@@ -32,7 +32,11 @@ export default async function ChildDashboard({
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
-  await setActiveChild(membership.child_id);
+  // Demo sessions: the /demo route handler already set the active-child
+  // cookie (cookies().set() throws in Server Components on the edge).
+  if (!(await isDemoRequest())) {
+    await setActiveChild(membership.child_id);
+  }
 
   return (
     <>
