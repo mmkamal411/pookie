@@ -50,24 +50,24 @@ export default function LoginPage({
   }
 
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-canopy-950">
+    <main className="relative flex min-h-screen overflow-hidden bg-nebula-950">
       <Fireflies />
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-6 py-16 lg:grid-cols-2">
         {/* Hero — the promise */}
         <section className="animate-bloom">
-          <p className="text-sm font-medium tracking-[0.2em] text-leaf-400 uppercase">
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
             Pookie
           </p>
           <h1 className="text-sunlit mt-4 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
             Everything a mother would be worried about — gently watched over.
           </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-bark-300">
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-stardust-300">
             Grades, health, safety, and dreams — growing together like a
             garden, tended with care, guided by intelligence that feels like
             love.
           </p>
-          <ul className="mt-8 space-y-3 text-bark-300">
+          <ul className="mt-8 space-y-3 text-stardust-300">
             {[
               "School, watched over daily",
               "Health, held with care",
@@ -92,16 +92,16 @@ export default function LoginPage({
             <div className="mx-auto flex w-fit">
               <PookieOrb size={72} />
             </div>
-            <h2 className="mt-5 text-center text-xl font-semibold text-dew-100">
+            <h2 className="mt-5 text-center text-xl font-semibold text-star-100">
               Come on in
             </h2>
-            <p className="mt-1 text-center text-sm text-bark-300">
+            <p className="mt-1 text-center text-sm text-stardust-300">
               Sign in with your email — we&apos;ll send a magic link. No
               passwords, ever.
             </p>
 
             {sent ? (
-              <p className="animate-bloom mt-6 rounded-2xl border border-leaf-400/25 bg-leaf-500/10 p-4 text-center text-sm text-moss-200">
+              <p className="animate-bloom mt-6 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center text-sm text-stardust-200">
                 Your link is fluttering toward your inbox — check your email.
               </p>
             ) : (
@@ -118,7 +118,7 @@ export default function LoginPage({
                 <button
                   type="submit"
                   disabled={busy}
-                  className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+                  className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950 disabled:opacity-50"
                 >
                   {busy ? "Sending…" : "Send magic link"}
                 </button>
@@ -127,7 +127,7 @@ export default function LoginPage({
             {demoAvail && (
               <a
                 href="/demo"
-                className="animate-bloom mt-4 block rounded-2xl border border-sunlight-400/30 bg-sunlight-400/10 py-3 text-center text-sm font-semibold text-sunlight-200 shadow-sun-warm transition hover:bg-sunlight-400/20"
+                className="animate-bloom mt-4 block rounded-2xl border border-aurum-400/30 bg-aurum-400/10 py-3 text-center text-sm font-semibold text-aurum-200 shadow-sun-warm transition hover:bg-aurum-400/20"
               >
                 ✨ View demo — no login needed
               </a>
@@ -141,8 +141,8 @@ export default function LoginPage({
 
 function LeafDot() {
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-leaf-500/15 shadow-glow-sm">
-      <span className="h-2 w-2 rounded-full bg-leaf-400" />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nova-500/15 shadow-glow-sm">
+      <span className="h-2 w-2 rounded-full bg-nova-400" />
     </span>
   );
 }
@@ -198,7 +198,7 @@ function Fireflies() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 90% 55% at 50% -10%, rgb(254 243 199 / 0.1), transparent 60%), radial-gradient(ellipse 80% 60% at 70% 20%, rgb(74 222 128 / 0.08), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgb(251 191 36 / 0.05), transparent 60%)",
+            "radial-gradient(ellipse 90% 55% at 50% -10%, rgb(254 243 199 / 0.1), transparent 60%), radial-gradient(ellipse 80% 60% at 70% 20%, rgb(244 114 182 / 0.08), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgb(251 191 36 / 0.05), transparent 60%)",
         }}
       />
     </div>

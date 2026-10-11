@@ -103,32 +103,32 @@ export function TeacherThread({
   }
 
   const statusChip = (m: TeacherMessage) => {
-    if (m.status === "received") return "border-leaf-400/40 text-leaf-300";
-    if (m.status === "sent" || sentIds.has(m.id)) return "border-leaf-400/40 text-leaf-300";
-    if (m.status === "approved") return "border-sunlight-400/40 text-sunlight-300";
-    return "border-bark-500/40 text-bark-300";
+    if (m.status === "received") return "border-nova-400/40 text-nova-300";
+    if (m.status === "sent" || sentIds.has(m.id)) return "border-nova-400/40 text-nova-300";
+    if (m.status === "approved") return "border-aurum-400/40 text-aurum-300";
+    return "border-stardust-500/40 text-stardust-300";
   };
 
   return (
-    <div className="card-living animate-rise rounded-3xl border border-leaf-400/20 p-5">
-      <h3 className="font-medium text-dew-100">Teacher messages</h3>
-      <p className="text-xs text-bark-300">
+    <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
+      <h3 className="font-medium text-star-100">Teacher messages</h3>
+      <p className="text-xs text-stardust-300">
         {teacherName ? `With ${teacherName}` : "With the teacher"} — nothing sends without your approval.
       </p>
 
       <div className="mt-4 space-y-3">
         {thread.length === 0 && (
-          <p className="text-sm text-bark-300">No messages yet — the thread grows here.</p>
+          <p className="text-sm text-stardust-300">No messages yet — the thread grows here.</p>
         )}
         {thread.map((m) => (
           <div
             key={m.id}
             className={`rounded-2xl border px-4 py-3 ${
-              m.direction === "inbound" ? "border-leaf-400/15 bg-canopy-800/60" : "border-sunlight-400/15 bg-canopy-800/40"
+              m.direction === "inbound" ? "border-nova-400/15 bg-nebula-800/60" : "border-aurum-400/15 bg-nebula-800/40"
             }`}
           >
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-bark-300">
+              <p className="text-xs font-medium text-stardust-300">
                 {m.direction === "inbound" ? (teacherName ?? "Teacher") : "You"}
                 {m.subject ? ` · ${m.subject}` : ""}
               </p>
@@ -136,8 +136,8 @@ export function TeacherThread({
                 {m.status}
               </span>
             </div>
-            <p className="mt-1.5 text-sm whitespace-pre-wrap text-dew-100">{m.body}</p>
-            <p className="mt-1.5 text-[10px] text-bark-500">
+            <p className="mt-1.5 text-sm whitespace-pre-wrap text-star-100">{m.body}</p>
+            <p className="mt-1.5 text-[10px] text-stardust-500">
               {new Date(m.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
             </p>
             {role === "parent" && !demo && m.direction === "outbound" && m.status === "draft" && (
@@ -145,7 +145,7 @@ export function TeacherThread({
                 type="button"
                 onClick={() => approve(m.id)}
                 disabled={busy}
-                className="btn-dapple mt-2 rounded-xl px-4 py-1.5 text-xs font-semibold text-canopy-950 disabled:opacity-50"
+                className="btn-dapple mt-2 rounded-xl px-4 py-1.5 text-xs font-semibold text-nebula-950 disabled:opacity-50"
               >
                 Approve exact text
               </button>
@@ -155,7 +155,7 @@ export function TeacherThread({
                 type="button"
                 onClick={() => send(m.id)}
                 disabled={busy}
-                className="btn-dapple mt-2 rounded-xl px-4 py-1.5 text-xs font-semibold text-canopy-950 disabled:opacity-50"
+                className="btn-dapple mt-2 rounded-xl px-4 py-1.5 text-xs font-semibold text-nebula-950 disabled:opacity-50"
               >
                 Send now
               </button>
@@ -165,14 +165,14 @@ export function TeacherThread({
       </div>
 
       {heldNote && (
-        <p className="mt-3 rounded-2xl border border-sunlight-400/30 bg-canopy-800/60 px-4 py-2.5 text-xs text-sunlight-200">
+        <p className="mt-3 rounded-2xl border border-aurum-400/30 bg-nebula-800/60 px-4 py-2.5 text-xs text-aurum-200">
           {heldNote}
         </p>
       )}
 
       {role === "parent" && !demo && (
-        <div className="mt-4 space-y-3 border-t border-leaf-400/10 pt-4">
-          <p className="text-sm font-medium text-leaf-300">Write to the teacher</p>
+        <div className="mt-4 space-y-3 border-t border-nova-400/10 pt-4">
+          <p className="text-sm font-medium text-nova-300">Write to the teacher</p>
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -192,11 +192,11 @@ export function TeacherThread({
             type="button"
             onClick={draft}
             disabled={busy || !body.trim()}
-            className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+            className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-nebula-950 disabled:opacity-50"
           >
             {busy ? "Saving…" : "Save as draft"}
           </button>
-          <p className="text-[11px] text-bark-500">
+          <p className="text-[11px] text-stardust-500">
             Drafts stay drafts until you approve the exact words. Sends go out 6:00 AM – 10:00 PM.
           </p>
         </div>

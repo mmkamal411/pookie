@@ -10,10 +10,10 @@ export async function DemoBanner() {
   return (
     <div
       role="note"
-      className="animate-rise sticky top-0 z-50 flex items-center justify-center gap-2 border-b border-sunlight-400/30 bg-canopy-900/95 px-4 py-2 text-center shadow-sun-warm backdrop-blur"
+      className="animate-rise sticky top-0 z-50 flex items-center justify-center gap-2 border-b border-aurum-400/30 bg-nebula-900/95 px-4 py-2 text-center shadow-sun-warm backdrop-blur"
     >
       <span aria-hidden="true">✨</span>
-      <p className="text-xs font-medium tracking-wide text-sunlight-200">
+      <p className="text-xs font-medium tracking-wide text-aurum-200">
         Demo mode — you&apos;re seeing mock data, not real grades
       </p>
       <span aria-hidden="true">✨</span>

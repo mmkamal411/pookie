@@ -14,17 +14,17 @@ export interface BandStyle {
 
 export const bandStyles: Record<GradeBand, BandStyle> = {
   green: {
-    text: "text-leaf-300",
-    ring: "border-leaf-400/30",
-    bar: "bg-leaf-400",
-    chip: "border-leaf-400/40 text-leaf-300",
+    text: "text-comet-300",
+    ring: "border-comet-400/30",
+    bar: "bg-comet-400",
+    chip: "border-comet-400/40 text-comet-300",
     glow: "0 0 14px rgb(74 222 128 / 0.22)",
   },
   yellow: {
-    text: "text-sunlight-300",
-    ring: "border-sunlight-400/30",
-    bar: "bg-sunlight-400",
-    chip: "border-sunlight-400/40 text-sunlight-300",
+    text: "text-aurum-300",
+    ring: "border-aurum-400/30",
+    bar: "bg-aurum-400",
+    chip: "border-aurum-400/40 text-aurum-300",
     glow: "0 0 14px rgb(251 191 36 / 0.22)",
   },
   orange: {
@@ -43,6 +43,42 @@ export const bandStyles: Record<GradeBand, BandStyle> = {
   },
 };
 
+/** White-card tone — deeper shades for dark-on-white (Home tab). */
+export const bandStylesWhite: Record<GradeBand, BandStyle> = {
+  green: {
+    text: "text-emerald-600",
+    ring: "border-emerald-500/30",
+    bar: "bg-emerald-500",
+    chip: "border-emerald-500/40 bg-emerald-50 text-emerald-700",
+    glow: "0 0 14px rgb(74 222 128 / 0.25)",
+  },
+  yellow: {
+    text: "text-amber-600",
+    ring: "border-amber-500/30",
+    bar: "bg-amber-500",
+    chip: "border-amber-500/40 bg-amber-50 text-amber-700",
+    glow: "0 0 14px rgb(251 191 36 / 0.25)",
+  },
+  orange: {
+    text: "text-orange-600",
+    ring: "border-orange-500/30",
+    bar: "bg-orange-500",
+    chip: "border-orange-500/40 bg-orange-50 text-orange-700",
+    glow: "0 0 14px rgb(251 146 60 / 0.25)",
+  },
+  red: {
+    text: "text-red-600",
+    ring: "border-red-500/30",
+    bar: "bg-red-500",
+    chip: "border-red-500/40 bg-red-50 text-red-700",
+    glow: "0 0 14px rgb(248 113 113 / 0.28)",
+  },
+};
+
+/** Pick the band palette for the card tone. */
+export function bandStyleFor(band: GradeBand, tone: "dark" | "white" = "dark"): BandStyle {
+  return tone === "white" ? bandStylesWhite[band] : bandStyles[band];
+}
 /** Gap-to-90 in words — the mission frame for every class. */
 export function gapCopy(gap: number | null): string {
   if (gap == null) return "Not graded yet this term — no judgment, just watching.";

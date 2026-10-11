@@ -23,9 +23,9 @@ export default async function SelectChildPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-canopy-950 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-nebula-950 px-4">
       <div className="w-full max-w-md">
-        <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-leaf-400 uppercase">
+        <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
           Pookie
         </p>
         <h1 className="text-sunlit animate-bloom mt-3 text-center text-2xl font-semibold tracking-tight">
@@ -44,14 +44,14 @@ export default async function SelectChildPage() {
                 type="submit"
                 className="card-living flex w-full items-center gap-4 rounded-3xl p-5 text-left"
               >
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-leaf-500/15 text-xl font-semibold text-leaf-300 shadow-glow-sm">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-nova-500/15 text-xl font-semibold text-nova-300 shadow-glow-sm">
                   {m.child.first_name.charAt(0)}
                 </span>
                 <span>
-                  <span className="block font-medium text-dew-100">
+                  <span className="block font-medium text-star-100">
                     {m.child.nickname ?? m.child.first_name}
                   </span>
-                  <span className="block text-sm text-bark-300">
+                  <span className="block text-sm text-stardust-300">
                     {[m.child.grade_level, m.child.school_name]
                       .filter(Boolean)
                       .join(" · ")}

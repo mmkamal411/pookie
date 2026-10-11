@@ -37,10 +37,10 @@ const BASE = "/api/v1/household/shopping";
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count?: number }) {
   return (
-    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-moss-300 uppercase">
+    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 uppercase">
       {children}
       {count != null && (
-        <span className="rounded-full bg-canopy-800 px-2 py-0.5 text-xs text-bark-300 shadow-glow-sm">
+        <span className="rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300 shadow-glow-sm">
           {count}
         </span>
       )}
@@ -91,8 +91,8 @@ function BuySheet({
   const [store, setStore] = useState("");
   const [price, setPrice] = useState("");
   return (
-    <div className="animate-rise mt-3 rounded-xl border border-sunlight-400/25 bg-canopy-800/80 p-3 shadow-sun-warm">
-      <p className="text-xs font-medium text-sunlight-200">
+    <div className="animate-rise mt-3 rounded-xl border border-aurum-400/25 bg-nebula-800/80 p-3 shadow-sun-warm">
+      <p className="text-xs font-medium text-aurum-200">
         Where did you get {item.name}?
       </p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -101,7 +101,7 @@ function BuySheet({
           value={store}
           onChange={(e) => setStore(e.target.value)}
           placeholder="Store (optional)"
-          className="w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+          className="w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
         />
         <datalist id={`stores-${item.id}`}>
           {stores.map((s) => (
@@ -113,20 +113,20 @@ function BuySheet({
           onChange={(e) => setPrice(e.target.value)}
           placeholder="Price (optional)"
           inputMode="decimal"
-          className="w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none sm:w-32"
+          className="w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none sm:w-32"
         />
       </div>
       <div className="mt-2 flex gap-2">
         <button
           disabled={busy}
           onClick={() => onConfirm(store.trim() || undefined, price ? Number(price) : undefined)}
-          className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+          className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
         >
           {busy ? "Saving…" : "Bought"}
         </button>
         <button
           onClick={onCancel}
-          className="rounded-lg border border-canopy-700 px-4 py-1.5 text-sm text-bark-300 hover:border-leaf-500"
+          className="rounded-lg border border-nebula-700 px-4 py-1.5 text-sm text-stardust-300 hover:border-nova-500"
         >
           Cancel
         </button>
@@ -180,30 +180,30 @@ function ItemCard({
   const hint = bestPriceHint(prices);
   const statusStyle =
     item.status === "needed"
-      ? "border-leaf-600/30"
+      ? "border-nova-600/30"
       : item.status === "claimed"
-        ? "border-sunlight-400/30 shadow-sun-warm"
-        : "border-canopy-700 opacity-80";
+        ? "border-aurum-400/30 shadow-sun-warm"
+        : "border-nebula-700 opacity-80";
 
   return (
-    <div className={`animate-bloom rounded-2xl border bg-canopy-900/80 p-4 ${statusStyle}`}>
+    <div className={`animate-bloom rounded-2xl border bg-nebula-900/80 p-4 ${statusStyle}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-semibold text-dew-100">
+          <p className="text-base font-semibold text-star-100">
             {item.name}{" "}
-            <span className="text-sm font-normal text-bark-300">{formatQty(item)}</span>
+            <span className="text-sm font-normal text-stardust-300">{formatQty(item)}</span>
           </p>
-          <p className="mt-0.5 text-xs text-bark-300">
+          <p className="mt-0.5 text-xs text-stardust-300">
             — {whoTag(item, userId)}
             {item.source !== "manual" && (
-              <span className="ml-2 rounded-full bg-canopy-800 px-2 py-0.5 text-[10px] tracking-wide text-sunlight-300 uppercase">
+              <span className="ml-2 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-aurum-300 uppercase">
                 {item.source === "meal-plan" ? "meal plan" : item.source}
               </span>
             )}
           </p>
-          {item.note && <p className="mt-1 text-xs text-bark-300 italic">{item.note}</p>}
+          {item.note && <p className="mt-1 text-xs text-stardust-300 italic">{item.note}</p>}
           {item.status === "bought" && item.store && (
-            <p className="mt-1 text-xs text-moss-300">
+            <p className="mt-1 text-xs text-nova-300">
               Got at {item.store}
               {item.price_paid != null && ` · $${Number(item.price_paid).toFixed(2)}`}
             </p>
@@ -215,7 +215,7 @@ function ItemCard({
             disabled={busy}
             title={item.added_by === userId ? "Remove" : "Remove (parent)"}
             aria-label={`Remove ${item.name}`}
-            className="rounded-full border border-canopy-700 px-2 py-0.5 text-xs text-bark-500 hover:border-leaf-500 hover:text-bark-100 disabled:opacity-50"
+            className="rounded-full border border-nebula-700 px-2 py-0.5 text-xs text-stardust-500 hover:border-nova-500 hover:text-stardust-100 disabled:opacity-50"
           >
             ✕
           </button>
@@ -227,7 +227,7 @@ function ItemCard({
           <button
             onClick={onClaim}
             disabled={busy}
-            className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+            className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
           >
             I&apos;ll grab it
           </button>
@@ -237,14 +237,14 @@ function ItemCard({
             <button
               onClick={onBuyStart}
               disabled={busy}
-              className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+              className="btn-dapple rounded-lg px-4 py-1.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
             >
               Bought it
             </button>
             <button
               onClick={onUnclaim}
               disabled={busy}
-              className="rounded-lg border border-canopy-700 px-3 py-1.5 text-sm text-bark-300 hover:border-leaf-500 disabled:opacity-50"
+              className="rounded-lg border border-nebula-700 px-3 py-1.5 text-sm text-stardust-300 hover:border-nova-500 disabled:opacity-50"
             >
               Unclaim
             </button>
@@ -252,7 +252,7 @@ function ItemCard({
         )}
         <button
           onClick={onTogglePrices}
-          className="ml-auto rounded-lg px-2 py-1.5 text-xs text-bark-300 underline decoration-dotted underline-offset-4 hover:text-dew-200"
+          className="ml-auto rounded-lg px-2 py-1.5 text-xs text-stardust-300 underline decoration-dotted underline-offset-4 hover:text-star-200"
         >
           {expanded ? "Hide price memory" : "Price memory"}
         </button>
@@ -269,23 +269,23 @@ function ItemCard({
       )}
 
       {expanded && (
-        <div className="animate-rise mt-3 rounded-xl border border-canopy-700 bg-canopy-950/60 p-3">
+        <div className="animate-rise mt-3 rounded-xl border border-nebula-700 bg-nebula-950/60 p-3">
           {hint && (
-            <p className="text-xs font-medium text-sunlight-200">💡 {hint}</p>
+            <p className="text-xs font-medium text-aurum-200">💡 {hint}</p>
           )}
           {prices.length === 0 ? (
-            <p className="mt-1 text-xs text-bark-500">
+            <p className="mt-1 text-xs text-stardust-500">
               No reported prices yet — report one below so the family learns where {item.name} is cheapest.
             </p>
           ) : (
             <ul className="mt-1 space-y-1">
               {prices.map((p) => (
-                <li key={p.id} className="flex items-center justify-between text-xs text-bark-300">
+                <li key={p.id} className="flex items-center justify-between text-xs text-stardust-300">
                   <span>
                     {p.store} · {p.reported_at}
                     {p.reported_by === userId ? " · you" : p.reported_by_name ? ` · ${p.reported_by_name}` : ""}
                   </span>
-                  <span className="font-semibold text-dew-200">${Number(p.price).toFixed(2)}</span>
+                  <span className="font-semibold text-star-200">${Number(p.price).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
@@ -295,14 +295,14 @@ function ItemCard({
               value={rStore}
               onChange={(e) => setRStore(e.target.value)}
               placeholder="Store"
-              className="w-full rounded-lg border border-canopy-700 bg-canopy-900 px-2 py-1.5 text-xs text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+              className="w-full rounded-lg border border-nebula-700 bg-nebula-900 px-2 py-1.5 text-xs text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
             />
             <input
               value={rPrice}
               onChange={(e) => setRPrice(e.target.value)}
               placeholder="Price"
               inputMode="decimal"
-              className="w-24 rounded-lg border border-canopy-700 bg-canopy-900 px-2 py-1.5 text-xs text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+              className="w-24 rounded-lg border border-nebula-700 bg-nebula-900 px-2 py-1.5 text-xs text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
             />
             <button
               disabled={busy || !rStore.trim() || !rPrice}
@@ -311,7 +311,7 @@ function ItemCard({
                 setRStore("");
                 setRPrice("");
               }}
-              className="rounded-lg border border-leaf-600/50 px-3 py-1.5 text-xs font-semibold text-leaf-300 hover:bg-leaf-600/20 disabled:opacity-50"
+              className="rounded-lg border border-nova-600/50 px-3 py-1.5 text-xs font-semibold text-nova-300 hover:bg-nova-600/20 disabled:opacity-50"
             >
               Report
             </button>
@@ -340,28 +340,28 @@ function PreferencesPanel({
   );
   const [rules, setRules] = useState((preferences.standing_rules as string) ?? "");
   return (
-    <div className="rounded-2xl border border-canopy-700 bg-canopy-900/80 p-4">
-      <h3 className="text-sm font-semibold text-dew-100">🏪 Store preferences</h3>
-      <p className="mt-0.5 text-xs text-bark-300">
+    <div className="rounded-2xl border border-nebula-700 bg-nebula-900/80 p-4">
+      <h3 className="text-sm font-semibold text-star-100">🏪 Store preferences</h3>
+      <p className="mt-0.5 text-xs text-stardust-300">
         Standing rules the family&apos;s suggestions respect — e.g. &ldquo;we don&apos;t do Walmart&rdquo;.
       </p>
-      <label className="mt-3 block text-xs font-medium text-bark-300">
+      <label className="mt-3 block text-xs font-medium text-stardust-300">
         Preferred stores (comma-separated)
         <input
           value={stores}
           onChange={(e) => setStores(e.target.value)}
           placeholder="Kroger, Aldi"
-          className="mt-1 w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
         />
       </label>
-      <label className="mt-2 block text-xs font-medium text-bark-300">
+      <label className="mt-2 block text-xs font-medium text-stardust-300">
         Standing rules
         <textarea
           value={rules}
           onChange={(e) => setRules(e.target.value)}
           rows={2}
           placeholder="we don't do Walmart"
-          className="mt-1 w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
         />
       </label>
       <button
@@ -372,7 +372,7 @@ function PreferencesPanel({
             standing_rules: rules.trim(),
           })
         }
-        className="btn-dapple mt-3 rounded-lg px-4 py-1.5 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+        className="btn-dapple mt-3 rounded-lg px-4 py-1.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
       >
         {busy ? "Saving…" : "Save preferences"}
       </button>
@@ -680,7 +680,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
   if (loading) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-center text-sm text-bark-300">Gathering the family list…</p>
+        <p className="text-center text-sm text-stardust-300">Gathering the family list…</p>
       </main>
     );
   }
@@ -688,7 +688,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
   if (!payload) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-center text-sm text-bark-300">
+        <p className="text-center text-sm text-stardust-300">
           {error ?? "The family list isn't available yet."}
         </p>
       </main>
@@ -699,23 +699,23 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
     <main className="mx-auto max-w-3xl px-4 py-8 pb-16">
       {/* header */}
       <header className="animate-rise">
-        <p className="text-xs font-semibold tracking-widest text-sunlight-300 uppercase">
+        <p className="text-xs font-semibold tracking-widest text-aurum-300 uppercase">
           🏠 Household
         </p>
         <h1 className="text-sunlit mt-1 text-3xl font-bold">Family shopping list</h1>
-        <p className="mt-1 text-sm text-bark-300">
+        <p className="mt-1 text-sm text-stardust-300">
           One list, the whole family — everyone adds, every item tagged with who added it.
         </p>
       </header>
 
       {error && (
-        <div role="alert" className="mt-4 rounded-xl border border-sunlight-400/40 bg-canopy-800 p-3 text-sm text-sunlight-200">
+        <div role="alert" className="mt-4 rounded-xl border border-aurum-400/40 bg-nebula-800 p-3 text-sm text-aurum-200">
           {error}
         </div>
       )}
 
       {/* add form */}
-      <section aria-label="Add an item" className="animate-bloom mt-6 rounded-2xl border border-leaf-600/30 bg-canopy-900/80 p-4 shadow-glow-sm">
+      <section aria-label="Add an item" className="animate-bloom mt-6 rounded-2xl border border-nova-600/30 bg-nebula-900/80 p-4 shadow-glow-sm">
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={name}
@@ -723,7 +723,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="Are we out of milk? Add it here…"
             aria-label="Item name"
-            className="w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+            className="w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
           />
           <div className="flex gap-2">
             <input
@@ -731,18 +731,18 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
               onChange={(e) => setQuantity(e.target.value)}
               aria-label="Quantity"
               inputMode="decimal"
-              className="w-20 rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 focus:border-leaf-500 focus:outline-none"
+              className="w-20 rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 focus:border-nova-500 focus:outline-none"
             />
             <input
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="unit"
               aria-label="Unit"
-              className="w-20 rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+              className="w-20 rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
             />
             <button
               onClick={handleAdd}
-              className="btn-dapple rounded-lg px-5 py-2 text-sm font-semibold text-canopy-950"
+              className="btn-dapple rounded-lg px-5 py-2 text-sm font-semibold text-nebula-950"
             >
               Add
             </button>
@@ -754,7 +754,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           placeholder="Note (optional) — e.g. oat, not dairy"
           aria-label="Note"
-          className="mt-2 w-full rounded-lg border border-canopy-700 bg-canopy-950 px-3 py-2 text-sm text-bark-100 placeholder:text-bark-500 focus:border-leaf-500 focus:outline-none"
+          className="mt-2 w-full rounded-lg border border-nebula-700 bg-nebula-950 px-3 py-2 text-sm text-stardust-100 placeholder:text-stardust-500 focus:border-nova-500 focus:outline-none"
         />
       </section>
 
@@ -766,7 +766,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
             <ItemCard key={i.id} {...cardProps(i)} />
           ))}
           {grouped.needed.length === 0 && (
-            <p className="text-sm text-bark-500">Nothing needed — the pantry glows. ✨</p>
+            <p className="text-sm text-stardust-500">Nothing needed — the pantry glows. ✨</p>
           )}
         </div>
       </section>
@@ -779,7 +779,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
             <ItemCard key={i.id} {...cardProps(i)} />
           ))}
           {grouped.claimed.length === 0 && (
-            <p className="text-sm text-bark-500">No one&apos;s on a grocery run right now.</p>
+            <p className="text-sm text-stardust-500">No one&apos;s on a grocery run right now.</p>
           )}
         </div>
       </section>
@@ -792,7 +792,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
             <ItemCard key={i.id} {...cardProps(i)} />
           ))}
           {grouped.bought.length === 0 && (
-            <p className="text-sm text-bark-500">Nothing bought yet.</p>
+            <p className="text-sm text-stardust-500">Nothing bought yet.</p>
           )}
         </div>
       </section>

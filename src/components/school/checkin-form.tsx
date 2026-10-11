@@ -58,9 +58,9 @@ export function CheckinForm({
 
   if (saved) {
     return (
-      <div className="card-living animate-rise flex items-center gap-4 rounded-3xl border border-leaf-400/20 px-5 py-4">
+      <div className="card-living animate-rise flex items-center gap-4 rounded-3xl border border-nova-400/20 px-5 py-4">
         <PookieOrb size={36} />
-        <p className="text-sm text-bark-100">
+        <p className="text-sm text-stardust-100">
           {childName} has checked in today. Pookie is listening. 🌱
         </p>
       </div>
@@ -68,12 +68,12 @@ export function CheckinForm({
   }
 
   return (
-    <div className="card-living animate-rise rounded-3xl border border-leaf-400/20 p-5">
+    <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center gap-3">
         <PookieOrb size={40} />
         <div>
-          <h3 className="font-medium text-dew-100">Today&apos;s check-in</h3>
-          <p className="text-xs text-bark-300">
+          <h3 className="font-medium text-star-100">Today&apos;s check-in</h3>
+          <p className="text-xs text-stardust-300">
             How is {childName} feeling? Honest answers grow the best plans.
           </p>
         </div>
@@ -88,9 +88,9 @@ export function CheckinForm({
           ] as const
         ).map((m) => (
           <label key={m.label} className="block">
-            <span className="mb-1 flex items-center justify-between text-xs text-bark-300">
+            <span className="mb-1 flex items-center justify-between text-xs text-stardust-300">
               <span>{m.label}</span>
-              <span className="font-semibold text-sunlight-300 tabular-nums">{m.value}/5</span>
+              <span className="font-semibold text-aurum-300 tabular-nums">{m.value}/5</span>
             </span>
             <input
               type="range"
@@ -100,10 +100,10 @@ export function CheckinForm({
               value={m.value}
               disabled={demo}
               onChange={(e) => m.set(Number(e.target.value))}
-              className="w-full accent-leaf-400"
+              className="w-full accent-nova-400"
               aria-label={`${m.label}: ${m.low} to ${m.high}`}
             />
-            <span className="flex justify-between text-[10px] text-bark-500">
+            <span className="flex justify-between text-[10px] text-stardust-500">
               <span>{m.low}</span>
               <span>{m.high}</span>
             </span>
@@ -127,7 +127,7 @@ export function CheckinForm({
         type="button"
         onClick={submit}
         disabled={saving || demo}
-        className="btn-dapple mt-4 rounded-2xl px-6 py-2.5 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+        className="btn-dapple mt-4 rounded-2xl px-6 py-2.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
       >
         {demo ? "Sign in to save check-ins" : saving ? "Saving…" : "Save check-in"}
       </button>

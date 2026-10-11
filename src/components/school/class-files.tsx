@@ -63,9 +63,9 @@ export function ClassFiles({
   }
 
   return (
-    <div className="card-living animate-rise rounded-3xl border border-leaf-400/20 p-5">
-      <h3 className="font-medium text-dew-100">Files &amp; handouts</h3>
-      <p className="text-xs text-bark-300">
+    <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
+      <h3 className="font-medium text-star-100">Files &amp; handouts</h3>
+      <p className="text-xs text-stardust-300">
         Study guides, screenshots, and notes for {className} — kept in the private class folder.
       </p>
 
@@ -77,11 +77,11 @@ export function ClassFiles({
                 href={f.signed_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-2xl border border-leaf-400/10 bg-canopy-800/60 px-4 py-2.5 text-sm text-dew-100 transition-colors hover:border-leaf-400/30"
+                className="flex items-center justify-between rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-2.5 text-sm text-star-100 transition-colors hover:border-nova-400/30"
               >
                 <span className="truncate">📎 {f.name}</span>
                 {f.created_at && (
-                  <span className="ml-3 shrink-0 text-[11px] text-bark-500">
+                  <span className="ml-3 shrink-0 text-[11px] text-stardust-500">
                     {new Date(f.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </span>
                 )}
@@ -90,10 +90,10 @@ export function ClassFiles({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-bark-300">Nothing here yet — the folder is ready when you are.</p>
+        <p className="mt-3 text-sm text-stardust-300">Nothing here yet — the folder is ready when you are.</p>
       )}
 
-      <label className="btn-dapple mt-4 inline-block cursor-pointer rounded-2xl px-5 py-2 text-sm font-semibold text-canopy-950">
+      <label className="btn-dapple mt-4 inline-block cursor-pointer rounded-2xl px-5 py-2 text-sm font-semibold text-nebula-950">
         {uploading ? "Uploading…" : "Upload a file"}
         <input
           type="file"

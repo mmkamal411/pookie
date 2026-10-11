@@ -101,17 +101,17 @@ export function PathTo90({
 
   const safetyBadge =
     plan?.safety_status === "approved"
-      ? "border-leaf-400/40 text-leaf-300"
+      ? "border-nova-400/40 text-nova-300"
       : plan?.safety_status === "rejected"
         ? "border-red-400/40 text-red-300"
-        : "border-sunlight-400/40 text-sunlight-300";
+        : "border-aurum-400/40 text-aurum-300";
 
   return (
-    <div className="card-living animate-rise rounded-3xl border border-leaf-400/20 p-5">
+    <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-medium text-dew-100">Path to 90</h3>
-          <p className="text-xs text-bark-300">
+          <h3 className="font-medium text-star-100">Path to 90</h3>
+          <p className="text-xs text-stardust-300">
             {plan
               ? `Week of ${plan.week_start} · ${plan.plan.filter((a) => a.done).length} of ${plan.plan.length} steps growing`
               : "No plan growing for this week yet."}
@@ -136,7 +136,7 @@ export function PathTo90({
             .map((a) => (
               <li key={a.rank}>
                 <label
-                  className={`flex items-start gap-3 rounded-2xl border border-leaf-400/10 bg-canopy-800/60 px-4 py-3 ${
+                  className={`flex items-start gap-3 rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3 ${
                     role === "parent" && !demo ? "cursor-pointer" : ""
                   } ${a.done ? "opacity-60" : ""}`}
                 >
@@ -145,15 +145,15 @@ export function PathTo90({
                     checked={a.done}
                     disabled={role !== "parent" || demo || busy}
                     onChange={(e) => toggle(a.rank, e.target.checked)}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-leaf-400"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-nova-400"
                     aria-label={`Step ${a.rank}: ${a.action}`}
                   />
                   <span className="flex-1">
-                    <span className={`block text-sm ${a.done ? "text-bark-300 line-through" : "text-dew-100"}`}>
-                      <span className="mr-2 font-semibold text-sunlight-300 tabular-nums">{a.rank}</span>
+                    <span className={`block text-sm ${a.done ? "text-stardust-300 line-through" : "text-star-100"}`}>
+                      <span className="mr-2 font-semibold text-aurum-300 tabular-nums">{a.rank}</span>
                       {a.action}
                     </span>
-                    {a.why && <span className="mt-0.5 block text-xs text-bark-300">{a.why}</span>}
+                    {a.why && <span className="mt-0.5 block text-xs text-stardust-300">{a.why}</span>}
                   </span>
                 </label>
               </li>
@@ -167,7 +167,7 @@ export function PathTo90({
             type="button"
             onClick={() => review("approved")}
             disabled={busy}
-            className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+            className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-nebula-950 disabled:opacity-50"
           >
             Approve plan
           </button>
@@ -183,12 +183,12 @@ export function PathTo90({
       )}
 
       {role === "parent" && !demo && (
-        <details className="mt-4 rounded-2xl border border-leaf-400/10 bg-canopy-800/60 px-4 py-3">
-          <summary className="cursor-pointer text-sm font-medium text-leaf-300">
+        <details className="mt-4 rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3">
+          <summary className="cursor-pointer text-sm font-medium text-nova-300">
             Draft a new weekly plan
           </summary>
           <div className="mt-3 space-y-3">
-            <label className="block text-xs text-bark-300">
+            <label className="block text-xs text-stardust-300">
               Week starting
               <input
                 type="date"
@@ -197,7 +197,7 @@ export function PathTo90({
                 className="input-rooted mt-1 block rounded-xl px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-xs text-bark-300">
+            <label className="block text-xs text-stardust-300">
               Steps — one per line, in order
               <textarea
                 value={draft}
@@ -211,7 +211,7 @@ export function PathTo90({
               type="button"
               onClick={create}
               disabled={busy}
-              className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-canopy-950 disabled:opacity-50"
+              className="btn-dapple rounded-2xl px-5 py-2 text-sm font-semibold text-nebula-950 disabled:opacity-50"
             >
               {busy ? "Saving…" : "Save plan"}
             </button>
