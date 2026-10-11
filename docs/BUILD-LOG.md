@@ -5,6 +5,16 @@ Rule: append entries newest-first. Keep it tight: what changed, what's blocked, 
 
 ---
 
+## 2026-10-11 — Backend rework (tRPC → REST, per ADR-001/ADR-004)
+
+**Converted:** tRPC procedures → REST Route Handlers. `GET /api/v1/children` (was `children.listMine`), `GET /api/v1/children/[childId]` (was `children.get`), `POST /api/v1/invites/consume` (was `invites.consume`, new route), `POST /api/v1/tutor/chat` (unchanged surface). New `src/server/rest.ts`: shared wrapper (requestId, session auth, canonical envelope, Zod→400) + best-effort `auditEvent()` via `audit_event()` RPC. Every route: resolve → assert (`assertTenant`) → use → audit.
+**Deleted:** `src/app/api/trpc/`, `src/server/trpc.ts`, `src/server/routers/`, `src/lib/trpc/`; removed `@trpc/*`, `@tanstack/react-query`, `superjson` from package.json. `errors.ts`: `ApiError` + `failWith()` replace `TRPCError`/`trpcError`. Edge-safe: Web Crypto `randomUUID`, no node: imports in routes. `SUPABASE_SERVICE_ROLE_KEY` referenced only from `src/lib/supabase/admin.ts` (grep-verified).
+**Verified:** `tsc` clean, `eslint` clean, `next build` green (4 dynamic API routes). Pushed to main (`e15589d`).
+**Notes for team:** frontend's `src/lib/tenant/actions.ts` (Server Actions, anon-key + RLS, HttpOnly cookies) is compliant with amended ADR-002 — left untouched; its `consumeInvite` action and the new REST endpoint are both thin adapters over the `consume_invite()` RPC (per the services/children.ts adapter pattern). `src/server/machine.ts` kept (unused today, but it's the documented service_role allowlist pattern for the upcoming worker-webhook work — flagging, not forgetting). List endpoint `GET /api/v1/children` is not per-child audited (audit_event requires a single child_id; RLS scopes the read) — deliberate exception to the audit step. Pod's handbook/docs/audit edits left uncommitted in the tree for their owners.
+**Blocked on:** nothing in code — live-DB verification still pending migrations on the `pookie` project.
+
+---
+
 ## 2026-10-11 — Senior Full-Stack Developer
 
 **Foundation built + design language applied:**
