@@ -149,38 +149,47 @@ export async function assertHouseholdParent(): Promise<HouseholdContext> {
 }
 
 /* ------------------------------------------------------------------ */
-/* W22/W23 health subjects (MODULE-ARCHITECTURE-BATCH2 §3/§4)          */
+/* W22/W23 health subjects (DBA canonical: 011_w22_health_tracker.sql) */
 /* ------------------------------------------------------------------ */
 
 export interface HealthSubjectContext extends TenantContext {
   /** health_subjects.id (the registry row, not children.id). */
   subjectRowId: string;
-  /** children.id when subject_kind='child'; null for adult subjects. */
-  subjectChildId: string | null;
-  /** True when the caller IS the subject (teen reading own data). */
+  /** The tenant child this subject is anchored to (health_subjects.child_id).
+   *  Always non-null — every subject anchors to exactly one child tenant.
+   *  This is the ONLY authorization key; owner_user_id is bookkeeping only. */
+  subjectChildId: string;
+  /** 'child' | 'household_member' per the 011 CHECK constraint. */
+  subjectKind: 'child' | 'household_member';
+  /** Display label from the registry (e.g. 'Dawson'). */
+  subjectLabel: string;
+  /** True when the caller IS the subject (child-role caller on a 'child' subject). */
   isSelf: boolean;
-  /** Subject's age in years from dob; null when dob is unknown. */
+  /** Subject's age in years from children.date_of_birth ('child' subjects
+   *  only); null when DOB is unknown or the subject is a household member.
+   *  Informational only — the RLS predicate health_metric_visible() is the
+   *  real privacy gate; unknown DOB fails closed into the teen tier there. */
   subjectAge: number | null;
 }
 
 interface HealthSubjectRow {
   id: string;
-  owner_user_id: string;
-  subject_id: string;
-  subject_kind: 'child' | 'adult';
+  child_id: string;
+  subject_kind: 'child' | 'household_member';
   label: string;
-  dob: string | null;
 }
 
 /**
  * Assert the caller may act on a health subject. Appends (never replaces)
  * the tenant/household helpers above.
  *
- * Resolve: subject registry row id → the underlying child (for child
- * subjects). Assert: that child is in the caller's current_child_ids()
- * (child_access stays the single source of truth). Use: RLS on the health
- * tables enforces the per-metric visibility predicate; this helper only
- * establishes tenant scope + role + selfhood for route logic.
+ * Resolve: health_subjects row id → child_id (the ONLY authorization key;
+ * owner_user_id is bookkeeping and grants nothing). Assert: that child is in
+ * the caller's current_child_ids() (child_access stays the single source of
+ * truth) — enforced twice: the app-layer assertTenant() below AND the DBA's
+ * assert_health_subject() RPC as a DB-enforced second check. Use: RLS on the
+ * health tables enforces the per-metric visibility predicate; this helper
+ * only establishes tenant scope + role + selfhood for route logic.
  */
 export async function assertHealthSubject(
   subjectRowId: string,
@@ -193,62 +202,52 @@ export async function assertHealthSubject(
 
   const { data: row, error } = await supabase
     .from('health_subjects')
-    .select('id, owner_user_id, subject_id, subject_kind, label, dob')
+    .select('id, child_id, subject_kind, label')
     .eq('id', subjectRowId)
     .single();
   if (error || !row) failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
   const subject = row as HealthSubjectRow;
 
-  const subjectChildId =
-    subject.subject_kind === 'child' ? subject.subject_id : null;
+  // App-layer assertion: child_access is the single source of truth.
+  const ctx = await assertTenant(subject.child_id);
 
-  let ctx: TenantContext;
-  if (subjectChildId) {
-    // Child subject: tenant scope via the child's membership.
-    ctx = await assertTenant(subjectChildId);
-  } else {
-    // Adult subject: anchored to the owner's household; the owner is the
-    // subject, so role is whatever the household context says.
-    const household = await assertHousehold();
-    if (household.ownerUserId !== subject.owner_user_id) {
-      failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
-    }
-    ctx = {
-      childId: household.anchorChildId,
-      userId: user.id,
-      role: household.role,
-    };
-  }
+  // DB-enforced second check (DBA's assert_health_subject() RPC). Raises
+  // health_subject_access_denied unless the subject's child is in the
+  // caller's tenant set. Fail closed on any error.
+  const { error: rpcError } = await supabase.rpc('assert_health_subject', {
+    p_subject_id: subjectRowId,
+  });
+  if (rpcError) failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
 
-  const isSelf =
-    subject.subject_kind === 'adult'
-      ? subject.owner_user_id === user.id
-      : await isSubjectSelf(supabase, subjectChildId!, user.id);
+  const isSelf = subject.subject_kind === 'child' && ctx.role === 'child';
 
+  // Age comes from children.date_of_birth — health_subjects carries no DOB.
   let subjectAge: number | null = null;
-  if (subject.dob) {
-    const dob = new Date(subject.dob + 'T00:00:00Z');
-    const now = new Date();
-    let age = now.getUTCFullYear() - dob.getUTCFullYear();
-    const m = now.getUTCMonth() - dob.getUTCMonth();
-    if (m < 0 || (m === 0 && now.getUTCDate() < dob.getUTCDate())) age -= 1;
-    subjectAge = age;
+  if (subject.subject_kind === 'child') {
+    const { data: child } = await supabase
+      .from('children')
+      .select('date_of_birth')
+      .eq('id', subject.child_id)
+      .single();
+    const dob = (child as { date_of_birth: string | null } | null)
+      ?.date_of_birth;
+    if (dob) {
+      const born = new Date(dob + 'T00:00:00Z');
+      const now = new Date();
+      let age = now.getUTCFullYear() - born.getUTCFullYear();
+      const m = now.getUTCMonth() - born.getUTCMonth();
+      if (m < 0 || (m === 0 && now.getUTCDate() < born.getUTCDate())) age -= 1;
+      subjectAge = age;
+    }
   }
 
-  return { ...ctx, subjectRowId: subject.id, subjectChildId, isSelf, subjectAge };
-}
-
-/** True when the caller is the teen themself (child-role access row). */
-async function isSubjectSelf(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  childId: string,
-  userId: string,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from('child_access')
-    .select('role')
-    .eq('child_id', childId)
-    .eq('user_id', userId)
-    .single();
-  return (data as { role: string } | null)?.role === 'child';
+  return {
+    ...ctx,
+    subjectRowId: subject.id,
+    subjectChildId: subject.child_id,
+    subjectKind: subject.subject_kind,
+    subjectLabel: subject.label,
+    isSelf,
+    subjectAge,
+  };
 }
