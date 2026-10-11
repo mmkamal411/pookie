@@ -80,3 +80,46 @@ Secondary factors: supabase-js also covers Realtime subscriptions and Storage (s
 
 ## Sign-off
 I, Technical Architect (manager of the **Technical design decisions** component), sign off on this component: the migration audit is delivered (`docs/audit-findings/technical-architect.md`, 1 CRITICAL / 4 HIGH / 12 MEDIUM / 8 LOW with fixes specified), and the three ADRs above are **decided** — **REST over tRPC, direct-client-plus-Edge-Functions over Server Actions/Route Handlers, supabase-js over Drizzle** — with written rationale grounded in verified evidence from the current production codebase. Nothing in this component is left undecided. The audit findings at CRITICAL/HIGH severity must be resolved before data flows, but the *decisions* are final.
+
+---
+
+## ADR-004: Deployment runtime — **DECIDED: `@cloudflare/next-on-pages` (full Next.js runtime on Cloudflare Pages). Static export is rejected for this project.**
+
+### Context
+ADR-002 decided "no `app/api` Route Handlers" and "keep the Next.js app static-export-compatible," on the premise that the app's server-side needs were zero and its backend was RLS + RPCs + Supabase Edge Functions. That premise did not survive contact with the actual build.
+
+Facts as observed in the repo (2026-10-11):
+- The build team has **already written a Next.js backend surface**: `src/app/api/trpc/[trpc]/route.ts` (tRPC handler), `src/app/api/v1/children/[childId]/route.ts`, `src/app/api/v1/tutor/chat/route.ts`, plus the full tRPC server tree (`src/server/trpc.ts`, `src/server/tenant.ts`, `src/server/errors.ts`, `src/server/routers/_app.ts`, `src/server/routers/children.ts`) and a client (`src/lib/trpc/client.tsx`).
+- **Server-only env usage exists and is designed correctly**: `src/lib/supabase/admin.ts` is a service-role client with a hard `typeof window !== 'undefined'` guard that throws if it ever lands in a client bundle — the team already internalized "service_role never reaches the browser."
+- Supabase **Edge Function stubs exist and stay**: `supabase/functions/verify-credential`, `supabase/functions/worker-webhook` (Deno, per-function secrets).
+- DevOps built the Pages pipeline assuming static export (the proven d-dash pattern: `next build` with `output: 'export'`, deploy `out/`).
+
+The collision: `next build` with `output: 'export'` **hard-errors on Route Handlers** — API routes cannot exist under static export, full stop. So the choice was binary:
+
+- **Option A — rework to static:** rewrite the API surface out of Next.js entirely (Portals credential probes, tenant-scoped orchestration, tutor-chat relay) into Cloudflare Workers or Supabase Edge Functions, plus move the server-only `service_role` usage with it. Estimated cost: days of rework, and it would push the first staging deploy back by days.
+- **Option B — full Next.js runtime on Pages via `@cloudflare/next-on-pages`:** Next.js builds normally (Route Handlers included), the adapter compiles the app into a Pages Functions worker, static export is not used. Estimated cost: hours — change the build command, add the `nodejs_compat` compatibility flag, adjust the `?v=`/CSP verification steps.
+
+Supporting factors that independently push toward a runtime:
+- **The Capacitor mobile decision** uses remote-URL mode: the WebView loads `https://pookie.pages.dev` and RSC streams come from Pages. Streaming RSC responses need a server runtime; static export cannot serve them.
+- **The server-side tenant firewall** planned for the `/c/[childSlug]` layout (resolve child from session → assert against `child_access` before any render) needs server code at request time — there is no static-export equivalent that isn't just client-side trust.
+- **pookie-tutor remains a separate Cloudflare Worker** (`pookie-tutor-v2`, CORS + `MUSE_QUEUE` KV bindings) — unchanged by this decision; the tutor-chat API route is a relay, not a reimplementation.
+
+### Decision
+**Adopt `@cloudflare/next-on-pages`. Static export is rejected for the Pookie app.** This is the deployment-architecture change ADR-002 anticipated ("that is a deployment-architecture change requiring its own ADR — not something to drift into one Route Handler at a time"): we are making it deliberately, in one ADR, rather than drifting into it one Route Handler at a time.
+
+What changes vs ADR-002, exactly:
+- **ADR-001 STANDS.** The tRPC handler must be **converted to REST API routes**, not kept. ADR-001's rationale (Supabase is already a typed API; the JWT+RLS story; non-Next.js clients) applies word-for-word to Route Handlers serving as the REST surface.
+- **ADR-002 is AMENDED.** Its premise — "no `service_role` near Next.js server code" — is replaced. The new invariant: **`service_role` lives ONLY in API routes** (never in Server Components, never in client bundles — CI must grep the built output for leaks), and **every API route asserts `child_id` per the child_id rule: resolve → assert → use → audit**. Resolve the child from the server-side auth context (never from client-supplied values); assert it against `child_access`; use it on every privileged query; audit via the `audit_event` RPC.
+- The primary read path is unchanged: client → Supabase direct under RLS with the singleton browser client. Route Handlers exist only for what RLS/RPCs can't do (external I/O with secrets, server-side tenant firewall, the tutor-chat relay). Supabase Edge Functions remain the home for Deno-native privileged ops (`verify-credential`, `worker-webhook`); they are not being migrated into Next.js.
+
+### Consequences
+- **Lose** the simplicity and zero-runtime-cost profile of static export. **Gain** a real server runtime without leaving Cloudflare Pages (no new hosting bill, same `pookie-staging` / `pookie` projects, same rollback story — promote the previous Pages deployment).
+- **New runtime quirks to live with:** the adapter runs app code in the workerd edge runtime, not Node. Some Node APIs are unavailable; code must run under `nodejs_compat`. Any route that discovers a missing API gets rewritten or moved to an Edge Function — it does not get a polyfill hack.
+- **Free-tier limit watch:** Pages Functions free tier allows 100k requests/day. At family scale (a handful of users + sync workers) this is headroom, not a constraint — but it is now a metered resource, so the deploy runbook carries it as a standing watch item (alert threshold at 50k req/day sustained).
+- **Larger security surface, honestly:** there is now a place in the stack where `service_role` exists (API routes). The mitigations are the new invariants: service-role only in API routes, the `window` guard pattern from `src/lib/supabase/admin.ts` as mandatory convention, CI grep of build output for key leakage, and the resolve→assert→use→audit child_id rule on every route. This is the cost of the runtime; it does not get relaxed later by drift.
+
+---
+
+## Amendment log
+- **ADR-004 (2026-10-11):** deployment runtime decided as `@cloudflare/next-on-pages`; static export rejected; ADR-002 amended (premise replaced with the service-role-only-in-API-routes + child_id rule invariant); ADR-001 unchanged (tRPC handler to be converted to REST routes). Directives for the build team: `docs/TEAM-DIRECTIVE-next-on-pages.md`.
+- **Founder decisions (2026-10-11):** (1) **Closed signup for v1** — invite-only; the NULL-child invite branch stays closed-by-construction. Public signups remain OFF. (2) **App Store / Play rating 12+** (not Kids category) for v1 — avoids Kids-category constraints (no third-party analytics, no external links, parental gates); the app is parent-driven, so 12+ is the honest rating. (3) **Teen health privacy tiers** follow the Guidance pod's framework (`docs/GUIDANCE-FRAMEWORK.md` — child's privacy contract) unless the founder directs otherwise.
