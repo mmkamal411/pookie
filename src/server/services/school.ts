@@ -190,7 +190,6 @@ export async function hasCheckinToday(childId: string): Promise<boolean> {
 
 export async function getSchoolOverview(childId: string): Promise<SchoolOverview> {
   const supabase = await createClient();
-  const tz = await getChildTimezone(childId);
 
   const { data: classes, error: classErr } = await supabase
     .from("classes")
