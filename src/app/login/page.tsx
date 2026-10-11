@@ -204,7 +204,8 @@ function GoogleGlyph() {
   );
 }
 
-function LeafDot() {  return (
+function LeafDot() {
+  return (
     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nova-500/15 shadow-glow-sm">
       <span className="h-2 w-2 rounded-full bg-nova-400" />
     </span>
