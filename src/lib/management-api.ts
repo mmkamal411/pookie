@@ -80,6 +80,17 @@ export const updateChild = (
   }
 ) => api<ChildSummary>(`/api/v1/children/${childId}`, { method: "PATCH", body: JSON.stringify(patch) });
 
+/** GET /api/v1/children/[childId] — full child detail (includes lastName). */
+export interface ChildDetail extends ChildSummary {
+  lastName: string | null;
+  district: string | null;
+  timezone: string | null;
+  avatarUrl: string | null;
+}
+
+export const getChild = (childId: string) =>
+  api<ChildDetail>(`/api/v1/children/${childId}`);
+
 /** DELETE /api/v1/children/[childId] — SOFT archive → { data: { id, status: "archived" } }. */
 export const deleteChild = (childId: string) =>
   api<{ id: string; status: string }>(`/api/v1/children/${childId}`, { method: "DELETE" });

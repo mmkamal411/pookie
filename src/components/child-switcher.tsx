@@ -40,7 +40,8 @@ function ChildAvatar({ child, size = 32 }: { child: TenantMembership["child"]; s
 /**
  * Child switcher — header control on every /c/[childSlug]/ page.
  * Shows the active child's avatar + name; tap opens the roster dropdown.
- * Hidden entirely when there is only one child (no useless control).
+ * Always visible (even with one child) so the active child is identifiable
+ * and "Add child" is discoverable from the header.
  * Selecting a child persists via setActiveChild and navigates to /c/[slug].
  */
 export function ChildSwitcher() {
@@ -68,7 +69,7 @@ export function ChildSwitcher() {
     };
   }, [open ]);
 
-  if (memberships.length <= 1 || !active) return null;
+  if (!active) return null;
 
   async function select(m: TenantMembership) {
     if (m.child_id === activeChildId || switching) {
@@ -90,7 +91,13 @@ export function ChildSwitcher() {
     }
   }
 
+  function goToAddChild() {
+    setOpen(false);
+    router.push(`/c/${active.child.slug}/settings`);
+  }
+
   const activeName = active.child.nickname ?? active.child.first_name;
+  const showChevron = memberships.length > 1;
 
   return (
     <div ref={rootRef} className="relative">
@@ -104,12 +111,14 @@ export function ChildSwitcher() {
       >
         <ChildAvatar child={active.child} size={30} />
         <span className="max-w-28 truncate text-sm font-medium text-star-100">{activeName}</span>
-        <span
-          aria-hidden="true"
-          className={`text-xs text-nova-300 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        >
-          ▾
-        </span>
+        {showChevron && (
+          <span
+            aria-hidden="true"
+            className={`text-xs text-nova-300 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          >
+            ▾
+          </span>
+        )}
       </button>
 
       {open && (
@@ -147,6 +156,21 @@ export function ChildSwitcher() {
               </button>
             );
           })}
+          <div className="border-t border-nova-400/10">
+            <button
+              type="button"
+              onClick={goToAddChild}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-nebula-800/60"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-dashed border-nova-400/40 text-lg text-nova-300"
+              >
+                +
+              </span>
+              <span className="text-sm font-medium text-nova-300">Add child</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

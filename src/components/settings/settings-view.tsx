@@ -13,6 +13,7 @@ import { signOut } from "@/lib/tenant/actions";
 import { useTheme } from "@/components/use-theme";
 import {
   listChildren,
+  getChild,
   createChild,
   updateChild,
   deleteChild,
@@ -190,15 +191,28 @@ export function SettingsView({
     setShowAdd(true);
   }
 
-  function openEdit(child: ChildSummary) {
-    const [first, ...rest] = child.firstName.split(" ");
-    setForm({
-      firstName: first,
-      lastName: rest.join(" ") || "",
-      nickname: child.nickname ?? "",
-      schoolName: child.schoolName ?? "",
-      gradeLevel: child.gradeLevel ?? "",
-    });
+  async function openEdit(child: ChildSummary) {
+    setNotice(null);
+    try {
+      // Fetch full detail — ChildSummary lacks lastName.
+      const detail = demo ? null : await getChild(child.id);
+      setForm({
+        firstName: detail?.firstName ?? child.firstName,
+        lastName: detail?.lastName ?? "",
+        nickname: child.nickname ?? "",
+        schoolName: child.schoolName ?? "",
+        gradeLevel: child.gradeLevel ?? "",
+      });
+    } catch {
+      // Fall back to summary fields if the detail fetch fails.
+      setForm({
+        firstName: child.firstName,
+        lastName: "",
+        nickname: child.nickname ?? "",
+        schoolName: child.schoolName ?? "",
+        gradeLevel: child.gradeLevel ?? "",
+      });
+    }
     setEditingId(child.id);
     setShowAdd(true);
   }
