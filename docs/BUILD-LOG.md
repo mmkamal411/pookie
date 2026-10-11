@@ -303,3 +303,17 @@ Node APIs).
 - Pushed to `mmkamal411/pookie` main (`44e3043`). **Blocker for DevOps:** the GitHub token
   lacks `workflow` scope, so `.github/workflows/ci.yml` was rejected on push and is held
   locally (untracked). CI workflow needs a token with workflow scope or manual upload.
+
+---
+
+## 2026-10-11 — Coordinator (batch-2): migration fork resolved
+
+**Schema fork detected and killed.** A competing untracked migration set appeared (`010_school_minutiae.sql`, `011_health_tracker.sql`, `012_nutrition_tracker.sql`, `013_college_prep.sql`) with divergent table names (`school_minutiae` vs DBA's `school_events`). Halt orders sent to all three batch-2 devs: canonical schema is the DBA's committed 009–012 set (commit `aefd4b2`); devs rework to DBA table names; `next build` must go green.
+
+**009 collision resolved:** `009_sync_queue.sql` (batch-1 Python dev, no log claim) → renumbered to `013_sync_queue.sql` (commit `316255d`). Batch-2 claimed 009–012 first in this log. Neither file applied to any live DB — safe.
+
+**Competing fork removed** (commit `a3c3a6e`): `011_health_tracker.sql`, `012_nutrition_tracker.sql`, `013_college_prep.sql` deleted. `010_school_minutiae.sql` was already removed from the tree.
+
+**Final migration map:** 001–005 foundation · 006–008 batch-1 (W1/W20/W21) · 009–012 batch-2 DBA canonical (W5/W16/W22/W23) · 013 sync queue. No duplicates, no forks.
+
+**Still open:** `docs/MODULE-ARCHITECTURE-BATCH2.md` was never committed by the architect — DBA built from the task brief + log entries. Doc needs to land in the repo.
