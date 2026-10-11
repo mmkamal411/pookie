@@ -83,7 +83,9 @@ I, Technical Architect (manager of the **Technical design decisions** component)
 
 ---
 
-## ADR-004: Deployment runtime — **DECIDED: `@cloudflare/next-on-pages` (full Next.js runtime on Cloudflare Pages). Static export is rejected for this project.**
+## ADR-004: Deployment runtime — **DECIDED: `@opennextjs/cloudflare` (full Next.js runtime on Cloudflare Pages). Static export is rejected for this project.**
+
+> **Amendment (2026-10-11):** `@cloudflare/next-on-pages` is abandoned for Next 16 (its peer dependency caps at Next 15.5.2). The adapter is now **`@opennextjs/cloudflare`** — the official successor, supporting Next 16. Separately, **Next.js is pinned to `~16.3.8`**: Next 16.4.0 reads `preview-props.json` via `loadManifest`, which OpenNext 1.20.x does not bundle (open PR #1356, unmerged at time of writing). Unpin only after that PR merges or OpenNext cuts a 16.4-compatible release.
 
 ### Context
 ADR-002 decided "no `app/api` Route Handlers" and "keep the Next.js app static-export-compatible," on the premise that the app's server-side needs were zero and its backend was RLS + RPCs + Supabase Edge Functions. That premise did not survive contact with the actual build.
@@ -122,4 +124,5 @@ What changes vs ADR-002, exactly:
 
 ## Amendment log
 - **ADR-004 (2026-10-11):** deployment runtime decided as `@cloudflare/next-on-pages`; static export rejected; ADR-002 amended (premise replaced with the service-role-only-in-API-routes + child_id rule invariant); ADR-001 unchanged (tRPC handler to be converted to REST routes). Directives for the build team: `docs/TEAM-DIRECTIVE-next-on-pages.md`.
+- **ADR-004 amendment (2026-10-11):** adapter switched to `@opennextjs/cloudflare` (next-on-pages is dead for Next 16 — peer dep caps at 15.5.2); Next.js pinned to `~16.3.8` (16.4.0 incompatible with OpenNext 1.20.x, PR #1356 unmerged). Static preview deployed to `preview-static.pookie-staging.pages.dev`; full dynamic Worker deployment pending (error 1101 hang, Supabase SSR middleware suspected).
 - **Founder decisions (2026-10-11):** (1) **Closed signup for v1** — invite-only; the NULL-child invite branch stays closed-by-construction. Public signups remain OFF. (2) **App Store / Play rating 12+** (not Kids category) for v1 — avoids Kids-category constraints (no third-party analytics, no external links, parental gates); the app is parent-driven, so 12+ is the honest rating. (3) **Teen health privacy tiers** follow the Guidance pod's framework (`docs/GUIDANCE-FRAMEWORK.md` — child's privacy contract) unless the founder directs otherwise.
