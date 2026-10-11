@@ -1,4 +1,4 @@
--- Migration 009: sync queue + atomic sweep upsert (school portal workers)
+-- Migration 013: sync queue + atomic sweep upsert (school portal workers)
 --
 -- The laptop workers (Windows/Mac) run the claim -> sweep -> upsert -> finish
 -- pattern against these objects. Conventions follow 001_tenancy_core:
