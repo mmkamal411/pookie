@@ -11,7 +11,7 @@
 // - Credentials are "portals": portal_key vocabulary (studentvue|parentvue|
 //   ctls-learn|o365); no PATCH (save = upsert); test is dual-mode with scope
 //   honesty (never a live portal login).
-// - Profile (/me) + notifications: NOT BUILT yet — stubs below throw
+// - Profile (/me) + notifications: BUILT — services/profile.ts
 //   ManagementApiError("not_built"); views render per-card pending states.
 
 export class ManagementApiError extends Error {
@@ -207,10 +207,9 @@ export const testPortal = (
 export const deletePortal = (childId: string, portalKey: PortalKey) =>
   api<{ removed: boolean }>(`/api/v1/children/${childId}/portals/${portalKey}`, { method: "DELETE" });
 
-/* ---------------- Profile + notifications — NOT BUILT ---------------- */
-// The backend has not shipped these yet. The typed stubs throw
-// ManagementApiError("not_built") so views render honest pending states
-// instead of hanging or faking data.
+/* ---------------- Profile + notifications ---------------- */
+// Backend: services/profile.ts — GET/PATCH /api/v1/me,
+// GET/PATCH /api/v1/me/notifications.
 
 export interface Profile {
   id: string;
@@ -228,15 +227,21 @@ export interface NotificationPrefs {
   quiet_hours_end: string | null;
 }
 
-function notBuilt<T>(): Promise<T> {
-  return Promise.reject(
-    new ManagementApiError("not_built", "This service isn't wired yet — the backend workstream is still building it.")
-  );
-}
-
-export const getProfile = (): Promise<Profile> => notBuilt();
+export const getProfile = (): Promise<Profile> =>
+  api<Profile>("/api/v1/me");
 export const updateProfile: (patch: { name?: string; avatar_url?: string | null }) => Promise<Profile> =
-  () => notBuilt();
-export const getNotificationPrefs = (): Promise<NotificationPrefs> => notBuilt();
+  (patch) =>
+    api<Profile>("/api/v1/me", {
+      method: "PATCH",
+      // avatar_url has no users-table column yet (SQL workstream DDL);
+      // the backend persists name and returns avatar_url: null.
+      body: JSON.stringify({ name: patch.name ?? null }),
+    });
+export const getNotificationPrefs = (): Promise<NotificationPrefs> =>
+  api<NotificationPrefs>("/api/v1/me/notifications");
 export const updateNotificationPrefs: (patch: Partial<NotificationPrefs>) => Promise<NotificationPrefs> =
-  () => notBuilt();
+  (patch) =>
+    api<NotificationPrefs>("/api/v1/me/notifications", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
