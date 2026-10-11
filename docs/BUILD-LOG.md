@@ -3,6 +3,34 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-11 ~16:45 EDT — Senior Full-Stack Developer (staging-build): THEME REFINEMENT — Nebula structure + Canopy soul + API contract alignment
+
+**Founder-confirmed direction (MEMORY.md 16:38):** Nebula structure + Canopy soul. "Not flat — alive."
+
+**Canopy-soul interactive layer (all in `src/app/globals.css` + components):**
+1. **Firefly sparks** (`nebula-background.tsx` canvas): ~36 green (#4ade80) / cyan (#22d3ee) / gold (#fbbf24) embers drifting slowly upward with sine wobble + flicker, additive glow, alpha 0.1–0.28. In the same rAF loop (no extra canvas). Skipped automatically with reduced-motion / no-canvas (static fallback).
+2. **Card hover:** `.card-living` / `.card-white` → translateY(-2px) + glow intensifies + border brightens (hover-capable devices; transform transition 0.25s).
+3. **Button hover:** `.btn-dapple` → glow intensifies + `translateY(-1px) scale(1.02)`; `PrimaryButton` → `hover:scale-[1.02] hover:shadow-glow-md`.
+4. **Tab bar:** active tab gets `.tab-active-glow` — soft nova-pink radial glow pooling under the icon; orb keeps pink drop-shadow when Pookie tab active.
+5. **Staggered entrances:** new `.stagger-children` utility — bloom fade-up with 50ms nth-child steps (12 steps). Existing per-card `animationDelay` patterns kept where already staggered.
+6. **Pookie orb:** new `.orb-breathe` (5s `orb-glow` box-shadow pulse) on the toolbar orb wrapper — the orb ball itself already breathes via `animate-breathe` (scale 1→1.04, 5s); now the halo glow pulses in sync.
+7. **Reduced motion:** the existing global kill-switch (`animation/transition → 0.01ms`) covers all of the above; JS guards (nebula static fallback, pinball skip, matchMedia listeners) unchanged.
+- **Fix:** `--animate-bloom` fill changed `both` → `backwards` — the completed `both` fill was overriding `:hover` transforms in the cascade, silently killing card hover lift. Hover lift works now.
+
+**White cards on Home (confirmed direction):** new `.card-white` — white glass (dark ink #23234d), pink glow edge, hover lift. Applied to the Home tab: `ClassCard` (new `tone="white"|"dark"` prop, default dark), `AttentionItems`, `DueNextStrip`, `UpcomingList`, check-in card. New `bandStylesWhite` + `bandStyleFor(band, tone)` (`school/styles.ts`) and `statusStyle(status, tone)` (`due-helpers.ts`) deepen grade/status colors for dark-on-white (emerald-600/amber-600/orange-600/red-600). Progress tab (`school/`, class detail) keeps dark glass — `class-detail.tsx` untouched.
+
+**Backend contract alignment (reconciling with aaacbfb):** rewrote `src/lib/management-api.ts` to the BUILT contract —
+- Children: camelCase (`ChildSummary`); POST needs `lastName`; DELETE → `{ id, status: "archived" }`.
+- Sync: `GET .../sync/requests` → `{ jobs: [{ id, status, device, summary, errors[], created_at, claimed_at, completed_at }] }`; `POST` → `{ job: { id, status } }`. No `started_at`/`error` — using `claimed_at`/`errors[]`.
+- Heartbeats: child-scoped `GET .../sync/heartbeats` → `{ workers: [{ worker_id, status, last_seen, last_job_id, last_successful_sync_at, version, last_error, is_stale }] }`; bands derived client-side via `heartbeatHealth()`. Health page now passes `childId`.
+- Portals (not "credentials"): `GET/POST .../portals` (`portal_key`: studentvue|parentvue|ctls-learn|o365), `POST .../portals/test` (dual-mode, scope honesty — never labeled a live login), `DELETE .../portals/[portalKey]`; save = upsert (no PATCH). `credentials-view.tsx` now renders `PortalsView`.
+- Profile (`/me`) + notifications: NOT BUILT — stubs throw `not_built`; settings cards render honest per-card "not wired yet" states (children section fully works against the real API).
+- Demo fixtures (`management-demo.ts`) reshaped to the real contract.
+
+**Verification:** `npx tsc --noEmit` exit 0 (W5 builder landed `src/server/services/college.ts` — the 18 pre-existing build errors are gone). ESLint clean on all frontend paths (0 errors, 0 warnings). Full `npm run build` pending — another agent's build was occupying the lock; retrying.
+
+**Note:** saw transient uncommitted edits in `src/server/errors.ts` (duplicate `CONSENT_REQUIRED` keys) from another active workstream — left untouched; they self-resolved.
+
 ## 2026-10-11 ~16:55 EDT — Migration + Data Specialist: HOLDING — build RED, no DB access from sandbox; full manual runbook documented
 
 **Gate status: NOT cleared — no migration applied.** `src/server/services/college.ts` still absent (18 W5 route imports unresolvable); no Build Fix Specialist entry in this log. Per the staging order (code → build green → migrations → data → deploy), this agent performed **zero DB writes**.
@@ -549,3 +577,47 @@ Design intent preserved (green accent + divine-light halo on cosmos black).
 **Verification:** `tsc --noEmit` ✅ · `eslint` on all touched paths ✅.
 `~/workspace/w16-delivery/` left in place as the delivery archive (task said don't leave W16
 code outside the repo — all 8 files are now landed; the staging dir is just the receipt).
+
+---
+
+## 2026-10-11 — Build Fix Specialist: W5 college service written, build GREEN
+
+**Problem:** `npm run build` failed with 18 `Can't resolve '@/server/services/college'` errors —
+the 18 W5 college route files imported ~35 names from `src/server/services/college.ts`,
+which was never written (only the unrelated `college-extra.ts` existed).
+
+**What I did:**
+- Read all 18 route files and cataloged every imported name/signature; read migration
+  `009_w5_college_prep.sql` and matched the real schema; followed the existing service
+  patterns (`school.ts`/`shopping.ts`: framework-free, user-JWT client in, RLS enforces
+  tenancy, `ApiError`/`failWith`/`mapDbError` error handling, Zod schemas).
+- **NEW `src/server/services/college.ts`** (1356 lines): all 35 exports — explorer
+  (`listColleges`, `explorerQuerySchema`), list/deadline/essay/recommender/test-score
+  CRUD + Zod create/patch schemas, `feedbackForEssay` (tenant-partitioned stub via the
+  real `src/server/essay-feedback.ts` call site — no AI, nothing persisted, per 009),
+  `getGpaSimulation` (pure read+math via the `simulate_gpa()` RPC + weekly trend from
+  real grade history), `verifyTestScore` (exact "you entered X / report says Y" match →
+  verified; mismatch → 409, nothing stored), transcript-release state machine
+  (`createRelease` → `authorizeRelease` with `release_authority_for()` RPC: parent for
+  minors, student at 18+, fail-closed both directions → `markReleaseSent`, approved-only),
+  and `getReadiness` (list, deadlines with derived 30/14/7/2-day buckets, derived
+  per-college requirement checklists from real artifacts, templates, GPA snapshot).
+  No `any`, no TODOs, no console.logs; eslint clean.
+- **3 pre-existing build blockers fixed** (surfaced by tsc once the college errors cleared):
+  - `src/server/ocr/extract.ts`: named regex capture groups → positional + field map
+    (tsconfig targets ES2017; behavior identical).
+  - `src/server/mail/common.ts`: `as` → `as unknown as` cast (TS2352).
+  - `src/lib/supabase/admin.ts`: service-role client is now **lazily initialized**
+    (Proxy) — the module-level throw on missing `SUPABASE_SERVICE_ROLE_KEY` broke
+    `next build`'s route-data collection. Throws on first USE now; all 6 call sites
+    unchanged. (Note: another agent is concurrently editing `src/server/errors.ts`
+    for the `CONSENT_REQUIRED` code — I left that file to them.)
+  - `.../college/test-scores/[scoreId]/report/route.ts`: added
+    `export const dynamic = "force-dynamic"` (upload route is inherently dynamic).
+- **Verification:** `npx tsc --noEmit` ✅ (0 errors) · `npx eslint` on all touched
+  paths ✅ · `npx opennextjs-cloudflare build` ✅ exit 0 ("OpenNext build complete").
+  (Two transient infra flakes during verification — a Turbopack cache panic from
+  concurrent builds racing on `.next/cache`, and an ENOENT on a tmp asset — both
+  resolved by clearing `.next` and rebuilding; not code issues.)
+- **Committed** on `staging-build`: the 5 files above (college.ts is the deliverable;
+  the other 4 are the minimal supporting fixes the green build depends on).
