@@ -73,6 +73,51 @@
 --       on users.role, so role='parent' with zero access rows sees nothing.
 --       current_child_ids() can never return NULL (COALESCE -> '{}'); anon
 --       (auth.uid() NULL) always gets '{}' -> every predicate fail-closed.
+--
+-- ROUND-2 FIXES 2026-10-11 R2 (Database expert):
+--   R2-1 AGENT DESIGN RECONCILIATION — DECISION: KEEP the round-1
+--       agent-aware current_child_ids() (service-minted JWT job_id claim ->
+--       agent_tenant_scope), NOT the backend reviewer's session-scoped
+--       agent_child_ids() + `child_id = ANY (current_child_ids() ||
+--       agent_child_ids())` policy rewrite. Reasons: (a) TRANSPORT: Supabase
+--       PostgREST sits behind pgBouncer in transaction-pooling mode, so
+--       SET LOCAL / session GUCs cannot be delivered to the RLS path over
+--       HTTP — a session-bound job id is infeasible on the real transport,
+--       while request.jwt.claims is verified by PostgREST on EVERY request;
+--       (b) BLAST RADIUS: the concat approach requires rewriting every
+--       tenant policy in 001/002/003/004/ETL and doubling the surface every
+--       future policy author must remember; the CASE branch inside the
+--       single funnel helper needs ZERO policy changes and every future
+--       policy inherits the agent boundary automatically; (c) the claim is
+--       service-minted with the project JWT secret — the agent cannot widen
+--       its own scope; missing/expired job_id fails closed to '{}'. The
+--       agent read path therefore works end-to-end TODAY: backend inserts
+--       scope row (service_role) -> mints short-lived JWT
+--       {role:'agent_reader', job_id, sub, exp} -> agent uses it for
+--       PostgREST/RPC -> RLS scopes every granted table to that job's
+--       child. Full rationale in docs/audit-findings/database-expert.md §R2.
+--   R2-2 New ensure_user() SECURITY DEFINER RPC: backstop for
+--       handle_new_auth_user trigger failures. A trigger exception rolls
+--       back the auth.users INSERT opaquely and orphans the auth user; the
+--       trigger only fires on INSERT, so a deleted public.users row never
+--       recovers. The app calls ensure_user() post-login: idempotent
+--       heal (insert-or-email-resync from the verified JWT email claim),
+--       legible errors for auth.uid() NULL or email-collision cases.
+--   R2-4 New access_requests table (PLAN §4.1 "request access notifies the
+--       parent"): id, child_id FK, requester_email, status
+--       pending/approved/denied, created_at. RLS: requester (email-matched)
+--       may SELECT/INSERT own rows; tenant parents may SELECT/UPDATE
+--       (status column only via column GRANT); no DELETE (ledger-like);
+--       partial unique index blocks duplicate pending requests.
+--       Notification delivery (email/push to the parent) is a LATER
+--       workstream — a trigger/Edge Function on INSERT will notify.
+--   R2-5 New cleanup_expired_agent_scopes() (service_role-only): reaps
+--       agent_tenant_scope rows with expires_at < now(); returns the count.
+--       NOTE: it needs a cron schedule — pg_cron on the project or an
+--       external scheduler calling this RPC with the service_role key.
+--   R2-6 Open-vs-closed signup: NO SQL CHANGE. Recorded as a flagged founder
+--       decision in docs/audit-findings/database-expert.md §R2 (the
+--       NULL-child invite branch stays service_role-only until decided).
 
 -- ---------------------------------------------------------------------------
 -- users: app-level profile, 1:1 with auth.users, created by trigger
@@ -156,6 +201,34 @@ CREATE INDEX IF NOT EXISTS invites_child_id_idx
   ON public.invites (child_id);
 
 -- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (R2-4): access_requests — PLAN §4.1 promises "request
+-- access notifies the parent." Minimal ledger for the request flow:
+-- a logged-in user (email-matched, may hold zero child_access rows) asks to
+-- join a child's tenant; a parent of that child approves/denies.
+-- Notification delivery (email/push to the parent on INSERT) is a LATER
+-- workstream — expect a trigger or Edge Function on this table's INSERT.
+-- No DELETE policy by design (ledger-like, same as invites): a denied row
+-- stays as the record of the decision.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.access_requests (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_id        uuid NOT NULL REFERENCES public.children(id) ON DELETE CASCADE,
+  requester_email text NOT NULL,
+  status          text NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending','approved','denied')),
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS access_requests_child_id_idx
+  ON public.access_requests (child_id);
+
+-- One live request per email per child: blocks duplicate pending spam and
+-- gives the parent's approve/deny UI a stable single row to act on.
+CREATE UNIQUE INDEX IF NOT EXISTS access_requests_one_pending_per_email
+  ON public.access_requests (child_id, lower(requester_email))
+  WHERE status = 'pending';
+
+-- ---------------------------------------------------------------------------
 -- agent_tenant_scope: per-job agent tenancy (which child a job may touch)
 -- FIX 2026-10-11 (F9): defined HERE, not in 005. current_child_ids() below
 -- is LANGUAGE sql and Postgres validates a SQL function body at CREATE time,
@@ -177,6 +250,37 @@ CREATE INDEX IF NOT EXISTS agent_tenant_scope_expires_idx
 
 ALTER TABLE public.agent_tenant_scope ENABLE ROW LEVEL SECURITY;
 -- Intentionally no policies: deny-all. See header comment.
+
+-- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (R2-5): reap expired agent scope rows.
+-- Scope rows carry a 2h TTL but nothing reaped them -> unbounded growth and
+-- stale job_ids lingering past their window. EXECUTE is service_role-only:
+-- the caller that mints scopes (the backend) is the only caller that reaps.
+-- NOTE — SCHEDULING REQUIRED: this function does nothing unless something
+-- calls it. Schedule it on the project (e.g. pg_cron:
+--   SELECT cron.schedule('cleanup-agent-scopes', '*/30 * * * *',
+--                        'SELECT public.cleanup_expired_agent_scopes();');
+-- or an external scheduler hitting this RPC with the service_role key).
+-- Expiry is enforced per-read by current_child_ids()/agent_assert_scope
+-- regardless — cleanup is hygiene, not a security boundary.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.cleanup_expired_agent_scopes()
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_reaped integer;
+BEGIN
+  DELETE FROM public.agent_tenant_scope WHERE expires_at < now();
+  GET DIAGNOSTICS v_reaped = ROW_COUNT;
+  RETURN v_reaped;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cleanup_expired_agent_scopes() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.cleanup_expired_agent_scopes() TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- Trigger: ensure public.users row on auth.users insert
@@ -233,6 +337,75 @@ CREATE TRIGGER on_auth_user_updated
   FOR EACH ROW EXECUTE FUNCTION public.handle_auth_user_updated();
 
 -- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (R2-2): ensure_user() — login-time backstop for the
+-- trigger above. Two failure modes the trigger cannot survive:
+--   (a) ANY exception inside handle_new_auth_user (e.g. a stale
+--       public.users row holding the same email under a different id ->
+--       unique violation on email) rolls back the auth.users INSERT itself,
+--       so sign-up fails with an opaque error and the auth user is orphaned;
+--   (b) the trigger fires on INSERT only — a public.users row deleted by
+--       other means never recovers, and every subsequent login proceeds
+--       with a missing profile (NULL email comparisons fail closed, so
+--       invite consumption silently stops working).
+-- The app calls SELECT public.ensure_user() on every login (cheap: one
+-- indexed lookup on the happy path). It is idempotent: insert when missing,
+-- re-sync email when the verified JWT claim drifted (covers the F10 trigger
+-- being bypassed), legible errors instead of opaque rollbacks.
+-- actor attribution: the row is created for auth.uid() only — a caller can
+-- never heal or touch another user's row.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.ensure_user()
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_id    uuid := auth.uid();
+  v_email text;
+  v_row   public.users%ROWTYPE;
+BEGIN
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'authentication_required';
+  END IF;
+
+  -- The verified JWT email claim (Supabase issues it; lowercased at issue).
+  v_email := lower(NULLIF(auth.jwt() ->> 'email', ''));
+
+  IF v_email IS NULL THEN
+    -- No email claim (e.g. phone-auth JWT): can only confirm an existing
+    -- row, never create one — creating a row without the email would break
+    -- the email-keyed tenant resolver.
+    SELECT * INTO v_row FROM public.users WHERE id = v_id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'user_email_unavailable';
+    END IF;
+    RETURN v_row.id;
+  END IF;
+
+  BEGIN
+    INSERT INTO public.users (id, email, role, display_name)
+    VALUES (v_id, v_email, 'parent',
+            COALESCE(NULLIF(split_part(v_email, '@', 1), ''), 'user'))
+    ON CONFLICT (id) DO UPDATE
+       SET email = EXCLUDED.email
+     WHERE public.users.email IS DISTINCT FROM EXCLUDED.email
+    RETURNING * INTO v_row;
+  EXCEPTION WHEN unique_violation THEN
+    -- A DIFFERENT users row already holds this email (the trigger's opaque
+    -- rollback case, now surfaced legibly): admin intervention required,
+    -- never silently merged.
+    RAISE EXCEPTION 'user_email_conflict_requires_admin';
+  END;
+
+  RETURN v_row.id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.ensure_user() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.ensure_user() TO authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
 -- RLS helper: current_child_ids() — the caller's tenant set (STABLE, DEFINER)
 -- FIX 2026-10-11 (F9): agent-aware. The agent authenticates with a
 -- service-minted JWT carrying role='agent_reader' and a job_id claim; its
@@ -242,6 +415,27 @@ CREATE TRIGGER on_auth_user_updated
 -- STABLE (not VOLATILE): evaluated once per statement — this is the
 -- performance-critical property for RLS-heavy workloads (see handbook 06).
 -- NEVER returns NULL: COALESCE -> '{}'; `x = ANY('{}')` is false, never NULL.
+--
+-- FIX 2026-10-11 R2 (R2-1) — AGENT DESIGN RECONCILIATION, DECISION: KEEP
+-- this agent-aware form (JWT job_id claim -> agent_tenant_scope) instead of
+-- the backend reviewer's session-scoped agent_child_ids() + per-policy
+-- `child_id = ANY (current_child_ids() || agent_child_ids())` rewrite:
+--   (a) TRANSPORT: Supabase PostgREST runs behind pgBouncer in
+--       transaction-pooling mode; SET LOCAL / session GUCs cannot be
+--       delivered over HTTP, so a session-bound job id cannot reach the RLS
+--       path. request.jwt.claims is verified by PostgREST on EVERY request
+--       and IS available here — the claim is the only workable carrier.
+--   (b) BLAST RADIUS: the concat approach rewrites every tenant policy in
+--       001/002/003/004/ETL and doubles the surface every future policy
+--       author must remember; the CASE branch inside this single funnel
+--       needs ZERO policy changes — every future policy written as
+--       `child_id = ANY (current_child_ids())` inherits the agent boundary
+--       automatically, including the ETL carried-over tables.
+--   (c) The job_id claim is service-minted with the project JWT secret
+--       (see 005's AGENT JWT CONTRACT): the agent cannot forge or widen its
+--       own scope; a missing/expired scope row fails closed to '{}'.
+-- agent_assert_scope() (005) remains for explicit per-call assertions and
+-- for the direct-psql/SET ROLE path, where request.jwt.claims is absent.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.current_child_ids()
 RETURNS uuid[]
@@ -535,6 +729,7 @@ ALTER TABLE public.users        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.children     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.child_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invites      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.access_requests ENABLE ROW LEVEL SECURITY;
 
 -- FIX 2026-10-11 (F11): DROP POLICY IF EXISTS precedes every CREATE POLICY —
 -- Postgres has no CREATE POLICY IF NOT EXISTS, so re-runs used to fail.
@@ -650,6 +845,50 @@ CREATE POLICY invites_parent_update ON public.invites
   );
 
 -- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (R2-4): access_requests policies.
+-- The requester is identified by EMAIL (they may hold zero child_access
+-- rows — that is the point of requesting access), matched case-insensitively
+-- against the caller's users row, mirroring the invitee arm of
+-- invites_parent_read. Tenant parents of the requested child can read and
+-- decide (UPDATE). No DELETE policy: denied rows stay as the decision
+-- record; expired-row cleanup is a service_role job.
+-- ---------------------------------------------------------------------------
+DROP POLICY IF EXISTS access_requests_read ON public.access_requests;
+CREATE POLICY access_requests_read ON public.access_requests
+  FOR SELECT USING (
+    lower(requester_email) = lower((SELECT u.email FROM public.users u WHERE u.id = auth.uid()))
+    OR (child_id = ANY (public.current_child_ids())
+        AND EXISTS (SELECT 1 FROM public.child_access ca
+                    WHERE ca.user_id = auth.uid()
+                      AND ca.child_id = public.access_requests.child_id
+                      AND ca.role = 'parent'))
+  );
+
+DROP POLICY IF EXISTS access_requests_requester_insert ON public.access_requests;
+CREATE POLICY access_requests_requester_insert ON public.access_requests
+  FOR INSERT WITH CHECK (
+    lower(requester_email) = lower((SELECT u.email FROM public.users u WHERE u.id = auth.uid()))
+  );
+
+DROP POLICY IF EXISTS access_requests_parent_update ON public.access_requests;
+CREATE POLICY access_requests_parent_update ON public.access_requests
+  FOR UPDATE
+  USING (
+    child_id = ANY (public.current_child_ids())
+    AND EXISTS (SELECT 1 FROM public.child_access ca
+                WHERE ca.user_id = auth.uid()
+                  AND ca.child_id = public.access_requests.child_id
+                  AND ca.role = 'parent')
+  )
+  WITH CHECK (
+    child_id = ANY (public.current_child_ids())
+    AND EXISTS (SELECT 1 FROM public.child_access ca
+                WHERE ca.user_id = auth.uid()
+                  AND ca.child_id = public.access_requests.child_id
+                  AND ca.role = 'parent')
+  );
+
+-- ---------------------------------------------------------------------------
 -- FIX 2026-10-11 (F2): explicit GRANTs. RLS policies alone grant nothing —
 -- without these PostgREST returns permission-denied for every client role.
 -- RLS remains the narrow gate; grants are the wide-but-necessary door.
@@ -681,6 +920,14 @@ GRANT SELECT, INSERT ON public.child_access TO authenticated;
 -- invites: parents read/write their tenant's invites; invitees read their
 -- own rows. No DELETE grant — revocation is a status update.
 GRANT SELECT, INSERT, UPDATE ON public.invites TO authenticated;
+
+-- FIX 2026-10-11 R2 (R2-4): access_requests — requesters read/insert their
+-- own rows; parents read/update. The column GRANT (not the policy) is what
+-- confines parents to the status decision: child_id and requester_email are
+-- never client-rewritable, so an approved request cannot be retargeted at a
+-- different child or email after the fact. No DELETE grant (ledger-like).
+GRANT SELECT, INSERT ON public.access_requests TO authenticated;
+GRANT UPDATE (status) ON public.access_requests TO authenticated;
 
 -- agent_tenant_scope: no grants to any client role (deny-all by RLS; writes
 -- are service_role-only, reads are via SECURITY DEFINER helpers).

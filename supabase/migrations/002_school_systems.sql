@@ -20,6 +20,27 @@ CREATE TABLE IF NOT EXISTS public.school_systems (
   created_at         timestamptz NOT NULL DEFAULT now()
 );
 
+-- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (integration-expert H2-H5, M1-M2): registry completeness.
+-- The registry is a config table, not code — adapters must be configurable
+-- declaratively. New columns: oauth_config (required when auth_flow='oauth':
+-- authorize/token URLs, scopes, client-id reference, redirect URI),
+-- auth_requirements (per-system auth constraints the Portals UI warns about,
+-- e.g. approved-device mandates), api_endpoints (per-system/district base
+-- URLs — per-district URLs stay out of adapter code), rate_limits
+-- (machine-readable claim throttles for workers), capabilities (which
+-- contract methods the system supports), contract_version (adapter contract
+-- version; workers fail closed on unknown majors). ALTER TABLE ... IF NOT
+-- EXISTS keeps re-runs idempotent where the table already exists from R1.
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.school_systems
+  ADD COLUMN IF NOT EXISTS oauth_config       jsonb,
+  ADD COLUMN IF NOT EXISTS auth_requirements  jsonb,
+  ADD COLUMN IF NOT EXISTS api_endpoints      jsonb,
+  ADD COLUMN IF NOT EXISTS rate_limits       jsonb,
+  ADD COLUMN IF NOT EXISTS capabilities      jsonb,
+  ADD COLUMN IF NOT EXISTS contract_version  text NOT NULL DEFAULT 'v1';
+
 -- Seed: Cobb County as Adapter #1
 INSERT INTO public.school_systems
   (system_key, display_name, adapter_module, auth_flow, credential_fields, grade_scale_default, term_structure, sync_cadence, notes)
@@ -30,6 +51,22 @@ VALUES
    'semesters', 'daily',
    'Adapter #1. StudentVUE via laptop worker (Conditional Access blocks sandbox); ParentVUE via parent cron.')
 ON CONFLICT (system_key) DO NOTHING;
+
+-- FIX 2026-10-11 R2 (integration-expert H9, H3, M1): fuller credential_fields
+-- spec {key,label,type,secret,required,placeholder?,options?,order} on the
+-- Cobb seed row, plus its known auth_requirements (Cobb Conditional Access
+-- blocks non-approved devices — the Portals UI must warn BEFORE a parent
+-- saves credentials) and capabilities (the four Adapter #1 contract
+-- methods). UPDATE (not just the INSERT above) so re-runs of this migration
+-- backfill the fuller spec on projects seeded by the older row shape.
+UPDATE public.school_systems
+SET credential_fields =
+      '[{"key":"studentvue_username","label":"StudentVUE username","type":"text","secret":false,"required":true,"placeholder":"e.g. jdoe27","order":1},{"key":"studentvue_password","label":"StudentVUE password","type":"password","secret":true,"required":true,"order":2},{"key":"parentvue_username","label":"ParentVUE username (optional)","type":"text","secret":false,"required":false,"placeholder":"Optional - one ParentVUE login covers all children","order":3},{"key":"parentvue_password","label":"ParentVUE password (optional)","type":"password","secret":true,"required":false,"order":4}]'::jsonb,
+    auth_requirements =
+      '{"approved_device_required":true,"notes":"Cobb Conditional Access blocks automated and sandbox logins (error 53003). StudentVUE sync must run on an approved device/profile via the parent laptop worker; ParentVUE via the parent cron."}'::jsonb,
+    capabilities =
+      '{"get_grades":true,"get_assignments":true,"get_attendance":true,"get_messages":true}'::jsonb
+WHERE system_key = 'cobb-county-ga';
 
 -- ---------------------------------------------------------------------------
 -- classes: replaces class-schedule.json + grade-weights.json (per child)

@@ -1,15 +1,19 @@
 "use client";
 
 import { useTenant } from "@/components/tenant-provider";
+import { PookieOrb } from "@/components/pookie-orb";
 
 export function DashboardGreeting() {
   const { activeChild } = useTenant();
   const name = activeChild?.nickname ?? activeChild?.first_name ?? "there";
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
-      <p className="animate-bloom text-sm font-medium tracking-[0.2em] text-leaf-400 uppercase">
-        Today&apos;s garden
-      </p>
+      <div className="animate-bloom flex items-center gap-4">
+        <PookieOrb size={52} />
+        <p className="text-sm font-medium tracking-[0.2em] text-leaf-400 uppercase">
+          Today&apos;s garden
+        </p>
+      </div>
       <h1 className="text-sunlit animate-bloom mt-3 text-3xl font-semibold tracking-tight">
         Here&apos;s how {name} is growing today.
       </h1>

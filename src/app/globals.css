@@ -37,6 +37,11 @@
   --color-sunlight-300: #fde68a;
   --color-sunlight-400: #fbbf24;
 
+  /* Halo — divine radiance, soft white-gold sacred light */
+  --color-halo-100: #fffbeb;
+  --color-halo-200: #fef9c3;
+  --color-halo-300: #fde68a;
+
   /* Bark — warm earth neutrals for body text */
   --color-bark-100: #e8f5ee;
   --color-bark-300: #b8d4c2;
@@ -47,12 +52,18 @@
   --shadow-glow-md: 0 0 28px rgb(74 222 128 / 0.32), 0 0 72px rgb(74 222 128 / 0.1);
   --shadow-sun-warm: 0 0 24px rgb(251 191 36 / 0.25);
 
+  /* Divine radiance — sacred light, warm and protective */
+  --shadow-halo-sm: 0 0 20px rgb(254 243 199 / 0.35), 0 0 60px rgb(251 191 36 / 0.15);
+  --shadow-halo-md: 0 0 32px rgb(254 243 199 / 0.5), 0 0 100px rgb(251 191 36 / 0.25);
+
   /* Organic motion */
   --animate-bloom: bloom 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-breathe: breathe 5s ease-in-out infinite;
   --animate-sway: sway 7s ease-in-out infinite;
   --animate-dapple: dapple 9s linear infinite;
   --animate-rise: rise 0.5s ease-out both;
+  --animate-halo-spin: halo-spin 24s linear infinite;
+  --animate-ascend: ascend 8s ease-in-out infinite;
 
   @keyframes bloom {
     from { opacity: 0; transform: translateY(14px) scale(0.98); }
@@ -73,6 +84,14 @@
   @keyframes rise {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes halo-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes ascend {
+    0%, 100% { transform: translateY(0); opacity: 0.7; }
+    50% { transform: translateY(-14px); opacity: 1; }
   }
 }
 
@@ -146,6 +165,59 @@ body {
   border-radius: 9999px;
   background: radial-gradient(circle, rgb(253 230 138 / 0.9), transparent 70%);
   animation: breathe 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Halo — divine radiance behind sacred moments */
+.halo {
+  position: relative;
+}
+.halo::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgb(254 243 199 / 0.28) 0%,
+    rgb(251 191 36 / 0.12) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Light rays — soft rotating divine rays, barely-there */
+.light-rays {
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(254 243 199 / 0.06) 12deg,
+    transparent 24deg,
+    transparent 48deg,
+    rgb(254 243 199 / 0.06) 60deg,
+    transparent 72deg,
+    transparent 120deg,
+    rgb(254 243 199 / 0.06) 132deg,
+    transparent 144deg,
+    transparent 200deg,
+    rgb(254 243 199 / 0.06) 212deg,
+    transparent 224deg,
+    transparent 280deg,
+    rgb(254 243 199 / 0.06) 292deg,
+    transparent 304deg
+  );
+  animation: halo-spin 24s linear infinite;
+  pointer-events: none;
+}
+
+/* Ascending light particles — gently rising, like prayers */
+.ascend-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(254 251 235 / 0.85), transparent 70%);
+  animation: ascend 8s ease-in-out infinite;
   pointer-events: none;
 }
 

@@ -30,6 +30,21 @@
 --   F5  `DROP POLICY IF EXISTS` before every CREATE POLICY (re-runnable
 --       migrations).
 --   F6  Added audit_log_actor_idx for per-actor disclosure queries.
+--
+-- ROUND-2 FIXES 2026-10-11 R2 (Database expert):
+--   R2-3 audit_log.detail secret-sink guard (SEC-001): BEFORE INSERT trigger
+--       rejecting rows whose detail top-level keys match secret-like
+--       patterns (password, passwd, secret, token, credential, private_key,
+--       api_key, otp — case-insensitive). The PLAN's own failure mode has
+--       workers "record a sanitized error" on portal-auth failure — the
+--       exact call site where a hurried implementation dumps an exception
+--       string or credential material into detail, which tenant members
+--       (child-role included) can then read. Convention is not enforcement;
+--       this trigger is. Fail-closed by design: a key like `token_count`
+--       also matches — rename such keys (e.g. `usage_tokens`) rather than
+--       weakening the guard. Top-level keys only; nested-object scanning is
+--       noted as future hardening. The exception string is a static literal
+--       (keeps the no-secret-in-errors invariant).
 
 -- ---------------------------------------------------------------------------
 -- consents: every authorization the parent grants, as an immutable ledger
@@ -112,6 +127,42 @@ ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS audit_log_tenant_read ON public.audit_log;
 CREATE POLICY audit_log_tenant_read ON public.audit_log
   FOR SELECT USING (child_id = ANY (public.current_child_ids()));
+
+-- ---------------------------------------------------------------------------
+-- FIX 2026-10-11 R2 (R2-3): reject secret-shaped keys in audit_log.detail.
+-- `detail` is caller-supplied jsonb readable by every tenant member, so it
+-- is a latent credential sink (SEC-001): one hurried worker dumping an
+-- exception string or password-adjacent field into detail exposes it to the
+-- child-role user. This trigger fails the INSERT (not the transaction's
+-- neighbors) when any TOP-LEVEL key matches the denylist, case-insensitive.
+-- It fires for every writer — audit_event() callers and service_role alike —
+-- because the hazard is the content, not the caller. Defense in depth: the
+-- normative ban lives in the appsec handbook; sanitization still belongs at
+-- the logging boundary in app code.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.audit_log_reject_secret_keys()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  v_key text;
+BEGIN
+  IF NEW.detail IS NOT NULL AND jsonb_typeof(NEW.detail) = 'object' THEN
+    FOR v_key IN SELECT jsonb_object_keys(NEW.detail) LOOP
+      IF v_key ~* 'password|passwd|secret|token|credential|private[_-]?key|api[_-]?key|otp' THEN
+        RAISE EXCEPTION 'audit_detail_secret_key_rejected';
+      END IF;
+    END LOOP;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS audit_log_detail_secret_guard ON public.audit_log;
+CREATE TRIGGER audit_log_detail_secret_guard
+  BEFORE INSERT ON public.audit_log
+  FOR EACH ROW EXECUTE FUNCTION public.audit_log_reject_secret_keys();
 
 -- ---------------------------------------------------------------------------
 -- FIX 2026-10-11 (F2): explicit GRANTs — RLS policies alone grant nothing.

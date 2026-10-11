@@ -5,6 +5,39 @@ Rule: append entries newest-first. Keep it tight: what changed, what's blocked, 
 
 ---
 
+## 2026-10-11 — Senior Full-Stack Developer
+
+**Foundation built + design language applied:**
+
+**Removed (scaffold dead weight):**
+- `public/file.svg`, `public/globe.svg`, `public/next.svg`, `public/vercel.svg`, `public/window.svg` — template SVGs, unused
+- Replaced `src/app/page.tsx` template hero entirely (now the tenant router)
+- Stripped `src/app/globals.css` template theme down to the Pookie token system
+
+**Built:**
+- Supabase singleton clients: `src/lib/supabase/client.ts` (browser, module singleton — never per-call), `server.ts`, `middleware.ts`; root `middleware.ts` refreshes sessions
+- Tenant layer: `src/lib/tenant/types.ts`, `actions.ts` (getMemberships, setActiveChild via HttpOnly cookie, consumeInvite via rpc, signOut), `src/components/tenant-provider.tsx` (React context)
+- Routes: `/` (tenant router: 0→login, 1→direct, N→switcher), `/login` (OTP magic-link + landing), `/auth/callback`, `/select-child` (parents only), `/c/[childSlug]` (slug-routed dashboard shell + skeleton)
+- `src/components/pookie-orb.tsx` — Pookie as a ball of light: breathing golden-green orb, halo, slow-turning light rays
+
+**Design tokens (nature + divine light) — `src/app/globals.css`, Tailwind v4 `@theme`:**
+- Canopy (bg): `canopy-950 #060f0a` → `canopy-700 #173322`
+- Leaf (brand): `leaf-300 #86efac` → `leaf-700 #15803d`
+- Moss (soft): `moss-200 #bbf7d0`, `moss-300 #86efac`
+- Dew (highlights): `dew-100 #ecfdf5`, `dew-200 #d1fae5`
+- Sunlight (warm gold): `sunlight-200 #fef3c7` → `sunlight-400 #fbbf24`
+- Halo (divine): `halo-100 #fffbeb` → `halo-300 #fde68a`
+- Bark (text): `bark-100 #e8f5ee`, `bark-300 #b8d4c2`, `bark-500 #7d9b88`
+- Shadows: `shadow-glow-sm/md`, `shadow-sun-warm`, `shadow-halo-sm/md`
+- Motion: `animate-bloom`, `animate-breathe`, `animate-sway`, `animate-dapple`, `animate-rise`, `animate-halo-spin`, `animate-ascend` — all disabled under `prefers-reduced-motion`
+- Utilities: `.text-sunlit`, `.btn-dapple`, `.card-living`, `.input-rooted`, `.halo`, `.light-rays`, `.firefly`, `.ascend-particle`
+
+**Build:** `npm run build` green. Note: installed missing `superjson` etc. from package.json (arch pod added deps without installing). Next.js 16 note: tenant routes use `export const instant = false` (the `dynamic` export is incompatible with cacheComponents).
+
+**Blocked on:** Supabase migrations still under audit (did not touch `supabase/migrations/`); auth flow untested until migrations land.
+
+---
+
 ## 2026-10-11 — DevOps Manager
 
 **Pipeline live (this commit):**

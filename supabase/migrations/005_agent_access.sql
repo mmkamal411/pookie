@@ -47,6 +47,25 @@
 --       agent_reader` in the ETL migration, or agent reads of those tables
 --       fail with permission-denied. RLS on those tables will scope the agent
 --       automatically via the 001 fix — no per-table agent policies needed.
+--
+-- ROUND-2 FIXES 2026-10-11 R2 (Database expert):
+--   R2-1 AGENT DESIGN RECONCILIATION — DECISION: KEEP 001's agent-aware
+--       current_child_ids() (JWT job_id claim -> agent_tenant_scope); the
+--       backend reviewer's session-scoped agent_child_ids() + per-policy
+--       concat rewrite is NOT adopted. Rationale: (a) Supabase PostgREST
+--       runs behind pgBouncer in transaction-pooling mode, so SET LOCAL /
+--       session GUCs cannot be delivered to the RLS path over HTTP — the
+--       JWT claim (verified by PostgREST on every request) is the only
+--       workable carrier; (b) the CASE branch inside the single funnel
+--       helper needs zero policy rewrites across 001/002/003/004/ETL, and
+--       every future `child_id = ANY (current_child_ids())` policy inherits
+--       the agent boundary automatically; (c) the claim is service-minted
+--       with the project JWT secret — the agent cannot widen its own scope,
+--       and a missing/expired scope fails closed to '{}'. The agent read
+--       path is end-to-end functional: scope row (service_role) -> mint
+--       short-lived JWT {role:'agent_reader', job_id, sub, exp} -> agent
+--       PostgREST/RPC -> RLS scopes every granted table to the job's child.
+--       Full rationale in docs/audit-findings/database-expert.md §R2.
 
 -- Dedicated role (no login; used via service-role-issued scoped JWTs or SET ROLE)
 DO $$

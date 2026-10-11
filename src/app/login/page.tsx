@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PookieOrb } from "@/components/pookie-orb";
 
 /**
  * Landing + auth. First thing a family sees: warmth, not a form.
@@ -82,10 +83,8 @@ export default function LoginPage({
         {/* Auth card — the doorway */}
         <section className="animate-bloom" style={{ animationDelay: "0.2s" }}>
           <div className="card-living mx-auto w-full max-w-sm rounded-3xl p-8">
-            <div className="animate-breathe mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-leaf-500/15 shadow-glow-md">
-              <span className="text-3xl" role="img" aria-label="seedling">
-                🌱
-              </span>
+            <div className="mx-auto flex w-fit">
+              <PookieOrb size={72} />
             </div>
             <h2 className="mt-5 text-center text-xl font-semibold text-dew-100">
               Come on in
@@ -145,11 +144,18 @@ function Fireflies() {
     { left: "30%", top: "45%", size: 5, delay: "2.4s" },
     { left: "55%", top: "55%", size: 9, delay: "1s" },
   ];
+  const ascenders = [
+    { left: "12%", top: "60%", size: 6, delay: "0s" },
+    { left: "35%", top: "75%", size: 8, delay: "2.5s" },
+    { left: "58%", top: "65%", size: 5, delay: "1.2s" },
+    { left: "72%", top: "70%", size: 7, delay: "4s" },
+    { left: "88%", top: "55%", size: 6, delay: "3s" },
+  ];
   return (
     <div className="absolute inset-0" aria-hidden="true">
       {dots.map((d, i) => (
         <span
-          key={i}
+          key={`f-${i}`}
           className="firefly"
           style={{
             left: d.left,
@@ -160,12 +166,25 @@ function Fireflies() {
           }}
         />
       ))}
-      {/* soft radial wash of dappled light */}
+      {ascenders.map((d, i) => (
+        <span
+          key={`a-${i}`}
+          className="ascend-particle"
+          style={{
+            left: d.left,
+            top: d.top,
+            width: d.size,
+            height: d.size,
+            animationDelay: d.delay,
+          }}
+        />
+      ))}
+      {/* divine light wash — dappled sunlight + heavenly radiance from above */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 70% 20%, rgb(74 222 128 / 0.08), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgb(251 191 36 / 0.05), transparent 60%)",
+            "radial-gradient(ellipse 90% 55% at 50% -10%, rgb(254 243 199 / 0.1), transparent 60%), radial-gradient(ellipse 80% 60% at 70% 20%, rgb(74 222 128 / 0.08), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgb(251 191 36 / 0.05), transparent 60%)",
         }}
       />
     </div>

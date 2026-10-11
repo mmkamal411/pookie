@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS public.child_portals (
   status           text NOT NULL DEFAULT 'unverified'
                      CHECK (status IN ('unverified','verified','failed')),
   last_verified_at timestamptz,
+  -- FIX 2026-10-11 R2 (integration-expert H6/H7): PLAN §4.8 failure-mode
+  -- schema backing.
+  consecutive_failures   int NOT NULL DEFAULT 0,      -- worker-owned auth-failure counter
+  credentials_updated_at timestamptz NOT NULL DEFAULT now(),  -- bumped on every rotation
   created_at       timestamptz NOT NULL DEFAULT now(),
   UNIQUE (child_id, portal_key),
   -- A parent-level (NULL child_id) row MUST record which family's parent owns it.

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
 
+// Reads the session — always renders at request time.
+export const instant = false;
+
 /**
  * Child switcher — rendered ONLY for parent-role users with N memberships.
  * Child-role users never see this (root router sends them straight in).
