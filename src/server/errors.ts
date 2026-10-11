@@ -1,6 +1,5 @@
 // Canonical error-code registry. Codes are stable API — add, never rename.
 // Raw Postgres messages are NEVER returned to clients; map them here.
-import { TRPCError } from '@trpc/server';
 
 export const ErrorCodes = {
   TENANT_SCOPE_VIOLATION: 'TENANT_SCOPE_VIOLATION',
@@ -43,6 +42,24 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   INTERNAL: 500,
 };
 
+/**
+ * Error carrying a canonical API code. The REST wrapper maps this to the
+ * canonical envelope; the message IS the code (safe to log, never shown).
+ */
+export class ApiError extends Error {
+  readonly code: ErrorCode;
+  constructor(code: ErrorCode) {
+    super(code);
+    this.name = 'ApiError';
+    this.code = code;
+  }
+}
+
+/** Throw an ApiError for a canonical code. */
+export function failWith(code: ErrorCode): never {
+  throw new ApiError(code);
+}
+
 /** Map a Postgres / RPC exception to a canonical code. Logs the raw detail. */
 export function mapDbError(err: unknown, requestId: string): ErrorCode {
   const message = err instanceof Error ? err.message : String(err);
@@ -71,9 +88,4 @@ export function toApiError(code: ErrorCode, requestId: string, details?: Record<
 
 export function httpStatusFor(code: ErrorCode): number {
   return HTTP_STATUS[code];
-}
-
-/** Throw a tRPC error carrying a canonical code (client adapter normalizes to the envelope). */
-export function trpcError(code: ErrorCode, trpcCode: 'FORBIDDEN' | 'NOT_FOUND' | 'BAD_REQUEST' | 'CONFLICT' | 'TOO_MANY_REQUESTS' | 'INTERNAL_SERVER_ERROR' = 'INTERNAL_SERVER_ERROR'): never {
-  throw new TRPCError({ code: trpcCode, message: code });
 }

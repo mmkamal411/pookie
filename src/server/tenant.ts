@@ -5,7 +5,7 @@
 // A client-supplied child_id is a *selection*, never authorization.
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { ErrorCodes, trpcError } from './errors';
+import { ErrorCodes, failWith } from './errors';
 
 export const childIdSchema = z.string().uuid();
 
@@ -23,7 +23,7 @@ export async function resolveChildSlug(slug: string): Promise<string> {
     .select('id')
     .eq('slug', slug)
     .single();
-  if (error || !data) trpcError(ErrorCodes.NOT_FOUND, 'NOT_FOUND');
+  if (error || !data) failWith(ErrorCodes.NOT_FOUND);
   return (data as { id: string }).id;
 }
 
@@ -36,13 +36,13 @@ export async function assertTenant(childId: string): Promise<TenantContext> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) trpcError(ErrorCodes.TENANT_SCOPE_VIOLATION, 'FORBIDDEN');
+  if (!user) failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
 
   // Membership check via the security-definer helper (single source of truth).
   const { data: childIds, error } = await supabase.rpc('current_child_ids');
-  if (error) trpcError(ErrorCodes.INTERNAL);
+  if (error) failWith(ErrorCodes.INTERNAL);
   const ids = (childIds ?? []) as string[];
-  if (!ids.includes(childId)) trpcError(ErrorCodes.TENANT_SCOPE_VIOLATION, 'FORBIDDEN');
+  if (!ids.includes(childId)) failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
 
   const { data: access } = await supabase
     .from('child_access')
@@ -61,6 +61,6 @@ export async function assertTenant(childId: string): Promise<TenantContext> {
 /** Assert parent role within the tenant. */
 export async function assertParent(childId: string): Promise<TenantContext> {
   const ctx = await assertTenant(childId);
-  if (ctx.role !== 'parent') trpcError(ErrorCodes.PARENT_ROLE_REQUIRED, 'FORBIDDEN');
+  if (ctx.role !== 'parent') failWith(ErrorCodes.PARENT_ROLE_REQUIRED);
   return ctx;
 }

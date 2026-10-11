@@ -2,7 +2,7 @@
 // function here takes an explicit allowlist and asserts child_id membership
 // BEFORE querying. Never derive child_id from client input alone.
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { ErrorCodes } from './errors';
+import { failWith, ErrorCodes } from './errors';
 
 /**
  * Fetch a child row on behalf of a worker job.
@@ -10,7 +10,7 @@ import { ErrorCodes } from './errors';
  */
 export async function machineGetChild(jobChildAllowlist: string[], childId: string) {
   if (!jobChildAllowlist.includes(childId)) {
-    throw new Error(ErrorCodes.TENANT_SCOPE_VIOLATION);
+    failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
   }
   const { data, error } = await supabaseAdmin
     .from('children')

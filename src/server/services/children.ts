@@ -1,4 +1,4 @@
-// Framework-free business logic. Handlers (tRPC/REST/actions) are thin adapters:
+// Framework-free business logic. Handlers (REST/actions) are thin adapters:
 // validate → resolve tenant → call service → shape response. No framework imports here.
 import { createClient } from '@/lib/supabase/server';
 
