@@ -1,6 +1,14 @@
 import { cookies } from "next/headers";
 import type { TenantMembership } from "./tenant/types";
 import type { ClassDetail, SchoolOverview } from "./school/types";
+import {
+  buildPrep,
+  computeNeedsNudge,
+  computePrepDue,
+  type MinutiaeEvent,
+  type MinutiaeKind,
+  type MinutiaeOwner,
+} from "./school/minutiae";
 
 /**
  * Demo mode — lets the founder click through the full app without logging in.
@@ -49,18 +57,6 @@ export function getDemoMemberships(): TenantMembership[] {
       },
     },
   ];
-}
-
-export interface DemoClassGrade {
-  name: string;
-  grade: number;
-  letter: string;
-  note: string;
-}
-
-export interface DemoUpcomingItem {
-  title: string;
-  due: string;
 }
 
 /** Mock W1 school overview — reference dataset, clearly mock values. */
@@ -251,24 +247,137 @@ export function getDemoClassDetail(classSlug: string): ClassDetail | null {
   };
 }
 
-/** Mock dashboard data — realistic shape, clearly fake values. */
-export function getDemoDashboardData(): {
-  classes: DemoClassGrade[];
-  upcoming: DemoUpcomingItem[];
-} {
+
+/* ------------------------------------------------------------------ */
+/* W16 school minutiae — mock reference dataset (demo only).           */
+/* Dates are relative to "today" so the demo always feels alive.       */
+/* Shapes match the DBA's school_events table (010_w16_minutiae.sql). */
+/* ------------------------------------------------------------------ */
+
+function demoIsoPlus(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Days until the next given weekday (0=Sun … 6=Sat); 0 = today. */
+function daysUntilWeekday(target: number): number {
+  return (target - new Date().getDay() + 7) % 7;
+}
+
+interface DemoMinutiaeSeed {
+  kind: MinutiaeKind;
+  title: string;
+  detail?: string;
+  daysOut: number | null; // null = TBD
+  owner: MinutiaeOwner;
+  ack?: boolean;
+}
+
+function seedMinutiaeEvent(i: number, s: DemoMinutiaeSeed): MinutiaeEvent {
+  const event_date = s.daysOut === null ? null : demoIsoPlus(s.daysOut);
+  const { prep_note, prep_deadline, reminder_at } = buildPrep(
+    s.kind,
+    s.title,
+    event_date,
+  );
+  const ack = s.ack ?? false;
   return {
-    classes: [
-      { name: "H Chinese III", grade: 97.1, letter: "A", note: "On track" },
-      { name: "Lit & Comp II", grade: 84.2, letter: "B", note: "+0.2 this week" },
-      { name: "American Gov", grade: 79.0, letter: "C", note: "+1.0 this week" },
-      { name: "AP CS Principles", grade: 80.2, letter: "B", note: "Steady" },
-      { name: "Env Science", grade: 79.0, letter: "C", note: "+2.0 this week" },
-      { name: "Geometry", grade: 69.5, letter: "F", note: "Needs attention" },
-    ],
-    upcoming: [
-      { title: "Geometry — Unit 4 quiz", due: "Tomorrow" },
-      { title: "Env Science — lab report", due: "Friday" },
-      { title: "Chinese III — vocab quiz", due: "Friday" },
-    ],
+    id: `00000000-0000-4000-8000-00000000d2${String(i).padStart(2, "0")}`,
+    child_id: DEMO_CHILD_ID,
+    kind: s.kind,
+    title: s.title,
+    detail: s.detail ?? null,
+    event_date,
+    prep_deadline,
+    reminder_at,
+    reminder_sent: false,
+    ack,
+    ack_at: ack ? new Date().toISOString() : null,
+    owner: s.owner,
+    source: "extractor",
+    status: ack ? "acknowledged" : "unacknowledged",
+    prep_note,
+    needs_nudge: computeNeedsNudge(ack, false, reminder_at),
+    prep_due: computePrepDue(ack, prep_deadline),
   };
+}
+
+/** Mock W16 calendar — realistic Walton HS minutiae for demo Dawson. */
+export function getDemoMinutiae(): MinutiaeEvent[] {
+  const seeds: DemoMinutiaeSeed[] = [
+    {
+      kind: "deadline",
+      title: "Permission slip due — Georgia Aquarium field trip (Env Science)",
+      detail:
+        "$28 + packed lunch. Bus leaves at 8:15 AM sharp from the bus loop.",
+      daysOut: 1,
+      owner: "parent",
+    },
+    {
+      kind: "deadline",
+      title: "Homecoming dance guest form due",
+      detail:
+        "Guest's school ID copy stapled to the form. Front office, not the teacher.",
+      daysOut: -1,
+      owner: "parent",
+    },
+    {
+      kind: "picture_day",
+      title: "Fall picture day — wear the good shirt",
+      detail: "Order forms went home in the Tuesday folder. Retakes Nov 12.",
+      daysOut: daysUntilWeekday(4),
+      owner: "parent",
+    },
+    {
+      kind: "early_release",
+      title: "Early release — teacher planning day",
+      detail: "Dismissal at 12:30 PM. Buses run the early routes.",
+      daysOut: daysUntilWeekday(5),
+      owner: "parent",
+    },
+    {
+      kind: "spirit_week",
+      title: "Homecoming spirit week",
+      detail:
+        "Pajama Day Mon · Decades Day Tue · Class Colors Wed · Jersey Day Thu · Green & Gold Fri",
+      daysOut: 3,
+      owner: "both",
+    },
+    {
+      kind: "other",
+      title: "Fall book fair — media center",
+      detail: "Open during lunch and after school until 4 PM.",
+      daysOut: 6,
+      owner: "child",
+    },
+    {
+      kind: "fundraiser",
+      title: "Band cookie-dough fundraiser — order forms due",
+      detail: "Goal: 10 tubs. Top seller gets the Braves tickets.",
+      daysOut: 8,
+      owner: "both",
+    },
+    {
+      kind: "field_trip",
+      title: "Chattahoochee Nature Center — Env Science",
+      detail: "Went last week. Photos in the Tuesday folder.",
+      daysOut: -5,
+      owner: "parent",
+      ack: true,
+    },
+    {
+      kind: "deadline",
+      title: "Library book return — “The Midnight Library”",
+      detail: "Media center drop box is fine.",
+      daysOut: 2,
+      owner: "child",
+      ack: true,
+    },
+  ];
+  return seeds
+    .map((s, i) => seedMinutiaeEvent(i, s))
+    .sort((a, b) =>
+      (a.event_date ?? "9999").localeCompare(b.event_date ?? "9999"),
+    );
 }

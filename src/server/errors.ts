@@ -9,6 +9,7 @@ export const ErrorCodes = {
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
+  CONSENT_REQUIRED: 'CONSENT_REQUIRED',
   RATE_LIMITED: 'RATE_LIMITED',
   UPSTREAM_UNAVAILABLE: 'UPSTREAM_UNAVAILABLE',
   INTERNAL: 'INTERNAL',
@@ -24,6 +25,7 @@ const HUMAN_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION_FAILED: 'The request was invalid.',
   NOT_FOUND: 'Not found.',
   CONFLICT: 'This already exists.',
+  CONSENT_REQUIRED: 'Explicit consent is required before using this service.',
   RATE_LIMITED: 'Too many requests. Please try again shortly.',
   UPSTREAM_UNAVAILABLE: 'A downstream service is unavailable. Please try again.',
   INTERNAL: 'Something went wrong. Please try again.',
@@ -37,6 +39,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   VALIDATION_FAILED: 400,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  CONSENT_REQUIRED: 403,
   RATE_LIMITED: 429,
   UPSTREAM_UNAVAILABLE: 502,
   INTERNAL: 500,
@@ -70,6 +73,12 @@ export function mapDbError(err: unknown, requestId: string): ErrorCode {
   if (message.includes('tenant_membership_required')) return ErrorCodes.TENANT_SCOPE_VIOLATION;
   if (message.includes('parent_membership_required')) return ErrorCodes.PARENT_ROLE_REQUIRED;
   if (message.includes('agent_scope_violation')) return ErrorCodes.TENANT_SCOPE_VIOLATION;
+  // W22/W23 health + nutrition RPC exceptions (raw strings never reach clients).
+  if (message.includes('override_reason_too_short')) return ErrorCodes.VALIDATION_FAILED;
+  if (message.includes('override_not_applicable') || message.includes('override_needs_dob'))
+    return ErrorCodes.VALIDATION_FAILED;
+  if (message.includes('unknown_metric') || message.includes('unknown_subject'))
+    return ErrorCodes.VALIDATION_FAILED;
   if (/duplicate key|unique constraint/i.test(message)) return ErrorCodes.CONFLICT;
   return ErrorCodes.INTERNAL;
 }
