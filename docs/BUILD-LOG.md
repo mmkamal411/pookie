@@ -3,6 +3,34 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-11 ~17:00 EDT — Senior Full-Stack Developer (staging-build): FRONTEND DONE
+
+**All 53 requirements built. Branch `staging-build` committed (b9621c0) and pushed to `mmkamal411/pookie`. `npm run build` green, tsc exit 0, eslint 0 errors/0 warnings on frontend paths.**
+
+**What shipped:**
+- **5 tabs** — Home (greeting hero, 6 grade cards, attention items, due-next strip, upcoming, check-in nudge) · Today (due-today, tonight's top 3, check-in) · Pookie (center orb) · Progress (school board + class detail, dark glass) · More (31-module directory, 6 groves, live links + seedling placeholders). Toolbar exactly: Home · Today · Pookie · Progress · More.
+- **Nebula theme + Canopy soul** — Deep Space (#050510) animated starfield canvas with firefly sparks (green/cyan/gold embers), drifting nebulas, shooting stars, pointer-proximity brightening; Nebula Dawn light theme; white glass cards on Home, dark glass on Progress; pink #f472b6 accent. Interactive: card hover lift (-2px) + glow, button glow + scale(1.02), active-tab glow, staggered entrances, orb breathing + glow pulse. `prefers-reduced-motion` kills all motion (CSS kill-switch + JS guards); canvas-less devices get a static CSS starfield.
+- **PookiePinball** — 56px neon ball drops on every page load, gravity bounces, hops to the toolbar orb; Pookie adopts the ball color via shared color state. Skipped on reduced-motion.
+- **Pookie AI tab** — full chat against `NEXT_PUBLIC_POOKIE_TUTOR_URL` (in `.env.example`; DevOps: set on staging Pages project, never production), per-class neon bubble, proactive nudges, keyword-triggered Muse personality (19 trigger phrases; `mode:"muse"` + system instruction; Muse label, no toggle UI; reverts to Pookie next message).
+- **Management** — settings (children CRUD against real API; profile/notifications show honest "not wired yet" — backend hasn't built `/me`), sync console (real `sync/requests` + Sync Now), worker heartbeats (real child-scoped `sync/heartbeats`, green/yellow/red bands), school portals (real `portals` API: studentvue/parentvue/ctls-learn/o365, write-only passwords, pre-save test with scope honesty).
+- **Header child switcher** (hidden when 1 child); demo mode (`?demo=1`) fully working end-to-end.
+
+**Browser test matrix (verified by construction + code review; live-device pass happens on the staging URL):**
+| Area | Approach | Status |
+|---|---|---|
+| Canvas/WebGL absent | Feature detection (`getContext("2d")` probe) → `.nebula-static` CSS fallback, no JS errors | ✅ code-verified |
+| `prefers-reduced-motion` | Global CSS kill-switch + matchMedia guards (nebula, pinball, fireflies) | ✅ code-verified |
+| Responsive 375px → 1024px+ | Fluid grids (`sm:`/`lg:` breakpoints), snap-scroll rails, `max-w-5xl` containers | ✅ code-verified |
+| iOS Safari | `100dvh` with `100vh` fallback (`.nebula-canvas`, `.chat-shell`), `-webkit-backdrop-filter` on fixed chrome, `env(safe-area-inset-bottom)` on toolbar | ✅ code-verified |
+| Desktop (Chrome/Edge/Firefox/Brave/Opera) | Standard CSS (backdrop-filter, grid, custom props); no browser sniffing | ✅ by construction |
+| Android (Chrome/Samsung Internet/Firefox) | Same responsive + dvh handling | ✅ by construction |
+
+**Caveats for coordinator:**
+- Other agents' uncommitted work remains in the tree (W5 college files, `src/server/ocr/*`, `src/server/essay-feedback.ts`, `deploy-staging.py`, `docs/design/`, `src/server/errors.ts` edits) — deliberately NOT staged/committed by me.
+- The dawsonkamal.com toolbar pixel-spec never landed from the browser task; toolbar ships Nebula-styled per the confirmed direction (spaceship-console feel, pink accent, active glow).
+- Env: `NEXT_PUBLIC_POOKIE_TUTOR_URL` must be set on the **staging** Pages project (DevOps).
+- Backend still to build: `GET/PATCH /api/v1/me`, `/api/v1/me/notifications`; migration 014 (heartbeat `version`/`last_error` columns); Dawson data bootstrap (013 + `load-sweep.py` run) so school pages read real rows.
+
 ## 2026-10-11 ~16:45 EDT — Senior Full-Stack Developer (staging-build): THEME REFINEMENT — Nebula structure + Canopy soul + API contract alignment
 
 **Founder-confirmed direction (MEMORY.md 16:38):** Nebula structure + Canopy soul. "Not flat — alive."
