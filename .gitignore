@@ -46,3 +46,4 @@ next-env.d.ts
 /.pages-deploy/
 /.preview-static/
 /.wrangler/
+__pycache__/
