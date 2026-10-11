@@ -1,0 +1,49 @@
+name: Deploy staging
+
+# Staging auto-deploys on every push to main (after CI passes).
+# Production NEVER auto-deploys — see deploy-production.yml (manual only).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci-gate:
+    name: CI gate
+    uses: ./.github/workflows/ci.yml
+
+  deploy-staging:
+    name: Deploy to pookie-staging
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (staging)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
+          NEXT_PUBLIC_ASSET_VERSION: ${{ github.sha }}
+
+      - name: Deploy to Cloudflare Pages (pookie-staging)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Account ID is not sensitive (matches deploy scripts in d-dash-app).
+          accountId: 91264b3fa69afffd6ffe57bdb3c545a8
+          command: pages deploy ./out --project-name=pookie-staging --branch=main
+
+      - name: Verify single asset version (?v= check)
+        run: bash scripts/verify-asset-version.sh https://pookie-staging.pages.dev

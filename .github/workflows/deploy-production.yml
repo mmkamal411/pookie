@@ -1,0 +1,48 @@
+name: Deploy production
+
+# Production deploys ONLY via manual trigger.
+# Founder's standing rule: staging first, Mehedi verifies, then production
+# with his explicit go-ahead. Triggering this workflow IS the go-ahead.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type VERIFIED to confirm staging was verified'
+        required: true
+
+jobs:
+  deploy-production:
+    name: Deploy to pookie (production)
+    if: github.event.inputs.confirm == 'VERIFIED'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (production)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
+          NEXT_PUBLIC_ASSET_VERSION: ${{ github.sha }}
+
+      - name: Deploy to Cloudflare Pages (pookie)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Account ID is not sensitive (matches deploy scripts in d-dash-app).
+          accountId: 91264b3fa69afffd6ffe57bdb3c545a8
+          command: pages deploy ./out --project-name=pookie --branch=main
+
+      - name: Verify single asset version (?v= check)
+        run: bash scripts/verify-asset-version.sh https://pookie.pages.dev
