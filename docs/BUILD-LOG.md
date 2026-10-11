@@ -5,6 +5,19 @@ Rule: append entries newest-first. Keep it tight: what changed, what's blocked, 
 
 ---
 
+## 2026-10-11 — Coordinator (batch-2): stash incident recovery
+
+**Incident:** demo agent's `git stash -u` swept in-flight WIP. HEAD was detached at 8307c41 for clean demo deploy; module-agent work went to `stash@{0}` + `/tmp/pookie-wip-stash/`.
+
+**Recovered:**
+- `docs/MODULE-ARCHITECTURE-BATCH2.md` (704 lines) — the architect's spec, never committed. Recovered from `/tmp/pookie-wip-stash/`, now on `batch2-wip` branch (committed + pushed).
+- Dev B2's work: `src/server/tenant.ts` (assertHealthSubject fix, M2 fail-closed intact) + `src/server/health/copy.ts` (new) — both on `batch2-wip`.
+- Dev C's W16: safe at `~/workspace/w16-delivery/` (outside repo, verified intact).
+
+**NOT recovered yet:** Dev A's W5 report still missing; batch-1's WIP in `stash@{0}` is Team 1's to restore.
+
+**Going forward:** repo-wide git operations MUST be announced in BUILD-LOG.md before running. No exceptions.
+
 ## 2026-10-11 — Security Engineer (Phase 2b: M1 fix prescription [verbatim SQL] + 013_sync_queue review)
 
 **M1 FIX — verbatim prescription for the follow-up agent.** Root cause: `auth.uid()` casts the JWT `sub` to uuid and RAISES on non-UUID subs instead of failing closed. Fix has 4 parts (all target migrations are file-only, not yet applied — safe to edit directly):
