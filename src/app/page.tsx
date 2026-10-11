@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getDemoMemberships, isDemoRequest } from "@/lib/demo";
 import {
   consumeInvite,
   getActiveChildId,
@@ -28,6 +29,14 @@ export default async function Home({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Demo mode: no session needed — walk straight into the demo child.
+  if (!user && (await isDemoRequest())) {
+    const [demo] = getDemoMemberships();
+    await setActiveChild(demo.child_id);
+    redirect(`/c/${demo.child.slug}`);
+  }
+
   if (!user) redirect("/login");
 
   const params = await searchParams;

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getDemoMemberships, isDemoRequest } from "@/lib/demo";
 import {
   ACTIVE_CHILD_COOKIE,
   type TenantMembership,
@@ -12,8 +13,13 @@ import {
 /**
  * The logged-in user's tenant memberships, resolved from child_access.
  * This is the single source of truth for "which children can this user see".
+ *
+ * Demo mode short-circuits to mock memberships — the RLS flow below is
+ * untouched and runs exactly as before on every non-demo deploy.
  */
 export async function getMemberships(): Promise<TenantMembership[]> {
+  if (await isDemoRequest()) return getDemoMemberships();
+
   const supabase = await createClient();
   const {
     data: { user },

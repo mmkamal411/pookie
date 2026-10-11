@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PookieOrb } from "@/components/pookie-orb";
 
@@ -12,25 +12,31 @@ import { PookieOrb } from "@/components/pookie-orb";
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string }>;
+  searchParams: Promise<{ token?: string; error?: string; demo?: string }>;
 }) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Demo entry — deploy-gated via public env var, link-gated via ?demo=1.
+  // searchParams unwrapped with use(): available on server and client, no hydration risk.
+  const params = use(searchParams);
+  const demoAvail =
+    process.env.NEXT_PUBLIC_DEMO_MODE === "1" && params.demo === "1";
+
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      const params = await searchParams;
+      const sp = await searchParams;
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback${
-            params.token ? `?next=/?invite=${params.token}` : ""
+            sp.token ? `?next=/?invite=${sp.token}` : ""
           }`,
         },
       });
@@ -117,6 +123,14 @@ export default function LoginPage({
                   {busy ? "Sending…" : "Send magic link"}
                 </button>
               </form>
+            )}
+            {demoAvail && (
+              <a
+                href="/demo"
+                className="animate-bloom mt-4 block rounded-2xl border border-sunlight-400/30 bg-sunlight-400/10 py-3 text-center text-sm font-semibold text-sunlight-200 shadow-sun-warm transition hover:bg-sunlight-400/20"
+              >
+                ✨ View demo — no login needed
+              </a>
             )}
           </div>
         </section>

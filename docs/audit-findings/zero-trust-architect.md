@@ -7,6 +7,160 @@
 
 ---
 
+## Round 2 (2026-10-11) — Director's fix list, all 8 items applied
+
+All edits are in `002_school_systems.sql` / `003_credential_vault.sql`, marked
+`-- FIX 2026-10-11 R2`. Both files re-parsed with pglast after editing
+(002: 29 statements OK; 003: 24 statements OK). Semantic checks: all four
+SECURITY DEFINER functions pin `SET search_path = public`; zero unqualified
+Vault references; no residual parent branch in `get_tenant_secret`.
+
+### R2-1 (CRITICAL) — plaintext-secret return to parents removed; `test_portal_connection` added
+- `get_tenant_secret()`: the `OR EXISTS (… role='parent' …)` caller branch is
+  **deleted**. The function is now service_role-only: the membership assertion
+  accepts the PostgREST `request.jwt.claims → role = 'service_role'` signal OR
+  `current_user = 'service_role'`. `GRANT EXECUTE` was narrowed from
+  `authenticated, service_role` to **`service_role` only** (defense in depth —
+  the assertion already raises for client roles, but the RPC is no longer even
+  invocable by them). This closes integration-expert C1, security-engineer
+  SEC-005, and solution-architect H4 in one move: no parent JWT can reach
+  decrypted portal passwords via PostgREST RPC, matching PLAN §4.8 ("only
+  service_role + credential-test Edge Function ever see the secret"; "The Edge
+  Function never returns the secret value").
+- New `test_portal_connection(p_child_id uuid, p_portal_key text) RETURNS
+  boolean` (SECURITY DEFINER, parent-only, `SET search_path = public`):
+  resolves the portal row with the *same family-scoped logic* as
+  `get_tenant_secret` (child row preferred, then the caller's family's
+  parent-level row; NULL `p_child_id` resolves only rows the caller owns —
+  `owner_user_id = auth.uid()` in the predicate), decrypts the secret
+  **server-side** to prove the Vault material is intact, and returns a boolean
+  — the secret never leaves the database. Documented scope honesty: this is a
+  credential-material integrity check, NOT a live portal login; the live login
+  belongs to the credential-test Edge Function (PLAN §4.8), which calls
+  `get_tenant_secret()` with the service_role key after its own parent check
+  and returns only `{ok, checked_at}`. Status is untouched (verification flips
+  belong to the future `mark_portal_verified`). Error strings stay static
+  literals. Non-members raise `parent_membership_required` (fail-closed); no
+  credential returns FALSE (idempotent UI behavior, no existence oracle beyond
+  what the parent already sees in `child_portals_public`).
+- Residual risk noted: none new — the parent JWT attack surface that existed
+  in R1 (two RPC calls → all portal passwords) is eliminated at the DB layer.
+
+### R2-2 — `current_user = 'service_role'` accept condition on direct SQL
+- `get_tenant_secret` now accepts `current_user = 'service_role'` alongside
+  the `request.jwt.claims` GUC check (integration-expert H1). The comment
+  documents both paths: PostgREST sets the GUC from the verified JWT
+  (REST/RPC); direct-SQL sessions (psql, psycopg/pgBouncer workers) have no
+  GUC, so the old check failed closed against *legitimate* workers.
+  `current_user` is set by Postgres from the authenticated connection role —
+  not forgeable by SQL text — and under PostgREST the session role already
+  equals the JWT role, so the RPC path stays sound. Workers should still
+  **prefer the PostgREST/RPC path**; direct SQL is a supported fallback.
+  (Not applied to `test_portal_connection`/`set_tenant_secret`/
+  `remove_tenant_secret`: those are parent-JWT flows where `auth.uid()` is
+  the correct authority.)
+
+### R2-3 — registry completeness (002)
+- `school_systems` gains `oauth_config`, `auth_requirements`,
+  `api_endpoints`, `rate_limits`, `capabilities` (jsonb, nullable) and
+  `contract_version text NOT NULL DEFAULT 'v1'` via
+  `ALTER TABLE … ADD COLUMN IF NOT EXISTS` (idempotent on re-run).
+- Cobb seed row's `credential_fields` upgraded to the fuller spec
+  `{key,label,type,secret,required,placeholder?,order}` (integration-expert
+  H9), plus its known `auth_requirements` (Cobb Conditional Access warning —
+  the Portals UI must warn BEFORE a parent saves credentials) and
+  `capabilities` (`get_grades/get_assignments/get_attendance/get_messages`
+  all true — the four Adapter #1 contract methods). Applied as an UPDATE
+  guarded on `system_key`, so re-runs backfill projects seeded by the older
+  row shape. `oauth_config`/`api_endpoints`/`rate_limits` intentionally left
+  NULL for Cobb: unknown or per-district — invented values would be worse.
+  M2 note: workers must fail closed on unknown contract majors (worker-side
+  rule, documented in the column comment).
+
+### R2-4 — failure-mode schema (003)
+- `child_portals` gains `consecutive_failures int NOT NULL DEFAULT 0` and
+  `credentials_updated_at timestamptz NOT NULL DEFAULT now()` (in the CREATE
+  TABLE plus an idempotent ALTER backfill). `set_tenant_secret()` bumps
+  `credentials_updated_at = now()` on every rotation (both upsert branches)
+  so long jobs can detect mid-job staleness.
+- Claim-pausing documented as an **enforcement contract** in the migration:
+  the worker owns the counter (increment on sanitized auth failure, reset on
+  success); after N failures the worker pauses claims and the app nudges the
+  parent with a Portals deep link. The DB records; it does not gate. `status`
+  stays `('unverified','verified','failed')` — `'paused'` is intentionally
+  not a status value (pausing is a worker claim decision, not row state).
+- Both columns are portal *metadata* (never secrets): added to
+  `child_portals_public` and to the base-table column GRANT so the Portals UI
+  can render the failure/nudge UX. `vault_secret_id` remains granted to no
+  client role.
+
+### R2-5 — `remove_tenant_secret` RPC
+- New `remove_tenant_secret(p_child_id uuid, p_portal_key text) RETURNS
+  boolean` (SECURITY DEFINER, parent-only, `SET search_path = public`,
+  EXECUTE to `authenticated, service_role`, revoked from PUBLIC). Same
+  end-user-JWT contract note as `set_tenant_secret`.
+- **Decision (documented in the migration): the metadata row is DELETED, not
+  kept with `status='unverified'.** A kept row would render a phantom portal
+  card ("unverified" with no credential behind it) and reintroduce the
+  NULL-row bookkeeping the partial unique index was built to avoid. The Vault
+  secret is truly deleted — closing security-engineer SEC-010 (compromised-
+  secret response requires deletion, not overwrite).
+- Implementation note: `vault.delete_secret()` **does not exist** in the
+  supabase_vault extension (verified 2026-10-11: only `create_secret` /
+  `update_secret` are exposed; community docs confirm deletion is
+  `DELETE FROM vault.secrets` directly). The function deletes via
+  `DELETE FROM vault.secrets WHERE id = …` inside the definer (the caller
+  holds no vault privileges). Known residue documented: the secret's
+  pgsodium key row is orphaned (operational housekeeping, not a security
+  issue). Returns FALSE when nothing matched (idempotent UI). Removal
+  audit-logging is the calling Edge Function's job — `audit_event` lives in
+  004, applied after this migration, so 003 stays self-contained.
+
+### R2-6 — agent portal-metadata grant: DECISION
+- **Decision: YES, the agent needs portal metadata** (status / username /
+  `consecutive_failures` — e.g. Pookie answering "is ParentVUE connected?",
+  briefing copy saying "sync paused, ask a parent to re-enter the password"),
+  **never secrets** — and the secret-less view already guarantees that
+  (`vault_secret_id` is not in the select list and is granted to no client
+  role).
+- The grant already exists in 005 (`GRANT SELECT ON
+  child_portals_public TO agent_reader`) and is documented there as
+  currently INERT — I did not add a grant in 002/003 and did not touch 005
+  (read-only this round). The grant becomes live only through the
+  agent-aware RLS scope bridge (solution-architect H3 / security-engineer
+  SEC-008), which does not exist yet; today `agent_reader` has no
+  `auth.uid()`, so the view's RLS policy returns zero rows for it. **Do NOT
+  remove the 005 grant** (removal would just require re-adding it when the
+  bridge ships); **do NOT add any wider grant** (no Vault, no base table).
+  The bridge migration must include the negative test: expired scope row ⇒
+  denied. Documented in 003 next to the view.
+
+### R2-7 — search_path hygiene
+- `vault` removed from `SET search_path` in `get_tenant_secret` and
+  `set_tenant_secret`; both new functions use `SET search_path = public`.
+  Verified by grep: every Vault reference is schema-qualified
+  (`vault.secrets`, `vault.decrypted_secrets`, `vault.create_secret`,
+  `vault.update_secret`, `DELETE FROM vault.secrets`) — zero bare
+  references. Pinned `search_path` on all SECURITY DEFINER functions also
+  blocks search_path hijacking (defense in depth, not just hygiene).
+
+### R2-8 — verification
+- pglast parse: 002 → 29 statements OK; 003 → 24 statements OK.
+- Grep checks: 4/4 definer functions `SET search_path = public`; no
+  unqualified vault refs; no residual parent caller branch in
+  `get_tenant_secret` (the remaining `child_access … role='parent'` match is
+  the *worker-side* family-scoping predicate for the parent-level fallback
+  row — row resolution, not caller authorization — and is intended).
+- Still needs a live project (carried over from R1 checklist, extended):
+  negative tests for `test_portal_connection` (non-member raises;
+  cross-family NULL-row test returns FALSE, not the other family's row);
+  `remove_tenant_secret` deletes both row and `vault.secrets` entry;
+  `get_tenant_secret` via parent JWT raises; the partial-index
+  `ON CONFLICT (owner_user_id, portal_key) WHERE child_id IS NULL` inference
+  on a real Postgres.
+
+---
+
 ## 1. What I changed in my files (002, 003)
 
 ### 003_credential_vault.sql — 3 CRITICAL-class defects fixed
@@ -137,4 +291,25 @@ This is the **accepted residual** (PLAN §4.7 #1): it cannot be closed in SQL. M
 
 ---
 
-**Round-1 sign-off status:** my component (002, 003) fixes are written and internally reviewed. Final sign-off pending Round-2 consolidated fix list from cross-workstream reviewers — per the Director's instruction, Round 1 is not final.
+**Round-2 sign-off (2026-10-11):** all 8 Director-assigned R2 items are
+applied, marked `-- FIX 2026-10-11 R2`, and parse-verified (pglast: 002 = 29
+statements, 003 = 24 statements, zero errors). Semantic spot-checks pass
+(pinned `search_path = public` on all 4 definer functions, zero unqualified
+Vault references, no residual parent branch in `get_tenant_secret`).
+
+**Component verdict: 002 + 003 are SIGNED OFF at the migration-SQL level.**
+The R1 CRITICALs (view RLS bypass, NULL-row family scoping, secret-name
+collision, NULL trap) and the R2 CRITICAL (parent plaintext-secret return)
+are all closed in SQL. The highest remaining risks in my component are now
+*outside* these files: (a) the agent scope bridge (005/H3/SEC-008) must land
+before `agent_reader` reads anything real; (b) `mark_portal_verified` and
+the worker-side failure counter/claim-pausing (documented contracts, not yet
+implemented); (c) the credential-test and portal-credential-write Edge
+Functions must be audited before they ship (they are the only callers of
+`get_tenant_secret` and `set_tenant_secret`); (d) live-project negative
+tests from the R2-8 checklist must run on the provisioned `pookie` project.
+
+Round-1 sign-off status (superseded): my component (002, 003) fixes were
+written and internally reviewed. Final sign-off pending Round-2
+consolidated fix list from cross-workstream reviewers — per the Director's
+instruction, Round 1 is not final.

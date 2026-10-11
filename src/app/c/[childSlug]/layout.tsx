@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DemoBanner } from "@/components/demo-banner";
+import { isDemoRequest } from "@/lib/demo";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 
@@ -22,7 +24,8 @@ export default async function ChildDashboard({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Demo sessions have no Supabase user — memberships come from mock data.
+  if (!user && !(await isDemoRequest())) redirect("/login");
 
   const { childSlug } = await params;
   const memberships = await getMemberships();
@@ -32,11 +35,14 @@ export default async function ChildDashboard({
   await setActiveChild(membership.child_id);
 
   return (
-    <TenantProvider
-      memberships={memberships}
-      activeChildId={membership.child_id}
-    >
-      {children}
-    </TenantProvider>
+    <>
+      <DemoBanner />
+      <TenantProvider
+        memberships={memberships}
+        activeChildId={membership.child_id}
+      >
+        {children}
+      </TenantProvider>
+    </>
   );
 }
