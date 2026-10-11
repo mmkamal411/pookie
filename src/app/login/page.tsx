@@ -17,6 +17,7 @@ export default function LoginPage({
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Demo entry — deploy-gated via public env var, link-gated via ?demo=1.
@@ -24,6 +25,26 @@ export default function LoginPage({
   const params = use(searchParams);
   const demoAvail =
     process.env.NEXT_PUBLIC_DEMO_MODE === "1" && params.demo === "1";
+
+  // Surface auth failures redirected back from /auth/callback.
+  const authError = params.error === "auth";
+
+  async function signInWithGoogle() {
+    setOauthBusy(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) throw error;
+      // On success the browser leaves for Google's consent screen.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setOauthBusy(false);
+    }
+  }
 
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
@@ -96,8 +117,8 @@ export default function LoginPage({
               Come on in
             </h2>
             <p className="mt-1 text-center text-sm text-stardust-300">
-              Sign in with your email — we&apos;ll send a magic link. No
-              passwords, ever.
+              Sign in with Google or your email — we&apos;ll send a magic
+              link. No passwords, ever.
             </p>
 
             {sent ? (
@@ -105,24 +126,45 @@ export default function LoginPage({
                 Your link is fluttering toward your inbox — check your email.
               </p>
             ) : (
-              <form onSubmit={sendLink} className="mt-6 space-y-4">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="input-rooted w-full rounded-2xl px-4 py-3 text-sm"
-                />
-                {error && <p className="text-sm text-red-400">{error}</p>}
+              <div className="mt-6 space-y-4">
+                {authError && (
+                  <p className="rounded-2xl border border-red-400/25 bg-red-500/10 p-3 text-center text-sm text-red-300">
+                    Sign-in didn&apos;t finish — please try again.
+                  </p>
+                )}
                 <button
-                  type="submit"
-                  disabled={busy}
-                  className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950 disabled:opacity-50"
+                  type="button"
+                  onClick={signInWithGoogle}
+                  disabled={oauthBusy}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-3 text-sm font-semibold text-nebula-950 shadow-glow-sm transition hover:bg-stardust-200 disabled:opacity-50"
                 >
-                  {busy ? "Sending…" : "Send magic link"}
+                  <GoogleGlyph />
+                  {oauthBusy ? "Connecting…" : "Continue with Google"}
                 </button>
-              </form>
+                <div className="flex items-center gap-3" aria-hidden="true">
+                  <span className="h-px flex-1 bg-star-100/15" />
+                  <span className="text-xs text-stardust-400">or</span>
+                  <span className="h-px flex-1 bg-star-100/15" />
+                </div>
+                <form onSubmit={sendLink} className="space-y-4">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="input-rooted w-full rounded-2xl px-4 py-3 text-sm"
+                  />
+                  {error && <p className="text-sm text-red-400">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950 disabled:opacity-50"
+                  >
+                    {busy ? "Sending…" : "Send magic link"}
+                  </button>
+                </form>
+              </div>
             )}
             {demoAvail && (
               <a
@@ -139,8 +181,30 @@ export default function LoginPage({
   );
 }
 
-function LeafDot() {
+function GoogleGlyph() {
   return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"
+      />
+    </svg>
+  );
+}
+
+function LeafDot() {  return (
     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nova-500/15 shadow-glow-sm">
       <span className="h-2 w-2 rounded-full bg-nova-400" />
     </span>
