@@ -89,3 +89,6 @@ Node APIs).
   array under the `!inner` join) — minimal fix, build now passes `tsc --noEmit` + `eslint` clean.
   Frontend dev: yours to review.
 - `tsc --noEmit` ✅ · `eslint` ✅ on all touched paths.
+- Pushed to `mmkamal411/pookie` main (`44e3043`). **Blocker for DevOps:** the GitHub token
+  lacks `workflow` scope, so `.github/workflows/ci.yml` was rejected on push and is held
+  locally (untracked). CI workflow needs a token with workflow scope or manual upload.
