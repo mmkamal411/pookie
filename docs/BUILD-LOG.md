@@ -5,6 +5,59 @@ Rule: append entries newest-first. Keep it tight: what changed, what's blocked, 
 
 ---
 
+## 2026-10-11 — Security Engineer (Phase 2b: M1 fix prescription [verbatim SQL] + 009_sync_queue review)
+
+**M1 FIX — verbatim prescription for the follow-up agent.** Root cause: `auth.uid()` casts the JWT `sub` to uuid and RAISES on non-UUID subs instead of failing closed. Fix has 4 parts (all target migrations are file-only, not yet applied — safe to edit directly):
+
+**Part 1 — new `safe_auth_uid()` helper (insert into 006 BEFORE its `-- RLS:` block; CREATE POLICY validates expressions at creation time, so it must exist first):**
+```sql
+CREATE OR REPLACE FUNCTION public.safe_auth_uid()
+RETURNS uuid
+LANGUAGE plpgsql
+STABLE
+SET search_path = public
+AS $$
+DECLARE
+  v_sub text := (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub');
+BEGIN
+  IF v_sub IS NULL THEN
+    RETURN NULL;
+  END IF;
+  BEGIN
+    RETURN v_sub::uuid;
+  EXCEPTION WHEN invalid_text_representation THEN
+    RETURN NULL;
+  END;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.safe_auth_uid() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.safe_auth_uid() TO authenticated, service_role, agent_reader;
+```
+(NOT security definer — reads only the request JWT claims. NULL on missing claim or non-UUID sub → every predicate using it fails closed.)
+
+**Part 2 — swap the three `auth.uid()` call sites to `public.safe_auth_uid()`:**
+- 006 `study_plans_tenant_read`: `WHERE ca.user_id = auth.uid()` → `WHERE ca.user_id = public.safe_auth_uid()`
+- 007 `is_household_member`: `SELECT p_owner = auth.uid()` → `SELECT p_owner = public.safe_auth_uid()`
+- 008 `is_household_parent`: `ON ca.child_id = c.cid AND ca.user_id = auth.uid() AND ca.role = 'parent'` → `... AND ca.user_id = public.safe_auth_uid() AND ...`
+
+**Part 3 — missing EXECUTE grants for agent_reader (without these, every agent query on 007/008 tables dies with "permission denied for function" even after the UUID-sub fix — Postgres checks EXECUTE on policy-referenced functions as the caller, SECURITY DEFINER notwithstanding):**
+- 007: `GRANT EXECUTE ON FUNCTION public.household_owner_for_child(uuid) TO authenticated, service_role, agent_reader;`
+- 007: `GRANT EXECUTE ON FUNCTION public.is_household_member(uuid) TO authenticated, service_role, agent_reader;`
+- 008: `GRANT EXECUTE ON FUNCTION public.is_household_parent(uuid) TO authenticated, service_role, agent_reader;`
+(`current_child_ids()` keeps default PUBLIC execute — no change needed there.)
+
+**Part 4 — mint-time enforcement (005 AGENT JWT CONTRACT comment; the minter is backend code, not SQL):** replace `"sub": "muse-agent"` with `"sub": "<uuid>"` and append: `SUB MUST BE A UUID — e.g. a fixed per-deployment agent UUID or uuidv5(job_id). The old 'muse-agent' string sub is FORBIDDEN. Backend minters: UUID-parse the sub and refuse to mint otherwise (fail-closed at mint time).`
+**Negative tests for the follow-up:** (a) agent JWT, non-UUID sub, valid scope → shopping_items SELECT returns 0 rows, NO error; (b) UUID sub + valid scope → job's household rows; (c) UUID sub + expired scope → 0 rows; (d) agent JWT on `child_portals_public` → 0 rows, no error.
+
+**009 REVIEW (`009_sync_queue.sql` — the Python dev's file; NOTE the filename collides with the DBA's batch-2 `009_w5_college_prep.sql` — see coordination flag below):** CRITICAL 0 / HIGH 0. Tables `sync_jobs`, `sync_heartbeats`: RLS enabled, zero policies (deny-all, same as agent_tenant_scope) ✓; GRANT ALL only to service_role, no client grants ✓. All 6 RPCs (dev reported 7; file has 6: sync_request_job, sync_claim_job, sync_finish_job, sync_append_log, sync_heartbeat, sync_upsert_sweep): definer + pinned search_path + REVOKE ALL FROM PUBLIC + EXECUTE-to-service_role ✓. `sync_claim_job` double-claim verified SAFE: SELECT…FOR UPDATE SKIP LOCKED + UPDATE in one transaction — concurrent workers skip locked rows, committed rows filter on status='pending'. `sync_upsert_sweep` child-scoping verified: every class lookup filters `child_id = p_child_id`, every INSERT stamps `p_child_id`, dedupe check is child-scoped, NULL/unknown child raises; no dynamic SQL (no injection); only `direction='inbound'` rows inserted (worker cannot forge outbound drafts) ✓.
+**LOW (4):** 009-L1 — assignments upsert with NULL `source_id` never matches ON CONFLICT → duplicate rows per sync if the worker omits it (unbounded growth, due_next dupes); require source_id in the worker contract or raise in the RPC. 009-L2 — `sync_append_log` SELECT-then-UPDATE without FOR UPDATE → lost log lines under concurrent appends; add FOR UPDATE. 009-L3 — `sync_finish_job` accepts any job in any status (no `status='claimed'` check); a worker bug could complete a pending job and skip the sync; add the check. 009-L4 — `sync_upsert_sweep` casts (`::numeric`, `::timestamptz`) raise on malformed input → whole sweep rolls back (fail-closed, but one bad row kills the sync); add per-row validation or worker contract tests.
+**INFO (3):** stuck 'claimed' jobs have no timeout/reaper — dead worker wedges the child's queue (recommend `sync_reap_stale_claims()` or heartbeat watchdog); laptop workers hold service_role (trusted-worker model — track worker key hardening); the upcoming SYNC NOW route must assertTenant/assertParent before calling service_role `sync_request_job` and scope job-status reads to the asserted child_id (the RPC does no caller authz by design — will verify when routes land).
+**COORDINATION FLAG (for parent/DBA):** migration filename collision — `009_sync_queue.sql` (Python dev, committed 74ed356) vs `009_w5_college_prep.sql` (DBA batch-2, committed aefd4b2); same for 010/011/012 (`010_school_minutiae.sql`+`010_w16_minutiae.sql`, `011_health_tracker.sql`+`011_w22_health_tracker.sql`, `012_nutrition_tracker.sql`+`012_w23_nutrition.sql` — the non-w-prefixed ones are untracked). Duplicate version numbers will break Supabase migration ordering/history. Needs a DBA renumber before anything is applied.
+**Next:** reviewing builders' API routes (W20 routes already delivered per the log — picking those up on notify).
+
+---
+
 ## 2026-10-11 — SQL DBA: migrations 009–012 (W5/W16/W22/W23) DELIVERED
 
 **Delivered (files only — NOT applied to any live DB):** `supabase/migrations/009_w5_college_prep.sql`, `010_w16_minutiae.sql`, `011_w22_health_tracker.sql`, `012_w23_nutrition.sql` — committed + pushed to mmkamal411/pookie main.
