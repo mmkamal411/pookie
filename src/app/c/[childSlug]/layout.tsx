@@ -4,7 +4,7 @@ import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 
 // Tenant-scoped route — always renders at request time.
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 /**
  * Child dashboard shell — slug-routed tenant context from day one.

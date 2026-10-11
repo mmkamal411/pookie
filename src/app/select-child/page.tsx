@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
 
 // Reads the session — always renders at request time.
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 /**
  * Child switcher — rendered ONLY for parent-role users with N memberships.

@@ -8,7 +8,7 @@ import {
 } from "@/lib/tenant/actions";
 
 // Tenant resolution reads the session cookie — this route always blocks.
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 /**
  * Root router — resolves login email → tenant per the plan (§4.1):
