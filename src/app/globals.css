@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   POOKIE DESIGN LANGUAGE — nature and love.
+   A living, breathing feel: sunlight through leaves, not a tech dashboard.
+   Organic growth, warmth, care — nature embracing the child.
+   Tokens defined once here, reused on every surface. No exceptions.
+   ========================================================================== */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Canopy — deep forest backgrounds (night forest) */
+  --color-canopy-950: #060f0a;
+  --color-canopy-900: #0a1a10;
+  --color-canopy-800: #10241a;
+  --color-canopy-700: #173322;
+
+  /* Leaf — living greens (primary brand) */
+  --color-leaf-300: #86efac;
+  --color-leaf-400: #4ade80;
+  --color-leaf-500: #22c55e;
+  --color-leaf-600: #16a34a;
+  --color-leaf-700: #15803d;
+
+  /* Moss — soft, muted greens (secondary surfaces) */
+  --color-moss-200: #bbf7d0;
+  --color-moss-300: #86efac;
+
+  /* Dew — pale mint highlights (text accents, gentle glows) */
+  --color-dew-100: #ecfdf5;
+  --color-dew-200: #d1fae5;
+
+  /* Sunlight — warm golden glow, like light through leaves */
+  --color-sunlight-200: #fef3c7;
+  --color-sunlight-300: #fde68a;
+  --color-sunlight-400: #fbbf24;
+
+  /* Bark — warm earth neutrals for body text */
+  --color-bark-100: #e8f5ee;
+  --color-bark-300: #b8d4c2;
+  --color-bark-500: #7d9b88;
+
+  /* Soft neon treatments — glow, never harsh */
+  --shadow-glow-sm: 0 0 14px rgb(74 222 128 / 0.22);
+  --shadow-glow-md: 0 0 28px rgb(74 222 128 / 0.32), 0 0 72px rgb(74 222 128 / 0.1);
+  --shadow-sun-warm: 0 0 24px rgb(251 191 36 / 0.25);
+
+  /* Organic motion */
+  --animate-bloom: bloom 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-breathe: breathe 5s ease-in-out infinite;
+  --animate-sway: sway 7s ease-in-out infinite;
+  --animate-dapple: dapple 9s linear infinite;
+  --animate-rise: rise 0.5s ease-out both;
+
+  @keyframes bloom {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.92; }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-1.5deg); }
+    50% { transform: rotate(1.5deg); }
+  }
+  @keyframes dapple {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-canopy-950);
+  color: var(--color-bark-100);
+}
+
+/* Sunlit text — warm glow like light through leaves */
+.text-sunlit {
+  color: var(--color-dew-200);
+  text-shadow: 0 0 20px rgb(74 222 128 / 0.45);
+}
+
+/* Dappled-light button — sunlight sweeping across leaf green */
+.btn-dapple {
+  background-image: linear-gradient(
+    110deg,
+    var(--color-leaf-600) 35%,
+    var(--color-leaf-400) 48%,
+    var(--color-sunlight-300) 52%,
+    var(--color-leaf-400) 56%,
+    var(--color-leaf-600) 70%
+  );
+  background-size: 220% 100%;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: var(--shadow-glow-sm);
+}
+.btn-dapple:hover {
+  animation: dapple 1.8s linear infinite;
+  box-shadow: var(--shadow-glow-md);
+  transform: translateY(-1px);
+}
+.btn-dapple:active {
+  transform: translateY(0);
+}
+
+/* Living card — moss-edged, breathing glow on hover */
+.card-living {
+  background: linear-gradient(165deg, var(--color-canopy-800), var(--color-canopy-900));
+  border: 1px solid rgb(74 222 128 / 0.16);
+  box-shadow: var(--shadow-glow-sm);
+  transition: box-shadow 0.35s ease, transform 0.25s ease, border-color 0.35s ease;
+}
+.card-living:hover {
+  box-shadow: var(--shadow-glow-md);
+  border-color: rgb(74 222 128 / 0.35);
+  transform: translateY(-3px);
+}
+
+/* Gentle input — rooted, calm */
+.input-rooted {
+  background: var(--color-canopy-800);
+  border: 1px solid rgb(74 222 128 / 0.2);
+  color: var(--color-bark-100);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.input-rooted::placeholder {
+  color: var(--color-bark-500);
+}
+.input-rooted:focus {
+  outline: none;
+  border-color: rgb(74 222 128 / 0.55);
+  box-shadow: var(--shadow-glow-sm);
+}
+
+/* Firefly dots — tiny floating lights for hero backgrounds */
+.firefly {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(253 230 138 / 0.9), transparent 70%);
+  animation: breathe 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Reduced motion: stillness over animation — glows remain, movement stops */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
