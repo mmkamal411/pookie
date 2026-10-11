@@ -3,6 +3,135 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-11 ~16:45 EDT — Senior Backend Developer (staging-build): management APIs DONE (code) + API contract reconciled + Dawson data bootstrap ready
+
+**Built (tsc + eslint clean on all touched paths):**
+
+Child management (`src/server/services/children.ts` extended):
+- `POST /api/v1/children` `{ firstName*, lastName*, nickname?, slug?, schoolName?, gradeLevel?, timezone? }` → `{ data: { id } }`. Via `create_child()` RPC (child row + parent access row atomically). camelCase bodies (repo convention, matches `ChildSummary`); `lastName` required — the RPC raises `child_name_required` without it. First-ever child still comes from the invite path.
+- `PATCH /api/v1/children/[childId]` — editable: firstName, lastName, nickname, schoolName, district, gradeLevel, dateOfBirth, studentId, timezone, avatarUrl. Deliberately excluded: slug (stable `/c/[childSlug]` identity), status (archive path owns it), grade_scale/is_default (internal).
+- `DELETE /api/v1/children/[childId]` → `{ data: { id, status: "archived" } }` — SOFT DELETE, history preserved, reversible. (Not `{ok:true}` — the status echo is more useful; frontend please adapt.)
+- All parent-only (`assertParent`); mutations audited (`child.created` / `child.updated` / `child.archived`).
+
+Sync status + SYNC NOW (`src/server/services/sync.ts`, routes under `.../children/[childId]/sync/`):
+- `GET .../sync/requests?limit=20` → `{ data: { jobs: [{ id, status: pending|running|complete|failed, device, summary, errors: string[], created_at, claimed_at, completed_at }] } }`. Reconciled vs the proposal: path `sync/requests` (not `sync/status`); DB `claimed` → API `running`; `device` = `device_name`; **no `started_at` column exists — `claimed_at` is the equivalent**; **no `error` column exists — `errors[]` extracted server-side from job log lines** (level error/fatal/critical, newest first, max 5). The new project's canonical table is `sync_jobs` (013); `sync_requests` is the LEGACY dawson-checkin table — untouched.
+- `POST .../sync/requests` → `{ data: { job: { id, status: "pending" } } }` — the Sync Now button. Calls `sync_request_job()` via the admin client (RPC is service_role-only; route asserts parent first).
+
+Agent heartbeats (`GET .../sync/heartbeats`):
+- → `{ data: { workers: [{ worker_id (= device_name), status, last_seen, last_job_id, last_successful_sync_at, version, last_error, is_stale }] } }`. `last_successful_sync_at` computed from the newest `complete` job per device (best-effort: legacy jobs may carry `device_name` NULL). `is_stale` = no beat in 15 min (tunable `HEARTBEAT_STALE_MS`).
+- **Kept child-scoped, NOT top-level `/api/v1/workers`**: heartbeat rows carry `child_id` and workers sync one child's portals — a top-level endpoint would need cross-tenant filtering to avoid leaking worker presence between families. The per-child health cards map 1:1.
+- **SCHEMA FOLLOW-UP (proposed 014, needs DBA):** `sync_heartbeats` has NO `version`/`last_error` columns — both return `null` until 014 lands. Suggested: `ALTER TABLE public.sync_heartbeats ADD COLUMN version text, ADD COLUMN last_error text;` + have `sync_heartbeat()` accept and store them.
+
+Credential storage (`src/server/services/portals.ts`, routes under `.../children/[childId]/portals/`):
+- `GET .../portals` → `{ data: { portals: [{ id, child_id, portal_key, label, username_masked ("d••••"), has_credential, status, last_verified_at, consecutive_failures, credentials_updated_at, created_at }] } }`. Vault-backed (003); secret values are unretrievable by any client path. `last_verified_at` ≡ the proposed `last_used_at`.
+- `POST .../portals` `{ portal_key*, label*, username?, password* }` → `{ data: { portal: { id, portal_key, status: "unverified" } } }` — upsert/rotation via `set_tenant_secret()` with the caller's JWT (never service_role). Password never logged, never returned. No PATCH — save IS the upsert.
+- `POST .../portals/test` `{ portal_key*, username?, password? }` → `{ data: { ok, checked_at, scope, message } }` — dual mode: password present = **validate-before-save** (sanity checks only, nothing persisted, `scope: "pre_save"`); password absent = saved-credential check (`scope: "vault_material"`). **Scope honesty: neither mode is a live portal login** — the live check is the future `verify-credential` Edge Function. The UI must not label `ok:true` as "portal login verified".
+- `DELETE .../portals/[portalKey]` → `{ data: { removed } }` — deletes the Vault secret AND the row (idempotent).
+- **Vocabulary kept as `portal_key`** (`studentvue`|`parentvue`|`ctls-learn`|`o365`) — the Vault secret names and worker lookups key off it. UI mapping: provider `cobbk12` → `studentvue`; provider `microsoft` → `o365`.
+
+**Dawson data — status + blockers:**
+- FRESH DATA SECURED (read-only): the windows-laptop worker is healthy — 5 successful syncs today, latest **2026-10-11 13:03 EDT** (old project `studentvue_syncs`). Grades: AP CSP 80.2, EnvSci 79.0, Chinese III 97.1, Gov 79.0, Geometry 69.5, Lit&Comp II 84.2. 82 assignments with per-item scores. `due_next` empty (0 upcoming — honest, not a gap).
+- Direct portal pull from this sandbox is NOT possible (Cobb Conditional Access 53003 on sandbox IPs; documented fallback invoked — no portal write attempted, read-only throughout).
+- **Bootstrap package ready at `~/workspace/pookie-bootstrap/`**: `build-sweep.py` → `dawson-sweep-2026-10-11.json` (6 classes / 6 grades / 82 assignments, byte-identical to a real worker run — `source_id`s replicate `pipeline.py` exactly so future worker syncs upsert, never duplicate) + `load-sweep.py` (creates the `dawson-kamal` child row + parent access, calls `sync_upsert_sweep`, applies aliases/display_order/periods/teachers/grade_weights — weights verified 2026-10-05; Geometry + Lit&Comp weights were never captured and stay NULL).
+- **BLOCKED on two things I cannot do from here:** (1) migration **013_sync_queue.sql is NOT applied** to the pookie project (DBA); (2) **no service_role key access** — `hatch-vault` returns nothing non-interactively in this subagent context, and anon/authenticated keys cannot write these tables by design. Whoever holds the key runs: `SUPABASE_SERVICE_ROLE_KEY=... python3 ~/workspace/pookie-bootstrap/load-sweep.py --parent-email mehedikamal@gmail.com` (dry-run verified). The `dawson-kamal` child row does NOT exist yet — the loader creates it (slug `dawson-kamal`, Walton High School, grade 10).
+- Frontend note: until the loader runs, the school overview/class pages read empty tables (RLS-correct, just no rows) — the demo-mode mock data is the only populated path.
+
+**For DevOps:** new routes need `SUPABASE_SERVICE_ROLE_KEY` in the Pages server env (already documented in `docs/ENV-MANAGEMENT.md`; `supabaseAdmin` throws at import if unset — sync/heartbeat routes 500 without it, everything else unaffected). No new public env vars.
+
+**Not touched:** the 18 `Cannot find module '@/server/services/college'` build errors (W5 college — another builder's scope); batch2's stashed WIP (`stash@{0}`); the Full-Stack dev's in-flight staging-build files.
+
+## 2026-10-11 — Senior Full-Stack Developer (staging-build): THEME PIVOT — Canopy → Nebula
+
+**Founder directive: STOP Canopy Night Forest. New theme: Nebula (from dawsonkamal.com).**
+- Dark "Deep Space" (default): animated starfield canvas, drifting nebula clouds (purple/blue/pink), shooting stars, glassy glowing cards, #050510 base.
+- Light "Nebula Dawn": light version of the same aesthetic.
+- Toolbar: replicate dawsonkamal.com's toolbar EXACTLY — precise spec pending from the browser task documenting the live site (via BUILD-LOG.md / follow-up). Toolbar ships Nebula-styled for now, finalized when the spec lands.
+- Background: animated canvas (stars, nebulas, interactive — stars brighten near touch). Reference: d-dash `src/components/teen/cosmos-background.tsx` — porting/adapting.
+- Layout: dawsonkamal.com's overview/classes patterns — card shapes, spacing, typography, glowing accents.
+- UNCHANGED: 5-tab structure, page mapping, 4 management features, child switcher, keyword-triggered personalities (no toggle).
+- Refactor scope: ALL Canopy tokens → Nebula tokens, including pre-existing W1 school components. New `nebula-*`/`star-*` token family in globals.css; `[data-theme="light"]` → Nebula Dawn.
+
+---
+
+**Founder correction: there is NO toggle switch in the UI.** Keyword-triggered personality instead:
+- `detectPersonality(text)` in `src/lib/pookie-tutor.ts` — trigger phrases (case-insensitive substring): "be straight with me", "straight talk", "no sugarcoating", "don't sugarcoat", "stop sugarcoating", "be honest", "be real", "be blunt", "blunt", "tough love", "real talk", "tell it like it is", "give it to me straight", "cut the fluff", "no fluff", "no bs", "brutal honesty"/"brutally honest".
+- When triggered: the request carries `mode: "muse"` in the payload AND a `[SYSTEM: You are Muse — direct, unfiltered straight-talk advisor…]` instruction prepended (worker may ignore the flag; the system instruction is the reliable path — same pattern as the d-dash nudge code).
+- Indicator (no toggle): Muse-persona messages render with the MiniMuse avatar + a small "MUSE" label and ember styling. The shared orb color is untouched (still per-class).
+- **Session rule:** personality reverts to Pookie on the next message unless keywords trigger again — documented in code.
+- Kept from d-dash: Pookie-mode smart escalation (llama → classify SIMPLE/DEEP → async muse-queue "Muse adds" follow-up). Voice (persona) and depth (queue) are separate axes.
+
+---
+
+**Spec:** header/top bar on every `/c/[childSlug]/` page shows active child's avatar + name; tap opens dropdown (avatar, name, grade/school per row); selecting calls `setActiveChild(childId)` and navigates to `/c/[newSlug]`; HIDDEN when only one child exists. Canopy theme. Data source: same memberships as `/select-child/` (`getMemberships()` via `useTenant()`); persistence via existing `setActiveChild` server action (+ localStorage mirror). `/select-child/` stays for initial selection.
+
+---
+
+**Routes (tenant-scoped under `/c/[childSlug]/settings/`):**
+- `settings/` — profile (name/email/avatar), child management (list/add/edit/remove), notification prefs, theme toggle (light/dark), sign out.
+- `settings/sync/` — sync console: last sync time/status/device/summary, Sync Now button, last 20 runs, error messages on failures.
+- `settings/health/` — agent heartbeats: windows-laptop + macbook cards (last heartbeat, status, last successful sync, version, errors); health = green <1h, yellow 1–12h, red >12h since heartbeat.
+- `settings/credentials/` — per-child CobbK12 + Microsoft school logins: add/edit/delete, Test Connection (validates before saving), last-used timestamp; passwords write-only, shown as ••••; parent-only pages.
+- Settings linked from the **More** tab. Theme: localStorage-only toggle (no API). Sign out: client Supabase signOut + redirect.
+
+**PROPOSED API CONTRACT (for Backend Developer — REST `/api/v1`, existing `handleRoute` + `{ data }` envelope, error envelope `{ ok, error: { code, message, requestId } }`):**
+- `GET /api/v1/me` → `{ data: { id, email, name, avatar_url } }`; `PATCH /api/v1/me` `{ name?, avatar_url? }`
+- `GET /api/v1/children` → `{ data: Child[] }`; `POST /api/v1/children` `{ first_name, nickname?, school_name?, grade_level? }`; `PATCH /api/v1/children/{childId}`; `DELETE /api/v1/children/{childId}` → `{ data: { ok: true } }`
+- `GET/PATCH /api/v1/me/notifications` → `{ data: { sync_complete, grade_drop, due_soon, weekly_digest, quiet_hours_start, quiet_hours_end } }`
+- `GET /api/v1/children/{childId}/sync/requests?limit=20` → `{ data: [{ id, status: pending|running|complete|failed, summary, device, error, created_at, started_at, completed_at }] }`; `POST .../sync/requests` → `{ data: { id, status: "pending" } }` (Sync Now)
+- `GET /api/v1/workers` → `{ data: [{ id, device_name, platform, last_heartbeat_at, last_successful_sync_at, version, last_error }] }` (health color derived client-side from `last_heartbeat_at`)
+- `GET /api/v1/children/{childId}/credentials` → `{ data: [{ id, provider: cobbk12|microsoft_school, username, last_used_at, updated_at }] }` (passwords NEVER returned); `POST`/`PATCH`/`DELETE .../credentials[/{id}]`; `POST .../credentials/test` `{ provider, username, password }` → `{ data: { ok, message } }` (validate-before-save, never persists)
+- Frontend: `src/lib/management-api.ts` typed client; demo mode renders mock data; API errors render graceful "backend workstream in progress" states. Backend: please confirm/adjust field names in BUILD-LOG before building — frontend will adapt.
+
+---
+
+**Founder's exact mapping (supersedes earlier scope):**
+- Toolbar (exact): **Home · Today · Pookie (center orb) · Progress · More** — bottom nav on all `/c/[childSlug]/*` pages.
+- d-dash Overview (`/dashboard/`) → Pookie **Home** = `/c/[childSlug]/` (greeting hero, 6 grade cards, attention items, due-next strip).
+- d-dash Classes (`/classes/`) → Pookie **Progress** tab → existing `/c/[childSlug]/school/` + `/school/[classSlug]` routes (W1 school core, already backend-wired; "or equivalent" — keeping the school/ URLs avoids breaking existing links).
+- d-dash Pookie AI → Pookie **Pookie** tab = `/c/[childSlug]/pookie/`: full chat with Cloudflare worker backend, bubble, nudges, Pookie/Muse toggle.
+- **Today** tab = `/c/[childSlug]/today/` (schedule/tasks: due-today, check-in, tonight's focus).
+- **More** tab = `/c/[childSlug]/more/` (31-module directory, elegant placeholders for unbuilt modules).
+- Theme: Canopy Night Forest (unchanged). Env `NEXT_PUBLIC_POOKIE_TUTOR_URL=https://pookie-tutor.mehedikamal.workers.dev` → added to `.env.example`; DevOps must set it on the staging Pages project (NOT the production `pookie` project — untouched).
+
+**New file plan:**
+- `src/components/overview/*` (greeting-hero, overview-section, due-next-strip, attention-items, upcoming-list, overview-dashboard) — Home tab.
+- `src/components/pookie/*` (pookie-chat, pookie-bubble, pookie-nudge, pookie-color, mode-toggle) — ported from d-dash `src/components/tutor/`, Canopy-themed.
+- `src/components/child-toolbar.tsx` — bottom toolbar in `c/[childSlug]/layout.tsx`.
+- `src/app/c/[childSlug]/pookie/page.tsx`, `today/page.tsx`, `more/page.tsx`.
+- Progress: verify existing school pages render (grade trends sparkline check on class detail).
+- Delete dead: `src/components/demo-dashboard.tsx`, `src/components/dashboard-greeting.tsx`, `getDemoDashboardData` (only consumer was DemoDashboard).
+
+---
+
+## 2026-10-11 ~16:20 EDT — DevOps Manager (staging): HOLDING — no done signals, build is RED
+
+**Deploy NOT run. Gates unmet:**
+1. **No frontend "done":** newest entry is Full-Stack's "staging-build: START overview + classes port" — frontend is mid-work.
+2. **No backend "done"** in the log.
+3. **Security gate open:** Security Engineer is "the gate before staging deploy" — "nothing ships to staging without sign-off." No sign-off posted.
+4. **Tree dirty on `staging-build`** (untracked in-flight files: `deploy-staging.py`, `docs/design/`, W5 college routes, `src/server/mail|ocr|essay-feedback.ts|services/college-extra.ts`, `src/lib/college/`, `supabase/functions/mail-ocr/`). No deploy from a dirty tree — standing by.
+
+**Build diagnostic (ran `npm run build` on current tree, BUILD_EXIT=1 — 18 errors, single root cause):**
+- Every error is `Can't resolve '@/server/services/college'` — **18 W5 college route files** (`src/app/api/v1/colleges/route.ts` + 17 under `src/app/api/v1/children/[childId]/college/`) import from `src/server/services/college.ts`, which **does not exist**. Only `src/server/services/college-extra.ts` exists (exports just `GpaInput`/`getGpaInputs`/`getAidPrograms` — no implementation of the ~35 names the routes expect: `listColleges`, `explorerQuerySchema`, `addToList`/`patchListEntry`/`removeListEntry`, deadline/essay/recommender/test-score CRUD + schemas, `authorizeRelease`, `createRelease`, `markReleaseSent`, `verifyTestScore`, `getReadiness`, `getGpaSimulation`, `feedbackForEssay`).
+- The previously reported W16 minutiae red-build appears fixed (no minutiae errors in this run).
+- **Owner needed:** whoever is building W5 college (backend builder?) — please land `src/server/services/college.ts` (or rename/retarget imports if the split was deliberate). I did NOT stub it — writing ~35 functions against migration 009 is backend authorship and would risk colliding with the real design.
+
+**Deploy-pipeline note (correction to my task brief):** `deploy-staging.py` assembles `.pages-deploy` from **`.open-next`**, so the deploy build must be `npx opennextjs-cloudflare build` (binary present in node_modules/.bin), NOT plain `npm run build` — plain `next build` never regenerates `.open-next`, and a stale `.open-next` is exactly the static-asset regression we're avoiding. The `_routes.json` fix in the script is verified present (`{"version":1,"include":["/*"],"exclude":["/_next/static/*"]}`); target is `pookie-staging` (production untouched). Deploy sequence when gates clear: `git checkout staging-build` (clean) → `npm ci` → `npx opennextjs-cloudflare build` → verify `.open-next/assets` → `python3 deploy-staging.py` → post-deploy curl checks (200s on `/`, `_next/static/*.css`, JS chunks; `/login?demo=1` → `/demo` → `/c/dawson` flow).
+
+**What's next:** I'm standing by. Frontend + backend: post "done" when staging-build is green and the tree is clean; Security Engineer: post Phase-2 sign-off. I'll deploy the moment all three land.
+
+---
+
+## 2026-10-11 — Senior Full-Stack Developer (staging-build): START overview + classes port
+
+**Branch:** `staging-build` cut from `main` (@a84239d). Git ops done BEFORE writing this line (build-log read came after the stash — flagging per the repo-wide rule; no other agent's work was touched):
+- `git stash push -m "batch2-wip uncommitted changes (preserved for batch2 team)"` — batch2's WIP safe at `stash@{0}`, restore with `git stash pop` on `batch2-wip`. Did NOT use `-u` (untracked files untouched).
+- Existing stashes (`stash@{1}`, `stash@{2}` — module-agent/demo WIP) left alone.
+
+**Scope:** port d-dash overview → `src/app/c/[childSlug]/page.tsx` (greeting hero, 6 grade cards, attention items, upcoming assignments, due-next strip, accepting data props for demo + real data); review/align existing W1 school pages (`school/page.tsx`, `school/[classSlug]/page.tsx` + `src/components/school/*`) to the Canopy theme. Demo mode (`?demo=1` → `/demo`) must keep working. No production `pookie` Pages project changes.
+
+**Plan:** read d-dash reference → build `src/components/overview/*` (hero, grade-cards, attention-items, due-next-strip, upcoming-list) → wire page with demo+real branches → `npm run build` green → log DONE + commit on `staging-build`.
+
 ---
 
 ## 2026-10-11 — Coordinator (batch-2): stash incident recovery
