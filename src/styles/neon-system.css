@@ -1,47 +1,80 @@
 /* ==========================================================================
-   PRISM NEON SYSTEM — app-wide subtle neon highlight system.
-   Owner: Prism E3 (UI Engineer, neon system). E4 and other squads: DO NOT
-   restyle pages to build this — USE these tokens and classes. This file is
-   the single source of truth for every glow in the app.
+   HULL NEON SYSTEM — app-wide spacecraft neon system.
+   Owner: Squad Hull. This file is the single source of truth for every
+   glow in the app. See docs/DESIGN-DIRECTION.md ("Mission Critical
+   Spacecraft") for the full direction.
 
    Design rules (Mehedi, non-negotiable):
-   - Cool hi-tech, well-lit. Subtle neon: shine and sparkle, NEVER harsh.
-   - Divine light: soft glows in neon colors at low opacity (0.25–0.5) and
-     large blur radius (12–24px), 200ms smooth transitions.
+   - Mission Critical Spacecraft: deep space blacks, HUD panels, phosphor
+     glows — NOT lavender/purple spa washes.
+   - Phosphor style: glows live on EDGES and status lights, never full-
+     surface washes. Opacity 0.1–0.25 ambient, 200ms transitions.
+   - Corner brackets on panels (8px L-marks, accent color, top-left +
+     bottom-right). Max 8px radius on panels, 6px on buttons/inputs.
    - Title Case everywhere, elevated copy — applies to any text this file
      ships (class names excluded; those are kebab-case by convention).
 
-   Usage: pick a color (.neon-green | .neon-teal | .neon-blue | .neon-pink,
-   default .neon-teal) and compose it with a behavior class:
-       <button class="neon-cta neon-pink">Launch</button>
+   Usage: pick a color (.neon-cyan | .neon-amber | .neon-green | .neon-red,
+   default .neon-cyan) and compose it with a behavior class:
+       <button class="neon-cta neon-cyan">Launch</button>
        <nav>  <a class="neon-current neon-green">Home</a>
-       <div class="neon-card neon-blue">...</div>
+       <div class="neon-card neon-amber">...</div>
+   Legacy aliases (.neon-teal, .neon-blue, .neon-pink) are kept for
+   compatibility but map to the spacecraft palette.
    ========================================================================== */
 
 @theme {
-  /* Neon palette — soft, luminous; never harsh. Registered as Tailwind v4
-     color tokens, so utilities like `text-neon-teal` and `bg-neon-pink/40`
+  /* Spacecraft neon palette — phosphor tones. Registered as Tailwind v4
+     color tokens, so utilities like `text-neon-cyan` and `bg-neon-amber/40`
      work out of the box. */
-  --color-neon-green: #4ade80;
-  --color-neon-teal: #2dd4bf;
-  --color-neon-blue: #7dd3fc;
+  --color-neon-cyan: #00E5FF;
+  --color-neon-amber: #FFB300;
+  --color-neon-green: #00FF88;
+  --color-neon-red: #FF4D5A;
+  /* Legacy aliases — do not use in new code. */
+  --color-neon-teal: #00E5FF;
+  --color-neon-blue: #00E5FF;
   --color-neon-pink: #f472b6;
+  /* Hull surfaces */
+  --color-hull-void: #05080C;
+  --color-hull-deck: #0A0F16;
+  --color-hull-bulkhead: #11161F;
+  --color-hull-line: #1E2836;
+  --color-hull-text: #E8F1F2;
+  --color-hull-text-dim: #8A99A8;
+  --color-hull-text-faint: #5A6B7D;
 }
 
 :root {
   /* Space-separated RGB triplets so utilities can dial alpha with
      rgb(var(--nx) / <opacity>). */
-  --neon-green-rgb: 74 222 128;
-  --neon-teal-rgb: 45 212 191;
-  --neon-blue-rgb: 125 211 252;
+  --neon-cyan-rgb: 0 229 255;
+  --neon-amber-rgb: 255 179 0;
+  --neon-green-rgb: 0 255 136;
+  --neon-red-rgb: 255 77 90;
+  /* Legacy RGB aliases */
+  --neon-teal-rgb: 0 229 255;
+  --neon-blue-rgb: 0 229 255;
   --neon-pink-rgb: 244 114 182;
+  /* Hull surface RGB */
+  --hull-void-rgb: 5 8 12;
+  --hull-deck-rgb: 10 15 22;
+  --hull-bulkhead-rgb: 17 22 31;
+  --hull-line-rgb: 30 40 54;
+  --hull-text-rgb: 232 241 242;
+  --hull-text-dim-rgb: 138 153 168;
+  --hull-text-faint-rgb: 90 107 125;
 
-  /* Active neon color for behavior classes. Defaults to teal. */
-  --nx: var(--neon-teal-rgb);
+  /* Active neon color for behavior classes. Defaults to cyan. */
+  --nx: var(--neon-cyan-rgb);
 }
 
 /* -- Color selectors: set which neon the behavior classes use. ----------- */
+.neon-cyan { --nx: var(--neon-cyan-rgb); }
+.neon-amber { --nx: var(--neon-amber-rgb); }
 .neon-green { --nx: var(--neon-green-rgb); }
+.neon-red { --nx: var(--neon-red-rgb); }
+/* Legacy aliases */
 .neon-teal { --nx: var(--neon-teal-rgb); }
 .neon-blue { --nx: var(--neon-blue-rgb); }
 .neon-pink { --nx: var(--neon-pink-rgb); }
@@ -191,4 +224,132 @@
   .neon-shine::after {
     display: none;
   }
+}
+
+/* ==========================================================================
+   HULL PANELS — Mission Critical Spacecraft instrument panels.
+   Angular HUD cards: 1px hairline border, neon edge accent on one side,
+   L-shaped corner brackets (top-left + bottom-right), max 8px radius.
+   Depth comes from the edge glow, never drop shadows.
+   ========================================================================== */
+
+/* -- .hull-panel: the base instrument panel ------------------------------ */
+.hull-panel {
+  --hx: var(--neon-cyan-rgb); /* panel accent color, override per panel */
+  position: relative;
+  background: rgb(var(--hull-bulkhead-rgb) / 0.92);
+  border: 1px solid rgb(var(--hull-line-rgb) / 0.9);
+  border-radius: 6px;
+}
+/* Corner brackets: top-left + bottom-right L-marks in accent color. */
+.hull-panel::before,
+.hull-panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+.hull-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid rgb(var(--hx) / 0.85);
+  border-left: 1px solid rgb(var(--hx) / 0.85);
+  border-top-left-radius: 6px;
+}
+.hull-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid rgb(var(--hx) / 0.85);
+  border-right: 1px solid rgb(var(--hx) / 0.85);
+  border-bottom-right-radius: 6px;
+}
+/* Accent edge: 1px neon line across the top of the panel. */
+.hull-panel-accent {
+  box-shadow: inset 0 1px 0 rgb(var(--hx) / 0.55), 0 0 12px rgb(var(--hx) / 0.12);
+}
+
+/* Accent color modifiers for panels */
+.hull-cyan { --hx: var(--neon-cyan-rgb); }
+.hull-amber { --hx: var(--neon-amber-rgb); }
+.hull-green { --hx: var(--neon-green-rgb); }
+.hull-red { --hx: var(--neon-red-rgb); }
+
+/* -- .hull-title: panel section header ------------------------------------
+   Monospace uppercase label with a small neon tick mark. */
+.hull-title {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--hull-text-dim-rgb, 138 153 168));
+}
+.hull-title::before {
+  content: "▸ ";
+  color: rgb(var(--hx, var(--neon-cyan-rgb)) / 0.9);
+}
+
+/* -- .hull-readout: technical data readout --------------------------------
+   Monospace numbers/values, uppercase labels. */
+.hull-readout {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  color: rgb(var(--hull-text-rgb, 232 241 242));
+  letter-spacing: 0.04em;
+}
+.hull-readout-label {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--hull-text-faint-rgb, 90 107 125));
+}
+
+/* -- .hull-msg: angular chat message panel --------------------------------
+   6px radius, 1px border, accent edge on the left. No spa bubbles. */
+.hull-msg {
+  --hx: var(--neon-cyan-rgb);
+  background: rgb(var(--hull-deck-rgb) / 0.95);
+  border: 1px solid rgb(var(--hull-line-rgb) / 0.9);
+  border-left: 2px solid rgb(var(--hx) / 0.7);
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgb(var(--hx) / 0.08);
+}
+.hull-msg-user { --hx: var(--neon-cyan-rgb); }
+.hull-msg-ai { --hx: var(--neon-green-rgb); }
+
+/* -- .hull-btn: square instrument key -------------------------------------
+   6px radius, 1px border, neon edge on hover. */
+.hull-btn {
+  --hx: var(--neon-cyan-rgb);
+  background: rgb(var(--hull-deck-rgb));
+  border: 1px solid rgb(var(--hull-line-rgb));
+  border-radius: 6px;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--hull-text-rgb, 232 241 242));
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.hull-btn:hover {
+  border-color: rgb(var(--hx) / 0.7);
+  box-shadow: 0 0 12px rgb(var(--hx) / 0.2);
+}
+
+/* -- .hull-input: instrument console input -------------------------------- */
+.hull-input {
+  background: rgb(var(--hull-void-rgb) / 0.9);
+  border: 1px solid rgb(var(--hull-line-rgb));
+  border-radius: 6px;
+  color: rgb(var(--hull-text-rgb, 232 241 242));
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+.hull-input:focus {
+  outline: none;
+  border-color: rgb(var(--neon-cyan-rgb) / 0.6);
+  box-shadow: 0 0 10px rgb(var(--neon-cyan-rgb) / 0.15);
+}
+.hull-input::placeholder {
+  color: rgb(var(--hull-text-faint-rgb, 90 107 125));
 }
