@@ -44,6 +44,8 @@ function PlanEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sentCount, setSentCount] = useState<number | null>(null);
 
   function setDay(i: number, patch: Partial<MealPlanDay>) {
     setDays((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
@@ -68,6 +70,36 @@ function PlanEditor({
     }
     setSaved(true);
     onSaved();
+  }
+
+  async function sendToShoppingList() {
+    const items = groceryText
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 50);
+    if (items.length === 0 || sending) return;
+    setSending(true);
+    setError(null);
+    setSentCount(null);
+    try {
+      const res = await fetch("/api/v1/household/shopping/items/batch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((name) => ({ name })),
+          source: "meal-plan",
+          source_ref: { weekStart },
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error?.message ?? "Couldn't send to shopping list.");
+      setSentCount(json.data.items.length);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't send to shopping list.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -149,14 +181,24 @@ function PlanEditor({
           className="input-rooted w-full rounded-xl px-3.5 py-2.5 text-sm text-star-100"
         />
       </label>
-      <button
-        type="button"
-        onClick={save}
-        disabled={saving}
-        className="mt-4 rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm transition-all hover:scale-[1.02] disabled:opacity-50"
-      >
-        {saving ? "Saving." : "Save this week's plan"}
-      </button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm transition-all hover:scale-[1.02] disabled:opacity-50"
+        >
+          {saving ? "Saving." : "Save this week's plan"}
+        </button>
+        <button
+          type="button"
+          onClick={sendToShoppingList}
+          disabled={sending || groceryText.trim().length === 0}
+          className="rounded-xl border border-nova-500/40 px-5 py-2.5 text-sm font-semibold text-nova-300 transition-all hover:scale-[1.02] disabled:opacity-50"
+        >
+          {sending ? "Sending…" : sentCount != null ? `✓ ${sentCount} sent to shopping list` : "Send to shopping list →"}
+        </button>
+      </div>
     </section>
   );
 }
