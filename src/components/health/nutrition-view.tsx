@@ -34,6 +34,67 @@ const MEAL_LABELS: Record<MealKind, string> = {
 };
 const FOOD_GROUPS = ["Grains", "Vegetables", "Fruits", "Protein", "Dairy", "Water"];
 
+/** Food group sigils — a colorful constellation for the plate. */
+const GROUP_SIGILS: Record<string, { glyph: string; glow: string }> = {
+  Grains: { glyph: "🌾", glow: "rgb(251 191 36 / 0.35)" },
+  Vegetables: { glyph: "🥬", glow: "rgb(52 211 153 / 0.35)" },
+  Fruits: { glyph: "🍎", glow: "rgb(251 113 133 / 0.35)" },
+  Protein: { glyph: "🍗", glow: "rgb(251 146 60 / 0.35)" },
+  Dairy: { glyph: "🥛", glow: "rgb(147 197 253 / 0.35)" },
+  Water: { glyph: "💧", glow: "rgb(103 232 249 / 0.4)" },
+};
+
+function PlateBalance({ groups }: { groups: string[] }) {
+  // A visual plate: selected food groups orbit as glowing sigils.
+  const selected = FOOD_GROUPS.filter((g) => groups.includes(g));
+  return (
+    <div className="relative mx-auto flex h-36 w-36 items-center justify-center">
+      {/* The plate */}
+      <div
+        className="absolute inset-0 rounded-full border border-nova-400/25 bg-gradient-to-br from-nebula-800/70 to-nebula-950/90 shadow-glow-sm"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-3 rounded-full border border-nova-400/12"
+        aria-hidden="true"
+      />
+      {selected.length === 0 ? (
+        <p className="relative px-6 text-center text-[11px] leading-snug text-stardust-500">
+          Tap food groups below to fill your plate
+        </p>
+      ) : (
+        <div className="relative flex max-w-[110px] flex-wrap items-center justify-center gap-1.5">
+          {selected.map((g) => (
+            <span
+              key={g}
+              title={g}
+              className="animate-bloom text-2xl"
+              style={{ filter: `drop-shadow(0 0 6px ${GROUP_SIGILS[g].glow})` }}
+            >
+              {GROUP_SIGILS[g].glyph}
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Balance ring — fills as groups are added */}
+      <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="48" fill="none" stroke="rgb(167 139 250 / 0.12)" strokeWidth="3" />
+        <circle
+          cx="50"
+          cy="50"
+          r="48"
+          fill="none"
+          stroke="rgb(52 211 153 / 0.8)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={`${(selected.length / FOOD_GROUPS.length) * 301.6} 301.6`}
+          style={{ transition: "stroke-dasharray 0.5s ease", filter: "drop-shadow(0 0 4px rgb(52 211 153 / 0.6))" }}
+        />
+      </svg>
+    </div>
+  );
+}
+
 function ScalePicker({
   label,
   value,
@@ -106,8 +167,11 @@ function MinorCheckinForm({ childId, onSaved }: { childId: string; onSaved: () =
   }
 
   return (
-    <section className="card-living rounded-3xl p-5">
-      <h2 className="text-base font-semibold text-star-100">Did you eat regularly today?</h2>
+    <section className="card-living led-strip-teal relative rounded-3xl p-5">
+      <p className="text-[10px] font-bold tracking-[0.2em] text-teal-200/70 uppercase">
+        Fuel Log
+      </p>
+      <h2 className="mt-1 text-base font-bold text-star-100">Did you eat regularly today?</h2>
       <p className="mt-1 text-xs text-stardust-300">
         This is about rhythm and energy. Not numbers. There are no wrong answers here.
       </p>
@@ -139,26 +203,33 @@ function MinorCheckinForm({ childId, onSaved }: { childId: string; onSaved: () =
           </button>
         ))}
       </div>
-      <div className="mt-4">
-        <p className="mb-1.5 text-xs font-medium tracking-wide text-stardust-300 capitalize">
+      <div className="mt-5">
+        <p className="mb-3 text-center text-xs font-medium tracking-wide text-stardust-300 capitalize">
           What food groups were on the plate?
         </p>
-        <div className="flex flex-wrap gap-2">
-          {FOOD_GROUPS.map((g) => (
-            <button
-              key={g}
-              type="button"
-              aria-pressed={groups.includes(g)}
-              onClick={() => toggleGroup(g)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                groups.includes(g)
-                  ? "border-comet-400/50 bg-comet-400/10 text-comet-200"
-                  : "border-nova-400/15 text-stardust-300 hover:border-nova-400/35"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
+        <PlateBalance groups={groups} />
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {FOOD_GROUPS.map((g) => {
+            const sigil = GROUP_SIGILS[g];
+            const active = groups.includes(g);
+            return (
+              <button
+                key={g}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleGroup(g)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                  active
+                    ? "border-comet-400/50 bg-comet-400/10 text-comet-200 shadow-glow-sm"
+                    : "border-nova-400/15 text-stardust-300 hover:border-nova-400/35 hover:scale-[1.03]"
+                }`}
+                style={active ? { boxShadow: `0 0 12px ${sigil.glow}` } : undefined}
+              >
+                <span aria-hidden="true">{sigil.glyph}</span>
+                {g}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -366,23 +437,39 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {isOwnerView && state && state.checkins.length > 0 && (
             <section className="card-living rounded-3xl p-5">
-              <h2 className="text-base font-semibold text-star-100">Recent check-ins</h2>
-              <ul className="mt-3 divide-y divide-nova-400/10">
+              <h2 className="text-base font-bold text-star-100">Recent check-ins</h2>
+              <ul className="mt-3 space-y-2.5">
                 {state.checkins.slice(0, 10).map((c) => (
-                  <li key={c.id} className="py-2.5">
-                    <p className="text-sm text-star-100">
-                      {MEAL_LABELS[c.meal]}
-                      {c.foodGroups.length > 0 && (
-                        <span className="ml-2 text-xs text-stardust-300">{c.foodGroups.join(", ")}</span>
+                  <li
+                    key={c.id}
+                    className="flex items-center gap-3 rounded-2xl border border-nova-400/10 bg-nebula-900/50 px-3.5 py-2.5"
+                  >
+                    <span className="flex -space-x-1.5" aria-hidden="true">
+                      {c.foodGroups.slice(0, 4).map((g) => (
+                        <span
+                          key={g}
+                          title={g}
+                          className="flex size-7 items-center justify-center rounded-full border border-nebula-950 bg-nebula-800 text-sm"
+                        >
+                          {GROUP_SIGILS[g]?.glyph ?? "•"}
+                        </span>
+                      ))}
+                      {c.foodGroups.length === 0 && (
+                        <span className="flex size-7 items-center justify-center rounded-full border border-nebula-950 bg-nebula-800 text-sm">
+                          🍽️
+                        </span>
                       )}
-                    </p>
-                    {(c.energyNote || c.hungerBefore != null) && (
-                      <p className="mt-0.5 text-xs text-stardust-500">
-                        {c.hungerBefore != null && `Hunger ${c.hungerBefore}/5. `}
-                        {c.fullnessAfter != null && `Fullness ${c.fullnessAfter}/5. `}
-                        {c.energyNote}
-                      </p>
-                    )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-star-100">{MEAL_LABELS[c.meal]}</p>
+                      {(c.energyNote || c.hungerBefore != null) && (
+                        <p className="mt-0.5 truncate text-xs text-stardust-500">
+                          {c.hungerBefore != null && `Hunger ${c.hungerBefore}/5. `}
+                          {c.fullnessAfter != null && `Fullness ${c.fullnessAfter}/5. `}
+                          {c.energyNote}
+                        </p>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -1,8 +1,9 @@
-// W29 Trails & Parks (REDESIGNED) — real NPS park data near the coarse ZIP.
-// Fixed safety block on every card (official source + page link; guidance
-// catalog flagged honestly while Squad 1's table is pending). Under-16:
-// no solo-hike recommendations anywhere — "share my plan" is the first-class
-// step. 90-minute sunset warning computed from real solar math.
+// W29 Trails & Parks — expeditions into the wild.
+// Real NPS park data near the coarse ZIP. Fixed safety block on every card
+// (official source + page link; guidance catalog flagged honestly while
+// Squad 1's table is pending). Under-16: no solo-hike recommendations
+// anywhere — "share my plan" is the first-class step. 90-minute sunset
+// warning computed from real solar math.
 
 "use client";
 
@@ -35,6 +36,46 @@ interface TrailsData {
   sunset_today: string | null;
   sunset_warning_minutes: number;
   location?: { city: string; state: string; zip: string };
+}
+
+/** Expedition art per park designation — gradient skies for the wild. */
+function artFor(designation: string): { sky: string; glyph: string; label: string } {
+  const d = designation.toLowerCase();
+  if (d.includes("national park"))
+    return {
+      sky: "linear-gradient(160deg, rgb(30 58 95 / 0.9), rgb(14 42 32 / 0.95))",
+      glyph: "🏔️",
+      label: "National Park",
+    };
+  if (d.includes("monument"))
+    return {
+      sky: "linear-gradient(160deg, rgb(88 60 28 / 0.9), rgb(48 30 18 / 0.95))",
+      glyph: "🗿",
+      label: "National Monument",
+    };
+  if (d.includes("historic"))
+    return {
+      sky: "linear-gradient(160deg, rgb(64 52 88 / 0.9), rgb(32 26 52 / 0.95))",
+      glyph: "🏛️",
+      label: "Historic Site",
+    };
+  if (d.includes("seashore") || d.includes("lakeshore") || d.includes("river"))
+    return {
+      sky: "linear-gradient(160deg, rgb(24 72 96 / 0.9), rgb(12 38 58 / 0.95))",
+      glyph: "🌊",
+      label: "Waterside",
+    };
+  if (d.includes("trail"))
+    return {
+      sky: "linear-gradient(160deg, rgb(34 78 52 / 0.9), rgb(16 44 30 / 0.95))",
+      glyph: "🥾",
+      label: "Trail",
+    };
+  return {
+    sky: "linear-gradient(160deg, rgb(40 60 44 / 0.9), rgb(18 34 26 / 0.95))",
+    glyph: "🌲",
+    label: "Protected Land",
+  };
 }
 
 export function TrailsPanel({ childAge, isTeen }: { childAge: number | null; isTeen: boolean }) {
@@ -82,6 +123,25 @@ export function TrailsPanel({ childAge, isTeen }: { childAge: number | null; isT
 
   return (
     <div className="space-y-4">
+      {/* Expedition header with sunset telemetry */}
+      <section className="holo-panel led-strip-teal px-5 py-5">
+        <p className="text-[10px] font-bold tracking-[0.2em] text-teal-200/70 uppercase">
+          Expeditions
+        </p>
+        <h2 className="mt-1 text-xl font-bold text-star-100">Into the wild</h2>
+        <p className="mt-0.5 text-sm text-stardust-300">
+          Real National Park Service sites near you — with the safety briefing on every card.
+        </p>
+        {data?.sunset_today && state === "loaded" && (
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/10 px-3.5 py-1.5">
+            <span aria-hidden="true">🌇</span>
+            <span className="text-xs font-semibold text-amber-200">
+              Sunset {data.sunset_today} — head back {data.sunset_warning_minutes} min before
+            </span>
+          </div>
+        )}
+      </section>
+
       {(under16 || isTeen) && (
         <InfoLine tone="teal" icon="🥾">
           <strong>Hiking is better with company.</strong>{" "}
@@ -108,13 +168,6 @@ export function TrailsPanel({ childAge, isTeen }: { childAge: number | null; isT
         </InfoLine>
       )}
 
-      {data?.sunset_today && state === "loaded" && (
-        <InfoLine icon="🌇">
-          Sunset today is around <strong>{data.sunset_today}</strong> here. You&apos;ll get a
-          heads-up 90 minutes before sunset on hiking days — enough time to head back.
-        </InfoLine>
-      )}
-
       {state === "idle" && (
         <InitializingCard
           title="Add your ZIP for trails"
@@ -125,7 +178,7 @@ export function TrailsPanel({ childAge, isTeen }: { childAge: number | null; isT
       {state === "error" && <ErrorCard message={error} onRetry={() => setNonce((n) => n + 1)} />}
 
       {state === "loaded" && data && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {data.parks.length === 0 && (
             <Card>
               <p className="text-sm text-stardust-300">
@@ -134,41 +187,82 @@ export function TrailsPanel({ childAge, isTeen }: { childAge: number | null; isT
               </p>
             </Card>
           )}
-          {data.parks.map((p) => (
-            <Card key={p.id} padding="sm">
-              <p className="text-sm font-semibold text-star-100">{p.name}</p>
-              <p className="text-xs text-stardust-400">
-                {p.designation}
-                {p.city ? ` · ${p.city}, ${p.state}` : ` · ${p.state}`}
-              </p>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-stardust-300">
-                {p.description.slice(0, 240)}
-                {p.description.length > 240 ? "…" : ""}
-              </p>
-              <div className="mt-2 rounded-lg border border-teal-400/20 bg-teal-500/5 px-2.5 py-2">
-                <p className="text-[11px] font-semibold text-teal-200">Safety block</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-stardust-400">
-                  Source: {p.safety_block.source} ·{" "}
-                  <a href={p.official_url} target="_blank" rel="noreferrer" className="text-nova-300 underline">
-                    Official park page
-                  </a>
-                </p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-stardust-400">
-                  {p.safety_block.guidance_note}
-                </p>
-                {under16 && (
-                  <p className="mt-0.5 text-[11px] font-medium text-teal-200">
-                    Bring 2+ people — go with an adult.
+          {data.parks.map((p, i) => {
+            const art = artFor(p.designation);
+            return (
+              <article
+                key={p.id}
+                className="card-living animate-rise group overflow-hidden rounded-3xl"
+                style={{ animationDelay: `${Math.min(i, 8) * 0.06}s` }}
+              >
+                {/* Expedition banner */}
+                <div
+                  className="relative px-5 pb-4 pt-5"
+                  style={{ background: art.sky }}
+                >
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(ellipse 80% 60% at 80% 0%, rgb(255 255 255 / 0.08), transparent 60%)",
+                    }}
+                    aria-hidden="true"
+                  />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white/90 uppercase">
+                        <span aria-hidden="true">{art.glyph}</span> {art.label}
+                      </span>
+                      <h3 className="mt-2 text-lg font-bold leading-tight text-white">
+                        {p.name}
+                      </h3>
+                      <p className="mt-0.5 text-xs font-medium text-white/70">
+                        {p.city ? `${p.city}, ${p.state}` : p.state}
+                      </p>
+                    </div>
+                    <span className="text-4xl opacity-90 transition-transform group-hover:scale-125" aria-hidden="true">
+                      {art.glyph}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="px-5 py-4">
+                  <p className="text-[13px] leading-relaxed text-stardust-300">
+                    {p.description.slice(0, 240)}
+                    {p.description.length > 240 ? "…" : ""}
                   </p>
-                )}
-              </div>
-              <div className="mt-2 flex justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setPlanFor(p)}>
-                  Share my plan →
-                </Button>
-              </div>
-            </Card>
-          ))}
+
+                  {/* Safety briefing — holographic panel */}
+                  <div className="holo-panel mt-3 px-3.5 py-3">
+                    <p className="text-[10px] font-bold tracking-[0.18em] text-cyan-200/80 uppercase">
+                      Safety Briefing
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-stardust-300">
+                      Source: {p.safety_block.source} ·{" "}
+                      <a href={p.official_url} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2">
+                        Official park page
+                      </a>
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-stardust-400">
+                      {p.safety_block.guidance_note}
+                    </p>
+                    {under16 && (
+                      <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 px-2.5 py-1 text-[11px] font-bold text-teal-200">
+                        <span aria-hidden="true">👥</span> Bring 2+ people — go with an adult
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex justify-end">
+                    <Button size="sm" variant="ghost" onClick={() => setPlanFor(p)}>
+                      Share my expedition plan →
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
           <p className="text-[11px] text-stardust-500">Source: National Park Service</p>
         </div>
       )}

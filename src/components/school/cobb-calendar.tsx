@@ -78,8 +78,60 @@ export function CobbCalendar({ events = COBB_EVENTS }: { events?: CobbEvent[] })
 
   const selectedDate = selectedKey ? parseKey(selectedKey) : null;
 
+  // Upcoming strip — the next 3 district events from today.
+  const upcoming = useMemo(() => {
+    const upcomingList = events
+      .filter((e) => e.end >= todayKey)
+      .sort((a, b) => (a.start < b.start ? -1 : 1))
+      .slice(0, 3);
+    return upcomingList;
+  }, [events, todayKey]);
+
+  function daysUntil(key: string): string {
+    const diff = Math.round(
+      (parseKey(key).getTime() - parseKey(todayKey).getTime()) / 86400000
+    );
+    if (diff <= 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    return `In ${diff} days`;
+  }
+
   return (
     <Collapsible title="Cobb County School District Calendar" subtitle="Tap a day for details">
+      {/* Upcoming strip — next events on the horizon */}
+      {upcoming.length > 0 && (
+        <div className="mb-3 grid gap-2 sm:grid-cols-3">
+          {upcoming.map((e, i) => {
+            const s = cobbStyleFor(e.category);
+            return (
+              <button
+                key={`${e.title}-${e.start}-${i}`}
+                type="button"
+                onClick={() => {
+                  const d = parseKey(e.start);
+                  setViewYear(d.getFullYear());
+                  setViewMonth(d.getMonth());
+                  setSelectedKey(e.start);
+                }}
+                className="holo-panel group px-3.5 py-3 text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <p
+                  className="text-[10px] font-bold tracking-wider uppercase"
+                  style={{ color: s.dot }}
+                >
+                  {daysUntil(e.start)}
+                </p>
+                <p className="mt-1 line-clamp-2 text-[13px] font-bold leading-snug text-star-100">
+                  {e.title}
+                </p>
+                <p className="mt-1 text-[11px] text-stardust-400">
+                  {parseKey(e.start).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <section aria-label="Cobb County school calendar" className="overflow-hidden rounded-2xl border border-nova-400/15 bg-nebula-900/60">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-nova-400/10 px-4 py-3">

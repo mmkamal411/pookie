@@ -1,7 +1,8 @@
-// W28 Restaurants — real verified Foursquare listings near the coarse ZIP.
-// 21+/bar-primary excluded server-side for <18. Allergen hard-blocks read
-// the health allergy list when connected (never inferred, never an
-// "allergy-safe" claim). Teen night-safety bias toggle, default ON <18.
+// W28 Restaurants — dining destinations across the sector.
+// Real verified Foursquare listings near the coarse ZIP. 21+/bar-primary
+// excluded server-side for <18. Allergen hard-blocks read the health allergy
+// list when connected (never inferred, never an "allergy-safe" claim).
+// Teen night-safety bias toggle, default ON <18.
 
 "use client";
 
@@ -39,7 +40,41 @@ interface RestaurantsData {
 function miles(m: number | null): string {
   if (m == null) return "";
   const mi = m / 1609.34;
-  return mi < 0.1 ? "nearby" : `${mi.toFixed(1)} mi`;
+  return mi < 0.1 ? "Nearby" : `${mi.toFixed(1)} mi`;
+}
+
+/** Cuisine sigil — a small glowing glyph per cuisine family. */
+const CUISINE_SIGILS: { match: RegExp; glyph: string; hue: string }[] = [
+  { match: /italian|pizza|pasta/i, glyph: "🍝", hue: "amber" },
+  { match: /mexican|taco|burrito/i, glyph: "🌮", hue: "orange" },
+  { match: /chinese|dim sum|noodle/i, glyph: "🥡", hue: "red" },
+  { match: /japanese|sushi|ramen/i, glyph: "🍣", hue: "rose" },
+  { match: /indian|curry/i, glyph: "🍛", hue: "yellow" },
+  { match: /thai/i, glyph: "🍜", hue: "lime" },
+  { match: /american|burger|bbq|steak/i, glyph: "🍔", hue: "sky" },
+  { match: /seafood|fish/i, glyph: "🦐", hue: "cyan" },
+  { match: /breakfast|brunch|coffee|cafe/i, glyph: "☕", hue: "stone" },
+  { match: /bakery|dessert|ice cream|sweet/i, glyph: "🧁", hue: "pink" },
+  { match: /vietnamese|pho/i, glyph: "🍲", hue: "emerald" },
+  { match: /korean/i, glyph: "🍱", hue: "violet" },
+  { match: /mediterranean|greek/i, glyph: "🫒", hue: "teal" },
+];
+
+function sigilFor(categories: string[]): { glyph: string; hue: string } {
+  const joined = categories.join(" ");
+  for (const s of CUISINE_SIGILS) {
+    if (s.match.test(joined)) return { glyph: s.glyph, hue: s.hue };
+  }
+  return { glyph: "🍽️", hue: "nova" };
+}
+
+function timeGreeting(): { line: string; sub: string } {
+  const h = new Date().getHours();
+  if (h < 11) return { line: "Morning fuel run?", sub: "Breakfast and brunch spots near you." };
+  if (h < 14) return { line: "Lunch coordinates?", sub: "Midday spots within easy reach." };
+  if (h < 17) return { line: "Afternoon refuel?", sub: "Coffee, snacks, and light bites nearby." };
+  if (h < 21) return { line: "Dinner destination?", sub: "Where should the crew eat tonight?" };
+  return { line: "Late-night provisions?", sub: "What's still open near you." };
 }
 
 export function RestaurantsPanel({ isTeen }: { isTeen: boolean }) {
@@ -86,8 +121,24 @@ export function RestaurantsPanel({ isTeen }: { isTeen: boolean }) {
     list = [...list].sort((a, b) => (a.distance_m ?? 99999) - (b.distance_m ?? 99999));
   }
 
+  const greeting = timeGreeting();
+
   return (
     <div className="space-y-4">
+      {/* Hero — time-aware dining header */}
+      <section className="holo-panel led-strip px-5 py-5">
+        <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-200/70 uppercase">
+          Dining Destinations
+        </p>
+        <h2 className="mt-1 text-xl font-bold text-star-100">{greeting.line}</h2>
+        <p className="mt-0.5 text-sm text-stardust-300">{greeting.sub}</p>
+        {data?.location && (
+          <p className="mt-2 text-xs text-stardust-400">
+            Scanning near {data.location.city}, {data.location.state} {data.location.zip}
+          </p>
+        )}
+      </section>
+
       <ZipGate
         value={zip}
         label="Where should we eat?"
@@ -111,7 +162,7 @@ export function RestaurantsPanel({ isTeen }: { isTeen: boolean }) {
       </Card>
 
       {data?.allergen_filter && (
-        <InfoLine tone={data.allergen_filter === "active" ? "teal" : "info"} icon="🥜">
+        <InfoLine tone={data.allergen_filter === "active" ? "teal" : "info"} icon="🛡️">
           {data.allergen_note}
         </InfoLine>
       )}
@@ -133,7 +184,7 @@ export function RestaurantsPanel({ isTeen }: { isTeen: boolean }) {
       )}
 
       {state === "loaded" && data?.status === "ok" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {list.length === 0 && (
             <Card>
               <p className="text-sm text-stardust-300">
@@ -141,21 +192,51 @@ export function RestaurantsPanel({ isTeen }: { isTeen: boolean }) {
               </p>
             </Card>
           )}
-          {list.map((r) => (
-            <Card key={r.id} padding="sm">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-star-100">{r.name}</p>
-                {r.distance_m != null && (
-                  <span className="shrink-0 text-xs text-stardust-400">{miles(r.distance_m)}</span>
-                )}
-              </div>
-              <p className="mt-0.5 text-xs text-stardust-400">
-                {r.categories.slice(0, 3).join(" · ")}
-              </p>
-              {r.address && <p className="mt-0.5 text-xs text-stardust-500">{r.address}</p>}
-              <p className="mt-1 text-[11px] text-stardust-500">Health score: not available</p>
-            </Card>
-          ))}
+          {list.map((r, i) => {
+            const sigil = sigilFor(r.categories);
+            return (
+              <article
+                key={r.id}
+                className="card-living animate-rise group relative overflow-hidden rounded-3xl p-4"
+                style={{ animationDelay: `${Math.min(i, 8) * 0.05}s` }}
+              >
+                <div className="flex items-start gap-3.5">
+                  {/* Cuisine sigil */}
+                  <div className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl border border-nova-400/25 bg-gradient-to-br from-nebula-800/80 to-nebula-950/90 text-2xl shadow-glow-sm transition-transform group-hover:scale-110">
+                    <span aria-hidden="true">{sigil.glyph}</span>
+                    <span className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-[15px] font-bold leading-snug text-star-100">
+                        {r.name}
+                      </h3>
+                      {r.distance_m != null && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
+                          <span aria-hidden="true">📍</span> {miles(r.distance_m)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs font-medium tracking-wide text-stardust-300">
+                      {r.categories.slice(0, 3).join(" · ")}
+                    </p>
+                    {r.address && (
+                      <p className="mt-0.5 truncate text-xs text-stardust-500">{r.address}</p>
+                    )}
+                  </div>
+                </div>
+                {/* Neon journey line */}
+                <div
+                  className="pointer-events-none absolute bottom-0 left-6 right-6 h-px opacity-0 transition-opacity group-hover:opacity-100"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, rgb(103 232 249 / 0.7), transparent)",
+                    boxShadow: "0 0 10px rgb(103 232 249 / 0.5)",
+                  }}
+                  aria-hidden="true"
+                />
+              </article>
+            );
+          })}
           <p className="text-[11px] text-stardust-500">
             Listings: Foursquare. {data.dph_note}
           </p>
