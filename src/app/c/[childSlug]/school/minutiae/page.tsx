@@ -31,7 +31,7 @@ export default async function MinutiaePage({
       <Link
         href={`/c/${childSlug}/school`}
         className="mb-4 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
-        style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+        style={{ textShadow: "0 0 10px rgb(0 229 255 / 0.35)" }}
       >
         ← School Overview
       </Link>

@@ -100,7 +100,10 @@ export function ChildRosterPanel({
 
   function goToAddChild() {
     onDone?.();
+    // Existing families add from Settings → Profile (create_child path);
+    // a parent with no memberships yet goes to the first-child flow.
     if (active) router.push(`/c/${active.child.slug}/settings`);
+    else router.push("/add-child");
   }
 
   const line = dark ? "rgb(0 229 255 / 0.14)" : "rgb(0 184 212 / 0.2)";

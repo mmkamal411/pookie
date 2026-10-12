@@ -238,7 +238,6 @@ export function MorePopup({
           placeholder="find a feature…"
           autoComplete="off"
           className="w-full rounded-2xl border border-nova-400/25 bg-nebula-900/70 px-4 py-3 text-sm text-star-100 placeholder:text-stardust-500 focus:border-nova-400/60 focus:outline-none"
-          style={{ boxShadow: "inset 0 0 18px rgb(5 5 16 / 0.5)" }}
         />
       </div>
 
@@ -295,7 +294,7 @@ export function MorePopup({
                     aria-expanded={isOpen}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
                   >
-                    <span aria-hidden="true" className="text-xl" style={{ filter: "drop-shadow(0 0 8px rgb(244 114 182 / 0.35))" }}>
+                    <span aria-hidden="true" className="text-xl" style={{ filter: "drop-shadow(0 0 8px rgb(0 229 255 / 0.35))" }}>
                       {grove.sigil}
                     </span>
                     <span className="min-w-0 flex-1">
