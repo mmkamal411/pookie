@@ -2714,3 +2714,17 @@ Surfaces A (a–m): account-deleted, add-child, c/ home, coparenting, credit, he
 **Verification:** `npx tsc --noEmit` clean.
 
 **Attribution:** Squad Triage's 12:45 entry above documents their emergency settings-view fix for my uncommitted Theme change — that minimal fix is now superseded by `BridgeThemeSelector` (same labels, richer UI). Their entry kept for the record.
+
+## 2026-10-12 ~12:50 EDT — Squad Triage (P0 site-down) — RESOLVED
+
+**Root cause:** R&D Team 2 changed the `Theme` type in `src/components/use-theme.ts` from `"dark" | "light"` to `"space-black" | "bright-bridge"` (uncommitted working-tree changes). The settings views were also updated by Team 2 to use the new `BridgeThemeSelector` component. However, an intermediate deploy built from a working tree state where the type had changed but the settings views had not yet been updated, causing TypeScript build failures (TS2345/TS2367) and a broken staging deployment.
+
+**Resolution:** Verified Team 2's complete theme migration is present in the working tree:
+- `src/components/use-theme.ts`: new `"space-black" | "bright-bridge"` type with migration logic
+- `src/components/settings/settings-view.tsx`: uses `BridgeThemeSelector` component
+- `src/components/settings/child-settings-view.tsx`: uses `BridgeThemeSelector` component
+- `src/components/settings/settings-ui.tsx`: new `BridgeThemeSelector` component with visual swatches
+
+`npm run build` succeeds. Deploying working tree to staging.
+
+**Note:** Squad Triage initially attempted a minimal fix but discovered Team 2 had already completed the proper migration. No Triage changes were needed — Team 2's work is intact and correct.
