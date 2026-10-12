@@ -34,8 +34,8 @@ export function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <Card padding="lg" className="text-center">
-      <div aria-hidden="true" className="text-3xl" style={{ filter: "drop-shadow(0 0 10px rgb(52 211 153 / 0.5))" }}>
+    <Card padding="lg" className="quantum-warm text-center">
+      <div aria-hidden="true" className="awaiting-data text-3xl" style={{ filter: "drop-shadow(0 0 10px rgb(52 211 153 / 0.5))" }}>
         {icon}
       </div>
       <p className="text-sunlit mt-3 text-base font-semibold">{title}</p>
@@ -58,7 +58,7 @@ export function EmptyCategoryCard({
   suggestion?: { moduleName: string; reason: string };
 }) {
   return (
-    <div className="card-living rounded-2xl p-5 text-center">
+    <div className="card-living quantum-warm awaiting-data rounded-2xl p-5 text-center">
       <div aria-hidden="true" className="text-2xl">🌌</div>
       <p className="mt-2 text-sm font-medium text-star-100">Nothing here for you right now.</p>
       <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-stardust-300">

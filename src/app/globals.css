@@ -502,3 +502,486 @@ body {
   color: rgb(244 114 182 / 0.85);
   text-shadow: 0 0 10px rgb(244 114 182 / 0.3);
 }
+
+/* ==========================================================================
+   SPACESHIP CONSOLE — Squad Console, 2026-10-12.
+   The bottom toolbar as the ship's main control deck. Quantum-tech feel:
+   dark surfaces, soft luminous edges, warm ambient light. Every glow is
+   intentional; nothing harsh. (prefers-reduced-motion kills motion globally.)
+   ========================================================================== */
+
+/* Console housing — the physical instrument bezel */
+.console-housing {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(18 18 44 / 0.78), rgb(5 5 16 / 0.9));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgb(244 114 182 / 0.3);
+  box-shadow:
+    0 -1px 0 rgb(244 114 182 / 0.16),
+    0 -14px 44px rgb(5 5 16 / 0.6),
+    0 -6px 28px rgb(244 114 182 / 0.07),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+/* Luminous edge — a hairline of quantum light tracing the console rim */
+.console-housing::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgb(244 114 182 / 0.75) 22%,
+    rgb(253 230 138 / 0.55) 50%,
+    rgb(244 114 182 / 0.75) 78%,
+    transparent);
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+/* Warm ambient wash breathing almost imperceptibly across the deck */
+.console-housing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 120% at 50% 120%,
+    rgb(244 114 182 / 0.08),
+    transparent 70%);
+  pointer-events: none;
+  animation: console-ambient 9s ease-in-out infinite;
+}
+@keyframes console-ambient {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Status strip — the ship's whisper: tiny readouts above the controls */
+.console-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 18px 3px;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(160 160 196 / 0.75);
+}
+.console-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px rgb(110 231 183 / 0.9), 0 0 16px rgb(110 231 183 / 0.4);
+  margin-right: 7px;
+  vertical-align: 1px;
+  animation: console-blink 3.2s ease-in-out infinite;
+}
+@keyframes console-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Tab controls — instrument switches on the deck */
+.console-tab {
+  --tab-glow: #a78bfa;
+  --tab-glow-soft: rgb(167 139 250 / 0.55);
+}
+.console-tab-btn {
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
+    filter 0.28s ease,
+    color 0.28s ease,
+    background-color 0.28s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .console-tab-btn:hover {
+    transform: translateY(-2px);
+  }
+  .console-tab-btn:hover .console-tab-glyph {
+    filter: drop-shadow(0 0 7px var(--tab-glow-soft));
+  }
+}
+.console-tab-btn:active {
+  transform: scale(0.9);
+  transition-duration: 0.1s;
+}
+.console-tab-btn:focus-visible {
+  outline: 2px solid var(--tab-glow);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+.console-tab-glyph {
+  transition: filter 0.28s ease, transform 0.28s ease;
+  color: rgb(160 160 196 / 0.85);
+}
+.console-tab-btn[data-active="true"] {
+  color: var(--tab-glow);
+}
+.console-tab-btn[data-active="true"] .console-tab-glyph {
+  color: var(--tab-glow);
+  filter: drop-shadow(0 0 9px var(--tab-glow-soft)) drop-shadow(0 0 20px rgb(255 255 255 / 0.08));
+  transform: translateY(-1px);
+}
+.console-tab-btn[data-active="true"] .console-tab-label {
+  color: var(--tab-glow);
+  text-shadow: 0 0 12px var(--tab-glow-soft);
+}
+/* The lit slot — an engaged switch glows from its socket */
+.console-tab-slot {
+  height: 4px;
+  width: 34px;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.08);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease;
+}
+.console-tab-btn[data-active="true"] .console-tab-slot {
+  background: var(--tab-glow);
+  box-shadow:
+    0 0 10px var(--tab-glow-soft),
+    0 0 22px rgb(255 255 255 / 0.1);
+  width: 40px;
+}
+
+/* Orb docking socket — the Pookie dome seated in its collar */
+.console-orb-socket {
+  border-radius: 9999px;
+  padding: 5px;
+  background: radial-gradient(circle at 50% 35%,
+    rgb(244 114 182 / 0.14),
+    rgb(5 5 16 / 0.4) 72%);
+  border: 1px solid rgb(244 114 182 / 0.4);
+  box-shadow:
+    0 0 20px rgb(244 114 182 / 0.28),
+    0 0 44px rgb(244 114 182 / 0.1),
+    inset 0 0 14px rgb(244 114 182 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  transition: box-shadow 0.3s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+a:active .console-orb-socket {
+  transform: scale(0.92);
+}
+.console-orb-socket[data-active="true"] {
+  box-shadow:
+    0 0 26px rgb(244 114 182 / 0.45),
+    0 0 60px rgb(244 114 182 / 0.16),
+    inset 0 0 16px rgb(244 114 182 / 0.16),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+/* Warm light pooling beneath the docked orb */
+.console-orb-pool {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 72px;
+  height: 22px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center,
+    rgb(244 114 182 / 0.4),
+    rgb(251 191 36 / 0.1) 55%,
+    transparent 72%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* Standby console — the deck at rest (pre-vessel pages) */
+.console-standby {
+  background:
+    linear-gradient(180deg, rgb(18 18 44 / 0.66), rgb(5 5 16 / 0.85));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgb(244 114 182 / 0.22);
+  box-shadow:
+    0 -1px 0 rgb(244 114 182 / 0.12),
+    0 -12px 36px rgb(5 5 16 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+/* Crew cluster — the header's crew + ship-controls instrument */
+.console-cluster {
+  background: linear-gradient(180deg, rgb(20 20 50 / 0.66), rgb(8 8 22 / 0.78));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgb(244 114 182 / 0.22);
+  box-shadow:
+    0 0 16px rgb(244 114 182 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.console-cluster:hover {
+  border-color: rgb(244 114 182 / 0.38);
+  box-shadow:
+    0 0 22px rgb(244 114 182 / 0.16),
+    inset 0 1px 0 rgb(255 255 255 / 0.09);
+}
+/* Pilot callsign readout — the logged-in user's name, letterspaced like a
+   cockpit crew placard. Warm neon whisper, never harsh. */
+.callsign-name {
+  color: var(--color-star-100);
+  text-shadow: 0 0 12px rgb(244 114 182 / 0.35);
+  letter-spacing: 0.045em;
+}
+.console-cluster-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 8px 0;
+  background: linear-gradient(180deg, transparent, rgb(244 114 182 / 0.3), transparent);
+}
+
+/* Docking-module chrome — popups as external modules linked to the console */
+.module-dock-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgb(249 168 212 / 0.9);
+  text-shadow: 0 0 10px rgb(244 114 182 / 0.35);
+}
+.module-dock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px rgb(110 231 183 / 0.9);
+  animation: console-blink 3.2s ease-in-out infinite;
+}
+.module-dock-panel {
+  border: 1px solid rgb(244 114 182 / 0.28) !important;
+  box-shadow:
+    0 -12px 48px rgb(5 5 16 / 0.6),
+    0 0 44px rgb(244 114 182 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
+}
+
+/* GlassPane — the ship's viewscreen. One consistent frame for every page:
+   frosted glass, subtle neon edge, soft inner glow. Readability first —
+   glows stay on the frame, never on the text. */
+.glass-pane {
+  background: linear-gradient(180deg,
+    rgb(16 16 42 / 0.5),
+    rgb(8 8 24 / 0.55));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgb(244 114 182 / 0.14);
+  border-radius: 28px;
+  box-shadow:
+    0 0 36px rgb(244 114 182 / 0.06),
+    0 18px 60px rgb(5 5 16 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 0 80px rgb(24 24 70 / 0.22);
+}
+
+/* Neon light piping — Mehedi 2026-10-12: every panel carries a continuous
+   subtle luminous edge, like light piping on a spacecraft. Hover: the pipe
+   brightens, the panel lifts, the glow blooms — 300ms, eased, never snapping.
+   GPU-cheap: border-color / box-shadow / transform / opacity only. */
+.neon-pipe {
+  border: 1px solid rgb(244 114 182 / 0.22);
+  box-shadow:
+    0 0 18px rgb(244 114 182 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Lift is opt-in: fixed chrome (console, viewscreen) glows but never lifts. */
+.neon-pipe-lift:hover {
+  border-color: rgb(244 114 182 / 0.45);
+  box-shadow:
+    0 0 30px rgb(244 114 182 / 0.18),
+    0 10px 34px rgb(5 5 16 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.09);
+  transform: translateY(-2px);
+}
+/* Console housing: pipe brightens on hover, never lifts (fixed chrome). */
+.console-housing {
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.console-housing:hover {
+  border-top-color: rgb(244 114 182 / 0.45);
+  box-shadow:
+    0 -1px 0 rgb(244 114 182 / 0.28),
+    0 -14px 44px rgb(5 5 16 / 0.6),
+    0 -6px 34px rgb(244 114 182 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+/* Cluster easing aligned to the 300ms standard. */
+.console-cluster {
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Page glide — Mehedi 2026-10-12: navigating feels like the ship gliding
+   from one place to another. Incoming view fades in with a gentle rise and
+   settle (~350ms); the GlassPane viewscreen stays stable around it.
+   GPU-cheap (opacity/transform only); reduced-motion collapses it globally. */
+@keyframes page-glide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-glide {
+  animation: page-glide-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   SQUAD QUANTUM — 2026-10-12. The ship's lighting language, unified.
+   Next-gen quantum-tech feel: warm, modern, mood-lifting. Every glow is
+   intentional — like the ship's interior lighting was designed by someone
+   who cares how it makes you feel. Subtle, never harsh. Never cold.
+
+   Palette (unified across all squads):
+     pink   #f472b6 — the ship's heart light (primary)
+     teal   #2dd4bf — systems nominal, calm
+     violet #a78bfa — depth, mystery, the far stars
+     gold   #fbbf24 — warmth, love, "needs extra love" (sparing)
+   GPU-cheap only: border-color / box-shadow / transform / opacity.
+   Text stays crisp — glows live on frames, never on glyphs.
+   prefers-reduced-motion collapses all of this globally (see top of file).
+   ========================================================================== */
+
+/* Neon pipe — teal variant. Calm systems, live-but-quiet modules. */
+.neon-pipe-teal {
+  border: 1px solid rgb(45 212 191 / 0.22);
+  box-shadow:
+    0 0 18px rgb(45 212 191 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.neon-pipe-lift.neon-pipe-teal:hover,
+a.neon-pipe-teal:hover, button.neon-pipe-teal:hover {
+  border-color: rgb(45 212 191 / 0.45);
+  box-shadow:
+    0 0 30px rgb(45 212 191 / 0.16),
+    0 10px 34px rgb(5 5 16 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.09);
+  transform: translateY(-2px);
+}
+
+/* Neon pipe — violet variant. Depth and wonder, the far-star modules. */
+.neon-pipe-violet {
+  border: 1px solid rgb(167 139 250 / 0.24);
+  box-shadow:
+    0 0 18px rgb(167 139 250 / 0.09),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.neon-pipe-lift.neon-pipe-violet:hover,
+a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
+  border-color: rgb(167 139 250 / 0.5);
+  box-shadow:
+    0 0 30px rgb(167 139 250 / 0.18),
+    0 10px 34px rgb(5 5 16 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.09);
+  transform: translateY(-2px);
+}
+
+/* Quantum warmth — a whisper of golden ambient light pooling inside a
+   surface. Lifts the mood without changing the hue of the content. Lay it
+   over cards and panes that should feel embraced, not displayed. */
+.quantum-warm {
+  position: relative;
+}
+.quantum-warm::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 90% 60% at 50% 108%,
+    rgb(251 191 36 / 0.07),
+    transparent 65%);
+  pointer-events: none;
+}
+
+/* Quantum press — the touch equivalent of the hover lift. On press, the
+   panel settles and its pipe blooms: tactile, never snappy. Pair with
+   neon-pipe / neon-pipe-lift / card-living on tappable surfaces. */
+.quantum-press {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.quantum-press:active {
+  transform: scale(0.97);
+  transition-duration: 0.1s;
+}
+
+/* Quantum ring — keyboard focus in the glow language. Visible, calm,
+   unmistakably part of the ship. Use on interactive controls that lack
+   their own focus style. */
+.quantum-ring:focus-visible {
+  outline: 2px solid rgb(244 114 182 / 0.7);
+  outline-offset: 3px;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgb(244 114 182 / 0.35);
+}
+
+/* Pill glow — unifies badges and status pills in the glow language. Their
+   per-tone shadows get a gentle bloom on hover so even tiny chips feel
+   like live instruments. */
+.pill-glow {
+  transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pill-glow:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12) saturate(1.1);
+}
+
+/* Light theme: pipes stay visible but whisper-quiet on pale glass. */
+[data-theme="light"] .neon-pipe,
+[data-theme="light"] .neon-pipe-teal,
+[data-theme="light"] .neon-pipe-violet {
+  box-shadow:
+    0 0 14px rgb(244 114 182 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+/* PageGlide outgoing — Squad Glide 2026-10-12: the previous view fades and
+   drifts out (250ms) while the new view glides in beneath it. The held echo
+   is inert + pointer-events-free — a visual echo, never a live surface.
+   GPU-cheap (opacity/transform only); reduced-motion collapses it globally. */
+@keyframes page-glide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.page-glide-wrap {
+  position: relative;
+}
+.page-glide-out {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: page-glide-out 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

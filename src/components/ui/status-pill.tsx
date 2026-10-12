@@ -31,7 +31,7 @@ export function StatusPill({
   return (
     <span
       title={title}
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${TONES[tone]}`}
+      className={`pill-glow inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${TONES[tone]}`}
     >
       {children}
     </span>

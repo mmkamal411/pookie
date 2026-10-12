@@ -32,7 +32,7 @@ export function Card({
   as?: "div" | "section" | "article" | "li";
 }) {
   const Tag = as;
-  const glowClass = glow === "soft" ? "card-living" : "";
+  const glowClass = glow === "soft" ? "card-living quantum-press" : "";
   return (
     <Tag className={`${glowClass} rounded-2xl ${PADDING[padding]} ${className}`}>
       {children}

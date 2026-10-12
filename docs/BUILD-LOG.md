@@ -1650,3 +1650,6 @@ Built the full UI for all 7 Squad 4 modules against BACKEND-CONTRACTS.md, per UX
 **Not touching:** Aurora's files (`pookie-orb.tsx`, `pookie-pinball.tsx`, `nebula-background.tsx`) — only wrapped/consumed. `tab-active-glow` class left in CSS (zero tsx usages now; was pre-existing — remove only after confirming no squad needs it).
 
 **Verified:** `npx tsc --noEmit` clean; `npm run build` green; dead-code sweep on touched files (removed 2 unused type imports). Browser/visual verification NOT done by Console — generic subagents can't operate the live browser; needs a signed-in visual pass (console on tab pages, standby on /me, roster panel, glide between tabs).
+
+## 2026-10-12 08:12 EDT — Squad Stardust (voice & copy) claims
+Files: src/app/login/**, src/app/page.tsx, src/app/onboarding/**, copy in src/components/ui/empty-state.tsx, src/components/ui/status-pill.tsx, home/today/school page copy, src/app/me/page.tsx copy, src/app/select-child/page.tsx copy. Copy+styling only, no logic changes. Will skip files actively being edited by other squads.

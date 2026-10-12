@@ -368,7 +368,7 @@ export function MinutiaeCalendar({
       )}
 
       {handled.length > 0 && (
-        <details className="mt-8 rounded-2xl border border-comet-600/20 px-4 py-3">
+        <details className="neon-pipe mt-8 rounded-2xl border border-comet-600/20 px-4 py-3">
           <summary className="cursor-pointer text-sm font-medium text-stardust-200">
             Handled · {handled.length} acknowledged
           </summary>

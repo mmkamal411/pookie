@@ -48,7 +48,7 @@ export function StudySparks({ sparks }: { sparks: StudySpark[] }) {
         {sparks.map((s) => {
           const open = openId === s.id;
           return (
-            <div key={s.id} className="rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3">
+            <div key={s.id} className="neon-pipe-violet rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3">
               <p className="text-sm leading-relaxed text-star-100">{s.body}</p>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <span className="rounded-full border border-nova-400/30 px-2 py-0.5 text-[10px] font-medium text-nova-300">

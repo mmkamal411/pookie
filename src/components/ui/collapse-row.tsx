@@ -24,7 +24,7 @@ export function CollapseRow({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="overflow-hidden rounded-xl border border-nova-400/15 bg-nebula-900/60">
+    <div className="neon-pipe overflow-hidden rounded-xl border border-nova-400/15 bg-nebula-900/60">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
