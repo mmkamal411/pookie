@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getMemberships } from "@/lib/tenant/actions";
-import { getSchoolOverview } from "@/server/services/school";
+import { getSchoolOverview, getHomeBriefing } from "@/server/services/school";
 import { OverviewDashboard } from "@/components/overview/overview-dashboard";
 
 // Tenant-scoped route — always renders at request time.
@@ -19,10 +19,12 @@ export default async function HomePage({ params }: { params: Promise<{ childSlug
   if (!membership) notFound();
 
   const overview = await getSchoolOverview(membership.child_id);
+  const briefing = await getHomeBriefing(membership.child_id);
 
   return (
     <OverviewDashboard
       overview={overview}
+      briefing={briefing}
       childName={membership.child.nickname ?? membership.child.first_name}
       childSlug={childSlug}
       schoolName={membership.child.school_name}

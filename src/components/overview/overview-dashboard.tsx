@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { SchoolOverview } from "@/lib/school/types";
+import type { HomeBriefing } from "@/server/services/school";
 import { ClassCard } from "@/components/school/class-card";
-import { GreetingHero } from "./greeting-hero";
+import { MissionBriefing } from "@/components/home/mission-briefing";
+import { CommandStrip } from "@/components/home/command-strip";
+import { SchoolCalendar } from "@/components/home/school-calendar";
+import { StudySparks } from "@/components/home/study-sparks";
+import { FormulaCard } from "@/components/home/formula-card";
 import { OverviewSection } from "./overview-section";
 import { DueNextStrip } from "./due-next-strip";
 import { AttentionItems } from "./attention-items";
@@ -10,12 +15,15 @@ import { isUrgent } from "./due-helpers";
 
 /**
  * Home tab — `/c/[childSlug]/`.
- * The morning glance: greeting hero, due-next strip, 6 grade cards
- * (highest first), attention items, upcoming assignments, check-in nudge.
- * through the same component.
+ * Structure ported from d-dash's beloved dashboard (Squad Homeport):
+ * mission briefing (greeting + quote + weather) → command strip (KPIs) →
+ * due-next rail → classes → needs extra love → coming up → school
+ * calendar → brain hacks → formula of the day → check-in nudge.
+ * All sections collapsed by default; the glance survives in the headers.
  */
 export function OverviewDashboard({
   overview,
+  briefing,
   childName,
   childSlug,
   schoolName,
@@ -23,6 +31,7 @@ export function OverviewDashboard({
   role,
 }: {
   overview: SchoolOverview;
+  briefing: HomeBriefing;
   childName: string;
   childSlug: string;
   schoolName: string | null;
@@ -44,7 +53,7 @@ export function OverviewDashboard({
       <div className="firefly" style={{ width: 6, height: 6, top: "18%", left: "88%", animationDelay: "1.6s" }} />
       <div className="firefly" style={{ width: 10, height: 10, top: "48%", left: "4%", animationDelay: "2.8s" }} />
 
-      <GreetingHero
+      <MissionBriefing
         childName={childName}
         schoolName={schoolName}
         gradeLevel={gradeLevel}
@@ -52,6 +61,14 @@ export function OverviewDashboard({
         urgentCount={urgentCount}
         classCount={classes.length}
       />
+
+      <div className="mt-6">
+        <CommandStrip
+          classes={classes}
+          dueNext={overview.due_next}
+          checkinStreak={briefing.checkin_streak}
+        />
+      </div>
 
       <div className="mt-8">
         <DueNextStrip items={overview.due_next} childSlug={childSlug} />
@@ -80,8 +97,30 @@ export function OverviewDashboard({
           <UpcomingList items={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 
+        <OverviewSection
+          title="School calendar"
+          badge={briefing.events.length || null}
+          delay={0.3}
+        >
+          <SchoolCalendar events={briefing.events} />
+        </OverviewSection>
+
+        <OverviewSection
+          title="Brain hacks"
+          badge={briefing.sparks.length || null}
+          delay={0.32}
+        >
+          <StudySparks sparks={briefing.sparks} />
+        </OverviewSection>
+
+        {briefing.formula && (
+          <OverviewSection title="Formula of the day" delay={0.34}>
+            <FormulaCard formula={briefing.formula} />
+          </OverviewSection>
+        )}
+
         {!overview.checkin_today && (
-          <OverviewSection title="Today's check-in" badge="!" delay={0.32}>
+          <OverviewSection title="Today's check-in" badge="!" delay={0.36}>
             <Link
               href={`/c/${childSlug}/school#checkin`}
               className="card-white block rounded-2xl px-5 py-4"

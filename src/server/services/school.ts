@@ -328,6 +328,133 @@ async function getSchoolOverviewInner(childId: string): Promise<SchoolOverview> 
 }
 
 // ---------------------------------------------------------------------------
+// Home briefing — d-dash home port (Squad Homeport)
+// ---------------------------------------------------------------------------
+
+export interface SchoolEventBrief {
+  id: string;
+  kind: string;
+  title: string;
+  detail: string | null;
+  event_date: string | null;
+}
+
+export interface StudySparkBrief {
+  id: string;
+  body: string;
+  unit_tag: string | null;
+  class_name: string | null;
+}
+
+export interface FormulaBrief {
+  id: string;
+  name: string;
+  plain_statement: string;
+  subject: string;
+}
+
+export interface HomeBriefing {
+  events: SchoolEventBrief[];
+  sparks: StudySparkBrief[];
+  formula: FormulaBrief | null;
+  checkin_streak: number;
+}
+
+const EMPTY_BRIEFING: HomeBriefing = { events: [], sparks: [], formula: null, checkin_streak: 0 };
+
+/**
+ * Home-tab extras: upcoming school events, study sparks (brain hacks),
+ * the daily formula, and the check-in streak. Never throws — returns empty
+ * briefing on failure so the home page shell always renders (F3 pattern).
+ */
+export async function getHomeBriefing(childId: string): Promise<HomeBriefing> {
+  try {
+    return await getHomeBriefingInner(childId);
+  } catch (err) {
+    const id = crypto.randomUUID().slice(0, 8);
+    console.error(`[${id}] school/getHomeBriefing :: child ${childId} :: ${err instanceof Error ? err.message : String(err)}`);
+    return EMPTY_BRIEFING;
+  }
+}
+
+async function getHomeBriefingInner(childId: string): Promise<HomeBriefing> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const horizon = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const [eventsRes, sparksRes, formulaRes, checkinRes] = await Promise.all([
+    supabase
+      .from("school_events")
+      .select("id, kind, title, detail, event_date")
+      .eq("child_id", childId)
+      .gte("event_date", today)
+      .lte("event_date", horizon)
+      .order("event_date", { ascending: true })
+      .limit(8),
+    supabase
+      .from("study_sparks")
+      .select("id, body, unit_tag, class_id, classes(display_name, name)")
+      .or(`child_id.eq.${childId},child_id.is.null`)
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase.from("formula_bank").select("id, name, plain_statement, subject", { count: "exact" }),
+    supabase
+      .from("checkins")
+      .select("checkin_date")
+      .eq("child_id", childId)
+      .order("checkin_date", { ascending: false })
+      .limit(62),
+  ]);
+
+  const events: SchoolEventBrief[] = ((eventsRes.data ?? []) as Array<{
+    id: string; kind: string; title: string; detail: string | null; event_date: string | null;
+  }>).map((e) => ({ id: e.id, kind: e.kind, title: e.title, detail: e.detail, event_date: e.event_date }));
+
+  const sparks: StudySparkBrief[] = ((sparksRes.data ?? []) as Array<{
+    id: string; body: string; unit_tag: string | null;
+    classes: { display_name: string | null; name: string } | Array<{ display_name: string | null; name: string }> | null;
+  }>).map((s) => {
+    const cls = Array.isArray(s.classes) ? s.classes[0] ?? null : s.classes;
+    return {
+      id: s.id,
+      body: s.body,
+      unit_tag: s.unit_tag,
+      class_name: cls ? (cls.display_name ?? cls.name) : null,
+    };
+  });
+
+  // Daily formula — deterministic rotation over the bank.
+  let formula: FormulaBrief | null = null;
+  const formulas = (formulaRes.data ?? []) as Array<{
+    id: string; name: string; plain_statement: string; subject: string;
+  }>;
+  if (formulas.length > 0) {
+    const dayNum = Math.floor(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) / 86_400_000);
+    const f = formulas[dayNum % formulas.length];
+    formula = { id: f.id, name: f.name, plain_statement: f.plain_statement, subject: f.subject };
+  }
+
+  // Check-in streak — consecutive days ending today or yesterday.
+  let streak = 0;
+  const dates = new Set(
+    ((checkinRes.data ?? []) as Array<{ checkin_date: string }>).map((r) => r.checkin_date)
+  );
+  const cursor = new Date();
+  if (!dates.has(cursor.toISOString().slice(0, 10))) {
+    cursor.setDate(cursor.getDate() - 1); // allow today to be missing once
+  }
+  for (;;) {
+    const key = cursor.toISOString().slice(0, 10);
+    if (!dates.has(key)) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+    if (streak > 60) break;
+  }
+
+  return { events, sparks, formula, checkin_streak: streak };
+}
+
+// ---------------------------------------------------------------------------
 // Class detail
 // ---------------------------------------------------------------------------
 

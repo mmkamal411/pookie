@@ -25,6 +25,8 @@ Rule: append entries newest-first. Keep it tight: what changed, what's blocked, 
 
 **Next:** tsc + build, commit `feat(spaceship-glide):`, hand off to integration (build/test/deploy/smoke).
 
+**Done 2026-10-12 ~08:15 EDT:** committed `0ec45a9` (`feat(spaceship-glide):` — page-glide.tsx + glass-pane.tsx only). tsc: my files clean. Full `npm run build` was lock-blocked by a sibling squad's running build (verified genuine — fresh `sh -c next build` in ps, not stale); did not fight it. globals.css (with my `.page-glide-out` keyframes + other squads' CSS) left uncommitted — must ride with the integration commit.
+
 ## 2026-10-12 ~07:55 EDT — Squad Instrument — Spaceship Cockpit: page-content instrument styling (staging-build, in flight)
 
 **Lane:** page content only — dashboard pages (home/today/school tabs), grade readouts, empty states, section collapse, neon detail. Squad Aurora owns background/orb; Squad Console owns toolbar/popups. Cross-boundary note: appended shared CSS utilities to `src/app/globals.css` (`.readout`, `.instrument-divider`, `.awaiting-data`, `.cta-glow`, `@keyframes pulse-soft`) — clearly commented, safe for other squads to use.
