@@ -1307,6 +1307,15 @@ body {
   background: rgb(20 28 58 / 0.66);
   border: 1px solid rgb(0 229 255 / 0.32);
 }
+/* Bright Bridge: inputs go light — the Vista dark glass would sit as a
+   dark slab on the light theme. Text/placeholder already flip via tokens. */
+[data-theme="bright-bridge"] .input-rooted {
+  background: rgb(255 255 255 / 0.88);
+  border-color: rgb(0 184 212 / 0.35);
+}
+[data-theme="bright-bridge"] .input-rooted:focus {
+  border-color: rgb(0 184 212 / 0.7);
+}
 
 /* --- 4. Cosmic scene layers: the rotating window ---
    z-index 1: above the starfield canvas (z-0), below content (z-10+).
