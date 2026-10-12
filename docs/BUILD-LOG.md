@@ -1834,3 +1834,18 @@ only surface — the badge appears exactly where users encounter them.
 **10. Global Quick Capture** — Floating action to instantly add task/note/bill from anywhere. Removes the #1 friction barrier. *Build: FAB + quick-add sheets.*
 
 **Phase 2 plan:** Building in priority order. Starting with #1 (Family Task System) — the foundation everything else plugs into.
+
+## 2026-10-12 ~09:45 EDT — Squad Value — PHASE 2 PROGRESS: 5 value builds shipped
+
+**#1 Family Task System** (commit 6f07e20): family_tasks table (migration 064, household-anchored, RLS), full CRUD API (/api/v1/household/tasks), TaskBoard UI (priorities, due dates, recurrence with auto-spawn, filters), wired into Today tab.
+
+**#3 Bill Tracker** (commit bd551c4): bills table (migration 065), CRUD API (/api/v1/household/bills), BillBoard UI (amounts, due dates, mark-paid, 7-day total), wired into Today tab. Restores d-dash Command Center feature.
+
+**#6 Meal → Shopping Pipeline** (commit 83de243): "Send to shopping list" button in meal planner; posts grocery lines to existing batch API with source='meal-plan'. The W13 seam finally connected.
+
+**#4 Pookie Chat → Actions** (commit aa2e674): Intent detection in pookie-chat.tsx ("remind me to X", "add task X", "todo: X") → creates real family task via API, confirmation in astronaut voice prepended to Pookie's reply.
+
+**#7 Morning Briefing Digest** (commit 0bfa235): Unified day-at-a-glance header on Today tab — school due, overdue/due-today tasks, bills due this week with total, check-in status. Urgent highlighting, "clear skies" empty state.
+
+All: tsc clean. NOT deployed (parent owns deploys). Migrations 064/065 need Supabase apply.
+**Remaining top-10:** #2 Family Calendar, #5 Grade Drop Alerts, #8 Emergency, #9 School Calendar, #10 Quick Capture.
