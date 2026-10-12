@@ -3,6 +3,24 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~05:00 EDT — Platform Team 2 Security Engineer 🔒 (staging-build): THREAT MODEL + AUDIT FINDINGS (NO PLACEHOLDERS)
+
+**Files:** `docs/THREAT-MODEL-PHASE0.md` (1-page: assets, trust boundaries, top-5 threats w/ mitigations) + `docs/SECURITY-AUDIT-FINDINGS-2026-10-12.md` (real file:line findings, clean-verified list, executable pen-test checklist PT-1..PT-16).
+
+**Findings (committed code, all with file:line evidence):**
+- 🔴 **SEC-001 CRITICAL** — `supabase/migrations/006_w1_school_core.sql:307-309`: `checkins_tenant_read` lets any tenant member (incl. parents) SELECT raw teen check-in text via direct PostgREST; "enforced in the route" claim (006:138-140) is false at the RLS perimeter. Same file: `checkins_member_update` (006:316-319) lets a parent OVERWRITE teen check-in text; no DELETE policy → teen can't delete own check-in. Violates FR-SCHOOL-003, FR-ACCESS-006. Fix: teen-only SELECT/UPDATE/DELETE, parents get a SECURITY DEFINER aggregate view (counts/averages, never text).
+- 🟠 **SEC-002 HIGH** — `src/server/errors.ts:71-72` + `001_tenancy_core.sql:505-512`: invite-consume returns distinct `INVITE_NOT_FOUND` vs `INVITE_EMAIL_MISMATCH` envelopes → enumeration oracle on bearer tokens. Violates NFR-PRIVACY-005, FR-AUTH-009. Fix: collapse to one code/message + rate-limit consume.
+- 🟡 **SEC-003 MEDIUM** — teacher_messages SELECT policy requires `role='parent'` (006:297-305): the teen subject can't read their own school comms. Likely inverted. Approve/send parent-gating verified good (`requireParentRole`, school.ts:622-623, 665-666).
+- 🟡 **SEC-004 MEDIUM** — `src/app/api/v1/tutor/chat/route.ts:24-31`: external tutor worker gets child_id, response returned verbatim; no scope filtering on the worker path — parent-initiated chat could surface teen-private context. Needs worker scope attestation + server-side post-filter.
+
+**Verified clean:** Workers cookie rule — all route handlers swept, only `auth/callback/route.ts` writes cookies and follows NFR-RELIABILITY-001 (zero violations); all 52 `/api/v1` routes go through `handleRoute` + `assertTenant`/`assertParent`/`assertHousehold`; `/verify-invite` pre-auth surface is capability-URL-only (no grades/access rows); `health_metric_visible()` (011:248-309) is deny-by-default with audited parental safety overrides — but header says it's superseded by `health_tier_visible` (still unapplied; 022 untracked).
+
+**Pending re-audit (not findings — code not landed):** P-1 `resolve_visible_scopes()` (no matches in repo); P-2 Support RBAC (`support_tickets`/`ticket_events`/`teen_privacy` don't exist; S1/S2/S3 are menu seedlings); P-3 `access_events` + `granted_by` enforcement (referenced only in UNTRACKED migrations 018/019/020); P-4 health-tier chain 022–025 (untracked).
+
+**Sign-off:** Phase 0 NOT signed off until SEC-001 + SEC-002 fixed and re-tested (PT-2/PT-3/PT-5), and P-1..P-4 landed + re-audited. **No deploy.**
+
+---
+
 ## 2026-10-12 ~04:55 EDT — Squad 3 School Track 🌿 PM (staging-build): BACKLOG.md DELIVERED + D5 REVISED + NO PLACEHOLDERS applied
 
 **File:** `docs/squad3/BACKLOG.md` (31 work packages, 3-sprint plan, risk watch, decision log — PM deliverables complete).
