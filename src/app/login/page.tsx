@@ -108,7 +108,7 @@ export default function LoginPage({
           ? RATE_LIMIT_COPY
           : err instanceof Error
             ? err.message
-            : "Something went wrong.",
+            : "Hold position — request incomplete. Try again in a moment.",
       );
       setOauthBusy(false);
     }
@@ -132,7 +132,7 @@ export default function LoginPage({
 
   function mapSendError(err: unknown): string {
     if (isRateLimitError(err)) return RATE_LIMIT_COPY;
-    return err instanceof Error ? err.message : "Something went wrong.";
+    return err instanceof Error ? err.message : "Hold position — request incomplete. Try again in a moment.";
   }
 
   async function sendLink(e: React.FormEvent) {
@@ -170,7 +170,7 @@ export default function LoginPage({
       <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-6 py-16 lg:grid-cols-2">
         {/* Hero — the promise */}
         <section className="animate-bloom">
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             Pookie · mission control
           </p>
           <h1 className="text-sunlit mt-4 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
@@ -204,7 +204,7 @@ export default function LoginPage({
           <div className="card-living mx-auto w-full max-w-sm rounded-3xl p-8">
             <div className="mx-auto flex w-fit flex-col items-center">
               <PookieOrb size={72} />
-              <p className="mt-2 text-[11px] tracking-[0.18em] text-stardust-500 uppercase">
+              <p className="mt-2 text-[11px] tracking-[0.18em] text-stardust-500 capitalize">
                 Your guiding light
               </p>
             </div>

@@ -170,7 +170,7 @@ function PlanEditor({
         ))}
       </div>
       <label className="mt-4 block">
-        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
           Grocery list (one item per line)
         </span>
         <textarea

@@ -105,7 +105,7 @@ function AddSitter({ onAdded }: { onAdded: (s: Babysitter) => void }) {
       setAttested(false);
       setOpen(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Something went wrong.");
+      setErr(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     } finally {
       setBusy(false);
     }
@@ -289,7 +289,7 @@ function ShareWizard({
       if (e instanceof ApiError && e.code === "RATE_LIMITED") {
         setCapped(true);
       } else {
-        setErr(e instanceof Error ? e.message : "Something went wrong.");
+        setErr(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       }
     } finally {
       setBusy(false);
@@ -764,7 +764,7 @@ export function BabysittersBoard() {
       );
       setGrantsBySitter(Object.fromEntries(grants));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     }
   };
 

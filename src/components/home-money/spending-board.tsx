@@ -163,7 +163,7 @@ function AddForm({
       setCategory("");
       setOpen(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Something went wrong.");
+      setErr(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     } finally {
       setBusy(false);
     }
@@ -269,7 +269,7 @@ function CsvImport({ onImported }: { onImported: () => void }) {
       setResult(data);
       onImported();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Something went wrong.");
+      setErr(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     } finally {
       setBusy(false);
     }
@@ -371,7 +371,7 @@ function PlaidConnect({ onSynced }: { onSynced: () => void }) {
             setState({ status: "done", institution: ex.institution_name, accounts: ex.accounts.length });
             onSynced();
           } catch (e) {
-            setState({ status: "error", message: e instanceof Error ? e.message : "Something went wrong." });
+            setState({ status: "error", message: e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment." });
           }
         },
         onExit: () => setState({ status: "idle" }),
@@ -381,7 +381,7 @@ function PlaidConnect({ onSynced }: { onSynced: () => void }) {
       if (e instanceof ApiError && e.code === "UPSTREAM_UNAVAILABLE") {
         setState({ status: "unavailable" });
       } else {
-        setState({ status: "error", message: e instanceof Error ? e.message : "Something went wrong." });
+        setState({ status: "error", message: e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment." });
       }
     }
   };
@@ -471,7 +471,7 @@ export function SpendingBoard() {
         if (first) setTeenName(first.nickname ?? first.firstName);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     }
   }, [range.from, range.to]);
 
@@ -584,7 +584,7 @@ export function SpendingBoard() {
           </div>
 
           <div className="mt-6 flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold tracking-wide text-nova-300 uppercase">{range.label}</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-nova-300 capitalize">{range.label}</h2>
             <p className="text-xl font-bold text-star-100">{fmtMoney(teenTotal)}</p>
           </div>
 
@@ -650,15 +650,15 @@ export function SpendingBoard() {
           {summary && (
             <div className="mt-4 grid grid-cols-3 gap-2">
               <div className="rounded-2xl border border-nova-600/25 bg-nebula-900/80 p-3">
-                <p className="text-[11px] tracking-wide text-stardust-400 uppercase">Out</p>
+                <p className="text-[11px] tracking-wide text-stardust-400 capitalize">Out</p>
                 <p className="text-sunlit text-lg font-bold">{fmtMoney(summary.total_outflow)}</p>
               </div>
               <div className="rounded-2xl border border-nebula-700 bg-nebula-900/70 p-3">
-                <p className="text-[11px] tracking-wide text-stardust-400 uppercase">In</p>
+                <p className="text-[11px] tracking-wide text-stardust-400 capitalize">In</p>
                 <p className="text-lg font-bold text-star-100">{fmtMoney(summary.total_inflow)}</p>
               </div>
               <div className="rounded-2xl border border-nebula-700 bg-nebula-900/70 p-3">
-                <p className="text-[11px] tracking-wide text-stardust-400 uppercase">Transactions</p>
+                <p className="text-[11px] tracking-wide text-stardust-400 capitalize">Transactions</p>
                 <p className="text-lg font-bold text-star-100">{String(summary.transaction_count)}</p>
               </div>
             </div>
@@ -670,7 +670,7 @@ export function SpendingBoard() {
 
           {summary && summary.by_category.length > 0 && (
             <section className="mt-6" aria-label="Spending by category">
-              <h2 className="text-sm font-semibold tracking-wide text-nova-300 uppercase">By category</h2>
+              <h2 className="text-sm font-semibold tracking-wide text-nova-300 capitalize">By category</h2>
               <div className="mt-2 space-y-1.5">
                 {summary.by_category.map((c) => (
                   <div key={c.category} className="flex items-center justify-between rounded-xl border border-nebula-700/70 bg-nebula-900/60 px-3 py-2">
@@ -683,7 +683,7 @@ export function SpendingBoard() {
           )}
 
           <section className="mt-6" aria-label="Recent household transactions">
-            <h2 className="text-sm font-semibold tracking-wide text-nova-300 uppercase">Recent household transactions</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-nova-300 capitalize">Recent household transactions</h2>
             <div className="mt-2 space-y-1.5">
               {transactions.map((t) => (
                 <div key={t.id} className="flex items-center justify-between rounded-xl border border-nebula-700/70 bg-nebula-900/60 px-3 py-2">

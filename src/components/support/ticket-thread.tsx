@@ -259,7 +259,7 @@ export function TicketThread({ ticketId, childSlug }: { ticketId: string; childS
           }
           if (e.kind === "system_note" || e.kind === "status_change") {
             return (
-              <p key={e.id} className="py-1 text-center text-[11px] tracking-wide text-stardust-500 uppercase">
+              <p key={e.id} className="py-1 text-center text-[11px] tracking-wide text-stardust-500 capitalize">
                 {e.body} · {fmtTime(e.created_at)}
               </p>
             );

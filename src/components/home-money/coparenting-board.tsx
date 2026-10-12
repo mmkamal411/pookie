@@ -103,7 +103,7 @@ function EntryForm({
       );
       onSaved(data.entry);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Something went wrong.");
+      setErr(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     } finally {
       setBusy(false);
     }
@@ -234,7 +234,7 @@ export function CoparentingBoard({ childId, childName }: { childId: string; chil
       if (e instanceof ApiError && (e.code === "PARENT_ROLE_REQUIRED" || e.code === "TENANT_SCOPE_VIOLATION")) {
         setForbidden(true);
       } else {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+        setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       }
     }
   };

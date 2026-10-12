@@ -11,7 +11,7 @@ export function FormulaCard({ formula }: { formula: FormulaBrief | null }) {
 
   return (
     <div className="rounded-2xl border border-nova-400/15 bg-nebula-800/30 px-5 py-4">
-      <p className="text-xs font-medium tracking-[0.14em] text-nova-300 uppercase">
+      <p className="text-xs font-medium tracking-[0.14em] text-nova-300 capitalize">
         {formula.subject === "math" ? "Math" : "Science"} · formula of the day
       </p>
       <p className="mt-2 text-sm font-semibold text-star-100">{formula.name}</p>

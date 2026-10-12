@@ -321,7 +321,7 @@ export function Review18View({
             )}
             {pendingQueue.map((r) => (
               <div key={r.recordId} className="card-living rounded-3xl p-5">
-                <p className="text-xs font-medium tracking-wide text-nova-400 uppercase">{r.category}</p>
+                <p className="text-xs font-medium tracking-wide text-nova-400 capitalize">{r.category}</p>
                 <p className="mt-1 text-sm text-star-100">{r.summary}</p>
                 <p className="mt-1 text-xs text-stardust-500">
                   Entered by {r.enteredByLabel}

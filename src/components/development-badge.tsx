@@ -3,7 +3,7 @@
 // glow. Looks intentional and premium — a module under construction, not an error.
 //
 // Two variants:
-//   "pill" (default) — compact uppercase micro-label for cards/tiles/headers
+//   "pill" (default) — compact capitalize micro-label for cards/tiles/headers
 //   "banner" — a slightly larger strip for the top of a module page
 //
 // (Squad Atlas 2026-10-12: Mehedi asked for visible "Development" tags on
@@ -13,12 +13,12 @@
 
 const PILL_CLASSES =
   "pill-glow inline-flex items-center gap-1.5 rounded-full border border-amber-400/45 " +
-  "bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.14em] uppercase " +
+  "bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.14em] capitalize " +
   "text-amber-300 shadow-[0_0_12px_rgb(251_191_36/0.28)] whitespace-nowrap";
 
 const BANNER_CLASSES =
   "inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 " +
-  "bg-amber-500/10 px-4 py-2 text-xs font-semibold tracking-[0.12em] uppercase " +
+  "bg-amber-500/10 px-4 py-2 text-xs font-semibold tracking-[0.12em] capitalize " +
   "text-amber-200 shadow-[0_0_18px_rgb(251_191_36/0.22)]";
 
 function SparkIcon({ className }: { className: string }) {

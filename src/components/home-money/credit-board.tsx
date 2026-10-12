@@ -149,7 +149,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
       if (e instanceof ApiError && (e.code === "PARENT_ROLE_REQUIRED" || e.code === "TENANT_SCOPE_VIOLATION")) {
         setForbidden(true);
       } else {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+        setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       }
     }
   };
@@ -173,7 +173,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
         guidance: s?.guidance ?? "",
       }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     } finally {
       setSeeding(false);
     }
@@ -273,7 +273,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
         </div>
       ) : (
         <>
-          <h2 className="mt-8 text-sm font-semibold tracking-wide text-nova-300 uppercase">
+          <h2 className="mt-8 text-sm font-semibold tracking-wide text-nova-300 capitalize">
             {childName}&apos;s freeze board
           </h2>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -316,7 +316,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
               aria-expanded={guidesOpen}
               className="flex w-full items-center justify-between text-left"
             >
-              <span className="text-sm font-semibold tracking-wide text-nova-300 uppercase">
+              <span className="text-sm font-semibold tracking-wide text-nova-300 capitalize">
                 📚 Freeze guides
               </span>
               <span aria-hidden="true" className={`text-nova-300 transition-transform ${guidesOpen ? "rotate-180" : ""}`}>▾</span>

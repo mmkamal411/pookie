@@ -505,7 +505,7 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.2em;
-  text-transform: uppercase;
+  text-transform: capitalize;
   color: rgb(244 114 182 / 0.85);
   text-shadow: 0 0 10px rgb(244 114 182 / 0.3);
 }
@@ -584,7 +584,7 @@ body {
   padding: 5px 18px 3px;
   font-size: 9px;
   letter-spacing: 0.24em;
-  text-transform: uppercase;
+  text-transform: capitalize;
   /* Squad Deck 2026-10-12: brightened (was 0.75 alpha) + nowrap guards so
      the two readouts never collide on narrow (320px) screens. */
   color: rgb(190 190 220 / 0.9);
@@ -773,7 +773,7 @@ a:active .console-orb-socket {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.26em;
-  text-transform: uppercase;
+  text-transform: capitalize;
   color: rgb(249 168 212 / 0.9);
   text-shadow: 0 0 10px rgb(244 114 182 / 0.35);
 }
@@ -1269,7 +1269,7 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.22em;
-  text-transform: uppercase;
+  text-transform: capitalize;
   color: rgb(196 181 253 / 0.75);
   text-shadow: 0 0 14px rgb(139 92 246 / 0.5);
   animation: vista-cue-bob 3.2s ease-in-out infinite;
@@ -1283,4 +1283,241 @@ body {
 }
 .vista-board {
   scroll-margin-top: 6rem;
+}
+
+/* ==========================================================================
+   SQUAD LUMINA — 2026-10-12. The lights come on — COOL and precise.
+   Mehedi's bar: "not too warm but modern and hi tech technology."
+   Think SpaceX Dragon capsule interior: crisp blues, cyans, clean whites,
+   precise accents. Light feels like clean LED panels and holographic
+   displays — cool and clinical in the best way. No warm ambers, no cozy
+   glows. Sleek, engineered, futuristic. Every element feels like advanced
+   technology.
+
+   Also: Title Case everywhere (Mehedi's rule — no ALL CAPS), micro-
+   interactions with intention, and the "wow" layer of subtle delights.
+   All additive: later-cascade rules, no rewrites of other squads' selectors.
+   ========================================================================== */
+
+/* --- 1. Palette lift: cool, lit, precise ---
+   :root redefinition wins over @theme by source order. Cool deep-space
+   tones — blues and cyans, never warm. Clean and clinical. */
+:root {
+  --color-nebula-950: #101430;
+  --color-nebula-900: #1a1f4a;
+  --color-nebula-800: #262c66;
+  --color-nebula-700: #343c82;
+  --color-stardust-500: #9aa3d0;
+  --color-stardust-300: #c2c8ea;
+  --color-stardust-200: #d8dcf4;
+  --color-stardust-100: #eceefc;
+  --color-star-100: #f8faff;
+  --color-star-200: #eef1fc;
+  --color-star-300: #dcdffa;
+}
+
+/* --- 2. LED-strip accents: thin lines of cool light ---
+   The signature Lumina detail. A 1px line of cool light along the top
+   edge of a surface — like an LED panel strip in a Dragon capsule.
+   Cool tones only: ice blue, cyan, violet-blue. */
+.led-strip {
+  position: relative;
+}
+.led-strip::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 8%; right: 8%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgb(103 232 249 / 0.9) 20%,
+    rgb(165 180 252 / 0.85) 50%,
+    rgb(125 211 252 / 0.9) 80%,
+    transparent);
+  box-shadow: 0 0 12px rgb(103 232 249 / 0.7), 0 0 28px rgb(125 211 252 / 0.35);
+  pointer-events: none;
+}
+.led-strip-violet::before {
+  background: linear-gradient(90deg, transparent, rgb(139 146 250 / 0.9) 30%, rgb(139 146 250 / 0.9) 70%, transparent);
+  box-shadow: 0 0 12px rgb(139 146 250 / 0.75);
+}
+.led-strip-teal::before {
+  background: linear-gradient(90deg, transparent, rgb(103 232 249 / 0.9) 30%, rgb(103 232 249 / 0.9) 70%, transparent);
+  box-shadow: 0 0 12px rgb(103 232 249 / 0.75);
+}
+.led-strip-ice::before {
+  background: linear-gradient(90deg, transparent, rgb(224 242 254 / 0.95) 30%, rgb(224 242 254 / 0.95) 70%, transparent);
+  box-shadow: 0 0 14px rgb(186 230 253 / 0.8);
+}
+.led-strip-blue::before {
+  background: linear-gradient(90deg, transparent, rgb(96 165 250 / 0.9) 30%, rgb(96 165 250 / 0.9) 70%, transparent);
+  box-shadow: 0 0 12px rgb(96 165 250 / 0.75);
+}
+
+/* --- 3. LED under-glow: cool light pooling beneath cards ---
+   Cards float in clean, cool light — like displays mounted on a
+   backlit panel. */
+.led-underglow {
+  box-shadow:
+    0 14px 44px rgb(4 8 24 / 0.5),
+    0 4px 18px rgb(56 130 246 / 0.2),
+    0 0 0 1px rgb(125 211 252 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+}
+
+/* --- 4. LED rim: precise edges on interactive elements ---
+   Buttons, chips, and tappables get a crisp luminous rim —
+   cool blue-white, like a high-end instrument panel. Snappy response. */
+.led-rim {
+  border: 1px solid rgb(125 211 252 / 0.4);
+  box-shadow:
+    0 0 16px rgb(56 130 246 / 0.25),
+    inset 0 0 18px rgb(56 130 246 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+.led-rim:hover {
+  border-color: rgb(186 230 253 / 0.65);
+  box-shadow:
+    0 0 26px rgb(56 130 246 / 0.45),
+    inset 0 0 24px rgb(56 130 246 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.24);
+}
+.led-rim:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 12px rgb(56 130 246 / 0.3),
+    inset 0 0 14px rgb(56 130 246 / 0.18);
+}
+
+/* --- 5. Micro-interactions: snappy, precise, technological ---
+   High-end instrument panels respond to touch with crisp feedback.
+   Faster timings, tighter springs — engineered, not floaty. */
+.pressable {
+  transition: transform 0.12s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.pressable:active {
+  transform: scale(0.96);
+}
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 48px rgb(4 8 24 / 0.55),
+    0 6px 22px rgb(56 130 246 / 0.28),
+    0 0 0 1px rgb(125 211 252 / 0.3),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+}
+.focus-glow:focus-visible {
+  outline: 2px solid rgb(125 211 252 / 0.85);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(56 130 246 / 0.25), 0 0 20px rgb(56 130 246 / 0.4);
+}
+
+/* --- 6. The "wow" layer: subtle delights --- */
+/* Shimmer sweep on load — light playing across a surface, once. */
+.shimmer-once {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-once::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.14) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: lumina-shimmer 1.8s ease-out 0.3s 1 forwards;
+  pointer-events: none;
+}
+@keyframes lumina-shimmer {
+  to { transform: translateX(100%); }
+}
+/* Gentle pulse for notifications and live indicators — cool cyan. */
+.pulse-gentle {
+  animation: lumina-pulse 2.6s ease-in-out infinite;
+}
+@keyframes lumina-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 12px rgb(103 232 249 / 0.4); }
+  50% { opacity: 0.82; box-shadow: 0 0 22px rgb(103 232 249 / 0.65); }
+}
+/* Slow breathing glow for the Pookie orb and hero accents. */
+.breathe-glow {
+  animation: lumina-breathe 5s ease-in-out infinite;
+}
+@keyframes lumina-breathe {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+
+/* --- 7. Eyebrow labels: Title Case, still premium ---
+   Mehedi's rule: no ALL CAPS. The wide-tracked eyebrow keeps its
+   magazine-cover elegance — now in Title Case, which reads as
+   confident rather than shouty. Pair with `capitalize` safety. */
+.eyebrow-title {
+  text-transform: none;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+/* LED divider: a cool hairline with a glowing center. */
+.led-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg,
+    transparent,
+    rgb(103 232 249 / 0.5) 20%,
+    rgb(186 230 253 / 0.7) 50%,
+    rgb(103 232 249 / 0.5) 80%,
+    transparent);
+  box-shadow: 0 0 8px rgb(56 189 248 / 0.4);
+}
+/* Frosted glass, lit cool: panels feel like holographic displays. */
+.glass-lit {
+  background: linear-gradient(165deg, rgb(44 56 110 / 0.62), rgb(22 30 66 / 0.7));
+  border: 1px solid rgb(125 211 252 / 0.32);
+  box-shadow:
+    0 16px 50px rgb(4 8 24 / 0.5),
+    0 4px 20px rgb(56 130 246 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    inset 0 0 60px rgb(50 80 160 / 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* --- 8. Brighter cool base (Dragon capsule, not a cave) --- */
+body {
+  background:
+    radial-gradient(ellipse 130% 95% at 50% -10%, #1d2452 0%, #101430 50%, #090d20 100%);
+  background-attachment: fixed;
+}
+
+/* ==========================================================================
+   SQUAD LUMINA — cool-temperature overrides.
+   The console and key surfaces shift from warm pink/gold to cool
+   cyan/ice-blue. Clean LED panels, not ambient warmth.
+   ========================================================================== */
+.console-housing {
+  background:
+    linear-gradient(180deg, rgb(26 32 68 / 0.9), rgb(10 14 34 / 0.94));
+  border-top: 1px solid rgb(125 211 252 / 0.32);
+  box-shadow:
+    0 -1px 0 rgb(125 211 252 / 0.18),
+    0 -14px 44px rgb(4 8 20 / 0.6),
+    0 -6px 28px rgb(56 189 248 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+.console-housing::before {
+  background: linear-gradient(90deg,
+    transparent,
+    rgb(103 232 249 / 0.8) 22%,
+    rgb(186 230 253 / 0.6) 50%,
+    rgb(103 232 249 / 0.8) 78%,
+    transparent);
+}
+.console-housing::after {
+  background: radial-gradient(ellipse 70% 120% at 50% 120%,
+    rgb(56 189 248 / 0.09),
+    transparent 70%);
 }

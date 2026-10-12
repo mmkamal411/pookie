@@ -87,7 +87,7 @@ export function ClaimsInbox() {
       <div className="relative z-10 mx-auto w-full max-w-2xl px-6 py-12">
         <div className="flex items-center gap-3">
           <PookieOrb size={40} />
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             Family requests
           </p>
         </div>
@@ -112,7 +112,7 @@ export function ClaimsInbox() {
           <div className="mt-8 space-y-6">
             {[...groups.entries()].map(([childName, group]) => (
               <section key={childName}>
-                <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+                <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
                   For {childName}
                 </h2>
                 <div className="mt-3 space-y-3">

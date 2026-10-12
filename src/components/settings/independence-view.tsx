@@ -167,7 +167,7 @@ export function IndependenceView() {
         </div>
 
         <div className="mt-5">
-          <p className="text-xs font-medium tracking-wide text-stardust-400 uppercase">
+          <p className="text-xs font-medium tracking-wide text-stardust-400 capitalize">
             What changes
           </p>
           <ul className="mt-2.5 space-y-2.5">
@@ -210,7 +210,7 @@ export function IndependenceView() {
             <div>
               <label
                 htmlFor="independence-confirm"
-                className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase"
+                className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize"
               >
                 Type <span className="font-bold text-nova-300">{CONFIRM_WORD}</span> to confirm
               </label>

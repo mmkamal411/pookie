@@ -120,7 +120,7 @@ export function ChildSwitcher({
         </span>
         <span className="flex flex-col items-start leading-none">
           <span className="callsign-name max-w-28 truncate text-sm font-semibold">{parentName}</span>
-          <span className="mt-1 flex items-center gap-1.5 text-[9px] font-medium tracking-[0.2em] text-stardust-500 uppercase">
+          <span className="mt-1 flex items-center gap-1.5 text-[9px] font-medium tracking-[0.2em] text-stardust-500 capitalize">
             <span
               aria-hidden="true"
               className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300"
@@ -182,7 +182,7 @@ export function ChildSwitcher({
                       ✓
                     </span>
                   ) : (
-                    <span aria-hidden="true" className="text-[10px] font-medium tracking-[0.18em] text-stardust-500 uppercase">
+                    <span aria-hidden="true" className="text-[10px] font-medium tracking-[0.18em] text-stardust-500 capitalize">
                       View
                     </span>
                   )}

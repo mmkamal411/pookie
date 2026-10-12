@@ -31,7 +31,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!json || !json.ok) {
     throw new ApiError(
       json?.error?.code ?? "INTERNAL",
-      json?.error?.message ?? "Something went wrong.",
+      json?.error?.message ?? "Hold position — request incomplete. Try again in a moment.",
     );
   }
   return json.data as T;
@@ -371,7 +371,7 @@ export function LaneTitle({
   count?: number;
 }) {
   return (
-    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 uppercase">
+    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 capitalize">
       {children}
       {count != null && (
         <span className="rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300 shadow-glow-sm">
@@ -399,7 +399,7 @@ export function PageHeader({
 }) {
   return (
     <header className="animate-rise">
-      <p className="text-xs font-semibold tracking-widest text-aurum-300 uppercase">
+      <p className="text-xs font-semibold tracking-widest text-aurum-300 capitalize">
         {eyebrow}
       </p>
       <h1 className="text-sunlit mt-1 text-3xl font-bold">

@@ -78,7 +78,7 @@ export function MorningBriefing({
 
   return (
     <div className="glass-pane animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
-      <p className="text-xs font-semibold uppercase tracking-widest text-nova-300">Morning briefing</p>
+      <p className="text-xs font-semibold capitalize tracking-widest text-nova-300">Morning briefing</p>
       <ul className="mt-2 space-y-1.5">
         {items.map((item, i) => (
           <li key={i} className="flex items-center gap-2 text-sm">

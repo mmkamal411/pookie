@@ -109,13 +109,13 @@ export function MissionBriefing({
     <header>
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={56} />
-        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Home · mission briefing
         </p>
       </div>
 
       <p
-        className="animate-bloom mt-4 text-xs font-medium tracking-[0.18em] text-stardust-500 uppercase"
+        className="animate-bloom mt-4 text-xs font-medium tracking-[0.18em] text-stardust-500 capitalize"
         style={{ animationDelay: "0.05s" }}
       >
         {dateLine || " "}
@@ -159,7 +159,7 @@ export function MissionBriefing({
           <blockquote className="text-[15px] leading-relaxed text-star-100 italic">
             &ldquo;{quote.text}&rdquo;
           </blockquote>
-          <figcaption className="mt-2 text-xs font-medium tracking-[0.14em] text-nova-300 uppercase">
+          <figcaption className="mt-2 text-xs font-medium tracking-[0.14em] text-nova-300 capitalize">
             {quote.source} · today&apos;s fuel
           </figcaption>
         </figure>
@@ -182,7 +182,7 @@ export function MissionBriefing({
                   className="flex flex-col items-center gap-1 rounded-xl border border-nova-400/15 bg-nebula-800/30 px-2 py-3"
                   title={d.label}
                 >
-                  <span className="text-[11px] font-medium tracking-wide text-stardust-400 uppercase">
+                  <span className="text-[11px] font-medium tracking-wide text-stardust-400 capitalize">
                     {d.day}
                   </span>
                   <WeatherGlyph icon={d.icon} />

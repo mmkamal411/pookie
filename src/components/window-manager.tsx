@@ -56,17 +56,17 @@ export function moduleForPathname(pathname: string): ModuleInfo {
 }
 
 const MODULES: ModuleInfo[] = [
-  { id: "home", name: "Home", readout: "NAV", glow: "#a78bfa", route: "/", closable: false },
-  { id: "today", name: "Today", readout: "SCAN", glow: "#6ee7b7", route: "/today", closable: true },
-  { id: "pookie", name: "Pookie", readout: "COMMS", glow: "#f472b6", route: "/pookie", closable: true },
-  { id: "progress", name: "Progress", readout: "GROWTH", glow: "#fbbf24", route: "/school", closable: true },
-  { id: "settings", name: "Ship Systems", readout: "SYS", glow: "#7dd3fc", route: "/settings", closable: true },
-  { id: "health", name: "Health", readout: "BIO", glow: "#6ee7b7", route: "/health", closable: true },
-  { id: "marketplace", name: "Marketplace", readout: "TRADE", glow: "#c4b5fd", route: "/marketplace", closable: true },
-  { id: "travel", name: "Travel", readout: "VOYAGE", glow: "#67e8f9", route: "/travel", closable: true },
-  { id: "coparenting", name: "Co-parenting", readout: "CREW", glow: "#fda4af", route: "/coparenting", closable: true },
-  { id: "credit", name: "Credit", readout: "LEDGER", glow: "#fcd34d", route: "/credit", closable: true },
-  { id: "support", name: "Support", readout: "BEACON", glow: "#93c5fd", route: "/support", closable: true },
+  { id: "home", name: "Home", readout: "Nav", glow: "#a78bfa", route: "/", closable: false },
+  { id: "today", name: "Today", readout: "Scan", glow: "#6ee7b7", route: "/today", closable: true },
+  { id: "pookie", name: "Pookie", readout: "Comms", glow: "#f472b6", route: "/pookie", closable: true },
+  { id: "progress", name: "Progress", readout: "Growth", glow: "#fbbf24", route: "/school", closable: true },
+  { id: "settings", name: "Ship Systems", readout: "Sys", glow: "#7dd3fc", route: "/settings", closable: true },
+  { id: "health", name: "Health", readout: "Bio", glow: "#6ee7b7", route: "/health", closable: true },
+  { id: "marketplace", name: "Marketplace", readout: "Trade", glow: "#c4b5fd", route: "/marketplace", closable: true },
+  { id: "travel", name: "Travel", readout: "Voyage", glow: "#67e8f9", route: "/travel", closable: true },
+  { id: "coparenting", name: "Co-parenting", readout: "Crew", glow: "#fda4af", route: "/coparenting", closable: true },
+  { id: "credit", name: "Credit", readout: "Ledger", glow: "#fcd34d", route: "/credit", closable: true },
+  { id: "support", name: "Support", readout: "Beacon", glow: "#93c5fd", route: "/support", closable: true },
 ];
 
 interface WindowManagerState {

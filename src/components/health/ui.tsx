@@ -295,7 +295,7 @@ export function HealthPageHeader({
 }) {
   return (
     <header className="animate-bloom">
-      <p className="text-xs font-medium tracking-[0.2em] text-nova-400 uppercase">{eyebrow}</p>
+      <p className="text-xs font-medium tracking-[0.2em] text-nova-400 capitalize">{eyebrow}</p>
       <h1 className="text-sunlit mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-1 max-w-xl text-sm text-stardust-300">{sub}</p>
     </header>

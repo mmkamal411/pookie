@@ -24,7 +24,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   const json = await res.json();
-  if (!json.ok) throw new ApiError(json.error?.code ?? "INTERNAL", json.error?.message ?? "Something went wrong.");
+  if (!json.ok) throw new ApiError(json.error?.code ?? "INTERNAL", json.error?.message ?? "Hold position — request incomplete. Try again in a moment.");
   return json.data as T;
 }
 
@@ -43,7 +43,7 @@ const BASE = "/api/v1/household/shopping";
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count?: number }) {
   return (
-    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 uppercase">
+    <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 capitalize">
       {children}
       {count != null && (
         <span className="rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300 shadow-glow-sm">
@@ -244,7 +244,7 @@ function ItemCard({
               </>
             )}
             {item.source !== "manual" && (
-              <span className="ml-1 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-aurum-300 uppercase">
+              <span className="ml-1 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-aurum-300 capitalize">
                 {item.source === "meal-plan" ? "meal plan" : item.source}
               </span>
             )}
@@ -518,14 +518,14 @@ export function ShoppingBoard() {
       try {
         await Promise.all([refresh(), refreshPrices()]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+        setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       } finally {
         setLoading(false);
       }
     })();
   }, [refresh, refreshPrices]);
 
-  const fail = (e: unknown) => setError(e instanceof Error ? e.message : "Something went wrong.");
+  const fail = (e: unknown) => setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
 
   const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
@@ -856,7 +856,7 @@ export function ShoppingBoard() {
     <main className="mx-auto max-w-3xl px-4 py-8 pb-16">
       {/* header */}
       <header className="animate-rise">
-        <p className="text-xs font-semibold tracking-widest text-aurum-300 uppercase">
+        <p className="text-xs font-semibold tracking-widest text-aurum-300 capitalize">
           🏠 Household
         </p>
         <h1 className="text-sunlit mt-1 text-3xl font-bold">Family shopping list</h1>
@@ -959,7 +959,7 @@ export function ShoppingBoard() {
               aria-expanded={haulOpen}
               className="flex w-full items-center justify-between rounded-xl border border-nebula-700 bg-nebula-950/60 px-3 py-2 text-left"
             >
-              <span className="text-xs font-medium tracking-wide text-stardust-300 uppercase">
+              <span className="text-xs font-medium tracking-wide text-stardust-300 capitalize">
                 🧺 This week&apos;s haul
                 <span className="ml-2 rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300">
                   {grouped.boughtWeek.length}

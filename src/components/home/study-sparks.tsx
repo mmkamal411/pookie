@@ -30,7 +30,7 @@ export function StudySparks({ sparks }: { sparks: StudySparkBrief[] }) {
           style={{ animationDelay: `${i * 0.05}s` }}
         >
           <p className="text-sm leading-relaxed text-star-100">{s.body}</p>
-          <p className="mt-2 text-xs font-medium tracking-[0.12em] text-nova-300 uppercase">
+          <p className="mt-2 text-xs font-medium tracking-[0.12em] text-nova-300 capitalize">
             {s.class_name ?? "Study spark"}
             {s.unit_tag ? ` · ${s.unit_tag}` : ""}
           </p>

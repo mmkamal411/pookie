@@ -110,18 +110,18 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const tabs: TabDef[] = [
-    { id: "home", label: "Home", href: base, glow: "#a78bfa", readout: "NAV · HOME", glyph: HabitatRingGlyph, active: pathname === base },
-    { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", readout: "NAV · TODAY", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
-    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#f472b6", readout: "POOKIE · AI", orb: true, active: pathname.startsWith(`${base}/pookie`) },
-    { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", readout: "NAV · PROGRESS", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
+    { id: "home", label: "Home", href: base, glow: "#a78bfa", readout: "Nav · Home", glyph: HabitatRingGlyph, active: pathname === base },
+    { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", readout: "Nav · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
+    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#f472b6", readout: "Pookie · Ai", orb: true, active: pathname.startsWith(`${base}/pookie`) },
+    { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", readout: "Nav · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page.
-    { id: "more", label: "More", href: "", glow: "#c4b5fd", readout: "MODULES", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
+    { id: "more", label: "More", href: "", glow: "#c4b5fd", readout: "Modules", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
   ];
 
   const activeTab = tabs.find((t) => t.active);
   const readout = pathname.includes("/settings")
-    ? "SHIP SYSTEMS"
-    : (activeTab?.readout ?? "NAV · MODULE");
+    ? "Ship Systems"
+    : (activeTab?.readout ?? "Nav · Module");
 
   const tabStyle = (glow: string): CSSProperties =>
     ({ "--tab-glow": glow, "--tab-glow-soft": soft(glow) }) as CSSProperties;

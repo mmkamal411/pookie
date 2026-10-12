@@ -22,7 +22,7 @@ export function StepShell({
       <div className="mx-auto flex w-fit">
         <PookieOrb size={64} />
       </div>
-      <p className="mt-4 text-center text-xs font-medium uppercase tracking-[0.18em] text-nova-300">
+      <p className="mt-4 text-center text-xs font-medium capitalize tracking-[0.18em] text-nova-300">
         {eyebrow}
       </p>
       <h1 className="mt-2 text-center text-2xl font-semibold text-star-100">

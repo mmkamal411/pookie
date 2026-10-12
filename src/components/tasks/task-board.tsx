@@ -13,7 +13,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   const json = await res.json();
-  if (!json.ok) throw new ApiError(json.error?.code ?? "INTERNAL", json.error?.message ?? "Something went wrong.");
+  if (!json.ok) throw new ApiError(json.error?.code ?? "INTERNAL", json.error?.message ?? "Hold position — request incomplete. Try again in a moment.");
   return json.data as T;
 }
 
@@ -191,7 +191,7 @@ export function TaskBoard({ compact = false }: { compact?: boolean }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-nova-300">
+        <h2 className="text-sm font-semibold capitalize tracking-wide text-nova-300">
           Family tasks
           {openCount > 0 && (
             <span className="ml-2 rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300">

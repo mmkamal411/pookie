@@ -37,7 +37,7 @@ export function DueNextStrip({
               href={`/c/${childSlug}/school/${item.class_slug}`}
               className="card-white w-56 shrink-0 snap-start rounded-2xl p-4"
             >
-              <p className="flex items-center gap-2 text-[11px] font-semibold tracking-wide uppercase">
+              <p className="flex items-center gap-2 text-[11px] font-semibold tracking-wide capitalize">
                 <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden="true" />
                 <span className={s.text}>{s.label}</span>
               </p>

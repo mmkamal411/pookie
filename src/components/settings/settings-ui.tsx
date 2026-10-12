@@ -98,7 +98,7 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">{label}</span>
+      <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">{label}</span>
       {children}
     </label>
   );

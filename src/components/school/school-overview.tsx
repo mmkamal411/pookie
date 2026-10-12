@@ -46,7 +46,7 @@ export function SchoolOverview({
 
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={56} />
-        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           School · mission status
         </p>
       </div>
@@ -66,7 +66,7 @@ export function SchoolOverview({
       </p>
 
       <div className="animate-bloom mt-6 flex items-center gap-3" style={{ animationDelay: "0.1s" }}>
-        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Classes
         </h2>
         <ProvenanceLabel kind="school-of-record" />
@@ -89,7 +89,7 @@ export function SchoolOverview({
       )}
 
       <div className="animate-bloom mt-10 flex items-center gap-3" style={{ animationDelay: "0.2s" }}>
-        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Coming up next
         </h2>
         <ProvenanceLabel kind="school-of-record" />

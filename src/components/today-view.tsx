@@ -35,7 +35,7 @@ export function TodayView({
 
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={52} />
-        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Today · flight plan
         </p>
       </div>
@@ -59,7 +59,7 @@ export function TodayView({
         </Link>
       )}
 
-      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.2s" }}>
+      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 capitalize" style={{ animationDelay: "0.2s" }}>
         On the radar today
       </h2>
       <div className="mt-3 grid gap-3">
@@ -93,7 +93,7 @@ export function TodayView({
         )}
       </div>
 
-      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.28s" }}>
+      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 capitalize" style={{ animationDelay: "0.28s" }}>
         Tonight&apos;s flight priorities
       </h2>
       <div className="mt-3 grid gap-3">

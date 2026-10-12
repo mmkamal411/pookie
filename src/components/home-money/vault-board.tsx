@@ -129,7 +129,7 @@ function DocCard({
             {doc.expires_on && <span> · expires {fmtDate(doc.expires_on)}</span>}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-nova-300 uppercase">
+        <span className="shrink-0 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-nova-300 capitalize">
           {TYPE_LABEL[doc.doc_type]}
         </span>
       </div>
@@ -257,7 +257,7 @@ export function VaultBoard() {
       setDocs(data.documents);
     } catch (e) {
       if (e instanceof ApiError && e.code === "PARENT_ROLE_REQUIRED") setForbidden(true);
-      else setError(e instanceof Error ? e.message : "Something went wrong.");
+      else setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     }
   };
 
@@ -351,7 +351,7 @@ export function VaultBoard() {
                     aria-expanded={open}
                     className="flex w-full items-center justify-between text-left"
                   >
-                    <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 uppercase">
+                    <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 capitalize">
                       {g.title}
                       <span className="rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300 shadow-glow-sm">
                         {items.length}

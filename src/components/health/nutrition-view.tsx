@@ -45,7 +45,7 @@ function ScalePicker({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-xs font-medium tracking-wide text-stardust-300 uppercase">{label}</p>
+      <p className="mb-1.5 text-xs font-medium tracking-wide text-stardust-300 capitalize">{label}</p>
       <div className="flex gap-2" role="radiogroup" aria-label={label}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -140,7 +140,7 @@ function MinorCheckinForm({ childId, onSaved }: { childId: string; onSaved: () =
         ))}
       </div>
       <div className="mt-4">
-        <p className="mb-1.5 text-xs font-medium tracking-wide text-stardust-300 uppercase">
+        <p className="mb-1.5 text-xs font-medium tracking-wide text-stardust-300 capitalize">
           What food groups were on the plate?
         </p>
         <div className="flex flex-wrap gap-2">
@@ -166,7 +166,7 @@ function MinorCheckinForm({ childId, onSaved }: { childId: string; onSaved: () =
         <ScalePicker label="Fullness after (1 still hungry, 5 satisfied)" value={fullness} onChange={setFullness} />
       </div>
       <label className="mt-4 block">
-        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
           How is your energy? (optional)
         </span>
         <input
@@ -227,7 +227,7 @@ function AdultDiaryForm({ childId, onSaved }: { childId: string; onSaved: () => 
         </div>
       )}
       <label className="mt-4 block">
-        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+        <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
           What did you eat?
         </span>
         <input
@@ -240,7 +240,7 @@ function AdultDiaryForm({ childId, onSaved }: { childId: string; onSaved: () => 
       </label>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+          <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
             Calories, low end
           </span>
           <input
@@ -252,7 +252,7 @@ function AdultDiaryForm({ childId, onSaved }: { childId: string; onSaved: () => 
           />
         </label>
         <label className="block">
-          <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+          <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
             Calories, high end
           </span>
           <input

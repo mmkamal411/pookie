@@ -1863,3 +1863,18 @@ only surface — the badge appears exactly where users encounter them.
 
 All: tsc clean. NOT deployed (parent owns deploys). Migrations 064/065 need Supabase apply.
 **Remaining top-10:** #2 Family Calendar, #5 Grade Drop Alerts, #8 Emergency, #9 School Calendar, #10 Quick Capture.
+
+## 2026-10-12 ~09:35 EDT — Squad Lumina — Cool hi-tech design polish (staging-build)
+
+**Directive:** Mehedi redirected the 24h effort to DESIGN with a course correction: "not too warm but modern and hi tech technology." Cool, precise, SpaceX Dragon — not warm/cozy.
+
+**What changed:**
+1. **Palette:** Lifted to cool deep-space tones (blues/cyans, never warm). `:root` tokens brightened: nebula-950 #101430, stardust text brightened across the board. Body background is a luminous cool gradient.
+2. **LED utilities (new):** `.led-strip` (+ variants: violet/teal/ice/blue — cool tones only), `.led-underglow`, `.led-rim` (snappy 0.18s transitions), `.led-divider`, `.glass-lit`.
+3. **Micro-interactions:** `.pressable`, `.hover-lift`, `.focus-glow`, `.shimmer-once`, `.pulse-gentle` (cool cyan), `.breathe-glow` — all snappy/precise timings.
+4. **Title Case everywhere:** Removed `uppercase` from 79 usages across 40 files → `capitalize`. Fixed hardcoded ALL-CAPS readouts ("NAV · HOME" → "Nav · Home", etc.). Kept `uppercase` ONLY on the type-to-confirm input (functional — user must type "INDEPENDENT" exactly).
+5. **Console cooled:** `.console-housing` shifted from warm pink/gold to cool cyan/ice-blue via later-cascade overrides.
+6. **Copy:** "Something went wrong." (27 occurrences) → "Hold position — request incomplete. Try again in a moment." (crisp, hi-tech voice).
+7. **GlassPane** now carries the `.led-strip` signature detail.
+
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys.

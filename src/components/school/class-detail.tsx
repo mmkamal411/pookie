@@ -76,7 +76,7 @@ export function ClassDetailView({
       <section className="animate-bloom mt-4 rounded-3xl border border-nova-400/20 bg-nebula-900/60 p-6 sm:p-8" style={{ animationDelay: "0.05s", boxShadow: s.glow }}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-nova-400 uppercase">{data.grade?.term ?? "Current term"}</p>
+            <p className="text-xs font-medium tracking-[0.2em] text-nova-400 capitalize">{data.grade?.term ?? "Current term"}</p>
             <h1 className="text-sunlit mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{displayName}</h1>
             <p className="mt-2 text-sm text-stardust-300">
               {[data.class.period ? `Period ${data.class.period}` : null, data.class.teacher_name].filter(Boolean).join(" · ")}
@@ -118,7 +118,7 @@ export function ClassDetailView({
       {/* Assignments */}
       <section className="mt-8">
         <div className="animate-bloom flex items-center gap-3">
-          <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Assignments</h2>
+          <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Assignments</h2>
           <ProvenanceLabel kind="school-of-record" />
         </div>
         {data.assignments.length > 0 ? (
@@ -155,7 +155,7 @@ export function ClassDetailView({
 
       {/* Path to 90 */}
       <section className="mt-8">
-        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Your next steps</h2>
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Your next steps</h2>
         <div className="mt-4" key={version}>
           <PathTo90
             plan={data.study_plan}
@@ -179,7 +179,7 @@ export function ClassDetailView({
 
       {/* Teacher thread */}
       <section className="mt-8">
-        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Teacher thread</h2>
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Teacher thread</h2>
         <div className="mt-4" key={`thread-${version}`}>
           <TeacherThread
             thread={data.teacher_thread}

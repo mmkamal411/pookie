@@ -188,7 +188,7 @@ export function DrivingSchoolPanel({
       </div>
 
       <Card className="border-nova-400/25">
-        <p className="text-[11px] font-semibold tracking-wide text-nova-300 uppercase">
+        <p className="text-[11px] font-semibold tracking-wide text-nova-300 capitalize">
           Your {stateCode === "GA" ? "Georgia" : "Florida"} license timeline
         </p>
         <p className="mt-1 text-base font-semibold text-star-100">{stage}</p>

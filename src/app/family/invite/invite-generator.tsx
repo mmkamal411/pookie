@@ -83,7 +83,7 @@ export function InviteGenerator({
       <div className="relative z-10 mx-auto w-full max-w-lg px-6 py-12">
         <div className="flex items-center gap-3">
           <PookieOrb size={40} />
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             Invite a co-parent
           </p>
         </div>

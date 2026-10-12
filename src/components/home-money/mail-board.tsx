@@ -118,7 +118,7 @@ function MailCard({
           </p>
         </div>
         {item.classification && (
-          <span className="shrink-0 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-nova-300 uppercase">
+          <span className="shrink-0 rounded-full bg-nebula-800 px-2 py-0.5 text-[10px] tracking-wide text-nova-300 capitalize">
             {item.classification}
           </span>
         )}
@@ -194,7 +194,7 @@ function Collapsible({
         aria-expanded={open}
         className="flex w-full items-center justify-between text-left"
       >
-        <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 uppercase">
+        <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-nova-300 capitalize">
           {title}
           <span className="rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300 shadow-glow-sm">
             {count}
@@ -231,7 +231,7 @@ export function MailBoard() {
       if (e instanceof ApiError && e.code === "PARENT_ROLE_REQUIRED") {
         setForbidden(true);
       } else {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+        setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       }
     }
   };
@@ -282,7 +282,7 @@ export function MailBoard() {
       upsert(ocr.item);
       setView({ name: "confirm", item: ocr.item, lowConfidence: ocr.handwritingReview });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
       setView({ name: "list" });
     }
   };
@@ -315,7 +315,7 @@ export function MailBoard() {
       upsert(data.item);
       setView({ name: "filed", item: data.item });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     }
   };
 
@@ -338,7 +338,7 @@ export function MailBoard() {
       upsert(data.item);
       setView({ name: "filed", item: data.item });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : "Hold position — request incomplete. Try again in a moment.");
     }
   };
 
@@ -514,7 +514,7 @@ function CaptureScreen({
           <span aria-hidden="true" className="absolute top-2 right-2 text-nova-300">┐</span>
           <span aria-hidden="true" className="absolute bottom-2 left-2 text-nova-300">└</span>
           <span aria-hidden="true" className="absolute right-2 bottom-2 text-nova-300">┘</span>
-          <p className="text-xs tracking-widest text-stardust-500 uppercase">Bill</p>
+          <p className="text-xs tracking-widest text-stardust-500 capitalize">Bill</p>
           <p className="mt-2 font-mono text-lg text-stardust-200">👆 •••• 4821</p>
           <p className="mt-1 text-lg font-semibold text-star-100">$84.12</p>
         </div>

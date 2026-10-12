@@ -53,7 +53,7 @@ export default async function MePage() {
         <div className="flex items-center gap-4">
           <PookieOrb size={56} />
           <div>
-            <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+            <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
               Your Pookie
             </p>
             <h1 className="text-sunlit mt-1 text-2xl font-semibold">

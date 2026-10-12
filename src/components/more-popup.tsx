@@ -266,7 +266,7 @@ export function MorePopup({
         <>
           {recentHits.length > 0 && (
             <div className="mt-3">
-              <p className="text-[11px] font-semibold tracking-[0.18em] text-stardust-500 uppercase">Recent</p>
+              <p className="text-[11px] font-semibold tracking-[0.18em] text-stardust-500 capitalize">Recent</p>
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                 {recentHits.map(({ hit }) => (
                   <Link

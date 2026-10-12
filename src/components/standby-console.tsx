@@ -21,7 +21,7 @@ export function StandbyConsole({ label }: { label: string }) {
           <span className="console-status-dot" />
           Systems nominal
         </span>
-        <span>STANDBY</span>
+        <span>Standby</span>
       </div>
       <div className="mx-auto flex max-w-lg items-center justify-center gap-3 px-4 pt-0.5 pb-2.5">
         <span className="console-orb-socket block" aria-hidden="true">

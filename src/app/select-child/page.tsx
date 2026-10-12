@@ -29,7 +29,7 @@ export default async function SelectChildPage() {
     <main className="flex min-h-screen items-center justify-center bg-nebula-950 px-4">
       <PageGlide>
       <div className="w-full max-w-md">
-        <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Pookie
         </p>
         <h1 className="text-sunlit animate-bloom mt-3 text-center text-2xl font-semibold tracking-tight">

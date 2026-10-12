@@ -34,7 +34,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { headers: { "content-type": "application/json" }, ...init });
   const json = await res.json();
   if (!json.ok) {
-    const err = new Error(json.error?.message ?? "Something went wrong.") as Error & {
+    const err = new Error(json.error?.message ?? "Hold position — request incomplete. Try again in a moment.") as Error & {
       code?: string;
       status?: number;
     };

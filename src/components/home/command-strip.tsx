@@ -121,7 +121,7 @@ export function CommandStrip({
         <div className="grid w-full grid-cols-3 gap-3 px-5 py-4">
           {primary.map((k) => (
             <div key={k.label} className="min-w-0 text-center">
-              <p className="truncate text-[11px] font-semibold tracking-[0.12em] text-stardust-400 uppercase">
+              <p className="truncate text-[11px] font-semibold tracking-[0.12em] text-stardust-400 capitalize">
                 {k.label}
               </p>
               <p className="mt-1 flex items-center justify-center gap-1.5">

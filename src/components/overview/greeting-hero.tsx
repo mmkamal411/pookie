@@ -58,12 +58,12 @@ export function GreetingHero({
     <header>
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={56} />
-        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Home · today&apos;s glance
         </p>
       </div>
       <p
-        className="animate-bloom mt-4 text-xs font-medium tracking-[0.18em] text-stardust-500 uppercase"
+        className="animate-bloom mt-4 text-xs font-medium tracking-[0.18em] text-stardust-500 capitalize"
         style={{ animationDelay: "0.05s" }}
       >
         {dateLine || " "}

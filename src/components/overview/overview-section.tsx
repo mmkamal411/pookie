@@ -32,7 +32,7 @@ export function OverviewSection({
         className="flex w-full items-center justify-between gap-3 py-2 text-left"
       >
         <span className="flex items-center gap-3">
-          <span className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          <span className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             {title}
           </span>
           {badge != null && badge !== "" && (

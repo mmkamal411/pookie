@@ -57,7 +57,7 @@ export function AcceptFlow({
         <div className="w-full">
           <div className="flex items-center gap-3">
             <PookieOrb size={48} />
-            <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+            <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
               Family invite
             </p>
           </div>

@@ -11,5 +11,5 @@
  * readability.
  */
 export function GlassPane({ children }: { children: React.ReactNode }) {
-  return <div className="glass-pane relative mx-auto w-full max-w-5xl">{children}</div>;
+  return <div className="glass-pane led-strip relative mx-auto w-full max-w-5xl">{children}</div>;
 }

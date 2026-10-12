@@ -141,7 +141,7 @@ function MemberRow({
       </button>
       {expanded && (
         <div className="animate-bloom border-t border-white/8 px-4 py-4">
-          <p className="text-xs font-medium tracking-wide text-stardust-400 uppercase">
+          <p className="text-xs font-medium tracking-wide text-stardust-400 capitalize">
             Linked logins
           </p>
           {member.logins.length === 0 ? (
@@ -170,7 +170,7 @@ function MemberRow({
           )}
           {pendingForChild.length > 0 && (
             <>
-              <p className="mt-4 text-xs font-medium tracking-wide text-stardust-400 uppercase">
+              <p className="mt-4 text-xs font-medium tracking-wide text-stardust-400 capitalize">
                 Waiting on
               </p>
               <ul className="mt-2 space-y-2">
@@ -423,7 +423,7 @@ export function FamilyView() {
           )}
           {lastVerifyUrl && notice?.kind === "ok" && (
             <div className="animate-bloom rounded-2xl border border-nova-400/25 bg-nova-500/8 p-4">
-              <p className="text-xs font-medium tracking-wide text-stardust-300 uppercase">
+              <p className="text-xs font-medium tracking-wide text-stardust-300 capitalize">
                 Share this link with them
               </p>
               <p className="mt-1.5 truncate font-mono text-xs text-nova-200">{lastVerifyUrl}</p>

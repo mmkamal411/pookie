@@ -218,7 +218,7 @@ export function WellbeingView({ childId, ctx }: { childId: string; ctx: HealthCo
               ))}
             </div>
             <label className="mt-4 block">
-              <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 uppercase">
+              <span className="mb-1.5 block text-xs font-medium tracking-wide text-stardust-300 capitalize">
                 A few words, if you want (optional)
               </span>
               <textarea

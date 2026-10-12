@@ -385,7 +385,7 @@ export function PookieChat({
           </span>
         </div>
         <div>
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-nova-400 align-middle" />
             Ship comms · Pookie
           </p>
@@ -463,7 +463,7 @@ export function PookieChat({
                 }
               >
                 {(m.persona === "muse" || m.museDeep) && (
-                  <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-orange-300 uppercase">
+                  <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-orange-300 capitalize">
                     {m.museDeep ? "Mookie · deeper take" : "Muse · straight talk"}
                   </p>
                 )}
