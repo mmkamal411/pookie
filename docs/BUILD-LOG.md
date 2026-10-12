@@ -3,6 +3,21 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Platform Team 1 DevOps Engineer (staging-build): MIGRATION AUDIT + CI CHECK DELIVERED
+
+**Migration ordering & idempotency audit (001–016):**
+- Numbering: no gaps/collisions across 001–016. 017–025 NOT landed yet (Backend 017–023, Security 024–025).
+- **VIOLATION — `002_school_systems.sql` is NOT re-runnable:** 13 `CREATE POLICY` statements (lines 129–200) have no preceding `DROP POLICY IF EXISTS`. Re-running 002 fails on duplicate policies. All other migrations pass: every `CREATE TABLE` has `IF NOT EXISTS`, all other policies have `DROP ... IF EXISTS` (001,003,004,006–012,014,015), all triggers have `DROP TRIGGER IF EXISTS`, all functions use `CREATE OR REPLACE`. (Noted only — 002 owned by DBA; did not edit.)
+- Dependency rules documented in the manifest: 017→profiles, 018→023 (granted_by before expires_at), 021 before event-writing RPCs, 016 after 015.
+- **⚠️ Numbering collision risk:** Squad 1 Tech Lead claims 022–029, Squad 2 Tech Lead drafted 022–027 — both overlap Platform Team 1's reserved 017–023. Coordinators must renumber (suggest Squad 1 → 026+, Squad 2 health amendments stay DRAFT or → 030+) before anything applies.
+- **"Applied live?" honesty:** brief said 001–014 applied per BUILD-LOG, but the newest log evidence says files-only / NOT applied (DBA 2026-10-12), and sandbox can't query `schema_migrations`. Manifest marks 001–014 as ❓ UNVERIFIED with a verification procedure; 015–016 ❌ pending Mehedi dashboard apply; 017–025 ❌ files not on branch.
+
+**Delivered:** `supabase/migrations/APPLY_ORDER.md` (001→025 manifest + apply rules + update procedure), `supabase/migrations/check.sh` (executable; exit-1 heuristic: TABLE-without-IF-NOT-EXISTS, POLICY-without-DROP, TRIGGER-without-DROP, FUNCTION-without-OR-REPLACE; proven on synthetic fixtures, currently FAILs only on 002).
+
+**Cleanliness sweep (160 files touched in last 30 days):** `console.log` = 0 hits (also 0 repo-wide in src/), `.only(` = 0, `TODO` = 1 legitimate note (`src/lib/tenant/actions.ts:219` — unwired transactional email). No dead code found in sweep scope.
+
+**Next:** Backend/Security land 017–025 → fill manifest rows, re-run check.sh. Whoever holds the DB key verifies `schema_migrations` and flips statuses.
+
 ## 2026-10-12 ~03:55 EDT — Squad 1 Safety Track Coordinator (staging-build): MD DIRECTIVE — NO PLACEHOLDERS
 
 **Managing Director directive (Mehedi):** every module ships as a full working implementation — real tables, real APIs, real UI on real data, real RLS. Banned: mock data, "coming soon" screens, stubbed functions, TODO/FIXME in shipped code.
