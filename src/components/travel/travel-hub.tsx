@@ -8,8 +8,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Card, InfoLine } from "@/components/ui";
-import { GROVES } from "@/lib/modules";
+import { Card, InfoLine, BackButton } from "@/components/ui";
+import { GROVES, resolveModuleHref } from "@/lib/modules";
 import { isTeenViewer, resolveModuleVisibility } from "@/lib/menu-access";
 import { useViewerProfile } from "@/lib/use-viewer-profile";
 import { ZipGate, api, readStoredZip, storeZip } from "./travel-shared";
@@ -146,13 +146,16 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
 
   return (
     <main className="mx-auto max-w-3xl px-4 pt-6 pb-10">
+      <div className="mb-2">
+        <BackButton />
+      </div>
       <div className="flex items-center gap-3">
         <span aria-hidden="true" className="text-3xl">
           🌍
         </span>
         <div>
           <h1 className="text-xl font-semibold text-star-100">Mission Planning</h1>
-          <p className="text-sm text-stardust-300">Chart the course — fuel, flights, and the world beyond the door</p>
+          <p className="text-sm text-stardust-300">Chart the Course — Fuel, Flights, and the World Beyond the Door</p>
         </div>
       </div>
 
@@ -183,7 +186,9 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
                 ? { kind: "live", line: "Real totals, 21+ company rules." }
                 : (states[m.id] ?? { kind: "checking" as const });
           return (
-            <Link key={m.id} href={`/c/${childSlug}${m.route ?? "/travel"}`} className="block">
+            {/* Prism E5 2026-10-12: P0 fix — W26 Weather's route is absolute
+                (/household/*); naive tenant-prefixing 404'd its card. */}
+            <Link key={m.id} href={resolveModuleHref(childSlug, m.route ?? "/travel")} className="block">
               <Card className="flex h-full items-start gap-3 transition-transform hover:-translate-y-0.5">
                 <span aria-hidden="true" className="text-2xl">
                   {ICONS[m.id] ?? "🧭"}

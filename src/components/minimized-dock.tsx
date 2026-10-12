@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useWindowManager } from "@/components/window-manager";
+import { resolveModuleHref } from "@/lib/modules";
 
 /**
  * MinimizedDock — floating restore chips for stowed module windows
@@ -26,7 +27,9 @@ export function MinimizedDock() {
   const handleRestore = (id: string) => {
     const mod = moduleById(id);
     restore(id);
-    router.push(`/c/${childSlug}${mod.route === "/" ? "" : mod.route}`);
+    // Prism E5 2026-10-12: P0 fix — absolute (/household/*) module routes
+    // must not be tenant-prefixed (that 404'd the restore).
+    router.push(resolveModuleHref(childSlug, mod.route === "/" ? "" : mod.route));
   };
 
   return (

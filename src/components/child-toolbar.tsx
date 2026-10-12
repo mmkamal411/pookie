@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { getPookieColor, subscribePookieColor } from "@/components/pookie/pookie-color";
 import { MorePopup } from "@/components/more-popup";
+import { GROVES, resolveModuleHref } from "@/lib/modules";
 
 /**
  * The one orb — Pookie herself, hovering in the center of the console.
@@ -196,13 +197,35 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const base = `/c/${childSlug}`;
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // Prism E5 (2026-10-12): the More tab carries the active glow while a
+  // module page is current — previously no tab lit up anywhere under
+  // /health, /travel, /support, /marketplace, etc. Tabs with their own glow
+  // (Home / Today / Pookie / Progress) keep precedence; absolute
+  // (/household/*) pages live outside the console's tabs.
+  const onModulePage = useMemo(() => {
+    const hit = GROVES.flatMap((g) => g.modules).some((m) => {
+      if (m.status !== "live" || !m.route) return false;
+      const href = resolveModuleHref(childSlug, m.route);
+      if (!href.startsWith(`${base}/`)) return false;
+      return pathname === href || pathname.startsWith(`${href}/`);
+    });
+    if (!hit) return false;
+    const claimedByTab =
+      pathname === base ||
+      pathname.startsWith(`${base}/today`) ||
+      pathname.startsWith(`${base}/pookie`) ||
+      pathname.startsWith(`${base}/school`);
+    return !claimedByTab;
+  }, [pathname, base, childSlug]);
+
   const tabs: TabDef[] = [
     { id: "home", label: "Home", href: base, glow: "#a78bfa", sector: "Sector · Home", glyph: HabitatRingGlyph, active: pathname === base },
     { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", sector: "Sector · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
     { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", sector: "AI Core", orb: true, active: pathname.startsWith(`${base}/pookie`) },
     { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", sector: "Sector · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
-    // More opens the module popup (FR-MENU-001) — not a page.
-    { id: "more", label: "More", href: "", glow: "#c4b5fd", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
+    // More opens the module popup (FR-MENU-001) — not a page. It also carries
+    // the active glow while a module page is current (see onModulePage).
+    { id: "more", label: "More", href: "", glow: "#c4b5fd", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen || onModulePage },
   ];
 
   const activeTab = tabs.find((t) => t.active);

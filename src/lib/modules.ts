@@ -19,8 +19,11 @@ export interface LifeModule {
   watchOver: string;
   seedAction: string;
   status: ModuleStatus;
-  /** Route under /c/[childSlug] — null until the module's workstream ships it.
-   *  A route starting with "/" is absolute (household / marketplace namespace). */
+  /** Route for the module — null until the module's workstream ships it.
+   *  Resolution (More popup, Prism E5 2026-10-12): a route under "/household/"
+   *  is absolute (account-level namespace); every other route resolves under
+   *  /c/[childSlug]. Keep the leading slash on ALL routes — the popup keys
+   *  absoluteness off the "/household/" prefix, not the leading slash. */
   route: string | null;
   teenPrivate?: boolean;
   /**
@@ -126,3 +129,14 @@ export const GROVES: Grove[] = [
 ];
 
 export const MODULE_COUNT = GROVES.reduce((n, g) => n + g.modules.length, 0);
+
+/**
+ * Resolve a module route to a full href.
+ * Prism E5 (2026-10-12): P0 fix — routes under "/household/" are absolute
+ * (account-level namespace); every other route resolves under /c/[childSlug].
+ * (A previous revision keyed absoluteness off the leading slash, but every
+ * registry route carries one — the whole More menu 404'd.)
+ */
+export function resolveModuleHref(childSlug: string, route: string): string {
+  return route.startsWith("/household/") ? route : `/c/${childSlug}${route}`;
+}

@@ -23,7 +23,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { GROVES, type Grove, type LifeModule } from "@/lib/modules";
+import { GROVES, resolveModuleHref, type Grove, type LifeModule } from "@/lib/modules";
 import {
   resolveModuleVisibility,
   getRecentModuleIds,
@@ -80,9 +80,7 @@ function ModuleRow({
   }
 
   if (mod.status === "live" && mod.route) {
-    const href = mod.route.startsWith("/")
-      ? mod.route
-      : `/c/${childSlug}${mod.route}`;
+    const href = resolveModuleHref(childSlug, mod.route);
     return (
       <Link
         href={href}
@@ -271,11 +269,7 @@ export function MorePopup({
                 {recentHits.map(({ hit }) => (
                   <Link
                     key={hit.mod.id}
-                    href={
-                      hit.mod.route!.startsWith("/")
-                        ? hit.mod.route!
-                        : `/c/${childSlug}${hit.mod.route}`
-                    }
+                    href={resolveModuleHref(childSlug, hit.mod.route!)}
                     onClick={() => {
                       recordModuleVisit(hit.mod.id);
                       onClose();

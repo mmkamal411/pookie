@@ -1,18 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
 
 /**
  * ShipSettingsControl — the settings control as a ship-systems dial.
  * An SVG instrument (hex bezel + mixer sliders) with a soft neon stroke —
  * never the generic gear emoji. Links to the child's settings page.
+ *
+ * Prism E5 (2026-10-12): current-page indication — the toolbar has no
+ * Settings tab, so this dial carries the active glow itself on /settings/*
+ * routes (reuses the console-tab [data-active] neon treatment).
  */
 export function ShipSettingsControl({ childSlug }: { childSlug: string }) {
+  const pathname = usePathname();
+  const active =
+    pathname === `/c/${childSlug}/settings` ||
+    pathname.startsWith(`/c/${childSlug}/settings/`);
   return (
     <Link
       href={`/c/${childSlug}/settings`}
       aria-label="Ship Systems — settings"
+      aria-current={active ? "page" : undefined}
+      data-active={active}
       className="console-tab-btn flex h-11 w-11 items-center justify-center rounded-full text-nova-300"
       style={{ "--tab-glow": "#f472b6", "--tab-glow-soft": "rgb(244 114 182 / 0.55)" } as CSSProperties}
     >
