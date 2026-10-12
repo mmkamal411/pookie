@@ -45,6 +45,11 @@ export const ALL_CONSENT: CookieConsent = {
 
 export const OPEN_PREFERENCE_CENTER = "pookie:open-cookie-preferences";
 
+// Cached snapshot for useSyncExternalStore — getSnapshot MUST return a
+// stable reference or React re-renders in an infinite loop (React #185).
+// Invalidated whenever consent changes (see writeConsent/subscribeConsent).
+let cachedSnapshot: CookieConsent | null | undefined;
+
 function readConsent(): CookieConsent | null {
   if (typeof window === "undefined") return null;
   try {
@@ -72,6 +77,9 @@ function writeConsent(consent: Omit<CookieConsent, "necessary" | "version" | "de
   } catch {
     // Storage unavailable (private mode etc.) — consent just won't persist.
   }
+  // Invalidate the cached snapshot (belt-and-suspenders; the event below
+  // also invalidates via subscribers).
+  cachedSnapshot = undefined;
   window.dispatchEvent(new CustomEvent("pookie:consent-changed", { detail: full }));
   return full;
 }
@@ -98,7 +106,11 @@ export function openPreferenceCenter() {
 }
 
 function subscribeConsent(onChange: () => void) {
-  const handler = () => onChange();
+  const handler = () => {
+    // Invalidate the cached snapshot so the next getSnapshot re-reads.
+    cachedSnapshot = undefined;
+    onChange();
+  };
   window.addEventListener("pookie:consent-changed", handler);
   window.addEventListener("storage", handler);
   return () => {
@@ -108,7 +120,9 @@ function subscribeConsent(onChange: () => void) {
 }
 
 function getConsentSnapshot(): CookieConsent | null {
-  return readConsent();
+  if (cachedSnapshot !== undefined) return cachedSnapshot;
+  cachedSnapshot = readConsent();
+  return cachedSnapshot;
 }
 
 /**

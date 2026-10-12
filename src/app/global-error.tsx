@@ -47,10 +47,6 @@ export default function GlobalError({
                 Reference: {error.digest}
               </p>
             )}
-            {/* TEMP DEBUG — remove after diagnosing the staging crash */}
-            <p className="mt-2 text-xs break-all text-red-400">
-              DEBUG: {error.message}
-            </p>
             <div className="mt-6 space-y-3">
               <button
                 type="button"
