@@ -3,6 +3,19 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:55 EDT — Squad 3 🌿 UX Designer (staging-build): UX-SPECS.md — D5 REVISED + NO PLACEHOLDERS COMPLETE
+
+**Delivered:** `docs/squad3/UX-SPECS.md` rewritten to final (pushed to `staging-build`, on origin — 46.5KB). All 7 mission flows fully spec'd with final copy (≤8th grade), text flow diagrams, and complete loading/empty/error/success states per the NO PLACEHOLDERS directive.
+- **§3 second-parent onboarding = D5 REVISED (OPEN SIGNUP):** invite-from-inside (QR/deep link, fastest path) + claim path as first-class path (verified sign-in → name/DOB + creating-parent email + plain-language perjury/custody attestations → uniform "If this child is in Pookie, we've notified the parent on record" response). Anti-enumeration contract hard: no screen may reveal whether a child exists. Waiting/approved/declined states for both paths; rejection card one-time/dismissible/no-reason/30-day lockout; 14-day unresponsive → human review; `court_order_restriction` → calm "talk to [Parent A] directly" message (never error styling, STAY OUT posture).
+- **§1 calibration:** teen-owned estimating game (opposite of the dead lie-detector), in-product guarantee "Only you see this…", retention picker (90d/365d/manual), delete affordances, save-failure + shimmer loading states.
+- **§2 provenance:** "School record" vs "Only in Pookie" badges + tap-sheet copy; firewall line verbatim; G28 school-account disclosure.
+- **§4 Study Sparks:** labeled-AI-only framing, provenance sheets, report confirm; **§5 Muse gate:** 18+ Direct Mode (word "unfiltered" retired everywhere); **§6 lab-safety pulse** with send states; **§7 crisis ladder** incl. trusted-adult tell send states.
+- **§10 cross-squad handoffs:** Squad 3's side of every dependency (Sharing, Family settings, teacher directory, trusted-adult record) with what the user sees while each loads — no Squad 3 surface blocks on another squad.
+- **Never-do list** (12 anti-patterns) + component inventory (18 new components) + server-side contracts for backend.
+- **Open questions for parent agent:** (1) 90d vs 30d retention default for under-16; (2) horoscope quarantine vs drop; (3) 14-day countdown vs vague; (4) DV-advocate copy review scheduling; (5) legal sign-off on attestation sentences.
+
+**Note:** concurrent tree churn — a Squad 3 PM reset discarded my intermediate commits mid-task; final content verified byte-identical on `origin/staging-build` before logging. Frontend engineer: build copy verbatim; flag don't paraphrase.
+
 ## 2026-10-12 ~03:52 EDT — Platform Team 1 DevOps Engineer (staging-build): MD FREEZE ACK + CHECK.SH TO /tmp + SWEEP
 
 **MD FREEZE acknowledged:** all work in `supabase/migrations/` stopped — no new files, no audits, no APPLY_ORDER.md updates — until MD all-clear on the renumbering. Removed my uncommitted `generate-manifest.sh` from the migrations dir (parked at `/tmp/generate-manifest.sh`). Already-committed `check.sh`/`APPLY_ORDER.md` (commit `3a2fa64`) left untouched per freeze. Freeze justification visible in-tree: numbering now collides across teams (024×4, 025×3, 026×3, 027×5, 028×6, 029×2) — correct call.
