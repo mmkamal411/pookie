@@ -79,9 +79,12 @@ function ModuleRow({
   }
 
   if (mod.status === "live" && mod.route) {
+    const href = mod.route.startsWith("/")
+      ? mod.route
+      : `/c/${childSlug}${mod.route}`;
     return (
       <Link
-        href={`/c/${childSlug}${mod.route}`}
+        href={href}
         onClick={() => {
           recordModuleVisit(mod.id);
           onNavigate();
@@ -263,7 +266,11 @@ export function MorePopup({
                 {recentHits.map(({ hit }) => (
                   <Link
                     key={hit.mod.id}
-                    href={`/c/${childSlug}${hit.mod.route}`}
+                    href={
+                      hit.mod.route!.startsWith("/")
+                        ? hit.mod.route!
+                        : `/c/${childSlug}${hit.mod.route}`
+                    }
                     onClick={() => {
                       recordModuleVisit(hit.mod.id);
                       onClose();

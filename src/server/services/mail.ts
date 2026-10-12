@@ -74,6 +74,41 @@ export async function intakeMailPhoto(
   return data as MailItemPublic;
 }
 
+export interface ManualMailInput {
+  sender?: string;
+  amount?: number;
+  due_date?: string;
+}
+
+/** Manual mail intake — typed by hand, no photo. The fully-working primary
+ *  path when the camera or OCR can't do the job. No raw photo exists, so the
+ *  30-day photo countdown never starts; extracted metadata is filed directly. */
+export async function intakeMailManual(
+  supabase: Db,
+  ctx: HouseholdContext,
+  input: ManualMailInput,
+): Promise<MailItemPublic> {
+  if (!input.sender && input.amount == null && !input.due_date) {
+    failWith(ErrorCodes.VALIDATION_FAILED);
+  }
+  const { data, error } = await supabase
+    .from('mail_items')
+    .insert({
+      owner_user_id: ctx.ownerUserId,
+      photo_path: '',
+      sender: input.sender?.trim() || null,
+      amount: input.amount ?? null,
+      due_date: input.due_date ?? null,
+      classification: 'bill',
+      status: 'new',
+      data_class: 'S',
+    })
+    .select(MAIL_ITEM_PUBLIC_COLS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return data as MailItemPublic;
+}
+
 /** List mail items (metadata only — ocr_text is never in list payloads). */
 export async function listMailItems(
   supabase: Db,
@@ -93,6 +128,37 @@ export async function listMailItems(
   return (data ?? []) as MailItemPublic[];
 }
 
+/** Update an item: status and/or confirm-screen corrections (sender, amount,
+ *  due_date). No client DELETE — ledger-like. The account field is locked by
+ *  design: account_last4 is written by the OCR pipeline only. */
+export async function updateMailItem(
+  supabase: Db,
+  ownerUserId: string,
+  itemId: string,
+  input: {
+    status?: MailItemStatus;
+    sender?: string | null;
+    amount?: number | null;
+    due_date?: string | null;
+  },
+): Promise<MailItemPublic> {
+  const patch: Record<string, unknown> = {};
+  if (input.status) patch.status = input.status;
+  if (input.sender !== undefined) patch.sender = input.sender?.trim() || null;
+  if (input.amount !== undefined) patch.amount = input.amount;
+  if (input.due_date !== undefined) patch.due_date = input.due_date;
+  if (Object.keys(patch).length === 0) failWith(ErrorCodes.VALIDATION_FAILED);
+  const { data, error } = await supabase
+    .from('mail_items')
+    .update(patch)
+    .eq('id', itemId)
+    .eq('owner_user_id', ownerUserId)
+    .select(MAIL_ITEM_PUBLIC_COLS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.NOT_FOUND);
+  return data as MailItemPublic;
+}
+
 /** Mark an item triaged/actioned/dismissed (no client DELETE — ledger-like). */
 export async function setMailItemStatus(
   supabase: Db,
@@ -100,13 +166,41 @@ export async function setMailItemStatus(
   itemId: string,
   status: MailItemStatus,
 ): Promise<MailItemPublic> {
+  return updateMailItem(supabase, ownerUserId, itemId, { status });
+}
+
+/**
+ * Delete the raw photo NOW (user-initiated disposal). The object is removed
+ * from the private mail-photos bucket and the row is marked purged; the
+ * extracted metadata (sender, amount, due date — all masked) stays in the
+ * file. Parent-only, audited by the route.
+ */
+export async function deleteMailPhotoNow(
+  supabase: Db,
+  ownerUserId: string,
+  itemId: string,
+): Promise<MailItemPublic> {
+  const { data: row, error: loadError } = await supabase
+    .from('mail_items')
+    .select('id, photo_path')
+    .eq('id', itemId)
+    .eq('owner_user_id', ownerUserId)
+    .maybeSingle();
+  if (loadError || !row) failWith(ErrorCodes.NOT_FOUND);
+  const path = (row as { photo_path: string | null }).photo_path;
+  if (path) {
+    const { error: storageError } = await supabaseAdmin.storage
+      .from('mail-photos')
+      .remove([path]);
+    if (storageError) failWith(ErrorCodes.UPSTREAM_UNAVAILABLE);
+  }
   const { data, error } = await supabase
     .from('mail_items')
-    .update({ status })
+    .update({ photo_path: '', photo_purged_at: new Date().toISOString() })
     .eq('id', itemId)
     .eq('owner_user_id', ownerUserId)
     .select(MAIL_ITEM_PUBLIC_COLS)
     .single();
-  if (error || !data) failWith(ErrorCodes.NOT_FOUND);
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
   return data as MailItemPublic;
 }

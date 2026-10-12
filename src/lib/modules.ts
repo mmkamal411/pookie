@@ -19,7 +19,8 @@ export interface LifeModule {
   watchOver: string;
   seedAction: string;
   status: ModuleStatus;
-  /** Route under /c/[childSlug] — null until the module's workstream ships it. */
+  /** Route under /c/[childSlug] — null until the module's workstream ships it.
+   *  A route starting with "/" is absolute (household / marketplace namespace). */
   route: string | null;
   teenPrivate?: boolean;
   /**
@@ -50,8 +51,8 @@ export const GROVES: Grove[] = [
       { id: "W2", name: "Health", watchOver: "Vitals, trends, and gentle glanceables — the body you live in.", seedAction: "Connect your health app", status: "live", route: "/health" },
       { id: "W8", name: "Wellbeing", watchOver: "The mood pulse — how the day actually felt.", seedAction: "Start the daily pulse", status: "live", route: "/health/wellbeing", teenPrivate: true },
       { id: "W13", name: "Meals", watchOver: "What's for dinner — planned, not panicked.", seedAction: "Plan this week's meals", status: "live", route: "/health/meals" },
-      { id: "W22", name: "Activity", watchOver: "Steps, workouts, streaks — the movement log.", seedAction: "Connect your fitness tracker", status: "seedling", route: null },
-      { id: "W23", name: "Nutrition", watchOver: "Fuel for the day — protein, balance, honesty.", seedAction: "Log today's meals", status: "live", route: "/health/nutrition" },
+      { id: "W22", name: "Activity", watchOver: "Steps, workouts, the movement log — no streaks, no calorie burn for teens.", seedAction: "Connect your fitness tracker", status: "seedling", route: null },
+      { id: "W23", name: "Nutrition", watchOver: "Fuel for the day — learning and meal ideas, never calorie or weight-loss tracking for teens.", seedAction: "Explore food & fuel", status: "live", route: "/health/nutrition" },
     ],
   },
   {
@@ -59,12 +60,12 @@ export const GROVES: Grove[] = [
     subtitle: "what lands at your door and on your table",
     sigil: "🏡",
     modules: [
-      { id: "W21", name: "Mail", watchOver: "What landed at your door — snap, read, action cards.", seedAction: "Snap your first envelope", status: "seedling", route: null },
-      { id: "W20", name: "Shopping List", watchOver: "One shared list for the whole household.", seedAction: "Start the list", status: "seedling", route: null },
-      { id: "W11", name: "Spending", watchOver: "Where the money went — patterns, not judgment.", seedAction: "Connect your bank", status: "seedling", route: null },
-      { id: "W7", name: "Money & Documents", watchOver: "The ledger and the vault — every dollar, every document.", seedAction: "Add your first account", status: "seedling", route: null },
-      { id: "W24", name: "Credit", watchOver: "Your credit, coached — all three bureaus, the excellent playbook.", seedAction: "Connect your cards", status: "seedling", route: null, minAge: 18 },
-      { id: "W14", name: "Co-parenting", watchOver: "Two households, one team — coordination without friction.", seedAction: "Invite your co-parent", status: "seedling", route: null },
+      { id: "W21", name: "Mail", watchOver: "What landed at your door — snap, read, action cards.", seedAction: "Snap your first envelope", status: "live", route: "/household/mail" },
+      { id: "W20", name: "Shopping List", watchOver: "One shared list for the whole household.", seedAction: "Start the list", status: "live", route: "/household/shopping" },
+      { id: "W11", name: "Spending", watchOver: "Where the money went — patterns, not judgment.", seedAction: "Connect your bank", status: "live", route: "/household/spending" },
+      { id: "W7", name: "Money & Documents", watchOver: "The ledger and the vault — every dollar, every document.", seedAction: "Add your first account", status: "live", route: "/household/vault" },
+      { id: "W24", name: "Credit", watchOver: "Minor security-freeze management + credit-hygiene coaching — not bureau monitoring.", seedAction: "Set up a security freeze", status: "live", route: "/credit", minAge: 18 },
+      { id: "W14", name: "Co-parenting", watchOver: "Parallel parenting — two surfaces, an immutable log, no messaging.", seedAction: "Log your first pickup", status: "live", route: "/coparenting" },
     ],
   },
   {
@@ -94,13 +95,13 @@ export const GROVES: Grove[] = [
     subtitle: "getting around, and the world beyond the door",
     sigil: "🌍",
     modules: [
-      { id: "W25", name: "Fuel & Charging", watchOver: "Cheapest gas, nearest chargers — vehicle-aware.", seedAction: "What do you drive?", status: "seedling", route: null },
-      { id: "W30", name: "Flights", watchOver: "Fly smarter — fare prediction, family-trip math.", seedAction: "Name a dream trip", status: "seedling", route: null, hideForTeen: true, minAge: 18 },
-      { id: "W31", name: "Rental Cars", watchOver: "The real total cost — no $29/day traps.", seedAction: "Add your loyalty programs", status: "seedling", route: null, hideForTeen: true, minAge: 18 },
-      { id: "W27", name: "Events", watchOver: "What's happening near you — AI-curated, family-fit.", seedAction: "What does your family love?", status: "seedling", route: null },
-      { id: "W28", name: "Restaurants", watchOver: "Where should we eat tonight — taste-learned, not stars.", seedAction: "Build your taste profile", status: "seedling", route: null },
-      { id: "W29", name: "Trails & Parks", watchOver: "Where can we go outside — conditions, kid-friendliness.", seedAction: "Set your home location", status: "seedling", route: null },
-      { id: "W26", name: "Weather", watchOver: "The sky over your day — hyperlocal, decision-ready.", seedAction: "Where does your day happen?", status: "seedling", route: null },
+      { id: "W25", name: "Fuel & Charging", watchOver: "Cheapest gas, nearest chargers — vehicle-aware.", seedAction: "What do you drive?", status: "live", route: "/travel/fuel" },
+      { id: "W30", name: "Flights", watchOver: "Fly smarter — fare prediction, family-trip math.", seedAction: "Name a dream trip", status: "live", route: "/travel/flights", hideForTeen: true, minAge: 18 },
+      { id: "W31", name: "Rental Cars", watchOver: "The real total cost — no $29/day traps.", seedAction: "Add your loyalty programs", status: "live", route: "/travel/rentals", hideForTeen: true, minAge: 18 },
+      { id: "W27", name: "Events", watchOver: "What's happening near you — AI-curated, family-fit.", seedAction: "What does your family love?", status: "live", route: "/travel/events" },
+      { id: "W28", name: "Restaurants", watchOver: "Where should we eat tonight — taste-learned, not stars.", seedAction: "Build your taste profile", status: "live", route: "/travel/restaurants" },
+      { id: "W29", name: "Trails & Parks", watchOver: "Where can we go outside — conditions, kid-friendliness.", seedAction: "Set your home location", status: "live", route: "/travel/trails" },
+      { id: "W26", name: "Weather", watchOver: "The sky over your day — hyperlocal, decision-ready.", seedAction: "Where does your day happen?", status: "live", route: "/travel/weather" },
     ],
   },
   {
@@ -108,8 +109,8 @@ export const GROVES: Grove[] = [
     subtitle: "trusted services, found",
     sigil: "🤝",
     modules: [
-      { id: "W12", name: "Babysitters", watchOver: "Trusted sitters — who, when, what they need to know.", seedAction: "Add your first sitter", status: "seedling", route: null },
-      { id: "W6", name: "Driving School", watchOver: "Driving, skills, independence — becoming, step by step.", seedAction: "Find a driving school", status: "seedling", route: null, minAge: 15 },
+      { id: "W12", name: "Babysitters", watchOver: "Trusted sitters — who, when, what they need to know.", seedAction: "Add your first sitter", status: "live", route: "/marketplace" },
+      { id: "W6", name: "Driving School", watchOver: "Driving, skills, independence — becoming, step by step.", seedAction: "Find a driving school", status: "live", route: "/marketplace", minAge: 15 },
     ],
   },
   {
@@ -117,9 +118,9 @@ export const GROVES: Grove[] = [
     subtitle: "help, when you need it",
     sigil: "💬",
     modules: [
-      { id: "S1", name: "Help Center & FAQ", watchOver: "Answers to common questions — searchable, plain-language.", seedAction: "Browse the help center", status: "seedling", route: null },
-      { id: "S2", name: "AI Support Chat", watchOver: "Instant answers from Pookie's support assistant, 24/7.", seedAction: "Start a chat", status: "seedling", route: null },
-      { id: "S3", name: "Support Tickets", watchOver: "Open a ticket, track it, talk to a human.", seedAction: "Open your first ticket", status: "seedling", route: null },
+      { id: "S1", name: "Help Center & FAQ", watchOver: "Answers to common questions — searchable, plain-language.", seedAction: "Browse the help center", status: "live", route: "/support/faq" },
+      { id: "S2", name: "AI Support Chat", watchOver: "Instant answers from Pookie's support assistant, 24/7.", seedAction: "Start a chat", status: "live", route: "/support/chat" },
+      { id: "S3", name: "Support Tickets", watchOver: "Open a ticket, track it, talk to a human.", seedAction: "Open your first ticket", status: "live", route: "/support/tickets" },
     ],
   },
 ];

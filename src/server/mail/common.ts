@@ -13,7 +13,7 @@ import { ErrorCodes, failWith } from '@/server/errors';
 
 /** Metadata only — §3.1.8. ocr_text is deliberately absent. */
 export const MAIL_ITEM_PUBLIC_COLS =
-  'id,owner_user_id,related_child_id,photo_path,ocr_confidence,ocr_provider,ocr_at,handwriting_flag,external_ocr_consent,classification,classification_confidence,amount,account_last4,due_date,sender,received_date,status,data_class,retention_class,created_at';
+  'id,owner_user_id,related_child_id,photo_path,ocr_confidence,ocr_provider,ocr_at,handwriting_flag,external_ocr_consent,classification,classification_confidence,amount,account_last4,due_date,sender,received_date,status,data_class,retention_class,auto_delete_at,photo_purged_at,created_at';
 
 /** Detail columns — ocr_text included. Audited read only. */
 export const MAIL_ITEM_DETAIL_COLS = `${MAIL_ITEM_PUBLIC_COLS},ocr_text`;
@@ -55,6 +55,10 @@ export interface MailItemPublic {
   status: MailItemStatus;
   data_class: string;
   retention_class: string;
+  /** Raw-photo purge deadline (≤30d from intake) — drives the retention UI. */
+  auto_delete_at: string | null;
+  /** Set when the raw photo was purged (auto or "Delete now"). */
+  photo_purged_at: string | null;
   created_at: string;
 }
 
