@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AssignmentItem } from "@/lib/school/types";
-import { cleanCategory, matchWeight, CATEGORY_WEIGHTS } from "@/lib/school/category-weights";
+import { cleanCategory, CATEGORY_WEIGHTS } from "@/lib/school/category-weights";
 
 function pctOf(a: AssignmentItem): number | null {
   if (a.points_earned != null && a.points_possible != null && a.points_possible > 0) {
@@ -22,18 +22,22 @@ interface CatGroup {
   assignments: AssignmentItem[];
 }
 
-function groupByCategory(assignments: AssignmentItem[], slug: string): CatGroup[] {
+function groupByCategory(assignments: AssignmentItem[], weights: Record<string, number>): CatGroup[] {
   const map = new Map<string, CatGroup>();
   for (const a of assignments) {
-    const matched = matchWeight(slug, a.category ?? "");
-    const name = matched ? matched.name : cleanCategory(a.category);
-    const weight = matched ? matched.weight : 0;
+    // Match the raw category to a weighted bucket by normalized name.
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z ]+/g, " ").replace(/\s+/g, " ").trim();
+    const raw = cleanCategory(a.category);
+    const key = Object.keys(weights).find((k) => norm(k) === norm(raw))
+      ?? Object.keys(weights).find((k) => norm(k).includes(norm(raw)) || norm(raw).includes(norm(k)))
+      ?? raw;
+    const weight = weights[key] ?? 0;
     const pct = pctOf(a) ?? (a.status === "missing" ? 0 : null);
     if (pct == null) continue; // ungraded future work doesn't move the average
-    let g = map.get(name);
+    let g = map.get(key);
     if (!g) {
-      g = { name, weight, pcts: [], assignments: [] };
-      map.set(name, g);
+      g = { name: key, weight, pcts: [], assignments: [] };
+      map.set(key, g);
     }
     g.pcts.push(pct);
     g.assignments.push(a);
@@ -56,21 +60,30 @@ function overallOf(groups: CatGroup[]): number | null {
 /**
  * Assignment What-If — "what if I score X on this?" Pick a missing or low
  * assignment, slide the score, watch the estimated overall grade move.
- * Math is category-weight aware (Cobb weights).
+ * Category-weight aware: prefers live classes.grade_weights, falls back to
+ * the curated Cobb weights.
  */
 export function WhatIfSimulator({
   assignments,
   slug,
   currentGrade,
+  liveWeights,
 }: {
   assignments: AssignmentItem[];
   slug: string | null;
   currentGrade: number | null;
+  /** Live weights from classes.grade_weights — win over the curated table. */
+  liveWeights?: Record<string, number> | null;
 }) {
-  const hasWeights = slug != null && CATEGORY_WEIGHTS[slug] != null;
+  const weights = liveWeights && Object.keys(liveWeights).length > 0
+    ? liveWeights
+    : slug != null
+      ? CATEGORY_WEIGHTS[slug] ?? null
+      : null;
+  const hasWeights = weights != null;
   const groups = useMemo(
-    () => (slug ? groupByCategory(assignments, slug) : []),
-    [assignments, slug]
+    () => (weights ? groupByCategory(assignments, weights) : []),
+    [assignments, weights]
   );
   const baseline = useMemo(() => overallOf(groups), [groups]);
 
@@ -176,9 +189,9 @@ export function WhatIfSimulator({
               </p>
             </div>
           )}
-          {sel && (
+          {sel && weights && (
             <p className="mt-2 text-[11px] text-stardust-400">
-              {sel.cat} counts {CATEGORY_WEIGHTS[slug as string][sel.cat]}% of your grade — that&apos;s
+              {sel.cat} counts {weights[sel.cat] ?? "?"}% of your grade — that&apos;s
               why {sel.pct < 70 ? "recovering it moves the needle fast" : "every point here counts"}.
             </p>
           )}

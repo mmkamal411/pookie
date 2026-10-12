@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import type { CheckinHandout } from "@/server/services/school-debrief";
 
 function todayIso(): string {
@@ -196,17 +196,30 @@ export function DebriefingChamber({
       if (!dRes.ok) throw new Error("debrief_failed");
 
       // 3. Handout uploads — auto-tagged to the current unit server-side.
+      // Uploads are best-effort: the debriefing itself already saved above.
+      const failed: string[] = [];
       for (const f of staged) {
-        const form = new FormData();
-        form.append("file", f);
-        form.append("class_id", classId);
-        const hRes = await fetch(`/api/v1/children/${childId}/school/checkins/${cid}/handouts`, {
-          method: "POST",
-          body: form,
-        });
-        if (!hRes.ok) throw new Error("handout_failed");
+        try {
+          const form = new FormData();
+          form.append("file", f);
+          form.append("class_id", classId);
+          const hRes = await fetch(`/api/v1/children/${childId}/school/checkins/${cid}/handouts`, {
+            method: "POST",
+            body: form,
+          });
+          if (!hRes.ok) throw new Error("handout_failed");
+        } catch {
+          failed.push(f.name);
+        }
       }
       setStaged([]);
+      if (failed.length > 0) {
+        setError(
+          `Debriefing saved, but ${failed.length} handout${failed.length === 1 ? "" : "s"} didn't upload (${failed.slice(0, 2).join(", ")}${failed.length > 2 ? "…" : ""}) — the handout storage is still wiring up. Your words are safe; try the handouts again from Class Files.`
+        );
+        setStage("briefing");
+        return;
+      }
       setStage("logged");
     } catch {
       setError("Transmission interrupted — nothing was lost. Try transmitting again.");
@@ -223,7 +236,7 @@ export function DebriefingChamber({
     return (
       <div className="card-living rounded-3xl border border-nova-400/20 px-5 py-4">
         <div className="flex items-center gap-3">
-          <PookieOrb size={36} />
+          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">The debriefing chamber is the student&apos;s private space</p>
             <p className="mt-0.5 text-xs leading-relaxed text-stardust-300">
@@ -244,7 +257,7 @@ export function DebriefingChamber({
           onClick={() => setStage("briefing")}
           className="group flex w-full items-center gap-4 px-5 py-5 text-left"
         >
-          <PookieOrb size={48} />
+          <ReactiveOrb size={48} />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-semibold text-star-100">Debriefing Chamber</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-stardust-300">
@@ -264,7 +277,7 @@ export function DebriefingChamber({
     return (
       <div className="relative overflow-hidden rounded-3xl border border-comet-400/40 bg-nebula-900/80 px-6 py-10 text-center" style={{ boxShadow: "0 0 40px rgb(74 222 128 / 0.15)" }}>
         <div className="mx-auto w-fit">
-          <PookieOrb size={72} />
+          <ReactiveOrb size={72} />
         </div>
         <h3 className="text-sunlit mt-4 text-xl font-semibold">Debriefing Logged</h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stardust-300">
@@ -299,7 +312,7 @@ export function DebriefingChamber({
         {/* Debriefing officer */}
         <div className="flex flex-col items-center px-6 pb-2 pt-7 text-center">
           <div className="relative">
-            <PookieOrb size={64} />
+            <ReactiveOrb size={64} />
             <span className="absolute inset-0 -m-2 animate-ping rounded-full border border-cyan-300/30" aria-hidden="true" />
           </div>
           <p className="mt-3 text-[11px] font-semibold tracking-[0.22em] text-cyan-300/90 capitalize">

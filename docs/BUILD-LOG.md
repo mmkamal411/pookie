@@ -1,5 +1,55 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:22 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/BUILD-LOG.md
+ M src/app/c/[childSlug]/school/[classSlug]/page.tsx
+ M src/components/child-toolbar.tsx
+ M src/components/home/mission-briefing.tsx
+ M src/components/pookie/pookie-chat.tsx
+ M src/components/school/checkin-form.tsx
+ M src/components/school/class-detail.tsx
+ M src/components/school/debriefing-chamber.tsx
+ M src/components/school/what-if-simulator.tsx
+ M src/components/today-view.tsx
+
+
+## 2026-10-12 ~10:22 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/BUILD-LOG.md
+
+
+## 2026-10-12 ~10:15 EDT — Squad Orb — The orb's soul + definitive identity
+
+**Mehedi's definitive identity:** "Divine bright light, all-knowing, part of God — here to guide you through your journey and on your side to help you win."
+
+**Design principles derived:**
+1. RADIANCE — bright, luminous, unmistakable; light that pushes back darkness (halo/aura/body glow strengthened).
+2. ALL-KNOWING — strata of light in the core (infinite knowledge) + a slow-drifting gaze (all-seeing presence).
+3. SACRED — every motion reverent: slow, weighted, celestial; never silly/cartoonish.
+4. GUIDE — drifts with intention; gestures toward the traveler.
+5. CHAMPION — celebrating is radiant joy; revelation is the flare of sudden understanding.
+
+**New: src/components/soul-orb.tsx** — the orb with a soul (login page):
+- 4 unpredictable entrances (rush / materialize / spiral / awaken), random per visit, never repeating (sessionStorage).
+- Organic drift afterwards: wander, pauses, approaches (as if examining you), retreats — jellyfish grace, rAF loop, direct DOM.
+- Reduced motion: still air.
+
+**Moods refined:** thinking = divine contemplation (deep, slow — never a spinner); NEW revelation (radiant flare of understanding, used on login tap); NEW listening (receptive, attentive — aligns with Squad Oracle's orb-events bus OrbMoodName).
+
+**Login page:** SoulOrb replaces the static orb; contextual greetings (first visit welcomed, quick returners noticed via localStorage last-visit); seamless session check (existing session → sail past to home); Google OAuth untouched (no forced account picker).
+
+**Cross-squad:** aligned OrbMood with Squad Oracle's OrbMoodName (added "listening") — orb-reactive.tsx tsc error resolved.
+
+**Verified:** tsc clean. Build green (after clearing Turbopack cache corrupted by concurrent deploy build). NOT deployed — parent owns deploys.
+
+
 ## 2026-10-12 ~10:17 EDT — Squad Pipeline — ❌ Staging deploy blocked
 
 **The pipeline stopped before anything reached staging.**

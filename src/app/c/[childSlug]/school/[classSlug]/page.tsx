@@ -40,18 +40,23 @@ export default async function ClassPage({
   const classRow = cls as { id: string; name: string };
   const classId = classRow.id;
 
-  // Room + current unit: live columns when migrated, curated fallback.
+  // Room + current unit + grade weights: live columns when migrated, curated fallback.
   let room: string | null = null;
   let currentUnit: string | null = null;
+  let gradeWeights: Record<string, number> | null = null;
   try {
     const { data: meta, error } = await supabase
       .from("classes")
-      .select("room, current_unit")
+      .select("room, current_unit, grade_weights")
       .eq("id", classId)
       .maybeSingle();
     if (!error && meta) {
       room = (meta as { room: string | null }).room ?? null;
       currentUnit = (meta as { current_unit: string | null }).current_unit ?? null;
+      const gw = (meta as { grade_weights: unknown }).grade_weights;
+      if (gw && typeof gw === "object" && !Array.isArray(gw)) {
+        gradeWeights = gw as Record<string, number>;
+      }
     }
   } catch {
     // columns not yet migrated — curated fallback below
@@ -85,6 +90,7 @@ export default async function ClassPage({
       curatedSlug={curatedSlug}
       room={room}
       currentUnit={currentUnit}
+      gradeWeights={gradeWeights}
     />
   );
 }

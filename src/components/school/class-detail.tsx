@@ -47,6 +47,8 @@ export function ClassDetailView({
   curatedSlug: string | null;
   room: string | null;
   currentUnit: string | null;
+  /** Live category weights from classes.grade_weights (may be {}). */
+  gradeWeights: Record<string, number> | null;
 }) {
   const [data, setData] = useState(detail);
   const [version, setVersion] = useState(0);
@@ -166,6 +168,7 @@ export function ClassDetailView({
           assignments={data.assignments ?? []}
           slug={curatedSlug}
           currentGrade={data.grade?.numeric ?? null}
+          liveWeights={gradeWeights}
         />
       </section>
 
