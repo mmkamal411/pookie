@@ -291,7 +291,7 @@ export function DebriefingChamber({
   return (
     <div className="debrief-shell relative">
       <style>{`
-        .debrief-shell { border-radius: 1.5rem; padding: 2px; background: conic-gradient(from var(--debrief-angle, 0deg), rgba(103,232,249,.55), rgba(167,139,250,.45), rgba(74,222,128,.4), rgba(103,232,249,.55)); animation: debrief-spin 7s linear infinite; }
+        .debrief-shell { border-radius: 1.5rem; padding: 2px; background: conic-gradient(from var(--debrief-angle, 0deg), rgba(103,232,249,.55), rgba(45,212,191,.45), rgba(74,222,128,.4), rgba(103,232,249,.55)); animation: debrief-spin 7s linear infinite; }
         @property --debrief-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
         @keyframes debrief-spin { to { --debrief-angle: 360deg; } }
         .debrief-scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(103,232,249,.7), transparent); animation: debrief-scan 5s ease-in-out infinite; pointer-events: none; }

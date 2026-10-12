@@ -1,5 +1,5 @@
 // Card — the living Nebula card: frosted deep-space glass with a soft
-// violet-pink glow edge (divine-light, never harsh). Shared surface for
+// cyan glow edge (divine-light, never harsh). Shared surface for
 // every squad's module tiles, list rows, and panel bodies.
 //
 // Props:

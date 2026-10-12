@@ -45,7 +45,7 @@ export const COBB_CATEGORIES: { key: string; label: string; dot: string; chip: s
   { key: "Board Meeting", label: "Board Meeting", dot: "#94a3b8", chip: "bg-slate-400/15 text-slate-300 border-slate-400/30" },
   { key: "Holiday - School Closed", label: "Holiday (Closed)", dot: "#e11d48", chip: "bg-rose-400/15 text-rose-300 border-rose-400/30" },
   { key: "Early Release Day - All levels", label: "Early Release", dot: "#ea580c", chip: "bg-orange-400/15 text-orange-300 border-orange-400/30" },
-  { key: "Elementary/Middle School Conference Week", label: "Conference Week", dot: "#9333ea", chip: "bg-purple-400/15 text-purple-300 border-purple-400/30" },
+  { key: "Elementary/Middle School Conference Week", label: "Conference Week", dot: "#2dd4bf", chip: "bg-teal-400/15 text-teal-300 border-teal-400/30" },
   { key: "Student Holiday/Staff Day", label: "Student Holiday", dot: "#2563eb", chip: "bg-blue-400/15 text-blue-300 border-blue-400/30" },
 ];
 

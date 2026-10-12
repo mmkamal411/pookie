@@ -62,7 +62,7 @@ function ProgressRing({ pct, label }: { pct: number; label: string }) {
           strokeDasharray={c}
           strokeDashoffset={c - (c * Math.min(100, pct)) / 100}
           transform="rotate(-90 42 42)"
-          style={{ filter: "drop-shadow(0 0 6px rgba(244,114,182,0.5))" }}
+          style={{ filter: "drop-shadow(0 0 6px rgba(0,229,255,0.5))" }}
         />
         <text x="42" y="47" textAnchor="middle" fill="#fff" fontSize="15" fontWeight="600">
           {pct}%

@@ -1,6 +1,6 @@
 // W26 Weather Hub — the standalone household weather experience.
 // Cosmic hero with condition-matched ambient glow (gold sun, ice-blue rain,
-// violet storms), CSS-animated condition art, current conditions, today's
+// electric-blue storms), CSS-animated condition art, current conditions,
 // hourly strip, 7-day outlook with temp-range bars, NWS alerts, and a home
 // ZIP setter. Every state renders beautifully: shimmer loading, graceful
 // standby with retry — never a blank page.
@@ -51,13 +51,13 @@ const CONDITION_LABEL: Record<ConditionKind, string> = {
 /** Ambient glow colors per condition: [core, halo]. */
 const CONDITION_GLOW: Record<string, [string, string]> = {
   "clear-day": ["rgba(246,196,83,0.32)", "rgba(246,150,60,0.10)"],
-  "clear-night": ["rgba(107,124,255,0.30)", "rgba(60,70,180,0.12)"],
+  "clear-night": ["rgba(96,140,220,0.30)", "rgba(40,70,140,0.12)"],
   partly: ["rgba(120,200,220,0.26)", "rgba(246,196,83,0.10)"],
   cloudy: ["rgba(110,150,180,0.24)", "rgba(90,120,150,0.10)"],
   rain: ["rgba(77,178,255,0.30)", "rgba(40,110,200,0.12)"],
-  storm: ["rgba(139,92,246,0.34)", "rgba(90,50,200,0.14)"],
+  storm: ["rgba(45,140,220,0.32)", "rgba(20,80,150,0.14)"],
   snow: ["rgba(191,227,255,0.30)", "rgba(140,190,240,0.12)"],
-  fog: ["rgba(154,147,184,0.28)", "rgba(120,110,160,0.12)"],
+  fog: ["rgba(148,163,184,0.28)", "rgba(100,116,139,0.12)"],
   wind: ["rgba(120,200,200,0.26)", "rgba(80,160,160,0.10)"],
 };
 

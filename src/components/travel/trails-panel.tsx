@@ -55,7 +55,7 @@ function artFor(designation: string): { sky: string; glyph: string; label: strin
     };
   if (d.includes("historic"))
     return {
-      sky: "linear-gradient(160deg, rgb(64 52 88 / 0.9), rgb(32 26 52 / 0.95))",
+      sky: "linear-gradient(160deg, rgb(52 64 96 / 0.9), rgb(26 34 56 / 0.95))",
       glyph: "🏛️",
       label: "Historic Site",
     };

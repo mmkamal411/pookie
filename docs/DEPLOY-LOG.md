@@ -4,6 +4,7 @@ Newest first. Each row: when, where, what commit, what changed, who/what trigger
 
 | Timestamp (EDT) | Env | Git SHA | Commits | Trigger | Smoke |
 |-----------------|-----|---------|---------|---------|-------|
+| 2026-10-12 12:54 | staging | 82f64b8 | 82f64b8 Team 2: two-theme system (space-black/bright-bridge) + Command Center menu + chat theming; 6adfffe P0 FIX: update settings theme toggle to new space-black/bright-bridge values (was breaking build); 447fda2 Design direction: two themes (Space Black default + Bright Bridge alt), Command Center | deploy-staging.py (local) | fail |
 | 2026-10-12 12:18 | staging | 44b48f2 | 44b48f2 Squad Gavel: legal surfaces — terms, children's privacy, do-not-sell, accessibility, AI disclosure, consent upgrade, footer; 0cfe966 Squad Cookie: complete cookie consent system (banner, preference center, policies, footer) | deploy-staging.py (local) | fail |
 | 2026-10-12 12:08 | staging | 525fe84 | 525fe84 docs(prism): scorecard — all 6 engineers complete, final tally; f87c96b docs(prism): scorecard — E5 nav fixes, P0 More-menu 404 resolved; c22f761 docs(prism-e4): build-log entry for audit-driven polish pass; 93b6d34 Prism E4: audit-driven neon polish — ScreenTimeCoSet, review-18, onboarding  | deploy-staging.py (local) | fail |
 | 2026-10-12 10:39 | staging | d36fdb6 | d36fdb6 docs(pipeline): first pipeline deploy record — 9bdc5b4 live on staging | deploy-staging.py (local) | fail |

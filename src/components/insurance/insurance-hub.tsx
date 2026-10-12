@@ -310,7 +310,7 @@ export function InsuranceHub() {
         />
         <button
           onClick={openAdd}
-          className="mt-1 rounded-xl bg-nova-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-nova-400"
+          className="mt-1 rounded-xl bg-nova-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(45,212,191,0.35)] transition hover:bg-nova-400"
         >
           + Add Policy
         </button>
@@ -329,7 +329,7 @@ export function InsuranceHub() {
           className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl"
         />
         <div className="flex items-center gap-4">
-          <div aria-hidden="true" className="h-14 w-14 shrink-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.9),rgba(167,139,250,0.55)_45%,rgba(76,29,149,0.25)_80%)] shadow-[0_0_30px_rgba(167,139,250,0.5)]" />
+          <div aria-hidden="true" className="h-14 w-14 shrink-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.9),rgba(45,212,191,0.55)_45%,rgba(13,92,102,0.25)_80%)] shadow-[0_0_30px_rgba(45,212,191,0.5)]" />
           <div>
             <h2 className="text-lg font-bold text-sunlit">{shieldState.title}</h2>
             <p className="text-sm text-stardust-300">{shieldState.body}</p>
@@ -362,7 +362,7 @@ export function InsuranceHub() {
 
       {policies.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-nebula-600 bg-nebula-900/40 p-10 text-center">
-          <div aria-hidden="true" className="mx-auto mb-4 h-12 w-12 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.85),rgba(167,139,250,0.5)_50%,transparent_80%)] shadow-[0_0_24px_rgba(167,139,250,0.4)]" />
+          <div aria-hidden="true" className="mx-auto mb-4 h-12 w-12 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.85),rgba(45,212,191,0.5)_50%,transparent_80%)] shadow-[0_0_24px_rgba(45,212,191,0.4)]" />
           <h3 className="text-lg font-semibold text-sunlit">No Policies Tracked Yet</h3>
           <p className="mx-auto mt-1 max-w-sm text-sm text-stardust-400">
             Add Auto, Home, Health, Life, Or Renter Policies To Start Renewal Countdowns And Never Miss A Payment.

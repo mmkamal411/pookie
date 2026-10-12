@@ -215,7 +215,7 @@
 [data-theme="bright-bridge"] .neon-hover:hover,
 [data-theme="bright-bridge"] .neon-card:hover {
   box-shadow:
-    0 8px 22px rgb(30 27 75 / 0.12),
+    0 8px 22px rgb(22 32 46 / 0.12),
     0 0 16px rgb(var(--nx) / 0.3);
 }
 

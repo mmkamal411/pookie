@@ -66,7 +66,7 @@ export function ClassCard({
         </div>
       </div>
 
-      <div className={`mt-3 h-1.5 overflow-hidden rounded-full ${white ? "bg-[#e3e1f2]" : "bg-nebula-800"}`}>
+      <div className={`mt-3 h-1.5 overflow-hidden rounded-full ${white ? "bg-[#dbe7f3]" : "bg-nebula-800"}`}>
         <div
           className={`h-full rounded-full ${s.bar}`}
           style={{ width: `${cls.numeric != null ? Math.min(100, cls.numeric) : 0}%` }}
