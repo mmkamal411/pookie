@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties, type ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { getPookieColor, subscribePookieColor } from "@/components/pookie/pookie-color";
 import { MorePopup } from "@/components/more-popup";
 
@@ -18,7 +18,7 @@ function ToolbarOrb() {
       className="orb-breathe relative rounded-full"
       style={color ? { filter: `drop-shadow(0 0 14px ${color})` } : undefined}
     >
-      <PookieOrb size={56} />
+      <ReactiveOrb size={56} />
       {color && (
         <span
           aria-hidden="true"
@@ -112,7 +112,7 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const tabs: TabDef[] = [
     { id: "home", label: "Home", href: base, glow: "#a78bfa", readout: "Nav · Home", glyph: HabitatRingGlyph, active: pathname === base },
     { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", readout: "Nav · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
-    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#f472b6", readout: "Pookie · Ai", orb: true, active: pathname.startsWith(`${base}/pookie`) },
+    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", readout: "Pookie · Ai", orb: true, active: pathname.startsWith(`${base}/pookie`) },
     { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", readout: "Nav · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page.
     { id: "more", label: "More", href: "", glow: "#c4b5fd", readout: "Modules", glyph: ModuleGridGlyph, popup: true, active: moreOpen },

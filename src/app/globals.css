@@ -674,45 +674,62 @@ body {
   width: 40px;
 }
 
-/* Orb docking socket — the Pookie dome seated in its collar */
+/* Orb cradle — the divine light rests directly on the console. No socket,
+   no jar, no darkness: pure light emanating into the toolbar, blending
+   seamlessly. The orb's own halo (screen blend) tints the console around
+   it. Squad Orb 2026-10-12 — Mehedi: "there should not be any darkness
+   around it." */
 .console-orb-socket {
   border-radius: 9999px;
-  padding: 5px;
-  background: radial-gradient(circle at 50% 35%,
-    rgb(244 114 182 / 0.14),
-    rgb(5 5 16 / 0.4) 72%);
-  border: 1px solid rgb(244 114 182 / 0.4);
-  box-shadow:
-    0 0 20px rgb(244 114 182 / 0.28),
-    0 0 44px rgb(244 114 182 / 0.1),
-    inset 0 0 14px rgb(244 114 182 / 0.1),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
-  transition: box-shadow 0.3s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 a:active .console-orb-socket {
   transform: scale(0.92);
 }
 .console-orb-socket[data-active="true"] {
-  box-shadow:
-    0 0 26px rgb(244 114 182 / 0.45),
-    0 0 60px rgb(244 114 182 / 0.16),
-    inset 0 0 16px rgb(244 114 182 / 0.16),
-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  box-shadow: none;
 }
-/* Warm light pooling beneath the docked orb */
+/* Divine light pooling beneath the orb — gold, not pink */
 .console-orb-pool {
   position: absolute;
   left: 50%;
   bottom: -6px;
-  width: 72px;
-  height: 22px;
+  width: 84px;
+  height: 26px;
   transform: translateX(-50%);
   background: radial-gradient(ellipse at center,
-    rgb(244 114 182 / 0.4),
-    rgb(251 191 36 / 0.1) 55%,
+    rgb(255 216 132 / 0.42),
+    rgb(255 200 110 / 0.1) 55%,
     transparent 72%);
   filter: blur(6px);
   pointer-events: none;
+}
+/* The toolbar orb beckons — a slow, reverent swell that says "I'm here,
+   tap me." Hypnotic, eager to assist, never still. */
+#toolbar-pookie-orb .orb-halo {
+  animation: orb-beckon 7s ease-in-out infinite;
+}
+@keyframes orb-beckon {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  12% { transform: scale(1.18); opacity: 1; }
+  26% { transform: scale(1); opacity: 0.85; }
+}
+/* Tap flash — a burst of light as the orb opens Pookie chat. */
+#toolbar-pookie-orb:active .orb-core {
+  animation: orb-tap-flash 0.35s ease-out;
+}
+@keyframes orb-tap-flash {
+  0% { filter: brightness(1); transform: scale(1); }
+  40% { filter: brightness(2.2); transform: scale(1.15); }
+  100% { filter: brightness(1.2); transform: scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #toolbar-pookie-orb .orb-halo { animation: none; }
+  #toolbar-pookie-orb:active .orb-core { animation: none; }
 }
 
 /* Standby console — the deck at rest (pre-vessel pages) */
