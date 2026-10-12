@@ -3,6 +3,27 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:52 EDT — Platform Team 1 DevOps Engineer (staging-build): MD FREEZE ACK + CHECK.SH TO /tmp + SWEEP
+
+**MD FREEZE acknowledged:** all work in `supabase/migrations/` stopped — no new files, no audits, no APPLY_ORDER.md updates — until MD all-clear on the renumbering. Removed my uncommitted `generate-manifest.sh` from the migrations dir (parked at `/tmp/generate-manifest.sh`). Already-committed `check.sh`/`APPLY_ORDER.md` (commit `3a2fa64`) left untouched per freeze. Freeze justification visible in-tree: numbering now collides across teams (024×4, 025×3, 026×3, 027×5, 028×6, 029×2) — correct call.
+
+**check.sh:** final version held at `/tmp/check.sh` (executable, accepts dir arg, fixed cosmetic double-prefix from earlier draft). Proven on synthetic fixtures (catches all 4 violation types, exit 1) and re-run against the live migrations dir: 13 violations, all in `002_school_systems.sql` (unguarded CREATE POLICY, lines 129–200) — pre-existing finding, reported not edited. Ready to install as `supabase/migrations/check.sh` when freeze lifts.
+
+**Cleanliness sweep** (160 src files touched in last 30 days, current tree): `console.log` = 0 hits, `.only(` = 0, `TODO/FIXME` = 1 legitimate note (`src/lib/tenant/actions.ts:219` — unwired transactional email, not dead code). No auto-fixes applied.
+
+**Next (post-freeze):** install check.sh, re-run full numbering audit on renumbered set, regenerate manifest.
+
+
+## 2026-10-12 ~03:48 EDT — Platform Team 1 DevOps Engineer (staging-build): MIGRATION AUDIT + CI CHECK DELIVERED (commit 3a2fa64)
+
+**Migration ordering & idempotency audit (001–016):** no numbering gaps/collisions in 001–016. **One idempotency violation: `002_school_systems.sql`** — 13 `CREATE POLICY` statements (lines 129–200) lack preceding `DROP POLICY IF EXISTS`; re-running 002 fails on duplicate policies. All other migrations pass (IF NOT EXISTS / DROP-guards / OR REPLACE verified by grep). Noted only — 002 is DBA-owned, not edited.
+
+**Dependency order (verified by grep):** 017 (profiles) before onboarding code; 018 (granted_by) before 019/020 (both consume `granted_by` / `grant_access()`); 022 (health tiers) before 023/024 (re-consent, grace/deletion).
+
+**Delivered (commit 3a2fa64):** `supabase/migrations/APPLY_ORDER.md` (001→025 manifest, apply rules, dependency rules, update procedure, "applied live?" statuses), `supabase/migrations/check.sh` (executable CI: TABLE-without-IF-NOT-EXISTS, POLICY-without-DROP, TRIGGER-without-DROP, FUNCTION-without-OR-REPLACE).
+
+**Caution for applier:** brief claimed 001–014 "applied per BUILD-LOG" but newest log evidence says files-only/NOT applied and the sandbox can't query `schema_migrations` — manifest marks 001–014 ❓ UNVERIFIED with a verify-first procedure. No deploy. No DB/Cloudflare touched.
+
 ## 2026-10-12 ~03:50 EDT — Squad 3 QA Engineer: TEST PLAN + PLACEHOLDER AUDIT + 12 DEFECTS (staging-build)
 
 **Deliverables in `docs/squad3/`:** TEST-PLAN.md (v1.0) + `scripts/placeholder-audit.sh`, `calibration-403-check.sh`, `parent-blocklist-check.sh` (staging-ready, runnable). `npm run build` ✅ passes locally (exit 0). Scope follows **MD D5 REVISED (open signup)**: corroborated claim flow is v1 — full test coverage for enumeration resistance (existing vs non-existing child probes → identical responses), rate limits, perjury/custody attestation required-fields, Parent-A-vs-teen approval routing, 14-day escalation, 30-day lockout, `court_order_restriction` self-serve disable; invite-from-inside (deep link/QR generation, redemption, expiry, single-use) retained as fastest path; + mandatory placeholder audit §1 (MD no-placeholders directive) wired into Definition of Done.
