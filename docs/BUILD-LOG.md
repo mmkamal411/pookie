@@ -3,6 +3,16 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~06:10 EDT — Squad 5 Phase 2 — Release Execution: STAGING RELEASED (aefe21d), wrangler branch-detection trap fixed
+
+**Release:** pulled latest `staging-build` (HEAD `aefe21d` — all squad commits confirmed: Squad 1 x4, Squad 2 x6, Squad 3 daf6a79, Squad 4 x2, Phase 1 6dbf839). Fresh `npm run build` + `npx opennextjs-cloudflare build`. Bundle verified clean (no `NEXT_PUBLIC_DEMO_MODE` in chunks). Assembled via `scripts/assemble-pages-deploy.py`. Smoke test: **11/11 pass** incl. bundle-freshness gate. Live bundle verification: all 10 `/login` JS chunks downloaded from `https://pookie-staging.pages.dev` are **byte-identical** to the fresh build; zero demo code in live bytes; tutor URL baked into server bundle. Recorded in DEPLOY-LOG.md (pass). Production untouched.
+
+**INCIDENT (fixed forward):** first deploy via `deploy-staging.py` published to `staging-build.pookie-staging.pages.dev` ONLY — canonical URL kept serving the old build. Root cause: wrangler auto-detects the local git branch and makes a preview-only deploy; Squad 2's "no --branch = production" assumption only holds in CI (detached HEAD). Verified via Cloudflare API: `pookie-staging` `production_branch = main`. Fix: re-deployed with `--branch=main` (Cloudflare treats branch==production_branch as the production deployment) — canonical URL now serves the fresh build; API confirms canonical deployment `08faa855`.
+
+**Code changes (committed below):**
+- `deploy-staging.py` — added `--branch=main` to the wrangler deploy call + comment explaining the trap (prevents the next local run from silently shipping a preview deploy).
+- `smoke-test-staging.py` — synced two expectations with intentional product changes: `/demo` now expects **404** (route fully removed with demo mode, 35344d7); dropped `/c/dawson/more` must-exist check (route deleted in 6345748; More tab is now a client-side popup in `ChildToolbar`, not a route).
+
 ## 2026-10-12 ~11:00 EDT — Squad 4 — DB Function Remediation (coordinator-assigned, staging-build): RPC GAP SWEEP — 6 MISSING FUNCTIONS MIGRATED, 051 BREAKAGE REPAIRED, 8 CALL SITES FIXED
 
 **Note:** a different "Squad 4" (Home & Money Track) has earlier entries in this log; this entry is the coordinator-assigned DB Function Remediation squad (fixer to Squad 3's finder). No relation.

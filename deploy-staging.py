@@ -165,8 +165,17 @@ def main():
     env = dict(os.environ)
     env["CLOUDFLARE_API_TOKEN"] = str(entry["surrogate"]).strip()
     env["CLOUDFLARE_ACCOUNT_ID"] = ACCOUNT_ID
+    # --branch=main is REQUIRED, not optional (2026-10-12 Squad 5 Phase 2):
+    # pookie-staging's production_branch is "main" (verified via Cloudflare
+    # API), and Cloudflare treats a --branch deploy as the PRODUCTION
+    # deployment exactly when branch == production_branch. Without the flag,
+    # wrangler auto-detects the local git branch (e.g. staging-build) and
+    # makes a PREVIEW-ONLY deploy to <branch>.pookie-staging.pages.dev —
+    # the canonical https://pookie-staging.pages.dev keeps serving the old
+    # build. Squad 2 dropped --branch believing no-flag = production; that
+    # only holds in CI (detached HEAD, no branch to detect).
     r = run(["npx", "wrangler", "pages", "deploy", ".pages-deploy",
-             "--project-name", PROJECT, "--commit-dirty=true"],
+             "--project-name", PROJECT, "--branch=main", "--commit-dirty=true"],
             env=env, check=False)
     if r.returncode != 0:
         sys.exit(r.returncode)

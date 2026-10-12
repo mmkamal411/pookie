@@ -34,8 +34,10 @@ Checks:
                                 incident: route statuses alone cannot prove
                                 the deployed bundle is the fresh build.)
     GET /auth/callback       -> 307 (no code = graceful redirect to login)
-    GET /demo                -> 307 (demo removed; middleware redirects
-                                unauthenticated users instead of 404)
+    GET /demo                -> 404 (demo route fully removed with demo mode,
+                                commit 35344d7 — 404 is the CORRECT signal that
+                                no demo code shipped; a 200/307 here would mean
+                                a stale build with demo mode is live)
     GET /api/v1/me           -> 403 + canonical error envelope
                                 (unauthenticated. 403 not 401 is intentional:
                                 src/server/errors.ts never-confirm/deny design
@@ -51,10 +53,10 @@ Checks:
 Routes that must EXIST (200/307/308 — never 404/500):
     /c/dawson        child dashboard (tenant firewall: 307 unauthenticated)
     /select-child    child picker
-    /c/dawson/more   More tab — the 31-module menu shell (incl. Support S1/S2/S3
-                     seedlings, which are data in src/lib/modules.ts, route:null,
-                     rendered client-side — no server routes to 500)
     /c/dawson/today  Today tab
+    NOTE (2026-10-12): /c/dawson/more is intentionally GONE — the More tab is
+    now a client-side popup in ChildToolbar (href=""), not a route
+    (commit 6345748). Expecting 404 there is correct; do not re-add.
 
 Added 2026-10-12 after the post-login 404 incident: a stale/broken
 deployment served a Next.js error boundary on `/` with no automated
@@ -278,7 +280,10 @@ def main():
         ok = False
     if not check_status("/auth/callback", 307, "callback without code redirects gracefully"):
         ok = False
-    if not check_status("/demo", 307, "demo route is gone (redirects via auth middleware, not 404)"):
+    # /demo was fully REMOVED with demo mode (commit 35344d7): 404 is the
+    # correct signal. A 200/307 here would mean a stale build with demo code
+    # went live — treat any non-404 as a failure.
+    if not check_status("/demo", 404, "demo route is gone entirely (404 = no demo code shipped)"):
         ok = False
     if not check_envelope("GET", "/api/v1/me", 403, "me endpoint rejects unauthenticated with envelope"):
         ok = False
@@ -287,11 +292,12 @@ def main():
     if not check_static_asset(login_html):
         ok = False
 
-    # Must-exist routes (never 404/500)
+    # Must-exist routes (never 404/500). /c/dawson/more is NOT here on purpose:
+    # the More tab became a client-side popup (ChildToolbar), not a route
+    # (commit 6345748) — expecting 404 there is correct.
     for path, desc in [
         ("/c/dawson", "child dashboard route exists"),
         ("/select-child", "select-child route exists"),
-        ("/c/dawson/more", "More tab menu shell exists (incl. Support seedlings)"),
         ("/c/dawson/today", "Today tab exists"),
     ]:
         if not check_exists(path, desc):
