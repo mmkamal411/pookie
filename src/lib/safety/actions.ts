@@ -20,6 +20,20 @@ import {
   sendSafetyEmail,
   sendSafetySms,
 } from "./notify";
+import { assertParent, assertTenant } from "@/server/tenant";
+import {
+  currentAppealAsList,
+  getScreenTimeRow,
+  getScreenTimeState as getScreenTimeStateSvc,
+  resolveScreenTimeOwner,
+  screenTimePlanSchema,
+} from "@/server/services/screen-time";
+import { auditEvent } from "@/server/rest";
+import type {
+  ScreenTimeAppeal,
+  ScreenTimePlan,
+  ScreenTimeState,
+} from "@/components/safety/types";
 
 export type ActionError = { code: string; message: string };
 export type ActionResult<T> =
@@ -630,4 +644,236 @@ export async function createBreakglassToken(
       maxViews: row.max_views,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// W15 Screen Time co-set
+// ---------------------------------------------------------------------------
+// Device-limit agreements only. State machine enforced here (mirrors the API
+// routes): draft → proposed → active/change_requested. Teen proposes from
+// draft; parent approves/counters/declines; parent can propose changes once
+// a plan exists. All writes audited.
+
+export async function getScreenTimeState(
+  childProfileId: string,
+): Promise<ActionResult<ScreenTimeState>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertTenant(childProfileId);
+    const supabase = await createClient();
+    const state = await getScreenTimeStateSvc(supabase, tenant.childId);
+    return { ok: true, data: state };
+  } catch (err) {
+    return rpcError(err);
+  }
+}
+
+export async function proposeScreenTime(
+  childProfileId: string,
+  plan: ScreenTimePlan,
+): Promise<ActionResult<void>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  const parsed = screenTimePlanSchema.safeParse(plan);
+  if (!parsed.success)
+    return fail("invalid_input", "Plan doesn't look right. Check the times and try again.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertTenant(childProfileId);
+    const supabase = await createClient();
+    const by = tenant.role === "child" ? "teen" : "parent";
+    const row = await getScreenTimeRow(supabase, tenant.childId);
+    const from = row?.status ?? "draft";
+    if (from === "proposed")
+      return fail("transition_invalid", "A proposal is already waiting for review.");
+    if (by === "parent" && from === "draft")
+      return fail("transition_invalid", "The first proposal comes from your teen.");
+
+    const ownerId =
+      row?.owner_user_id ?? (await resolveScreenTimeOwner(supabase, tenant.childId));
+    if (!ownerId) return fail("internal", "Couldn't find the household. Try again.");
+    const now = new Date().toISOString();
+    const values = {
+      status: "proposed" as const,
+      plan: parsed.data,
+      proposed_by: by,
+      last_change_by: by,
+      last_change_at: now,
+      appeal_reason: null,
+      appeal_at: null,
+      appeal_response: null,
+      appeal_responded_at: null,
+    };
+    if (row) {
+      const { error } = await supabase.from("screen_time_plans").update(values).eq("id", row.id);
+      if (error) return rpcError(error);
+    } else {
+      const { error } = await supabase.from("screen_time_plans").insert({
+        child_profile_id: tenant.childId,
+        owner_user_id: ownerId,
+        ...values,
+      });
+      if (error) return rpcError(error);
+    }
+    await auditEvent(tenant.childId, "screen_time.proposed", { by, status_from: from });
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return rpcError(err);
+  }
+}
+
+export async function reviewScreenTime(
+  childProfileId: string,
+  decision: "approve" | "counter" | "decline",
+  plan: ScreenTimePlan,
+  reason: string | null,
+): Promise<ActionResult<void>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  const parsed = screenTimePlanSchema.safeParse(plan);
+  if (!parsed.success)
+    return fail("invalid_input", "Plan doesn't look right. Check the times and try again.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertParent(childProfileId);
+    const supabase = await createClient();
+    const row = await getScreenTimeRow(supabase, tenant.childId);
+    if (!row || (row.status !== "proposed" && row.status !== "change_requested"))
+      return fail("transition_invalid", "There's nothing waiting for review right now.");
+    if (decision === "decline" && !reason)
+      return fail("invalid_input", "Let your teen know why — a reason is required.");
+
+    const now = new Date().toISOString();
+    const clearAppeal = {
+      appeal_reason: null,
+      appeal_at: null,
+      appeal_response: null,
+      appeal_responded_at: null,
+    };
+    let update: Record<string, unknown>;
+    if (decision === "approve") {
+      update = { status: "active", last_change_by: "parent", last_change_at: now, ...clearAppeal };
+    } else if (decision === "counter") {
+      update = {
+        status: "change_requested",
+        plan: parsed.data,
+        proposed_by: "parent",
+        last_change_by: "parent",
+        last_change_at: now,
+        ...clearAppeal,
+      };
+    } else {
+      update = {
+        status: "draft",
+        proposed_by: null,
+        last_change_by: "parent",
+        last_change_at: now,
+        ...clearAppeal,
+      };
+    }
+    const { error } = await supabase.from("screen_time_plans").update(update).eq("id", row.id);
+    if (error) return rpcError(error);
+    await auditEvent(tenant.childId, "screen_time.reviewed", { decision, reason: reason ?? null });
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return rpcError(err);
+  }
+}
+
+export async function appealScreenTime(
+  childProfileId: string,
+  reason: string,
+): Promise<ActionResult<void>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  if (!reason.trim() || reason.length > 1000)
+    return fail("invalid_input", "Tell us what's not working — a sentence or two is enough.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertTenant(childProfileId);
+    if (tenant.role !== "child")
+      return fail("forbidden", "Only the teen can file an appeal.");
+    const supabase = await createClient();
+    const row = await getScreenTimeRow(supabase, tenant.childId);
+    if (!row || row.status !== "active")
+      return fail("transition_invalid", "Appeals are for the live, agreed plan.");
+    if (row.appeal_reason && !row.appeal_response)
+      return fail("transition_invalid", "You already have an appeal waiting.");
+
+    const { error } = await supabase
+      .from("screen_time_plans")
+      .update({
+        appeal_reason: reason.trim(),
+        appeal_at: new Date().toISOString(),
+        appeal_response: null,
+        appeal_responded_at: null,
+      })
+      .eq("id", row.id);
+    if (error) return rpcError(error);
+    await auditEvent(tenant.childId, "screen_time.appeal_filed");
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return rpcError(err);
+  }
+}
+
+export async function respondToAppeal(
+  childProfileId: string,
+  _appealId: string,
+  decision: "approve" | "deny",
+  response: string,
+): Promise<ActionResult<void>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  if (!response.trim() || response.length > 1000)
+    return fail("invalid_input", "A response is required.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertParent(childProfileId);
+    const supabase = await createClient();
+    const row = await getScreenTimeRow(supabase, tenant.childId);
+    if (!row || !row.appeal_reason || row.appeal_response)
+      return fail("transition_invalid", "There's no open appeal right now.");
+
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("screen_time_plans")
+      .update({
+        appeal_response: response.trim(),
+        appeal_responded_at: now,
+        last_change_by: "parent",
+        last_change_at: now,
+        ...(decision === "approve" ? { status: "change_requested" } : {}),
+      })
+      .eq("id", row.id);
+    if (error) return rpcError(error);
+    await auditEvent(tenant.childId, "screen_time.appeal_responded", { decision });
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return rpcError(err);
+  }
+}
+
+export async function listScreenTimeAppeals(
+  childProfileId: string,
+): Promise<ActionResult<ScreenTimeAppeal[]>> {
+  if (!uuidSchema.safeParse(childProfileId).success)
+    return fail("invalid_input", "Invalid child id.");
+  if (!(await requireUserId()))
+    return fail("authentication_required", "Sign in required.");
+  try {
+    const tenant = await assertTenant(childProfileId);
+    const supabase = await createClient();
+    const row = await getScreenTimeRow(supabase, tenant.childId);
+    return { ok: true, data: currentAppealAsList(row) };
+  } catch (err) {
+    return rpcError(err);
+  }
 }

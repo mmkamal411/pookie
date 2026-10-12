@@ -7,21 +7,45 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button, Card, InfoLine, Sheet } from "@/components/ui";
 
+function FaqGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5a4.5 4.5 0 0 0-4.4 3.6c-.1.5.2 1 .7 1.1l1.2.2c.4.1.7.5.6.9l-.3 1.2M12 17.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+  );
+}
+
+function ChatGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8m-8 4h5m7-2a8 8 0 0 1-8 8H7l-4 3v-3.2c-1-1.4-1.6-3-1.6-4.8a8 8 0 0 1 16 0Z" />
+    </svg>
+  );
+}
+
+function TicketGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Zm6 3h4" />
+    </svg>
+  );
+}
+
 const CARDS = [
   {
-    icon: "📖",
+    Icon: FaqGlyph,
     title: "Help Center & FAQ",
     sub: "Answers to common questions — searchable, plain-language.",
     route: "faq",
   },
   {
-    icon: "💬",
+    Icon: ChatGlyph,
     title: "AI Support Chat",
     sub: "Instant answers, 24/7. A human is one tap away.",
     route: "chat",
   },
   {
-    icon: "🎫",
+    Icon: TicketGlyph,
     title: "Support Tickets",
     sub: "Open a ticket, track it, talk to a human.",
     route: "tickets",
@@ -34,8 +58,8 @@ export function SupportHub({ childSlug, under13 }: { childSlug: string; under13:
   return (
     <main className="mx-auto max-w-3xl px-4 pt-6 pb-10">
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="text-3xl">
-          💬
+        <span aria-hidden="true" className="text-nova-400">
+          <ChatGlyph />
         </span>
         <div>
           <h1 className="text-xl font-semibold text-star-100">Support</h1>
@@ -66,8 +90,8 @@ export function SupportHub({ childSlug, under13 }: { childSlug: string; under13:
         {CARDS.map((c) => (
           <Link key={c.route} href={`/c/${childSlug}/support/${c.route}`} className="block">
             <Card className="flex items-center gap-4 transition-transform hover:-translate-y-0.5">
-              <span aria-hidden="true" className="text-3xl">
-                {c.icon}
+              <span aria-hidden="true" className="text-nova-400">
+                <c.Icon />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-semibold text-star-100">{c.title}</span>
