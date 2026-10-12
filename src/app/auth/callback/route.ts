@@ -1,20 +1,50 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 /**
- * OTP / magic-link callback. Supabase redirects here after the user
- * clicks the email link; we exchange the code for a session and
- * hand off to / for tenant resolution.
+ * OAuth / OTP callback. Supabase redirects here after the user
+ * authenticates; we exchange the code for a session and hand off
+ * to / for tenant resolution.
+ *
+ * Edge-safe cookie handling: session cookies set during the code
+ * exchange are captured in a local array and explicitly attached to
+ * the redirect response. We do NOT rely on next/headers cookies().set()
+ * propagation to a freshly-created NextResponse — that propagation is
+ * framework magic that is unreliable on Cloudflare Workers (OpenNext).
+ * Reading the incoming cookies comes straight from the request.
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
   if (code) {
-    const supabase = await createClient();
+    // Collect every Set-Cookie the Supabase client wants to write so we
+    // can attach them to the redirect response explicitly.
+    const pendingCookies: { name: string; value: string; options?: object }[] =
+      [];
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            pendingCookies.push(...cookiesToSet);
+          },
+        },
+      },
+    );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      const response = NextResponse.redirect(`${origin}${next}`);
+      for (const { name, value, options } of pendingCookies) {
+        response.cookies.set(name, value, options);
+      }
+      return response;
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth`);
