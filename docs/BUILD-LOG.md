@@ -3,6 +3,18 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~05:05 EDT — Squad 4 PM (PMP) (staging-build): SQUAD 4 PLANNING DELIVERABLES
+
+**Squad 4 — Home & Money Track PM artifacts in `docs/squad4/`** (BACKLOG.md, DEPENDENCY-MAP.md, LEGAL-GATE-PLAN.md, RISK-REGISTER.md). Planning only — no code, no deploy.
+
+**Backlog:** 34 stories / 224 pts (+5 fallback), ordered per PANEL-ROUND2-SOLUTIONS §9: W20 hardening (11) → W21 (18) → W11 (37) → W7 (37) → W24 (24) → W12 (43) → W14 (46). Every story: FR-cited ACs, E2E against real data, global DoD (real tables/RLS/endpoints/UI, tsc clean, zero console.logs/dead code/TODOs).
+**MD directives applied:** (1) **NO PLACEHOLDERS** — W24/W14 "pending legal review" are real working states driven by a `legal_gates` row (new S4-X-01 story); modules fully built, the gate is legal not technical. (2) **D6 tiered time-boxed grants** baked into W12 stories: 8/grantee/30d trusted, 2/30d first-time, installment detection both tiers, teen co-approval (13–15) for NEW grantees only — renewals within cap don't re-prompt.
+**CROSS-TEAM BLOCKER — time-boxed-grant columns have NO migration:** 018 implements D6 caps in `grant_access()` but references `expires_at`/`grant_kind`/`grant_purpose` "added by 023" — the file at 023 is `023_health_reconsent.sql` (no such columns). **Platform Team 1: please add the columns in a new migration (e.g. 029) and fix the stale 023 comment in 018.** Also: 018 defines "trusted" as *any prior grant history*; D6 says *previously approved, no blocks on record* — MD to confirm whether the RPC needs the block-history check. Fallback stands: S4-W12-F ships W12 directory + manual revoke as a complete feature; time-boxed grants unlock when the columns land.
+**Other deps:** vault key-mgmt (Fractional Team 2, hard precondition for W7 credential storage); Plaid keys (MD); OCR vendor (MD/Fractional Team 1); counsel engagement — review packets pre-built, engage during P2 not P7.
+**Legal-gate plan:** "ready for counsel review" = built (real schema/endpoints/UI, E2E green, scope locks grep-audited: no bureau code in W24, no messaging primitive in W14) + gated (`legal_gates` row, no real-family exposure) + reviewable (packet with staging URL + exact legal questions). W24 → FCRA counsel sign-off on freeze pivot + partner contract; W14 → family-law practitioner review (R5); launch = read-only/logistics-only.
+**Top squad risks:** S4-RISK-001 Plaid integration (interface-first build + manual-entry interim feature); 002 OCR accuracy (user-confirms-extraction, confidence flags); 003 FCRA scope drift (scope lock + grep audit + hard counsel gate); 004 W14 weaponization in high-conflict cases (parallel-parenting only, logistics-only launch, practitioner review); 005 W11 teen purchase-privacy leak (server-side scope filtering, 403-tested, every surface verified).
+**Next:** S4-X-01 legal-gate infra first; W20 hardening can start immediately (live route, no deps). Staffing: PM done; Tech Lead/Frontend/QA/UX per TEAM-CHARTERS.md.
+
 ## 2026-10-12 ~05:00 EDT — Platform Team 2 Security Engineer 🔒 (staging-build): THREAT MODEL + AUDIT FINDINGS (NO PLACEHOLDERS)
 
 **Files:** `docs/THREAT-MODEL-PHASE0.md` (1-page: assets, trust boundaries, top-5 threats w/ mitigations) + `docs/SECURITY-AUDIT-FINDINGS-2026-10-12.md` (real file:line findings, clean-verified list, executable pen-test checklist PT-1..PT-16).

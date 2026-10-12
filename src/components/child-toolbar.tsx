@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PookieOrb } from "@/components/pookie-orb";
 import { getPookieColor, subscribePookieColor } from "@/components/pookie/pookie-color";
+import { MorePopup } from "@/components/more-popup";
 
 /** The center orb — takes on the pinball's color when Pookie eats it. */
 function ToolbarOrb() {
@@ -36,22 +37,21 @@ function ToolbarOrb() {
 export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const pathname = usePathname();
   const base = `/c/${childSlug}`;
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const tabs = [
     { id: "home", label: "Home", href: base, active: pathname === base },
     { id: "today", label: "Today", href: `${base}/today`, active: pathname.startsWith(`${base}/today`) },
     { id: "pookie", label: "Pookie", href: `${base}/pookie`, active: pathname.startsWith(`${base}/pookie`), orb: true },
     { id: "progress", label: "Progress", href: `${base}/school`, active: pathname.startsWith(`${base}/school`) },
-    {
-      id: "more",
-      label: "More",
-      href: `${base}/more`,
-      active: pathname.startsWith(`${base}/more`) || pathname.startsWith(`${base}/settings`),
-    },
+    // More opens the module popup (FR-MENU-001) — not a page.
+    { id: "more", label: "More", href: "", active: moreOpen, popup: true },
   ];
 
   return (
-    <nav
+    <>
+      <MorePopup open={moreOpen} onClose={() => setMoreOpen(false)} childSlug={childSlug} />
+      <nav
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-nova-400/20"
       style={{
@@ -85,6 +85,25 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
                 {tab.label}
               </span>
             </Link>
+          ) : "popup" in tab && tab.popup ? (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-expanded={moreOpen}
+              aria-haspopup="dialog"
+              className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-transform hover:scale-105 ${tab.active ? "tab-active-glow" : ""}`}
+            >
+              <span
+                className={`h-1 w-8 rounded-full transition-colors ${tab.active ? "bg-nova-400 shadow-glow-sm" : "bg-transparent"}`}
+                aria-hidden="true"
+              />
+              <span
+                className={`text-[11px] font-medium ${tab.active ? "text-nova-300" : "text-stardust-500"}`}
+              >
+                {tab.label}
+              </span>
+            </button>
           ) : (
             <Link
               key={tab.id}
@@ -106,5 +125,6 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
         )}
       </div>
     </nav>
+    </>
   );
 }
