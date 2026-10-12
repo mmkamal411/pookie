@@ -60,3 +60,23 @@ The 9:35 AM reference direction: bright white bridge aesthetic, cool color tempe
 - `useTheme()` hook in `src/components/use-theme.ts` — `Theme = "space-black" | "bright-bridge"`
 - localStorage key: `pookie-theme`
 - Instant switch, no reload, persists across sessions
+
+## Team 4 Amendments (2026-10-12, final polish)
+
+### Glass pane decision
+`.glass-pane` (the viewscreen) is **frosted glass, not dark glass**: dark-frosted in Space Black, **light-frosted** (white/icy gradient, icy cyan edge) in Bright Bridge. A dark slab on a white page reads as a rendering bug. This is intentional — documented in the CSS rule.
+
+### New tokens
+`--color-stardust-400` (`#adb3dc` / bright `#687a92`) and `--color-nebula-600` (`#3f4794` / bright `#b4c9df`) were added because 238 existing call sites (`text-stardust-400`, `border-nebula-600`, …) referenced tokens that never existed — silent Tailwind no-ops. They now render in both themes.
+
+### Specificity rule (hard lesson)
+The Bright Bridge token block MUST use the selector `:root[data-theme="bright-bridge"]` (specificity 0,2,0). A bare `[data-theme="bright-bridge"]` (0,1,0) ties with the later hand-written `:root` palette-lift blocks (Squad Vista/Lumina) and loses by source order — which silently left the "bright" theme dark. Never rely on source order for theme overrides in this file; use the higher-specificity selector.
+
+### Deliberate exceptions (not bugs)
+- **Sync ops consoles** (workers/logins/console/command-shell) stay dark in both themes — terminal-window pattern, fully legible.
+- **CrisisCard / EmergencyModule** stay light in both themes — safety-critical legibility, like an illuminated emergency placard.
+- **`.neon-pink`** is a cyan alias (compat shim, renders `#00E5FF`) — do not rename without checking call sites.
+- **Core nebula/stardust tokens** are dark navy/slate neutrals ("deep space"), not purple washes.
+
+### Orb color discipline
+The Pookie orb's prism animation is clamped to ±40° hue swing (cyan → teal → green → ice blue). The orb must NEVER drift into purple/pink — a full 360° hue-rotate violates the ban even though it "looks cool."
