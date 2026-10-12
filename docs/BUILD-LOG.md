@@ -1,3 +1,20 @@
+## 2026-10-12 ~11:15 EDT — Squad Village — Shared Shopping Lists + The Village (mentors)
+
+**Feature 1 — Shared Shopping Lists Between Families ("Link Ships"):**
+- `supabase/migrations/069_shared_shopping_lists.sql` — `shopping_list_shares` table (list↔user, active/revoked), `can_access_shopping_list()` DEFINER helper, additive RLS extending list/item/price-report visibility to share recipients; recipients can self-revoke (leave). ❌ Pending — Mehedi dashboard apply.
+- `src/server/services/shopping-shares.ts` — share by email, revoke, leave, shared-list view with per-item attribution, add/claim/buy transitions. User-JWT client only, no service_role.
+- `src/app/api/v1/shopping/shares/route.ts` (GET/POST/DELETE), `shares/leave/route.ts`, `shared/list/route.ts`, `shared/list/items/[itemId]/route.ts`
+- `src/components/shopping/linked-ships.tsx` — "Link Ships" panel (share out by email) + "Linked to You" live cargo manifests (add, claim, got it, unlink). Wired into `src/app/household/shopping/page.tsx`.
+
+**Feature 2 — The Village ("The Crew"): mentors for children:**
+- `supabase/migrations/070_child_mentors_village.sql` — `child_mentors` (age-tiered consent: <13 parent-immediate, 13–15 consent + 7-day cooling-off, 16+ consent-instant), `mentor_access_log` (append-only audit), `mentor_kudos`; `is_active_mentor()`/`mentor_can_see_class()` DEFINER helpers; mentor read policies on classes/grades/assignments (scoped by scope_class_ids). Health data, teacher messaging, check-ins explicitly NOT granted. ❌ Pending — Mehedi dashboard apply.
+- `src/server/services/village.ts` — grant (age-tiered), teen consent answer, instant revoke, list, myMentorships, mentorOverview (logs every view), sendKudos/listKudos.
+- `src/app/api/v1/village/mentors|mentorships|overview|kudos/route.ts` — resolve→assert→use→audit pattern.
+- `src/components/village/village-crew.tsx` — crew management (grant by email + relationship + class scope, revoke, kudos feed). Wired into `src/app/c/[childSlug]/settings/sharing/page.tsx`.
+- `src/components/village/mentor-overview.tsx` + `src/app/village/[childId]/page.tsx` — mentor's read-only window: classes, grades, attention-first assignments, kudos composer. `src/app/village/page.tsx` — mentor roster.
+
+**Verification:** `npx tsc --noEmit` — all Village files clean (one pre-existing error in `src/lib/health/actions.ts` from Phase1's in-flight meals work, not Village's). Migrations pass `check.sh` idempotency rules. Build not run (another squad's in-flight error blocks it). NOT deployed.
+
 ## 2026-10-12 ~10:55 EDT — Squad Phase45 — W15 Screen Time backend complete
 
 **Phase 4 (Support):** Audited — S1 FAQ (23 articles, legal accordions), S2 AI Chat (tripwires), S3 Tickets (RBAC) all functional. Polished support hub icons to spaceship design language (SVG glyphs replacing emojis).
