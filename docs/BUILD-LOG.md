@@ -3,6 +3,18 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~08:50 EDT — Squad Bugfix — 4 glitches fixed (commit 23a934b, staging-build)
+
+**GLITCH 1 (Mookie "deeper" never resolves):** Root cause was APP-side, not the worker. Proved worker healthy end-to-end via curl (enqueue → pending → respond ok:true → poll "answered" → removed from pending). The app stranded responses two ways: (a) unmount cleared the poll interval but left `musePollRef` non-null, so remount resume was permanently blocked — navigating tabs killed the Mookie answer; (b) 5-min timeout silently abandoned polling. Fixed: ref reset on unmount, immediate first poll on resume, 5-min backoff to 10s polls with "taking longer" state (hard stop 30m with explanatory message), concurrent escalation shows a notice instead of silently dropping, enqueue failure retracts the bridge promise. Sibling hunt: other setInterval polls (TrustedAdultFlow, BreakGlassRequest, babysitters) are bounded with proper cleanup — chat was the outlier.
+
+**GLITCH 2 (sign-out hang):** `supabase.auth.signOut()` awaited with no timeout in the server action; client awaited with no feedback. Fixed: server races signOut vs 8s timeout, cookies + redirect unconditional; both settings views get "Signing out…" disabled state + 15s dead-man's switch forcing /login.
+
+**GLITCH 3 (More Close obscured):** Modal overlays (BottomSheet, SharingRevoke, type-to-confirm) z-50 → z-[100], above toolbar (z-40) and pinball layer (z-[60]).
+
+**GLITCH 4 (settings placeholder flash):** profile/prefs probe booleans defaulted false → flashed "isn't wired up yet" during probe. Tri-state (null=probing→skeleton, true→fields, false→NotWiredYet) in parent + child settings views.
+
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — Squad Launch owns deploys.
+
 ## 2026-10-12 ~08:15 EDT — Squad Harbor — Child settings scope + self-service enforcement (staging-build, in flight)
 
 **Lane:** child settings only. My files: `src/app/api/v1/children/[childId]/route.ts` (PATCH), `src/components/settings/settings-ui.tsx` (SettingsTabs role filter), settings sub-pages (role prop pass-through). No overlap with Console/Glide in-flight files.
