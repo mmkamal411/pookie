@@ -6,8 +6,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { assertTenant } from "@/server/tenant";
-import { CLASS_TOPICS, classMetaFor } from "@/lib/school/study-resources";
-import { matchClassSlug } from "@/server/services/school-enrich";
+import { CLASS_TOPICS, classMetaFor, matchClassSlug } from "@/lib/school/study-resources";
 
 /** Any tenant member may curate the library; RLS (owner-or-parent) gates writes. */
 async function memberUserId(childId: string): Promise<string> {

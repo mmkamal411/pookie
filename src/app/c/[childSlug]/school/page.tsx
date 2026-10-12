@@ -2,6 +2,14 @@ import { notFound } from "next/navigation";
 import { getMemberships } from "@/lib/tenant/actions";
 import { getSchoolOverview } from "@/server/services/school";
 import {
+  getAttendance,
+  getDidYouKnow,
+  getGpaBlock,
+  getSemesterCard,
+} from "@/server/services/school-enrich";
+import { getCalendarEvents } from "@/server/services/school-calendar";
+import { getSyncHealth } from "@/server/services/school-sync-health";
+import {
   getCalibration,
   getLabToday,
   getTodayCheckin,
@@ -33,8 +41,31 @@ export default async function SchoolPage({ params }: { params: Promise<{ childSl
     day: "2-digit",
   }).format(new Date());
 
-  const [overview, teenData] = await Promise.all([
+  const [overview, enrich, teenData] = await Promise.all([
     getSchoolOverview(membership.child_id),
+    (async () => {
+      const [gpa, attendance, calendar, health] = await Promise.all([
+        getGpaBlock(membership.child_id),
+        getAttendance(membership.child_id),
+        getCalendarEvents(membership.child_id),
+        getSyncHealth(membership.child_id),
+      ]);
+      return {
+        semester: getSemesterCard(),
+        gpa,
+        attendance,
+        trivia: getDidYouKnow(),
+        health: {
+          allGreen: health.allGreen,
+          sources: health.sources.map((s) => ({
+            source: s.source,
+            name: s.name,
+            freshness: s.freshness,
+          })),
+        },
+        calendarEvents: calendar.events,
+      };
+    })(),
     isTeen
       ? Promise.all([
           getCalibration(membership.child_id).catch(() => null),
@@ -55,6 +86,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ childSl
       calibration={calibration}
       labToday={labToday}
       todayCheckin={todayCheckin}
+      enrich={enrich}
     />
   );
 }

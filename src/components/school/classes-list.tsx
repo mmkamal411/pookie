@@ -3,22 +3,21 @@
 import Link from "next/link";
 import { gapTo90, gradeBand, letterGrade } from "@/lib/grades";
 import type { ClassOverview } from "@/lib/school/types";
+import { enrichClassMeta } from "@/lib/school/study-resources";
 import { bandStyles, gapCopy } from "./styles";
 
 /**
  * Classes list — d-dash comprehensiveness in spaceship style: period badge,
  * class name, teacher · room, grade pill (80|B), "+X to 90" under each grade.
- * Rows link to the class page.
+ * Rows link to the class page. Rooms come from curated metadata when the
+ * class row doesn't carry one.
  */
 export function ClassesList({
   classes,
   childSlug,
-  roomById,
 }: {
   classes: ClassOverview[];
   childSlug: string;
-  /** Optional class_id → room lookup (from curated metadata). */
-  roomById?: Record<string, string | null>;
 }) {
   if (classes.length === 0) {
     return (
@@ -38,7 +37,10 @@ export function ClassesList({
         const band = gradeBand(cls.numeric);
         const s = bandStyles[band];
         const gap = gapTo90(cls.numeric);
-        const room = roomById?.[cls.class_id] ?? null;
+        const meta = enrichClassMeta(cls.name);
+        const teacher = cls.teacher_name ?? meta?.teacher ?? null;
+        const room = meta?.room ?? null;
+        const period = cls.period ?? (meta ? String(meta.period) : null);
         const displayName = cls.display_name ?? cls.name;
         return (
           <Link
@@ -50,14 +52,14 @@ export function ClassesList({
           >
             {/* Period badge */}
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-nebula-700 text-sm font-bold text-star-100">
-              {cls.period ?? "·"}
+              {period ?? "·"}
             </div>
 
             {/* Class info */}
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold text-star-100">{displayName}</p>
               <p className="truncate text-xs text-stardust-300">
-                {[cls.teacher_name, room ? `Room ${room}` : null].filter(Boolean).join(" · ") || "Teacher · Room syncing…"}
+                {[teacher, room ? `Room ${room}` : null].filter(Boolean).join(" · ") || "Teacher · Room syncing…"}
               </p>
             </div>
 

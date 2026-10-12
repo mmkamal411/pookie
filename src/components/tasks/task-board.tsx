@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FamilyTask } from "@/server/services/tasks";
 import { ApiError, LoadVeil } from "@/components/home-money/shared";
+import { orbCelebrate } from "@/lib/orb/orb-events";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -166,6 +167,10 @@ export function TaskBoard({ compact = false }: { compact?: boolean }) {
     const next = task.status === "done" ? "open" : "done";
     // Optimistic update
     setTasks((ts) => ts.map((t) => (t.id === task.id ? { ...t, status: next as FamilyTask["status"] } : t)));
+    if (next === "done") {
+      // Squad Oracle: the orb celebrates every win — it's on your side.
+      orbCelebrate(`task completed: ${task.title}`);
+    }
     try {
       await api(`${BASE}/${task.id}`, {
         method: "PATCH",

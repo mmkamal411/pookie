@@ -4,7 +4,8 @@ import { useState, use, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PookieOrb, type OrbMood } from "@/components/pookie-orb";
-import { nextGreeting } from "@/components/login-greetings";
+import { SoulOrb } from "@/components/soul-orb";
+import { nextGreeting, greetingContext, type GreetContext } from "@/components/login-greetings";
 
 /**
  * Landing + auth. Squad Orb (2026-10-12) — Mehedi's directive: the login
@@ -77,8 +78,14 @@ export default function LoginPage({
     last: null,
     seenRare: new Set(),
   });
+  // Contextual awareness — the orb knows if this is a first meeting or a
+  // quick return, and greets accordingly.
+  const greetCtx = useRef<GreetContext | null>(null);
+  if (greetCtx.current === null && typeof window !== "undefined") {
+    greetCtx.current = greetingContext();
+  }
   const [greeting, setGreeting] = useState(() => {
-    const g = nextGreeting(greetState.current);
+    const g = nextGreeting(greetState.current, greetCtx.current ?? undefined);
     greetState.current = g.state;
     return g.text;
   });
@@ -207,19 +214,18 @@ export default function LoginPage({
     }
   }
 
-  /** The magical tap — the orb bursts with light, then reveals clearance. */
+  /** The magical tap — the orb understands, flares with revelation,
+      then reveals the clearance options. */
   function tapOrb() {
     if (phase !== "greeting" || bursting) return;
     setBursting(true);
-    setOrbMood("celebrating");
+    setOrbMood("revelation");
     window.setTimeout(() => {
       setPhase("clearance");
       setBursting(false);
       setOrbMood("excited");
     }, 680);
   }
-
-  const orbSize = phase === "greeting" ? 132 : phase === "clearance" ? 96 : 72;
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
@@ -235,25 +241,14 @@ export default function LoginPage({
           </>
         ) : (
           <>
-        {/* The orb — the entire login page. */}
-        <button
-          type="button"
-          onClick={tapOrb}
-          aria-label={
-            phase === "greeting"
-              ? "Request boarding clearance"
-              : "Pookie, your guiding light"
-          }
-          className={`relative rounded-full outline-none transition-transform duration-500 ${
-            bursting ? "orb-burst" : ""
-          } ${phase === "greeting" ? "cursor-pointer" : "cursor-default"}`}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
+        {/* The orb — the entire login page. A soul, not a logo:
+            unpredictable entrances, organic drift, alive. */}
+        <div className="relative inline-block">
           {phase === "greeting" && !bursting && (
             <span aria-hidden="true" className="tap-hint absolute inset-0 rounded-full" />
           )}
-          <PookieOrb size={orbSize} mood={orbMood} interactive />
-        </button>
+          <SoulOrb size={132} mood={orbMood} bursting={bursting} onTap={tapOrb} />
+        </div>
 
         {phase === "greeting" && (
           <div className="animate-bloom mt-8">

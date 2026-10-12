@@ -4,43 +4,49 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { PookieOrb } from "@/components/pookie-orb";
 import { gapTo90, gradeBand, letterGrade } from "@/lib/grades";
-import type { CalibrationSummary, ClassDetail, StudySpark, TodayCheckin } from "@/lib/school/types";
-import { bandStyles, deltaCopy, dueDateLabel, gapCopy } from "./styles";
+import type { ClassDetail } from "@/lib/school/types";
+import { bandStyles, deltaCopy, gapCopy } from "./styles";
 import { PathTo90 } from "./path-to-90";
 import { TeacherThread } from "./teacher-thread";
-import { CheckinForm } from "./checkin-form";
 import { ClassFiles } from "./class-files";
-import { StudySparks } from "./study-sparks";
 import { ProvenanceLabel } from "./provenance-label";
+import { PeerPlaybook } from "./peer-playbook";
+import { AssignmentsGrouped } from "./assignments-grouped";
+import { WhatIfSimulator } from "./what-if-simulator";
+import { ExplainBack } from "./explain-back";
+import { StudyMaterials } from "./study-materials";
+import { StudyResources } from "./study-resources";
+import { ResourceLibrary } from "./resource-library";
+import { DebriefingChamber } from "./debriefing-chamber";
 
 /**
- * /c/[childSlug]/school/[classSlug] — the class page.
- * Grade hero first (numeric + letter side by side, gap-to-90 leading),
- * then: assignments, Path-to-90, teacher thread, check-in + handouts
- * below the hero — "what do I do next" stays first.
+ * /c/[childSlug]/school/[classSlug] — the class page, d-dash comprehensive.
+ * Grade hero first (numeric + letter side by side, gap-to-90 leading), then:
+ * 98% playbook, the debriefing chamber, assignments by impact, what-if,
+ * Path-to-90, explain-it-back, study materials, the student's own resource
+ * library, curated study resources, class files, teacher thread.
  */
 export function ClassDetailView({
   detail,
   childName,
   childSlug,
   childId,
-  checkinToday,
+  checkinId,
   role,
-  sparks,
-  calibration,
-  labToday,
-  todayCheckin,
+  curatedSlug,
+  room,
+  currentUnit,
 }: {
   detail: ClassDetail;
   childName: string;
   childSlug: string;
   childId: string;
-  checkinToday: boolean;
+  checkinId: string | null;
   role: "parent" | "child";
-  sparks?: StudySpark[];
-  calibration?: CalibrationSummary | null;
-  labToday?: { class_name: string } | null;
-  todayCheckin?: TodayCheckin | null;
+  /** Curated slug (apcsp/envsci/…) for Drive materials, tips, resources. */
+  curatedSlug: string | null;
+  room: string | null;
+  currentUnit: string | null;
 }) {
   const [data, setData] = useState(detail);
   const [version, setVersion] = useState(0);
@@ -61,6 +67,13 @@ export function ClassDetailView({
   const s = bandStyles[band];
   const gap = gapTo90(data.grade?.numeric);
   const displayName = data.class.display_name ?? data.class.name;
+  const teacherLine = [
+    data.class.period ? `Period ${data.class.period}` : null,
+    data.class.teacher_name,
+    room ? `Room ${room}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const attention = (data.assignments ?? []).filter((a) => a.status === "missing" || a.status === "late");
 
   return (
@@ -69,18 +82,21 @@ export function ClassDetailView({
       <div className="firefly" style={{ width: 6, height: 6, top: "30%", left: "90%", animationDelay: "1.8s" }} />
 
       <Link href={`/c/${childSlug}/school`} className="animate-bloom text-sm font-medium text-nova-300 hover:text-nova-400">
-        ← All classes
+        ← All Classes
       </Link>
 
       {/* Grade hero — numeric + letter side by side, separated by a line, visible on open */}
       <section className="animate-bloom mt-4 rounded-3xl border border-nova-400/20 bg-nebula-900/60 p-6 sm:p-8" style={{ animationDelay: "0.05s", boxShadow: s.glow }}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-nova-400 capitalize">{data.grade?.term ?? "Current term"}</p>
+            <p className="text-xs font-medium tracking-[0.2em] text-nova-400 capitalize">{data.grade?.term ?? "Current Term"}</p>
             <h1 className="text-sunlit mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{displayName}</h1>
-            <p className="mt-2 text-sm text-stardust-300">
-              {[data.class.period ? `Period ${data.class.period}` : null, data.class.teacher_name].filter(Boolean).join(" · ")}
-            </p>
+            <p className="mt-2 text-sm text-stardust-300">{teacherLine || "Teacher · Room syncing…"}</p>
+            {currentUnit && (
+              <span className="mt-3 inline-block rounded-full border border-comet-400/40 bg-comet-400/10 px-3 py-1 text-xs font-semibold text-comet-300">
+                Current: {currentUnit}
+              </span>
+            )}
           </div>
           <PookieOrb size={64} />
         </div>
@@ -96,7 +112,7 @@ export function ClassDetailView({
           <span className="h-16 w-px bg-nova-400/25" aria-hidden="true" />
           <div>
             <p className={`text-4xl font-bold ${s.text}`}>{letterGrade(data.grade?.numeric)}</p>
-            <p className="mt-1 text-xs text-stardust-300">letter</p>
+            <p className="mt-1 text-xs text-stardust-300 capitalize">Letter</p>
           </div>
         </div>
 
@@ -115,47 +131,47 @@ export function ClassDetailView({
         )}
       </section>
 
-      {/* Assignments */}
+      {/* 98% Playbook — peer tips, high visibility */}
+      <section className="mt-5">
+        <PeerPlaybook childId={childId} slug={curatedSlug} />
+      </section>
+
+      {/* Debriefing chamber — the daily check-in as a mission event */}
+      <section className="mt-5" id="debrief">
+        <DebriefingChamber
+          childId={childId}
+          classId={data.class.id}
+          classSlug={data.class.class_slug}
+          className={displayName}
+          currentUnit={currentUnit}
+          initialCheckinId={checkinId}
+          role={role}
+        />
+      </section>
+
+      {/* Assignments grouped by impact */}
       <section className="mt-8">
         <div className="animate-bloom flex items-center gap-3">
           <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Assignments</h2>
           <ProvenanceLabel kind="school-of-record" />
         </div>
-        {data.assignments.length > 0 ? (
-          <div className="mt-4 grid gap-3">
-            {data.assignments.map((a, i) => (
-              <div
-                key={a.id}
-                className="card-living animate-bloom flex items-center justify-between gap-3 rounded-2xl px-5 py-4"
-                style={{ animationDelay: `${0.1 + i * 0.05}s` }}
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-star-100">{a.title}</p>
-                  <p className="mt-0.5 text-xs text-stardust-300">
-                    {[a.category, a.points_earned != null && a.points_possible != null ? `${a.points_earned}/${a.points_possible}` : a.points_possible != null ? `out of ${a.points_possible}` : null]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className={`text-xs font-medium ${a.status === "missing" || a.status === "late" ? "text-red-300" : "text-aurum-300"}`}>
-                    {a.status === "missing" ? "Missing" : a.status === "late" ? "Late" : a.status === "graded" ? "Graded" : a.status === "submitted" ? "Submitted" : dueDateLabel(a.due_date)}
-                  </p>
-                  {a.due_date && (a.status === "missing" || a.status === "late") && (
-                    <p className="text-[11px] text-stardust-500">{dueDateLabel(a.due_date)}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-stardust-300">No assignments tracked yet for this class.</p>
-        )}
+        <div className="mt-4">
+          <AssignmentsGrouped assignments={data.assignments ?? []} slug={curatedSlug} />
+        </div>
+      </section>
+
+      {/* Assignment what-if */}
+      <section className="mt-5">
+        <WhatIfSimulator
+          assignments={data.assignments ?? []}
+          slug={curatedSlug}
+          currentGrade={data.grade?.numeric ?? null}
+        />
       </section>
 
       {/* Path to 90 */}
       <section className="mt-8">
-        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Your next steps</h2>
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Your Next Steps</h2>
         <div className="mt-4" key={version}>
           <PathTo90
             plan={data.study_plan}
@@ -168,18 +184,50 @@ export function ClassDetailView({
         </div>
       </section>
 
-      {/* Study Sparks */}
-      {sparks && sparks.length > 0 && (
-        <section className="mt-8">
-          <div className="mt-4">
-            <StudySparks sparks={sparks} />
-          </div>
-        </section>
-      )}
+      {/* Explain it back — 60-second self-test */}
+      <section className="mt-5">
+        <ExplainBack
+          childId={childId}
+          classId={data.class.id}
+          topic={currentUnit ?? displayName}
+        />
+      </section>
+
+      {/* Study materials — from Drive */}
+      <section className="mt-8">
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Study Materials</h2>
+        <p className="mt-1 text-xs text-stardust-400">From your Drive · grouped by unit</p>
+        <div className="mt-4">
+          <StudyMaterials childId={childId} slug={curatedSlug} />
+        </div>
+      </section>
+
+      {/* My resource library — the student owns it */}
+      <section className="mt-8">
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">My Resource Library</h2>
+        <p className="mt-1 text-xs text-stardust-400">Khan, YouTube, Quizlet, Desmos — whatever works. Yours to keep.</p>
+        <div className="mt-4">
+          <ResourceLibrary childId={childId} classId={data.class.id} currentUnit={currentUnit} />
+        </div>
+      </section>
+
+      {/* Study resources — curated */}
+      <section className="mt-8">
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Study Resources</h2>
+        <p className="mt-1 text-xs text-stardust-400">Curated for this class · Pookie&apos;s picks</p>
+        <div className="mt-4">
+          <StudyResources childId={childId} slug={curatedSlug} />
+        </div>
+      </section>
+
+      {/* Class files */}
+      <section className="mt-8">
+        <ClassFiles childId={childId} classId={data.class.id} className={displayName} />
+      </section>
 
       {/* Teacher thread */}
       <section className="mt-8">
-        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Teacher thread</h2>
+        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">Teacher Inbox</h2>
         <div className="mt-4" key={`thread-${version}`}>
           <TeacherThread
             thread={data.teacher_thread}
@@ -192,18 +240,9 @@ export function ClassDetailView({
         </div>
       </section>
 
-      {/* Check-in + handouts below the hero */}
-      <section className="mt-8 grid gap-4 lg:grid-cols-2">
-        <CheckinForm
-          childId={childId}
-          childName={childName}
-          role={role}
-          todayCheckin={todayCheckin ?? null}
-          calibration={calibration ?? null}
-          labToday={labToday ?? null}
-        />
-        <ClassFiles childId={childId} classId={data.class.id} className={displayName} />
-      </section>
+      <p className="mt-8 text-center text-xs text-stardust-500">
+        Grades refresh with each school sync · {role === "parent" ? "Command View" : "Flight-Deck View"}
+      </p>
     </main>
   );
 }

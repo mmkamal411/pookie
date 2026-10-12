@@ -5,7 +5,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { triviaForDate } from "@/lib/school/trivia";
-import { CLASS_META, classMetaFor } from "@/lib/school/study-resources";
+import { CLASS_META, classMetaFor, matchClassSlug } from "@/lib/school/study-resources";
 
 // ---------------------------------------------------------------------------
 // Semester card
@@ -219,23 +219,6 @@ export interface ClassMetaEnrichment {
   teacher: string | null;
   room: string | null;
   currentTopic: string | null;
-}
-
-const SLUG_HINTS: { slug: string; hints: string[] }[] = [
-  { slug: "apcsp", hints: ["computer science", "apcsp", "ap csp"] },
-  { slug: "envsci", hints: ["environmental", "env sci", "envsci"] },
-  { slug: "chinese", hints: ["chinese"] },
-  { slug: "gov", hints: ["government", "gov"] },
-  { slug: "geometry", hints: ["geometry"] },
-  { slug: "litcomp", hints: ["literature", "lit", "comp", "ela"] },
-];
-
-export function matchClassSlug(name: string): string | null {
-  const n = name.toLowerCase();
-  for (const { slug, hints } of SLUG_HINTS) {
-    if (hints.some((h) => n.includes(h))) return slug;
-  }
-  return null;
 }
 
 /** Resolve curated metadata for a pookie class name (falls back to CLASS_META by slug). */

@@ -38,6 +38,30 @@ export function classMetaFor(slug: string): ClassMeta | null {
   return CLASS_META.find((m) => m.slug === slug) ?? null;
 }
 
+const SLUG_HINTS: { slug: string; hints: string[] }[] = [
+  { slug: "apcsp", hints: ["computer science", "apcsp", "ap csp"] },
+  { slug: "envsci", hints: ["environmental", "env sci", "envsci"] },
+  { slug: "chinese", hints: ["chinese"] },
+  { slug: "gov", hints: ["government", "gov"] },
+  { slug: "geometry", hints: ["geometry"] },
+  { slug: "litcomp", hints: ["literature", "lit", "comp", "ela"] },
+];
+
+/** Match a pookie class name to a curated slug ("AP Computer Science Principles" → "apcsp"). */
+export function matchClassSlug(name: string): string | null {
+  const n = name.toLowerCase();
+  for (const { slug, hints } of SLUG_HINTS) {
+    if (hints.some((h) => n.includes(h))) return slug;
+  }
+  return null;
+}
+
+/** Curated metadata (period/teacher/room/current unit) for a pookie class name. */
+export function enrichClassMeta(name: string): ClassMeta | null {
+  const slug = matchClassSlug(name);
+  return slug ? classMetaFor(slug) : null;
+}
+
 export const CLASS_TOPICS: Record<string, { topics: StudyTopic[] }> = {
     "apcsp": {
       topics: [{

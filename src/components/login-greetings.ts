@@ -56,15 +56,62 @@ const RARE = [
   "The void is quieter without you.",
 ];
 
+/** First contact — the orb introduces itself exactly once. */
+const FIRST = [
+  "Welcome aboard, Captain. I am Pookie.",
+  "A new traveler. The stars welcome you, Captain.",
+];
+
+/** Back sooner than expected — the orb notices. */
+const RETURNING_SOON = [
+  "Back so soon, Captain?",
+  "That was quick, Captain. You were missed.",
+  "Already back? I like that, Captain.",
+];
+
 const RARE_CHANCE = 0.18;
+const SOON_MS = 45 * 60 * 1000;
+
+export interface GreetContext {
+  isFirst: boolean;
+  backSoon: boolean;
+}
 
 /**
- * Pick the next greeting. Avoids repeating the previous one; rare lines
- * appear occasionally and never repeat within the session.
+ * Contextual awareness — the orb knows things before you say them.
+ * Reads (and stamps) the last-visit time; first-timers get an introduction,
+ * quick returners get noticed.
+ */
+export function greetingContext(): GreetContext {
+  try {
+    const raw = localStorage.getItem("pookie-last-visit");
+    localStorage.setItem("pookie-last-visit", String(Date.now()));
+    if (!raw) return { isFirst: true, backSoon: false };
+    const ago = Date.now() - parseInt(raw, 10);
+    return { isFirst: false, backSoon: ago < SOON_MS };
+  } catch {
+    return { isFirst: false, backSoon: false };
+  }
+}
+
+/**
+ * Pick the next greeting. Context-aware: first-timers are welcomed,
+ * quick returners are noticed, everyone else gets the rotating pool.
+ * Never repeats the previous line; rare lines never repeat in a session.
  */
 export function nextGreeting(
   state: { last: string | null; seenRare: Set<string> },
+  ctx?: GreetContext,
 ): { text: string; state: { last: string | null; seenRare: Set<string> } } {
+  if (ctx?.isFirst) {
+    const pick = FIRST[Math.floor(Math.random() * FIRST.length)];
+    return { text: pick, state: { last: pick, seenRare: state.seenRare } };
+  }
+  if (ctx?.backSoon && Math.random() < 0.6) {
+    const candidates = RETURNING_SOON.filter((g) => g !== state.last);
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    return { text: pick, state: { last: pick, seenRare: state.seenRare } };
+  }
   const daypart = daypartForHour(new Date().getHours());
   const unseenRare = RARE.filter((r) => !state.seenRare.has(r));
   if (unseenRare.length > 0 && Math.random() < RARE_CHANCE) {

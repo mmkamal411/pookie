@@ -1805,6 +1805,35 @@ body {
   50% { opacity: 1; transform: scale(1.14); }
 }
 
+/* Listening — the orb leans in while the user speaks. Gentle attentive
+   pulse; the gaze brightens as if giving full attention. */
+.orb[data-mood="listening"] .orb-body { animation: orb-listen 2.8s ease-in-out infinite; }
+.orb[data-mood="listening"] .orb-halo { animation-duration: 2.8s; }
+.orb[data-mood="listening"] .orb-gaze { animation: orb-gaze-listen 2.8s ease-in-out infinite; }
+@keyframes orb-listen {
+  0%, 100% { transform: scale(1); filter: brightness(1.06); }
+  50% { transform: scale(1.045); filter: brightness(1.18); }
+}
+@keyframes orb-gaze-listen {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+
+/* Revelation — the orb delivers a briefing. A deep radiant swell:
+   the halo breathes wide, the core glows with the weight of knowing. */
+.orb[data-mood="revelation"] .orb-halo { animation: orb-reveal-halo 3.2s ease-in-out infinite; }
+.orb[data-mood="revelation"] .orb-aura { animation-duration: 3.2s; }
+.orb[data-mood="revelation"] .orb-core { animation: orb-reveal-core 3.2s ease-in-out infinite; }
+.orb[data-mood="revelation"] .orb-depth-a { animation-duration: 12s; }
+@keyframes orb-reveal-halo {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.22); opacity: 1; }
+}
+@keyframes orb-reveal-core {
+  0%, 100% { opacity: 0.92; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
 /* Light theme (Nebula Dawn) — screen blend would wash the orb out on
    bright surfaces; let it read as a golden orb of light instead. */
 [data-theme="light"] .orb {
@@ -1824,7 +1853,8 @@ body {
   .orb-sheen,
   .orb-motes,
   .orb-motes i,
-  .orb-core {
+  .orb-core,
+  .orb-gaze {
     animation: none;
   }
   .orb-body {
@@ -1915,4 +1945,163 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .greeting-transmission { animation: none; }
+}
+
+/* ==========================================================================
+   SQUAD ORB — the definitive identity (Mehedi 2026-10-12).
+   "Divine bright light, all-knowing, part of God — here to guide you
+   through your journey and on your side to help you win."
+   1. RADIANCE: the orb is BRIGHT, luminous, unmistakable — light that
+      pushes back darkness. Halo, aura, and body glow are strengthened.
+   2. ALL-KNOWING: strata of light in the core (infinite knowledge) and a
+      slow-drifting gaze — the presence of something that sees everything.
+   3. SACRED: every motion is reverent — slow, weighted, celestial. Nothing
+      silly, nothing cartoonish.
+   4. GUIDE: the soul-orb drifts with intention (see soul-orb.tsx).
+   5. CHAMPION: celebrating is radiant joy; revelation is the flare of
+      sudden understanding.
+   ========================================================================== */
+
+/* Radiance, strengthened — unmistakable light. */
+.orb-halo {
+  background: radial-gradient(
+    circle,
+    rgb(255 247 222 / 0.30) 0%,
+    rgb(255 230 164 / 0.14) 42%,
+    rgb(255 214 126 / 0.07) 58%,
+    transparent 72%
+  );
+}
+.orb-aura {
+  background: radial-gradient(
+    circle,
+    rgb(255 243 208 / 0.44) 0%,
+    rgb(255 224 144 / 0.20) 55%,
+    transparent 72%
+  );
+}
+.orb-body {
+  box-shadow:
+    0 0 28px rgb(255 224 150 / 0.7),
+    0 0 80px rgb(255 202 112 / 0.36),
+    0 0 160px rgb(255 192 92 / 0.16);
+}
+
+/* Strata of knowing — concentric light within the core, breathing slowly
+   like the weight of infinite knowledge. */
+.orb-strata {
+  background: repeating-radial-gradient(
+    circle at 50% 46%,
+    rgb(255 255 255 / 0.12) 0%,
+    transparent 9%,
+    rgb(255 244 214 / 0.07) 18%,
+    transparent 27%
+  );
+  animation: orb-strata-breathe 7s ease-in-out infinite;
+}
+@keyframes orb-strata-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.045); }
+}
+
+/* The gaze — a point of brightest light drifting slowly within the core.
+   Reverent, all-seeing, never staring. */
+.orb-gaze {
+  width: 24%;
+  height: 24%;
+  left: 38%;
+  top: 30%;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.85) 0%,
+    rgb(255 250 235 / 0.3) 45%,
+    transparent 70%
+  );
+  animation: orb-gaze-drift 11s ease-in-out infinite;
+}
+@keyframes orb-gaze-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(20%, 14%); }
+  66% { transform: translate(-16%, 18%); }
+}
+
+/* --- Divine contemplation: thinking is deep and slow, never a spinner --- */
+.orb[data-mood="thinking"] .orb-depth-a { animation-duration: 34s; }
+.orb[data-mood="thinking"] .orb-depth-b { animation-duration: 46s; }
+.orb[data-mood="thinking"] .orb-strata { animation-duration: 9s; }
+.orb[data-mood="thinking"] .orb-core { animation: orb-contemplate 4.5s ease-in-out infinite; }
+.orb[data-mood="thinking"] .orb-halo { animation-duration: 5.5s; }
+.orb[data-mood="thinking"] .orb-gaze { animation-duration: 16s; }
+@keyframes orb-contemplate {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* --- Revelation: the sudden radiant flare of understanding --- */
+.orb[data-mood="revelation"] .orb-core { animation: orb-revelation 1.6s ease-out; }
+.orb[data-mood="revelation"] .orb-halo { animation: orb-revelation-halo 1.6s ease-out; }
+.orb[data-mood="revelation"] .orb-gaze { animation: orb-revelation-gaze 1.6s ease-out; }
+@keyframes orb-revelation {
+  0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  25% { opacity: 1; transform: scale(1.28); filter: brightness(2.4); }
+  100% { opacity: 0.95; transform: scale(1.06); filter: brightness(1.15); }
+}
+@keyframes orb-revelation-halo {
+  0% { opacity: 0.85; transform: scale(1); }
+  30% { opacity: 1; transform: scale(1.45); }
+  100% { opacity: 0.95; transform: scale(1.2); }
+}
+@keyframes orb-revelation-gaze {
+  0% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(0, 0) scale(1.8); }
+  100% { transform: translate(0, 0) scale(1.2); }
+}
+
+/* --- The soul's entrances: unpredictable welcomes, each reverent --- */
+
+/* Rush — sweeps in from below with purpose, flaring as it arrives. */
+.soul-enter-rush { animation: soul-rush 1.4s cubic-bezier(0.2, 0.8, 0.3, 1); }
+@keyframes soul-rush {
+  0% { opacity: 0; transform: translateY(140px) scale(0.5); }
+  60% { opacity: 1; transform: translateY(-10px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Materialize — condenses slowly out of starlight with a deep pulse. */
+.soul-enter-materialize { animation: soul-materialize 2.2s ease-out; }
+@keyframes soul-materialize {
+  0% { opacity: 0; transform: scale(0.7); filter: brightness(0.4); }
+  50% { opacity: 0.7; transform: scale(0.95); filter: brightness(1.4); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+/* Spiral — descends in a slow celestial spiral from the edge of the sky. */
+.soul-enter-spiral { animation: soul-spiral 2.6s cubic-bezier(0.3, 0.7, 0.4, 1); }
+@keyframes soul-spiral {
+  0% { opacity: 0; transform: translate(38vw, -30vh) scale(0.6) rotate(-120deg); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+}
+
+/* Awaken — stirs from slumber: dim, flickers, then opens its light. */
+.soul-enter-awaken { animation: soul-awaken 2s ease-out; }
+@keyframes soul-awaken {
+  0% { opacity: 0.1; transform: scale(0.92); filter: brightness(0.5); }
+  25% { opacity: 0.35; filter: brightness(0.8); }
+  40% { opacity: 0.15; filter: brightness(0.55); }
+  60% { opacity: 0.7; filter: brightness(1.1); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-strata,
+  .orb-gaze {
+    animation: none;
+  }
+  .soul-enter-rush,
+  .soul-enter-materialize,
+  .soul-enter-spiral,
+  .soul-enter-awaken {
+    animation: none;
+  }
 }

@@ -2,12 +2,8 @@ import { notFound } from "next/navigation";
 import { getMemberships } from "@/lib/tenant/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getClassDetail } from "@/server/services/school";
-import {
-  getCalibration,
-  getLabToday,
-  getTodayCheckin,
-  listStudySparks,
-} from "@/server/services/school-track";
+import { getTodayCheckin } from "@/server/services/school-track";
+import { matchClassSlug, classMetaFor } from "@/lib/school/study-resources";
 import { ClassDetailView } from "@/components/school/class-detail";
 
 // Tenant-scoped route — always renders at request time.
@@ -17,8 +13,9 @@ export const dynamic = "force-dynamic";
  * /c/[childSlug]/school/[classSlug] — W1 class page.
  * classSlug = classes.class_slug (UNIQUE per child — stable, readable URLs).
  *
- * Teen-scoped data (calibration, today's check-in, lab pulse) is fetched ONLY
- * for the child role — the services enforce requireChildRole.
+ * curatedSlug maps the pookie class to the curated library (apcsp, envsci…)
+ * for Drive materials, peer tips, and study resources. Room + current unit
+ * prefer the live classes columns (E4 066); curated metadata is the fallback.
  */
 export default async function ClassPage({
   params,
@@ -35,32 +32,47 @@ export default async function ClassPage({
 
   const { data: cls } = await supabase
     .from("classes")
-    .select("id")
+    .select("id, name")
     .eq("child_id", membership.child_id)
     .eq("class_slug", classSlug)
     .maybeSingle();
   if (!cls) notFound();
-  const classId = (cls as { id: string }).id;
+  const classRow = cls as { id: string; name: string };
+  const classId = classRow.id;
 
-  const isTeen = membership.role === "child";
+  // Room + current unit: live columns when migrated, curated fallback.
+  let room: string | null = null;
+  let currentUnit: string | null = null;
+  try {
+    const { data: meta, error } = await supabase
+      .from("classes")
+      .select("room, current_unit")
+      .eq("id", classId)
+      .maybeSingle();
+    if (!error && meta) {
+      room = (meta as { room: string | null }).room ?? null;
+      currentUnit = (meta as { current_unit: string | null }).current_unit ?? null;
+    }
+  } catch {
+    // columns not yet migrated — curated fallback below
+  }
+  const curatedSlug = matchClassSlug(classRow.name);
+  const curated = curatedSlug ? classMetaFor(curatedSlug) : null;
+  if (!room) room = curated?.room ?? null;
+  if (!currentUnit) currentUnit = curated?.currentTopic ?? null;
+
   const today = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
 
-  const [detail, teenData, sparks] = await Promise.all([
+  const [detail, todayCheckin] = await Promise.all([
     getClassDetail(membership.child_id, classId),
-    isTeen
-      ? Promise.all([
-          getCalibration(membership.child_id).catch(() => null),
-          getLabToday(membership.child_id).catch(() => null),
-          getTodayCheckin(membership.child_id, today).catch(() => null),
-        ])
-      : Promise.resolve([null, null, null] as const),
-    listStudySparks(membership.child_id, classId).catch(() => ({ sparks: [] })),
+    membership.role === "child"
+      ? getTodayCheckin(membership.child_id, today).catch(() => null)
+      : Promise.resolve(null),
   ]);
-  const [calibration, labToday, todayCheckin] = teenData;
 
   return (
     <ClassDetailView
@@ -68,12 +80,11 @@ export default async function ClassPage({
       childName={membership.child.nickname ?? membership.child.first_name}
       childSlug={childSlug}
       childId={membership.child_id}
-      checkinToday={!!todayCheckin}
+      checkinId={todayCheckin?.id ?? null}
       role={membership.role}
-      sparks={sparks.sparks}
-      calibration={calibration}
-      labToday={labToday}
-      todayCheckin={todayCheckin}
+      curatedSlug={curatedSlug}
+      room={room}
+      currentUnit={currentUnit}
     />
   );
 }

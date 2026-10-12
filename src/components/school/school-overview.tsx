@@ -2,20 +2,35 @@
 
 import { PookieOrb } from "@/components/pookie-orb";
 import type { CalibrationSummary, SchoolOverview, TodayCheckin } from "@/lib/school/types";
-import { ClassCard } from "./class-card";
+import type { AttendanceSummary, GpaBlock, SemesterCard as SemesterCardData } from "@/server/services/school-enrich";
+import type { TriviaFact } from "@/lib/school/trivia";
+import type { CobbEvent } from "@/lib/school/cobb-calendar";
+import type { Freshness } from "@/server/services/school-sync-health";
+import { ClassesList } from "./classes-list";
 import { CheckinForm } from "./checkin-form";
 import { ProvenanceLabel, ProvenanceLine } from "./provenance-label";
+import { DidYouKnow } from "./did-you-know";
+import { SemesterCard } from "./semester-card";
+import { SyncHealthSummary } from "./sync-health-summary";
+import { BellSchedule } from "./bell-schedule";
+import { CobbCalendar } from "./cobb-calendar";
+import { WeatherCard } from "./weather-card";
 import { dueDateLabel } from "./styles";
 
+export interface OverviewEnrich {
+  semester: SemesterCardData;
+  gpa: GpaBlock | null;
+  attendance: AttendanceSummary;
+  trivia: TriviaFact;
+  health: { allGreen: boolean; sources: { source: string; name: string; freshness: Freshness }[] };
+  calendarEvents: CobbEvent[];
+}
+
 /**
- * /c/[childSlug]/school — "Is my child keeping up in school?"
- * Grades dashboard: 6 classes color-coded, gap-to-90 leading,
- * due-next rail, and today's check-in. The AI turns deltas into
- * causes and plans — never just red numbers.
- *
- * Provenance (FR-SCHOOL-001): grades + due-next are school-of-record
- * (the school shares them with parents directly, outside Pookie's control);
- * the check-in is app-generated and teen-private.
+ * /c/[childSlug]/school — the full d-dash comprehensiveness, spaceship-styled:
+ * Did You Know, semester card (GPA + attendance + simulator), data-freshness
+ * strip, classes list, due-next rail, bell schedule, Cobb calendar, weather,
+ * and the daily check-in. Provenance labels mark school-of-record data.
  */
 export function SchoolOverview({
   overview,
@@ -26,6 +41,7 @@ export function SchoolOverview({
   calibration,
   labToday,
   todayCheckin,
+  enrich,
 }: {
   overview: SchoolOverview;
   childName: string;
@@ -35,6 +51,7 @@ export function SchoolOverview({
   calibration?: CalibrationSummary | null;
   labToday?: { class_name: string } | null;
   todayCheckin?: TodayCheckin | null;
+  enrich: OverviewEnrich;
 }) {
   const needsAttention = overview.classes.filter((c) => c.numeric != null && c.numeric < 80).length;
 
@@ -44,15 +61,18 @@ export function SchoolOverview({
       <div className="firefly" style={{ width: 6, height: 6, top: "22%", left: "86%", animationDelay: "1.4s" }} />
       <div className="firefly" style={{ width: 10, height: 10, top: "60%", left: "6%", animationDelay: "2.6s" }} />
 
-      <div className="animate-bloom flex items-center gap-4">
+      {/* Did You Know — top of the flight deck */}
+      <DidYouKnow fact={enrich.trivia} />
+
+      <div className="animate-bloom mt-6 flex items-center gap-4">
         <PookieOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-          School · mission status
+          School · Mission Status
         </p>
       </div>
 
       <h1 className="text-sunlit animate-bloom mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-        {childName}&apos;s school, from the flight deck
+        {childName}&apos;s School, From the Flight Deck
       </h1>
       <p className="animate-bloom mt-3 max-w-xl leading-relaxed text-stardust-300" style={{ animationDelay: "0.08s" }}>
         The mission: <span className="font-semibold text-star-100">90%+ in every class</span>. Every
@@ -65,32 +85,36 @@ export function SchoolOverview({
         )}
       </p>
 
-      <div className="animate-bloom mt-6 flex items-center gap-3" style={{ animationDelay: "0.1s" }}>
+      {/* Semester card — term, countdowns, GPA, attendance, simulator */}
+      <div className="mt-6">
+        <SemesterCard semester={enrich.semester} gpa={enrich.gpa} attendance={enrich.attendance} />
+      </div>
+
+      {/* Data freshness strip */}
+      <div className="mt-4">
+        <SyncHealthSummary
+          sources={enrich.health.sources}
+          allGreen={enrich.health.allGreen}
+          childSlug={childSlug}
+        />
+      </div>
+
+      {/* Classes list */}
+      <div className="animate-bloom mt-8 flex items-center gap-3" style={{ animationDelay: "0.2s" }}>
         <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Classes
         </h2>
         <ProvenanceLabel kind="school-of-record" />
       </div>
       <ProvenanceLine kind="school-of-record" className="mt-1" />
-      {overview.classes.length > 0 ? (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {overview.classes.map((cls, i) => (
-            <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} />
-          ))}
-        </div>
-      ) : (
-        <div className="card-living awaiting-data mt-4 rounded-2xl px-5 py-8 text-center">
-          <p className="instrument-label">Grade instruments warming up</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-stardust-200">
-            No grades on the board yet. The moment the first school sync
-            lands, every dial lights up — the mission begins with data. ✦
-          </p>
-        </div>
-      )}
+      <div className="mt-4">
+        <ClassesList classes={overview.classes} childSlug={childSlug} />
+      </div>
 
+      {/* Due next */}
       <div className="animate-bloom mt-10 flex items-center gap-3" style={{ animationDelay: "0.2s" }}>
         <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-          Coming up next
+          Coming Up Next
         </h2>
         <ProvenanceLabel kind="school-of-record" />
       </div>
@@ -121,6 +145,7 @@ export function SchoolOverview({
         </p>
       )}
 
+      {/* Daily check-in */}
       <div className="mt-10" id="checkin">
         <CheckinForm
           childId={childId}
@@ -132,8 +157,18 @@ export function SchoolOverview({
         />
       </div>
 
+      {/* Reference — collapsed by default */}
+      <div className="mt-10 space-y-3">
+        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
+          Reference
+        </h2>
+        <BellSchedule />
+        <CobbCalendar events={enrich.calendarEvents} />
+        <WeatherCard childId={childId} />
+      </div>
+
       <p className="mt-8 text-center text-xs text-stardust-500">
-        Grades refresh with each school sync · {role === "parent" ? "Command view" : "Flight-deck view"}
+        Grades refresh with each school sync · {role === "parent" ? "Command View" : "Flight-Deck View"}
       </p>
     </main>
   );
