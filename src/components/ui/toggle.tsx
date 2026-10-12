@@ -1,4 +1,4 @@
-// Toggle — the Nebula on/off switch: a soft nova-pink glow track when on,
+// Toggle — the Nebula on/off switch: a soft nova-cyan glow track when on,
 // quiet stardust when off. Fully keyboard-operable (a real <input>), with an
 // optional label + helper line. Divine-light: glow is soft, never harsh.
 //

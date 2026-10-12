@@ -82,7 +82,7 @@ export function GradeRing({
         y="50%"
         dy="0.36em"
         textAnchor="middle"
-        fill={tone === "white" ? "#23234d" : "#f4f2ff"}
+        fill={tone === "white" ? "#1e2a3a" : "#f4f2ff"}
         fontSize={size * 0.26}
         fontWeight={600}
         style={{ fontVariantNumeric: "tabular-nums" }}

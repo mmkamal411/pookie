@@ -138,10 +138,10 @@ export function OverviewDashboard({
               href={`/c/${childSlug}/school#checkin`}
               className="card-white block rounded-2xl px-5 py-4"
             >
-              <p className="text-sm font-medium text-[#1f1f4a]">
+              <p className="text-sm font-medium text-[#1e2a3a]">
                 {childName} hasn't logged today's check-in yet.
               </p>
-              <p className="mt-1 text-sm text-[#55557e]">
+              <p className="mt-1 text-sm text-[#55677e]">
                 Two minutes — how did the mission go? It shapes tonight's flight plan. →
               </p>
             </Link>

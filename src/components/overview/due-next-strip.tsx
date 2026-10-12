@@ -41,10 +41,10 @@ export function DueNextStrip({
                 <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden="true" />
                 <span className={s.text}>{s.label}</span>
               </p>
-              <p className="mt-2 line-clamp-2 text-sm font-medium text-[#1f1f4a]">
+              <p className="mt-2 line-clamp-2 text-sm font-medium text-[#1e2a3a]">
                 {item.title}
               </p>
-              <p className="mt-1 truncate text-xs text-[#55557e]">
+              <p className="mt-1 truncate text-xs text-[#55677e]">
                 {item.class_name}
                 {item.category ? ` · ${item.category}` : ""}
               </p>

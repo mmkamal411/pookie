@@ -37,8 +37,8 @@ export function ClassCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`font-medium ${white ? "text-[#1f1f4a]" : "text-star-100"}`}>{displayName}</p>
-          <p className={`mt-0.5 text-xs ${white ? "text-[#55557e]" : "text-stardust-300"}`}>
+          <p className={`font-medium ${white ? "text-[#1e2a3a]" : "text-star-100"}`}>{displayName}</p>
+          <p className={`mt-0.5 text-xs ${white ? "text-[#55677e]" : "text-stardust-300"}`}>
             {[cls.period ? `Period ${cls.period}` : null, cls.teacher_name]
               .filter(Boolean)
               .join(" · ")}
@@ -74,8 +74,8 @@ export function ClassCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <p className={`text-xs font-medium ${white ? "text-[#2b2b54]" : "text-stardust-100"}`}>{gapCopy(gap)}</p>
-        {delta && <p className={`text-xs ${white ? "text-[#55557e]" : "text-stardust-300"}`}>{delta}</p>}
+        <p className={`text-xs font-medium ${white ? "text-[#55677e]" : "text-stardust-100"}`}>{gapCopy(gap)}</p>
+        {delta && <p className={`text-xs ${white ? "text-[#55677e]" : "text-stardust-300"}`}>{delta}</p>}
       </div>
     </Link>
   );

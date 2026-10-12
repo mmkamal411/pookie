@@ -40,7 +40,7 @@ export function AttentionItems({
   if (needing.length === 0) {
     return (
       <div className="card-white love-halo rounded-2xl px-5 py-4">
-        <p className="text-sm text-[#1f1f4a]">
+        <p className="text-sm text-[#1e2a3a]">
           Nothing needs extra attention right now — every class is at or above 80. ✅
         </p>
       </div>
@@ -67,8 +67,8 @@ export function AttentionItems({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium text-[#1f1f4a]">{displayName}</p>
-                <p className="mt-1 text-xs text-[#55557e]">
+                <p className="font-medium text-[#1e2a3a]">{displayName}</p>
+                <p className="mt-1 text-xs text-[#55677e]">
                   {gapCopy(gap)}
                   {delta ? ` · ${delta}` : ""}
                 </p>
@@ -92,7 +92,7 @@ export function AttentionItems({
                   const st = statusStyle(item.status, "white");
                   return (
                     <li key={item.id} className="flex items-center justify-between gap-3">
-                      <p className="min-w-0 truncate text-sm text-[#2b2b54]">
+                      <p className="min-w-0 truncate text-sm text-[#1e2a3a]">
                         <span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden="true" />
                         {item.title}
                       </p>

@@ -38,8 +38,8 @@ export function UpcomingList({
             style={{ animationDelay: `${0.05 + i * 0.04}s` }}
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#1f1f4a]">{item.title}</p>
-              <p className="mt-0.5 truncate text-xs text-[#55557e]">
+              <p className="truncate text-sm font-medium text-[#1e2a3a]">{item.title}</p>
+              <p className="mt-0.5 truncate text-xs text-[#55677e]">
                 {item.class_name}
                 {item.category ? ` · ${item.category}` : ""}
               </p>
