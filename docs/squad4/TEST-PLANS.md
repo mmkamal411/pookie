@@ -93,19 +93,20 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 ### 2.3 Existing route regression
 | ID | Test | Method | Pass criteria |
 |---|---|---|---|
-| S4-W20-010 | Route smoke (existing) | Run the existing shopping route smoke test against the staging build (all routes in §2 header return expected status codes with a real household JWT; 401 without). | 100% of shopping routes green; no regressions in `list`, `items`, `items/[itemId]`, `items/[itemId]/remove`, `items/batch`, `preferences`, `prices`. |
+| S4-W20-010 | Route smoke (to be created — S4-BUG-003) | Extend `smoke-test-staging.py` (or a sibling) with authenticated checks for every shopping route: `list`, `items`, `items/[itemId]`, `items/[itemId]/remove`, `items/batch`, `preferences`, `prices` (expect 2xx with a real household JWT; 401 without). | 100% of shopping routes green once the script exists; no regressions. Until then, S4-W20-001–009 are the regression net. |
 | S4-W20-011 | Page render | Load `/household/shopping` as P1 and P2 (real login). | Renders with data, no console errors, no 404s on assets; Nebula/canopy styling intact (design gate). |
 | S4-W20-012 | Type + cleanliness | `npx tsc --noEmit` clean; grep shopping tree for `console.log`, dead exports. | Zero type errors; zero console.logs; no dead code (Mehedi's standing rule). |
 
 ## 3. W11 — Spending · FR-MOD-W11 (⚠️ — teen privacy is THE critical test)
 **Spec:** Mask to last-4; FTC Disposal Rule on disposal; **teen's own purchase detail is teen-private.**
+**Implementation (real, in-repo):** migration `035_w11_spending.sql` — tables `transactions` (`is_teen_private boolean NOT NULL DEFAULT false`, `purchased_by`, `category_override`, amount sign convention: >0 outflow / <0 inflow per Plaid; **no DELETE policy — ledger-like**), `spending_accounts`, `plaid_items` (owner-scoped; Plaid tokens are encrypted blobs, never plaintext). Teen privacy is enforced **in RLS, not the app**: `transactions_household_read` = household member AND (`NOT is_teen_private` OR `purchased_by = auth.uid()`); parents get aggregates via the `spending_summary()` SECURITY DEFINER RPC (parent-role checked inside).
 **No-placeholder rule applied:** the Plaid seam is tested as (a) full local-flow E2E via the manual/CSV entry path (manual entry → categorization engine → RLS scoping → UI) against real data, and (b) an integration-point contract test against the Plaid **sandbox** API (real API, sandbox credentials) — never a canned-data stub.
 
 ### 3.1 Teen privacy — the critical test (BLOCKS the module if it fails)
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W11-001 | Parent sees aggregates only | Synthetic household: parent P + teen T (13–17). Seed T's transactions via the real manual-entry/CSV path (real categorization engine runs). As P (real JWT + real UI + direct PostgREST): open Spending. | P sees **category totals, monthly aggregates, trends** — and **zero line-item rows** for T's purchases. Direct PostgREST `SELECT` on the transactions table as P returns zero line-item rows for T (RLS, not UI filtering — prove it at the API layer). Any single merchant name, amount, or timestamp of T's leaking to P = **P0 defect, module blocked**. |
-| S4-W11-002 | Teen sees own full detail | As T: same dataset. | T sees every own line item (merchant, amount, date, category) with nothing redacted. |
+| S4-W11-001 | Parent sees aggregates only | Synthetic household: parent P + teen T (13–17). Seed T's transactions via the real manual-entry/CSV path with `is_teen_private=true` (real categorization engine runs). As P (real JWT + real UI + direct PostgREST on `transactions`): open Spending; call `spending_summary()`. | P sees **category totals, monthly aggregates, trends** via `spending_summary()` — and **zero line-item rows** for T's purchases: direct PostgREST `SELECT` on `transactions` as P returns zero of T's private rows (the RLS policy `transactions_household_read` enforces it — prove at the API layer, not the UI). Any single merchant name, amount, or timestamp of T's leaking to P = **P0 defect, module blocked**. |
+| S4-W11-002 | Teen sees own full detail | As T: same dataset (`purchased_by` = T). | T sees every own line item (merchant, amount, date, category) with nothing redacted — the `purchased_by = auth.uid()` arm of the policy. |
 | S4-W11-003 | Parent's own detail intact | As P: P's own transactions. | P sees own full line-item detail (privacy boundary is per-person, not parent-blind). |
 | S4-W11-004 | Sibling isolation | Two teens T1, T2 in one household. | T1 cannot see T2's line items (PostgREST + UI); aggregates shown to parents never expose per-teen drill-down (no "click total → see whose" path). |
 | S4-W11-005 | Revocation propagation | T revokes P's aggregate scope (per age-tier rules) or turns 18 with continuity prompt. | Aggregates disappear for P immediately (no cached/stale aggregate served — verify with a fresh request, not a cached page); audit row records the scope change. |
@@ -117,8 +118,8 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 |---|---|---|---|
 | S4-W11-008 | Manual entry end-to-end | As T: manually enter 25 transactions (mixed merchants, amounts, dates incl. edge cases: refunds/negative amounts, split categories, future-dated). Real categorization engine assigns categories. Reload UI as T and as P; query PostgREST as both. | T: all 25 visible with correct categories; user overrides of category persist. P: aggregates update by the correct totals; still zero line items (ties back to S4-W11-001). Every amount is exact to the cent — no float drift in aggregates (sum(line items) == aggregate, verified in SQL). |
 | S4-W11-009 | Categorization quality | The 25-transaction set includes ambiguous merchants; run the real categorizer. | ≥90% correct category on first pass; miscategorized items correctable by the user and the correction persists; correction never changes another user's data. |
-| S4-W11-010 | Last-4 masking | Transactions carry `account_last4` only. DB audit via service_role (QA read-only): regex scan for `\d{13,19}` across spending tables. | Zero full PANs; UI shows `…1234` forms only. |
-| S4-W11-011 | FTC Disposal Rule | Delete/dispose flow for statements: run the real disposal path, then attempt forensic read (PostgREST + storage). | Disposed records unrecoverable; disposal logged; retention schedule documents the disposal method (NFR-PRIVACY-002). |
+| S4-W11-010 | Last-4 masking | Transactions carry `account_last4` only. DB audit via service_role (QA read-only): regex scan for `\d{13,19}` across `transactions`, `spending_accounts`, `plaid_items`. | Zero full PANs; UI shows `…1234` forms only. `plaid_items` access tokens are encrypted blobs — assert ciphertext, never plaintext (same method as S4-W7-004). |
+| S4-W11-011 | FTC Disposal Rule | The schema has **no DELETE policy** on `transactions` (ledger-like, per migration comment). Exercise the implemented disposal path for statements; then attempt forensic read (PostgREST + storage). **Implementation checkpoint:** if no disposal path exists for statements, file as defect — the FTC Disposal Rule requires proper disposal of consumer-report-derived data; "no DELETE" cannot mean "keep forever" (NFR-PRIVACY-002 demands a written retention schedule). | Disposed records unrecoverable; disposal logged; retention schedule documents the disposal method (NFR-PRIVACY-002). |
 
 ### 3.3 Integration-point contract — Plaid seam (spec'd interface, real sandbox)
 | ID | Test | Method (real data, real infra) | Pass criteria |
@@ -131,20 +132,21 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 
 ## 4. W7 — Money & Documents (vault) · FR-MOD-W7, NFR-PRIVACY-009, NFR-SEC-006
 **Spec:** Same masking as W21; **never persist full card numbers**; credentials-vault grade encryption (NFR-SEC-006: encrypt before any real credentials stored; never log plaintext; rotation + cryptographic erasure).
+**Implementation (real, in-repo):** migration `036_w7_vault.sql` — table `vault_documents` (`owner_user_id` tenant key, `doc_type` CHECK across card/bank_account/tax/insurance/medical/legal/identity/loan/other, `doc_label` — "never a full number", **`encrypted_blob bytea` holding `pgp_sym_encrypt()` ciphertext**, `created_by`, `retention_until` computed by `vault_retention_until()`, `data_class`).
 
 ### 4.1 No-full-PAN persistence — DB audit (the gate)
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W7-001 | Full-repo PAN audit | After exercising every vault write path (add card, add document, edit, import): service_role (QA read-only) regex scan `\d{13,19}` and `\d{3}-\d{2}-\d{4}` across **all** vault/document tables, their history/audit tables, and storage object metadata. | **Zero matches.** Any single full PAN = P0, module blocked. |
+| S4-W7-001 | Full-repo PAN audit | After exercising every vault write path (add card, add document, edit, import): service_role (QA read-only) regex scan `\d{13,19}` and `\d{3}-\d{2}-\d{4}` across **`vault_documents`** (all text columns incl. `doc_label`, `notes`-equivalents), its history/audit tables, and storage object metadata. | **Zero matches.** Any single full PAN = P0, module blocked. |
 | S4-W7-002 | PAN never in logs | Trigger card add/edit with a synthetic test PAN; inspect server logs, error payloads, audit rows. | PAN appears nowhere — logs show masked form or token reference only. |
 | S4-W7-003 | PAN never in transit dumps | Capture the actual request/response payloads of the vault write routes (test harness proxy). | No full PAN in any response body, including error responses and validation messages ("card number invalid" must not echo the number). |
 
 ### 4.2 Encryption at rest — verified, not asserted
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W7-004 | Ciphertext on disk | Write a vault secret through the real route; read the raw row via service_role. | The secret column holds ciphertext (indistinguishable from random; no plaintext substring of the input present). Key id/version column present (rotation support). |
+| S4-W7-004 | Ciphertext on disk | Write a vault secret through the real route; read the raw row via service_role. | `encrypted_blob` holds `pgp_sym_encrypt()` ciphertext — no plaintext substring of the input present in the column. |
 | S4-W7-005 | Decrypt round-trip | Read the secret back through the real route as the owning parent. | Correct plaintext returned to the authorized user; wrong-household JWT gets zero rows (RLS) — not an error message containing ciphertext. |
-| S4-W7-006 | Cryptographic erasure | Delete a vault item through the real route; attempt read via route, PostgREST, and raw row inspection. | Key material for that item destroyed (per-item/wrapped-key scheme) — ciphertext unrecoverable even with DB access; deletion audited. |
+| S4-W7-006 | Cryptographic erasure | Delete a vault item through the real route; attempt read via route, PostgREST, and raw row inspection. | Item unrecoverable via all paths; deletion audited. Assert the implemented erasure mechanism (key destruction vs row delete) and lock it in — "deleted" must mean forensically unrecoverable, not merely RLS-hidden. |
 | S4-W7-007 | Rotation | Rotate the vault key per the implemented rotation procedure on a seeded dataset. | Old-key ciphertext re-wrapped; reads still succeed; old key retired and unusable (attempt decrypt with retired key → fails). |
 
 ### 4.3 Retention schedule enforcement
@@ -172,11 +174,12 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 | S4-W24-003 | Age-gating | Load as a <18 account (FR-MENU-004). | Credit module hidden from under-18 (menu + direct URL → age-gate, not the module). |
 
 ### 5.2 Freeze-status data model (functions, real DB)
+**Implementation (real, in-repo):** migration `037_w24_credit.sql` — table `credit_freezes` (`child_id` tenant key, `bureau` CHECK ∈ {equifax, experian, transunion, innovis, chexsystems}, `freeze_status` CHECK ∈ {not_requested, requested, confirmed, temporarily_lifted, removed, error}, `requested_by/at`, `confirmed_at`, `confirmation_ref` (opaque bureau code), `lift_requested_at`, `lift_expires_at`, `notes`, `counsel_review_status` DEFAULT 'pending', `counsel_reviewed_by/at`, `data_class`).
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W24-004 | Freeze record CRUD | Via the real API/route layer with a parent JWT: create a freeze-status record per bureau (Equifax/Experian/TransUnion) for a synthetic minor profile; update status (requested → confirmed); read back; verify timestamps. | All three bureaus representable; status transitions valid; `verified_at`/`requested_at` coherent (verified ≥ requested); records household-scoped. |
-| S4-W24-005 | Freeze data model correctness | Direct PostgREST: assert schema constraints — bureau ∈ {equifax, experian, transunion}, status ∈ the implemented enum, one active record per (minor, bureau) (uniqueness), freeze PIN stored **encrypted** (same standard as W7 — ciphertext on disk, S4-W7-004 method). | Constraints enforced at the DB layer (attempt invalid bureau/status → 4xx); PIN never plaintext. |
-| S4-W24-006 | Freeze RLS | Cross-household read attempts (B-parent on A's freeze rows); child JWT read attempts. | Household parents only; zero rows for B and for children. |
+| S4-W24-004 | Freeze record CRUD | Via the real API/route layer with a parent JWT: create a freeze-status record per bureau for a synthetic minor profile; transition `not_requested` → `requested` → `confirmed`; read back; verify `requested_at` ≤ `confirmed_at`. | All five bureaus representable; status transitions follow the CHECK enum; timestamps coherent; records household-scoped. |
+| S4-W24-005 | Freeze data model correctness | Direct PostgREST: attempt invalid `bureau` ('fakecreditbureau') and invalid `freeze_status` ('hacked'); attempt duplicate active rows per (child, bureau) if a uniqueness constraint exists. | Invalid values rejected at the DB layer (4xx); `confirmation_ref` is opaque (no PAN/SSN-shaped content — regex-audited); `counsel_review_status` starts `'pending'` and only counsel workflow moves it. |
+| S4-W24-006 | Freeze RLS | Cross-household read attempts (B-parent on A's `credit_freezes` rows); child JWT read attempts. | Household parents only; zero rows for B and for children. |
 | S4-W24-007 | Coaching-partner seam (integration-point contract) | If a licensed-partner coaching integration exists: contract test against the partner's **sandbox/staging** endpoint with synthetic data — verify content renders as coaching only (no score, no bureau data). If no partner is integrated yet: **S4-BLK-001** (blocked on licensed-partner integration), never passed. | Coaching content is educational only; no FCRA-regulated data flows. |
 | S4-W24-008 | Launch gate | Attempt to enable any user-facing monitoring or to file a real freeze with a real bureau. | Impossible by design until counsel sign-off is recorded; sign-off artifact (counsel letter/memo) is the named unblock for S4-BLK-002. |
 
@@ -196,9 +199,10 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 | S4-W14-003 | Travel-restriction profile | With a custody order restricting out-of-state travel, attempt to authorize travel crossing the restriction (real logistics flow). | Blocked with a plain-language explanation; block logged immutably; FR-SAFETY-012 honored. |
 
 ### 6.2 Immutability — real UPDATE/DELETE attempts (the gate)
+**Implementation (real, in-repo):** migration `038_w14_coparenting.sql` — table `coparenting_log` (`child_id` tenant key). Verified in the migration source: **zero UPDATE/DELETE policies** (only `coparenting_log_parent_read` + `coparenting_log_parent_insert` exist) and the file's own comment states "no grants" for UPDATE/DELETE. Tests below prove it from the client side rather than trusting the comment.
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W14-004 | UPDATE on log entries must fail | Create log entries via the real write path as Parent A; then attempt `UPDATE` via PostgREST with A's own JWT (the *owner* trying to edit their own entry), with a service-adjacent role, and via any API route. | **All UPDATE attempts fail** (no UPDATE policy + no UPDATE grant — verify both layers: policy absence AND grant absence, mirroring the `004_compliance.sql` append-only pattern). |
+| S4-W14-004 | UPDATE on log entries must fail | Create log entries via the real write path as Parent A; then attempt `UPDATE` via PostgREST with A's own JWT (the *owner* trying to edit their own entry), with B's JWT, and via any API route. | **All UPDATE attempts fail** (no UPDATE policy + no UPDATE grant — verify both layers: query `information_schema`/policy catalog for the table AND observe the 4xx/empty behavior, mirroring the `004_compliance.sql` append-only pattern). |
 | S4-W14-005 | DELETE on log entries must fail | Same matrix for DELETE. | **All DELETE attempts fail**; no soft-delete-via-UPDATE loophole (UPDATE is already impossible per S4-W14-004). |
 | S4-W14-006 | Corrections are append-only | Attempt the legitimate "I made an error" flow. | Only path is a new superseding entry linked to the original (original preserved byte-for-byte); UI shows the correction chain, never a rewritten entry. |
 | S4-W14-007 | Tamper evidence | service_role (QA read-only) inspection: log table has no UPDATE/DELETE grants to any client role; row hashes/sequence numbers (if implemented) verify. | Append-only proven at the grant layer, not just the policy layer. |
@@ -222,7 +226,8 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 
 ## 7. W12 — Babysitters · FR-MOD-W12, FR-ACCESS-011, MD decision D6
 **Spec:** Directory only, labeled **"parent-vetted, not background-checked by Pookie"** — or real checks (FCRA counsel first). Time-boxed sitter access rides on FR-ACCESS-011 temporary grants.
-**D6 (supersedes the flat "2/30d" text at BUILD-SPECIFICATION.md:50 — QA finding S4-BUG-001: spec line must be updated):** tiered frequency caps — **8 grants/grantee/30d** for recurring/trusted grantees; **2/30d** for first-time grantees; installment detection active for both tiers; **teen co-approval (13–15) required for NEW grantees only** — renewals within cap do NOT re-prompt. Rationale: the cap is anti-harassment, not anti-convenience. Migration 023 (`expires_at`, `grant_kind`, `grant_purpose` on `child_access`) does not exist in-repo yet (migrations stop at 018) — integration tests against it are **S4-BLK-004** until 023 lands.
+**D6 (supersedes the flat "2/30d" text at BUILD-SPECIFICATION.md:50 — QA finding S4-BUG-001: spec line must be updated):** tiered frequency caps — **8 grants/grantee/30d** for recurring/trusted grantees; **2/30d** for first-time grantees; installment detection active for both tiers; **teen co-approval (13–15) required for NEW grantees only** — renewals within cap do NOT re-prompt. Rationale: the cap is anti-harassment, not anti-convenience.
+**Implementation (real, in-repo):** migration `029_w12_babysitters.sql` implements D6 end-to-end — tables `babysitters` (`trust_tier`, `block_on_record`) and `sitter_grants` (`starts_at`/`expires_at` NOT NULL, `grantee_tier`, `teen_coapproval_status` ∈ not_required/required/approved/installment_review, `status` ∈ pending_approval/active/expired/revoked/flagged, `revoked_by`); RPCs `sitter_grant_cap(tier)` (trusted→8, first_time→2), `request_sitter_grant(...)` (SECURITY DEFINER — the D6 enforcement point), `record_sitter_grant_outcome(...)` (clean completion → `trust_tier='trusted'`; block → `block_on_record=true`, tier reset to `first_time`). **Correction to the original brief:** the grant integration test is NOT blocked on a missing migration 023 — 029 adds the timeboxed columns to `child_access` idempotently itself. Precondition for §7.2–7.4: **migrations 018 + 029 applied on the test DB** (verify with a schema check; S4-BLK-004 reframed accordingly). Note the stale comment in `018_access_authority.sql:43-44` ("added by 023") — 023 is `023_health_reconsent.sql` and adds no such columns (S4-BUG-005; Platform Team 1 cleanup already requested in BUILD-LOG 2026-10-12 Squad 4 PM entry).
 
 ### 7.1 Disclaimer presence (real render)
 | ID | Test | Method (real data, real infra) | Pass criteria |
@@ -231,34 +236,34 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 | S4-W12-002 | Disclaimer survives entry points | Reach sitter profiles via search, deep link, and any "suggested sitter" surface. | Disclaimer present on every entry path; no path renders a sitter card implying Pookie vetting. |
 | S4-W12-003 | No background-check claims | Grep UI copy + bundle for "background check", "vetted by Pookie", "verified sitter" outside the disclaimed context. | Zero claims of Pookie-performed checks unless a real FCRA-cleared integration ships (counsel first). |
 
-### 7.2 Tiered caps — D6 (executable once migration 023 lands; cap-counting unit logic testable now)
+### 7.2 Tiered caps — D6 (against the real `request_sitter_grant` RPC; precondition: 029 applied)
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W12-004 | Trusted-tier cap: 9th grant blocked | Synthetic household; grantee G marked trusted (previously approved, no blocks). Issue 8 time-boxed grants within a rolling 30d window via the real grant RPC; attempt the 9th. | 9th grant **rejected** with a plain-language cap message; the rejection names the renewal/convert path (exceeding converts to the indefinite-grant flow with teen approval per FR-ACCESS-011). First 8 succeed. |
-| S4-W12-005 | First-time tier cap: 3rd grant blocked | New grantee H (never granted). Issue 2 grants in 30d; attempt the 3rd. | 3rd grant **rejected**; convert-to-indefinite flow offered with teen approval. |
-| S4-W12-006 | Cap window is rolling 30d | Grants at day −31, −29, −1 for a first-time grantee; attempt a new grant. | Day −31 grant aged out → new grant allowed (count = 2 in-window). Boundary verified at the query layer (PostgREST count check), not just UI. |
-| S4-W12-007 | Trusted status is earned, not self-declared | Attempt to mark a grantee trusted via client-accessible paths without the "previously approved, no blocks" history. | Rejected; trusted flag derivable only from real grant history (RPC-computed or parent-verified flow — assert the implemented contract). A grantee with a prior block/revoke can never be trusted-tier while the block stands. |
-| S4-W12-008 | Installment detection — trusted tier | Issue two 2-hour grants back-to-back to trusted grantee G (e.g., 6–8pm and 8–10pm same evening) via the real grant path. | Detected as installment behavior: counted as **one occasion** against the cap OR flagged on the teen's Sharing screen per FR-ACCESS-011 ("background pattern detection flags installment behavior"). Assert the actual implemented behavior and lock it in — silent double-counting is a FAIL. |
-| S4-W12-009 | Installment detection — first-time tier | Same back-to-back pattern for first-time grantee H. | Same detection applies (D6: active for both tiers); the two grants consume one of the 2 first-timer slots, with the flag visible. |
-| S4-W12-010 | Installment detection is not trivially evadable | Back-to-back grants with slightly different durations/scopes (2h + 2h15m; "Sitter basics" vs custom scope) and a 30-min gap variant. | Detection triggers on the pattern (temporal adjacency + same grantee), not on exact-duration equality; gap variant either merges or flags. Document the exact thresholds once observed. |
+| S4-W12-004 | Trusted-tier cap: 9th grant blocked | Synthetic household; sitter S with `trust_tier='trusted'` (promoted via `record_sitter_grant_outcome` after a clean grant). Call the real `request_sitter_grant` RPC 8× within a rolling 30d window; attempt the 9th. | 9th call raises **`grant_cap_exceeded`**; first 8 return grant rows. **Gap (S4-BUG-004):** FR-ACCESS-011 says over-cap "converts to indefinite-grant flow with teen approval" — the RPC hard-rejects instead. Flagged for MD/product: confirm hard-reject is the intended D6 behavior or implement the convert path. |
+| S4-W12-005 | First-time tier cap: 3rd grant blocked | New sitter H (`trust_tier='first_time'`). Two real grants in 30d; attempt the 3rd. | 3rd raises `grant_cap_exceeded`. |
+| S4-W12-006 | Rolling 30d window + counted statuses | Seed grants with `created_at` at −31d, −29d, −1d (QA-controlled insert through the real RPC where allowed; age setup only via service_role), plus one `status='flagged'` grant in-window. Call `request_sitter_grant`. | −31d grant aged out of the count; −29d/−1d counted; **`flagged` grants are NOT counted** (RPC counts only active/expired/pending_approval) — assert this exact behavior and lock it in. |
+| S4-W12-007 | Trusted = previously approved, no blocks (D6) | (a) New sitter → `trust_tier='first_time'`. (b) `record_sitter_grant_outcome(grant, false)` after clean completion → tier becomes `trusted`. (c) `record_sitter_grant_outcome(grant, true)` → `block_on_record=true`, tier reset to `first_time`. (d) Attempt `request_sitter_grant` for the blocked sitter. | (b) and (c) transitions verified in the DB; (d) raises **`sitter_blocked`**. Self-declaration impossible: `trust_tier` is set only by the RPC, and the direct-UPDATE path requires owner (assert no client path promotes without a completed grant). **Open MD question (from Squad 4 PM log):** 018's `grant_access()` defines trusted as "any prior grant history" — confirm it must also check block history before W12/W-access tests execute. |
+| S4-W12-008 | Installment detection — chain of 3 flagged | Same sitter × child: grant 1 (2h, e.g. 18:00–20:00), grant 2 starts within 7 days of grant 1's `expires_at`, grant 3 starts within 7 days of grant 2's `expires_at` — all inside 30d. | Grant 3 returns `status='flagged'`, `teen_coapproval_status='installment_review'` (chain rule: prior `expires_at` within 7d before new `starts_at`, recursive ≤12 links, 30d window; chain+1 ≥ 3). |
+| S4-W12-009 | Two back-to-back ≠ flagged (both tiers) | Two 2-hour grants back-to-back (18:00–20:00, 20:00–22:00) for a trusted sitter AND for a first-time sitter. | Neither flagged (chain of 2 < 3) — but **each counts against the tier cap** (verified via `v_count_30d`). Detection is active for both tiers per D6. **Semantic note (S4-BUG-006):** the implementation never merges installments into "one occasion" — it flags at chain ≥ 3. The task brief allowed either semantic; MD/product to confirm the implemented flag-only semantic is acceptable. |
+| S4-W12-010 | Installment detection not trivially evadable | Variants: 2h + 2h15m durations; 30-min gap between grants; 8-day gap (outside the 7d chain window). | Chaining triggers on temporal adjacency (≤7d) + same sitter × child, not exact-duration equality; the 8-day-gap grant starts a NEW chain (assert via `teen_coapproval_status`). Document observed thresholds. |
 
-### 7.3 Smart co-approval — D6 (teen 13–15)
+### 7.3 Smart co-approval — D6 (teen 13–15; real RPC behavior)
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W12-011 | New grantee → teen co-approval required | Parent grants a NEW sitter (first-time grantee) for a 13–15 teen's scope. Observe the teen's Sharing screen + notification path. | Grant stays **pending** until the teen approves; teen gets a real notification with one-tap approve/revoke; grant is unusable before approval (attempt sitter-scoped access → denied). |
-| S4-W12-012 | Renewal within cap → NO re-prompt | Renew a trusted grantee's grant (within the 8/30d cap) for the same 13–15 teen. Instrument: count teen-prompt notifications fired. | **Zero teen prompts fired**; renewal completes on the parent action alone; audit row records `renewal_of=<prior grant id>` (no phantom "approval" rows). |
-| S4-W12-013 | Renewal above cap → approval path | Attempt a 9th grant (over cap) for the trusted grantee. | Converts to the indefinite-grant flow **with** teen approval (the D6/FR-ACCESS-011 convert path) — teen prompt fires exactly once. |
-| S4-W12-014 | Teen revoke is instant | Teen one-tap revokes a sitter grant (new or renewal). | Access revoked immediately (sitter-scoped call → denied within seconds); parent notified; revocation audited. |
+| S4-W12-011 | New grantee → teen co-approval required | Parent calls `request_sitter_grant` for a NEW sitter (`trust_tier='first_time'`) on a 13–15 teen's `child_id` (real `children.date_of_birth`). | Grant row returns `status='pending_approval'`, `teen_coapproval_status='required'` — NOT active. The grant confers zero access before approval (assert: no sitter-scoped capability is usable while pending). Repeat with teen `date_of_birth` NULL → also `required` (fail-closed, per RPC). Teen 16+ or under-13 → `not_required` (assert the age bands exactly). |
+| S4-W12-012 | Renewal within cap → NO re-prompt | `request_sitter_grant` for a `trusted` sitter within the 8/30d cap on a 13–15 teen. Instrument: `teen_coapproval_status` on the returned row + notification outbox. | Row returns `teen_coapproval_status='not_required'`, `status='active'`; **zero teen prompts**; audit shows no phantom approval rows. |
+| S4-W12-013 | Renewal above cap → hard reject (not convert) | 9th grant for the trusted sitter (S4-W12-004 setup). | Raises `grant_cap_exceeded` — same S4-BUG-004 gap: no convert-to-indefinite-with-teen-approval path exists. |
+| S4-W12-014 | Teen revoke is instant | Teen one-tap revoke of an active grant (13+ per FR-ACCESS-011). Mechanism under test: `status`→`'revoked'`, `revoked_by='teen'`. **Implementation checkpoint:** `sitter_grants` RLS UPDATE policy requires parent role — the teen revoke MUST exist as a SECURITY DEFINER RPC or route; if it doesn't, file as defect (missing FR-ACCESS-011 "instant" revoke), not as blocked. | Revoke effective immediately (sitter-scoped access denied on the next check); parent notified; revocation audited with `revoked_by='teen'`. |
 
-### 7.4 Grant lifecycle (real paths; S4-BLK-004 until migration 023)
+### 7.4 Grant lifecycle (real paths; precondition: 029 applied)
 | ID | Test | Method (real data, real infra) | Pass criteria |
 |---|---|---|---|
-| S4-W12-015 | Occasion-based grant UX | "Share for a bit" flow: who → scope picker ("Sitter basics" preset) → occasion preset with computed end time. | `expires_at` computed correctly per preset; scope limited to the operational allowlist (schedule/logistics, pickup authorization, emergency medical card); RPC **rejects** Reflection/Wellness/H2/H3/full-communications scopes with an explicit error. |
-| S4-W12-016 | Manual revoke path (runnable NOW) | Revoke any existing grant-equivalent access via the current UI/API; verify propagation. | Revoke works through the real path today; blocks/revokes/safe-exit propagate to temporary grants once 023 lands (re-verify then). |
-| S4-W12-017 | Expiry sweeper | Grants past `expires_at`: run the idempotent 5-min sweeper. | Revoked with `revoked_by='system'`, reason `expiry`; single-fire expiry notices (no duplicates on re-run); 10-min read-only grace honored then closed. |
-| S4-W12-018 | Expiry slope notifications | Grant expiring in 25h, 2h, 20m (synthetic clock or seeded rows). | T-24h parent nudge, T-1h/T-15m sitter wrap-up, "All done" screen with [Request more time] + [Text parent]; notices carry zero attribution and no re-request CTA. |
+| S4-W12-015 | Occasion-based grant UX + scope allowlist | "Share for a bit" flow: who → scope picker ("Sitter basics" preset) → occasion preset with computed end time; call `request_sitter_grant` with default scope and with a forbidden scope (`["wellness"]`, `["reflection"]`). | Default scope `["schedule","pickup","emergency_medical"]` accepted; any scope outside the allowlist raises **`scope_not_allowed`** at the RPC layer. `starts_at`/`expires_at` NOT NULL enforced (`CHECK (expires_at > starts_at)`). |
+| S4-W12-016 | Manual revoke path (parent) | Parent UPDATEs a grant row: `status='revoked'`, `revoked_by='parent'` (allowed by `sitter_grants_parent_update`); verify propagation. | Revoke succeeds via the real path; the revoked grant confers no access; **no DELETE grant exists on `sitter_grants`** — hard-delete attempts fail (revocation is a status, not a deletion). Blocks/revokes/safe-exit propagation to sitter grants re-verified here. |
+| S4-W12-017 | Expiry sweeper | Grants past `expires_at`: run the idempotent 5-min sweeper (FR-ACCESS-011: `revoked_by='system'`, reason `expiry`). **Implementation checkpoint:** no sweeper function was found in 029 — verify it exists as a cron/Edge Function; if missing, file as defect (missing FR-ACCESS-011 component), not as blocked. | Expired grants revoked with `revoked_by='system'`; re-run is a no-op (idempotent); single-fire expiry notices. |
+| S4-W12-018 | Expiry slope notifications | Grant expiring in 25h, 2h, 20m (seeded rows via the real RPC). | T-24h parent nudge, T-1h/T-15m sitter wrap-up, "All done" screen with [Request more time] + [Text parent]; notices carry zero attribution and no re-request CTA. (Route/cron concern — assert against the real notification outbox, not mocks.) |
 
-**Blocked register:** S4-BLK-004 — W12 grant integration tests (S4-W12-004–018) blocked on **migration 023** (`expires_at` + `grant_kind` + `grant_purpose` on `child_access`). Runnable now: S4-W12-001–003 (disclaimer), S4-W12-016 (manual revoke via current paths).
+**Blocked register:** S4-BLK-004 (reframed) — W12 grant tests (S4-W12-004–018) require **migrations 018 + 029 applied on the test DB** (schema precondition, verified by a pre-run schema check — not a missing-migration block). Runnable without the DB: S4-W12-001–003 (disclaimer render). S4-BUG-004/005/006 are spec/implementation questions for MD/product, not test blockers.
 
 ---
 
@@ -267,7 +272,7 @@ Every test has an ID: `S4-<module>-NNN` (e.g., `S4-W21-001`). Defects get `S4-BU
 ### 8.1 RLS bypass attempts
 | ID | Test | Pass criteria |
 |---|---|---|
-| S4-SEC-001 | Anon-key sweep: GET every Squad 4 table (`mail_items`, `mail_action_items`, `mail_dispute_drafts`, `shopping_lists`, `shopping_items`, `shopping_price_reports`, vault tables, spending tables, freeze tables, co-parent log, sitter/grant tables) with the anon key, no JWT. | Zero rows on all user-data tables (registry/config tables like `mail_ocr_providers` are intentionally public — assert each exception is deliberate and documented). |
+| S4-SEC-001 | Anon-key sweep: GET every Squad 4 table (`mail_items`, `mail_action_items`, `mail_dispute_drafts`, `shopping_lists`, `shopping_items`, `shopping_price_reports`, `vault_documents`, `transactions`, `spending_accounts`, `plaid_items`, `credit_freezes`, `coparenting_log`, `babysitters`, `sitter_grants`) with the anon key, no JWT. | Zero rows on all user-data tables (registry/config tables like `mail_ocr_providers` are intentionally public — assert each exception is deliberate and documented). |
 | S4-SEC-002 | Wrong-household JWT sweep: B-parent JWT against A's rows on every table. | Zero rows everywhere; no error messages leaking row existence (no "row exists but forbidden" oracle — 0 rows, not 403-with-hint). |
 | S4-SEC-003 | Role-confusion: child JWT on parent-scoped tables (mail, vault, freeze, spending aggregates of others); parent JWT on teen-private line items (S4-W11-001). | Zero rows in all cases. |
 | S4-SEC-004 | Post-revocation access: revoke a grant / remove a household member; immediately replay their JWT against previously-visible rows. | Zero rows; no stale-cache serving (fresh PostgREST request, not a cached page). |
@@ -318,7 +323,7 @@ Target fields: mail notes, sitter notes, log entries (W14), shopping item names/
 | S4-BLK-001 | S4-W24-007 (coaching partner) | Licensed credit-hygiene partner integration | Managing Director / counsel | S4-W24-001–006, 008 |
 | S4-BLK-002 | W24 user launch | **FCRA counsel sign-off** (NFR-COMPLIANCE-002) | Licensed counsel | Pending-review state + freeze data model (S4-W24-001–007) |
 | S4-BLK-003 | W14 full launch | **Family-law practitioner review** (R5) | Family-law practitioner | Pending-review state + immutable-log/parallel-surface/no-messaging tests (S4-W14-001–012) |
-| S4-BLK-004 | S4-W12-004–015, 017–018 | **Migration 023** (`expires_at`, `grant_kind`, `grant_purpose` on `child_access`) | Squad 4 build | Disclaimer tests (S4-W12-001–003), manual revoke (S4-W12-016) |
+| S4-BLK-004 | S4-W12-004–018 | **Schema precondition:** migrations 018 + 029 applied on the test DB (verified by pre-run schema check). The timeboxed columns ship in 029 itself (idempotent `ADD COLUMN IF NOT EXISTS`), not in 023. | Squad 4 build / DevOps (apply migrations) | S4-W12-001–003 (disclaimer render, no DB grant logic needed) |
 | S4-BLK-005 | S4-W11-012/013 (if sandbox unreachable) | Plaid sandbox availability | Plaid / platform | Full local-flow E2E (S4-W11-008–011) |
 
 **Rule:** a blocked test is never marked PASS. When a dependency clears, the blocked tests run before the module is declared done.
@@ -332,10 +337,22 @@ Target fields: mail notes, sitter notes, log entries (W14), shopping item names/
 - [ ] Full E2E runs against implementation — pending module delivery; plans above are written to execute as-is.
 
 ### QA run 2026-10-12 — typecheck
-_To be filled from the tsc run._
+`npx tsc --noEmit` on `staging-build`: **CLEAN, exit 0** — zero type errors.
 
-### QA run 2026-10-12 — shopping route smoke
-_To be filled from the smoke-test run._
+### QA run 2026-10-12 — existing smoke test
+`python3 smoke-test-staging.py` (default base `https://pookie-staging.pages.dev`, read-only GETs, no deploy):
+**PASSED — 5/5 checks green** (`/` → 307, `/login` → 200, `/auth/callback` → 307,
+`/c/dawson` exists, `/select-child` exists).
+**Gap filed as S4-BUG-003:** the script covers no shopping routes — S4-W20-010
+specifies the shopping route smoke coverage to add.
+
+### QA run 2026-10-12 — shopping service logic (real shipped code, tsx)
+Scratch harness `/tmp/qa-shopping-logic.ts` (not committed) imported the real
+`normalizeName` + `assertTransitionAllowed` from `src/server/services/shopping.ts`
+and asserted all 16 state-machine pairs + dedupe normalization:
+**19/19 PASS** — 6 legal transitions allowed, 10 illegal transitions throw,
+dedupe normalization correct. Supporting evidence for S4-W20-002; the route-layer
+E2E runs when the full E2E suite executes.
 
 ---
 
@@ -344,7 +361,11 @@ _To be filled from the smoke-test run._
 | ID | Finding | Severity | Action |
 |---|---|---|---|
 | S4-BUG-001 | **Spec drift:** `docs/BUILD-SPECIFICATION.md:50` (FR-ACCESS-011) still states the flat "max 2 temporary grants per grantee per rolling 30 days". MD decision D6 (2026-10-12) supersedes it with tiered caps (8/30d trusted, 2/30d first-time, teen co-approval for new grantees only). | Medium | Spec owner to update FR-ACCESS-011 to D6 before W12 cap tests execute; tests in §7 assert D6 as the authority. |
-| S4-BUG-002 | **Missing dependency:** migration 023 (FR-ACCESS-011 schema) does not exist in-repo (migrations stop at 018); W12 grant tests are S4-BLK-004 until it lands. | Medium | Squad 4 build to land 023; QA re-runs §7.2–7.4 on landing. |
+| S4-BUG-002 | **Superseded — corrected during plan writing:** the original brief said W12 grant tests were blocked on a missing migration 023. Verification showed `029_w12_babysitters.sql` exists and implements the full D6 grant engine (tables, `request_sitter_grant`, `sitter_grant_cap`, `record_sitter_grant_outcome`), adding the timeboxed columns idempotently itself. Reframed as S4-BLK-004 (schema-applied precondition). Lesson: verify migration state before declaring blocks. | Low | None — corrected in-plan. |
+| S4-BUG-003 | **Missing coverage:** repo has no shopping route smoke test; `smoke-test-staging.py` checks only `/`, `/login`, `/auth/callback`, `/c/dawson`, `/select-child`. W20 is the one live Squad 4 module and has no route-level regression net. | Medium | Add shopping route checks (per S4-W20-010) to `smoke-test-staging.py` or a sibling script; QA owns the test list. |
+| S4-BUG-004 | **Spec vs implementation:** FR-ACCESS-011 says over-cap grants "convert to indefinite-grant flow with teen approval". `request_sitter_grant` (029) raises `grant_cap_exceeded` (hard reject) instead — no convert path exists. | Medium | MD/product to confirm: is hard-reject the intended D6 behavior? If yes, update FR-ACCESS-011; if no, build the convert flow. Tests S4-W12-004/013 assert the current behavior and will flip when decided. |
+| S4-BUG-005 | **Stale comment:** `018_access_authority.sql:43-44` says the timeboxed columns are "added by 023" — 023 is `023_health_reconsent.sql` and adds no such columns; 029 adds them idempotently. (Already flagged to Platform Team 1 in the Squad 4 PM BUILD-LOG entry.) | Low | Platform Team 1: fix the stale comment; confirm no migration-ordering hazard between 018's `grant_access()` and 029's columns. |
+| S4-BUG-006 | **Semantic question:** the task brief allowed installment detection to "count as one occasion OR flag". 029 implements flag-only: chain ≥ 3 within 7d-chaining/30d window → `status='flagged'`, `teen_coapproval_status='installment_review'`; it never merges installments into one cap occasion. | Low | MD/product to confirm the flag-only semantic is acceptable (S4-W12-008/009 lock in the implemented behavior). |
 
 ---
 
