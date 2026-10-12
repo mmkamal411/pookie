@@ -50,6 +50,7 @@ export function OverviewDashboard({
         gradeLevel={gradeLevel}
         attentionCount={attentionCount}
         urgentCount={urgentCount}
+        classCount={classes.length}
       />
 
       <div className="mt-8">
@@ -57,7 +58,7 @@ export function OverviewDashboard({
       </div>
 
       <div className="mt-8 space-y-8">
-        <OverviewSection title="Classes" badge={classes.length} defaultOpen delay={0.2}>
+        <OverviewSection title="Classes" badge={classes.length} delay={0.2}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {classes.map((cls, i) => (
               <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} tone="white" />
@@ -65,13 +66,13 @@ export function OverviewDashboard({
           </div>
           <Link
             href={`/c/${childSlug}/school`}
-            className="mt-4 inline-block text-sm font-medium text-nova-600 hover:text-nova-500"
+            className="cta-glow mt-4 inline-block text-sm font-medium text-nova-600 hover:text-nova-500"
           >
             Open the school board →
           </Link>
         </OverviewSection>
 
-        <OverviewSection title="Needs extra love" badge={attentionCount || null} defaultOpen delay={0.24}>
+        <OverviewSection title="Needs extra love" badge={attentionCount || null} delay={0.24}>
           <AttentionItems classes={classes} dueNext={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 

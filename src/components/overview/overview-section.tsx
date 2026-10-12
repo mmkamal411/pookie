@@ -48,6 +48,7 @@ export function OverviewSection({
           ▾
         </span>
       </button>
+      <hr className="instrument-divider mt-1" aria-hidden="true" />
       {open && <div className="animate-rise mt-3">{children}</div>}
     </section>
   );

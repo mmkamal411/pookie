@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { gapTo90, gradeBand, letterGrade } from "@/lib/grades";
 import type { ClassOverview } from "@/lib/school/types";
+import { GradeRing } from "@/components/instrument/grade-ring";
 import { bandStyleFor, deltaCopy, gapCopy } from "./styles";
 
 /**
@@ -43,13 +44,21 @@ export function ClassCard({
               .join(" · ")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <p className={`text-2xl font-semibold tabular-nums ${s.text}`}>
-            {cls.numeric != null ? cls.numeric.toFixed(1) : "—"}
-          </p>
-          <span className={`h-8 w-px ${white ? "bg-nova-600/20" : "bg-nova-400/20"}`} aria-hidden="true" />
+        <div className="flex shrink-0 items-center gap-2.5">
+          {/* Grade dial — the instrument readout: glowing ring + letter chip.
+              The ring carries the round number; the caption keeps full precision. */}
+          <div className="flex flex-col items-center gap-1">
+            <GradeRing numeric={cls.numeric} tone={tone} size={58} />
+            <span
+              className={`readout-cool text-[10px] font-semibold tracking-wide ${s.text}`}
+              aria-hidden="true"
+            >
+              {cls.numeric != null ? cls.numeric.toFixed(1) : "—"}
+            </span>
+          </div>
+          <span className={`h-10 w-px ${white ? "bg-nova-600/20" : "bg-nova-400/20"}`} aria-hidden="true" />
           <span
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border text-base font-bold ${s.chip}`}
+            className={`readout inline-flex h-9 w-9 items-center justify-center rounded-full border text-base font-bold ${s.chip}`}
             aria-label={`Letter grade ${letterGrade(cls.numeric)}`}
           >
             {letterGrade(cls.numeric)}

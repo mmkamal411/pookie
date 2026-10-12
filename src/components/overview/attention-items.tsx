@@ -24,9 +24,22 @@ export function AttentionItems({
     .filter((c) => c.numeric != null && c.numeric < 80)
     .sort((a, b) => (a.numeric ?? 0) - (b.numeric ?? 0));
 
+  // No instruments on the board yet — the readouts are warming up, not empty.
+  if (classes.length === 0) {
+    return (
+      <div className="card-living awaiting-data rounded-2xl px-5 py-6 text-center">
+        <p className="instrument-label">Readouts warming up</p>
+        <p className="mt-2 text-sm text-stardust-200">
+          No classes on the instruments yet. Add the first class and the
+          board will come alive — the mission starts there. ✦
+        </p>
+      </div>
+    );
+  }
+
   if (needing.length === 0) {
     return (
-      <div className="card-white rounded-2xl px-5 py-4">
+      <div className="card-white love-halo rounded-2xl px-5 py-4">
         <p className="text-sm text-[#1f1f4a]">
           Nothing needs extra love right now — every class is at or above 80. 🌱
         </p>
@@ -61,7 +74,7 @@ export function AttentionItems({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <p className={`text-xl font-semibold tabular-nums ${s.text}`}>
+                <p className={`readout text-xl font-semibold tabular-nums ${s.text}`}>
                   {cls.numeric != null ? cls.numeric.toFixed(1) : "—"}
                 </p>
                 <span

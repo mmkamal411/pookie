@@ -72,11 +72,21 @@ export function SchoolOverview({
         <ProvenanceLabel kind="school-of-record" />
       </div>
       <ProvenanceLine kind="school-of-record" className="mt-1" />
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {overview.classes.map((cls, i) => (
-          <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} />
-        ))}
-      </div>
+      {overview.classes.length > 0 ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {overview.classes.map((cls, i) => (
+            <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="card-living awaiting-data mt-4 rounded-2xl px-5 py-8 text-center">
+          <p className="instrument-label">Grade instruments warming up</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-stardust-200">
+            No grades on the board yet. The moment the first school sync
+            lands, every dial lights up — the mission begins with data. ✦
+          </p>
+        </div>
+      )}
 
       <div className="animate-bloom mt-10 flex items-center gap-3" style={{ animationDelay: "0.2s" }}>
         <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">

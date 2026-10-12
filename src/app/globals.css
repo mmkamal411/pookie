@@ -248,6 +248,67 @@ body {
   animation: orb-glow 5s ease-in-out infinite;
 }
 
+/* ==========================================================================
+   AURORA — spaceship-cockpit light language (2026-10-12).
+   The Pookie orb is the ship's ambient soul-light, not a beacon: moonlit,
+   desaturated, dissolving into transparency. Every glow here is a whisper.
+   ========================================================================== */
+
+/* The toolbar orb specifically: override the nova-pink pulse with a soft
+   moonlit breathe so it blends into the console instead of shouting. */
+#toolbar-pookie-orb .orb-breathe {
+  animation: orb-glow-aurora 6s ease-in-out infinite;
+}
+@keyframes orb-glow-aurora {
+  0%, 100% { box-shadow: 0 0 10px rgb(200 218 180 / 0.18), 0 0 30px rgb(170 195 155 / 0.08); }
+  50% { box-shadow: 0 0 16px rgb(200 218 180 / 0.3), 0 0 46px rgb(170 195 155 / 0.14); }
+}
+
+/* Luminous divider — a hairline of starlight between sections */
+.divider-neon {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(167 139 250 / 0.35) 20%, rgb(244 114 182 / 0.3) 50%, rgb(167 139 250 / 0.35) 80%, transparent);
+  box-shadow: 0 0 8px rgb(167 139 250 / 0.25);
+  border: 0;
+}
+
+/* Active child avatar — a gentle nova ring that breathes, never blinks */
+.avatar-pulse {
+  position: relative;
+  border-radius: 9999px;
+}
+.avatar-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1px solid rgb(244 114 182 / 0.4);
+  box-shadow: 0 0 10px rgb(244 114 182 / 0.25), inset 0 0 6px rgb(244 114 182 / 0.12);
+  animation: pulse-ring-soft 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pulse-ring-soft {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+/* Underglow — soft light pooling beneath a card, like console backlight */
+.underglow {
+  position: relative;
+}
+.underglow::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -10px;
+  height: 22px;
+  background: radial-gradient(ellipse at center, rgb(167 139 250 / 0.22), transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: -1;
+}
+
 /* Active tab — soft nova glow pooling under the icon */
 .tab-active-glow {
   position: relative;
@@ -377,4 +438,67 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================
+   Squad Instrument — spaceship cockpit page-content utilities.
+   Shared, safe for all squads. Subtle neon, never harsh.
+   ============================================================ */
+
+/* Luminous readout digits — instrument numerals with a soft halo.
+   tabular-nums keeps grades aligned; the glow stays under 1px blur so
+   digits remain crisp and readable. */
+.readout {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgb(244 114 182 / 0.35), 0 0 2px rgb(255 255 255 / 0.25);
+}
+.readout-cool {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgb(167 139 250 / 0.35), 0 0 2px rgb(255 255 255 / 0.2);
+}
+
+/* Instrument divider — hairline with a soft neon core. */
+.instrument-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgb(244 114 182 / 0.35) 30%, rgb(167 139 250 / 0.4) 50%, rgb(244 114 182 / 0.35) 70%, transparent);
+  box-shadow: 0 0 8px rgb(244 114 182 / 0.18);
+}
+
+/* Instrument awaiting data — an empty readout bay. Gentle breathing glow
+   so it feels alive, never dead. Reduced-motion is handled by the global
+   media query above (animation collapses to stillness). */
+.awaiting-data {
+  animation: pulse-soft 3.2s ease-in-out infinite;
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Primary CTA glow — soft invitation light on links that move the mission. */
+.cta-glow {
+  text-shadow: 0 0 12px rgb(244 114 182 / 0.45);
+  transition: text-shadow 0.3s ease;
+}
+.cta-glow:hover {
+  text-shadow: 0 0 18px rgb(244 114 182 / 0.7);
+}
+
+/* Needs-love banner halo — warm golden light pooling around the notice. */
+.love-halo {
+  box-shadow:
+    0 0 22px rgb(251 191 36 / 0.18),
+    0 0 60px rgb(251 191 36 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+/* Instrument group label — the small-caps tongue of the ship's readouts. */
+.instrument-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(244 114 182 / 0.85);
+  text-shadow: 0 0 10px rgb(244 114 182 / 0.3);
 }

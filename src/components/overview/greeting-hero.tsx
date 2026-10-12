@@ -21,12 +21,14 @@ export function GreetingHero({
   gradeLevel,
   attentionCount,
   urgentCount,
+  classCount,
 }: {
   childName: string;
   schoolName: string | null;
   gradeLevel: string | null;
   attentionCount: number;
   urgentCount: number;
+  classCount: number;
 }) {
   const [greeting, setGreeting] = useState("Hello");
   const [dateLine, setDateLine] = useState("");
@@ -82,7 +84,9 @@ export function GreetingHero({
           </>
         )}
         Goal: <span className="font-semibold text-star-100">90%+ in every class</span>
-        {attentionCount > 0 ? (
+        {classCount === 0 ? (
+          <> · the board is quiet — no classes on the instruments yet</>
+        ) : attentionCount > 0 ? (
           <>
             {" "}· {attentionCount} {attentionCount === 1 ? "class" : "classes"} getting
             extra love
