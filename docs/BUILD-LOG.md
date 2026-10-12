@@ -3,6 +3,18 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Squad 1 Safety Track Coordinator (staging-build): MD DECISIONS RELAYED
+
+**Managing Director decisions D1, D4, D6, D7** (full record: `docs/MD-DECISIONS.md`) relayed to all 5 squad experts with role-specific implementation deltas:
+
+- **D1 — Emergency staffing → CONTRACT** (not in-house 24/7): Path A now built against a vendor API contract (provider TBD — MD action item, logged as external dependency). PM: plan updated with vendor interface work packages. Backend: `vendor_crisis_review` interface defined (request/callback/grant handshake); no reviewer UI built. Frontend: vendor-review waiting state + timeout fallback UI. QA: mock-vendor contract tests + webhook auth. UX: waiting/timeout/denial screens, no "our team" copy.
+- **D7 — Location → COARSE ONLY** (architectural constraint, city/ZIP max): Backend: reject precise coords at ingestion (server-side), city/ZIP text columns (no geography types), coarse-only break-glass scope by construction. Frontend: city/ZIP pickers only, no map pin-drop, trust copy added. QA: adversarial precise-GPS rejection tests + zero-precise-storage verification. UX: picker specs + "never stores your exact location" framing.
+- **D6 — Time-boxed grants → tiered caps** (8/30d trusted, 2/30d new; teen co-approval for new grantees only): Backend: trust-tier classification, rolling-window cap enforcement, installment detection. Frontend: allowance indicator, co-approval card, cap-hit copy. QA: tier/cap/window tests. UX: picker distinction, non-punitive cap copy.
+- **D4 — Support: rotating holiday on-call + $50 in-ticket authority**: PM: on-call routing in crisis escalation plan. QA: holiday-path tests. UX: holiday banner copy variant.
+
+**Squad status:** all 5 experts building with updated briefs. Awaiting deliverables: implementation-plan.md, migrations 022–029, safety components, test-plan.md, ux-specs.md. Gates unchanged: QA sign-off + Fractional Team 2 security review per flow.
+
+
 ## 2026-10-12 ~03:50 EDT — QA Engineer, Squad 2 Health Track (staging-build): QA-PLAN DELIVERED
 
 **Committed `docs/squads/squad2-health/QA-PLAN.md` (cbf6162). PLAN ONLY — executable the moment build starts; no code, no deploy.**
