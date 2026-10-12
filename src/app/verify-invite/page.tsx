@@ -34,9 +34,9 @@ interface InvitePreview {
 export default async function VerifyInvitePage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; error?: string }>;
 }) {
-  const { token } = await searchParams;
+  const { token, error: inviteError } = await searchParams;
   const supabase = await createClient();
 
   let preview: InvitePreview | null = null;
@@ -52,11 +52,18 @@ export default async function VerifyInvitePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const childName = preview
-    ? preview.child_nickname ?? preview.child_first_name
-    : null;
+  // CRITICAL-1 (FR-AUTH-009/NFR-PRIVACY-005): child_first_name /
+  // child_nickname from get_invite_preview must NEVER render pre-auth.
+  // childName is only referenced in the authenticated branch below; the
+  // pre-auth view shows invite validity + the inviting adult's display
+  // name only, even though the RPC still returns the name fields.
+  const childName =
+    user && preview ? preview.child_nickname ?? preview.child_first_name : null;
   const inviterLabel =
     preview?.inviter_name ?? preview?.inviter_email ?? "your parent";
+  // Pre-auth: the inviting adult's display name only — never their email,
+  // and never anything about the child.
+  const preAuthInviter = preview?.inviter_name ?? "your parent";
 
   let state: "invalid" | "signin" | "mismatch" | "ready" | "joined" = "invalid";
   if (preview) {
@@ -101,18 +108,36 @@ export default async function VerifyInvitePage({
             </>
           )}
 
+          {inviteError === "underage" && state !== "invalid" && (
+            <div className="mt-6 rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-stardust-200">
+              Pookie accounts are for ages 13 and up. A parent or guardian
+              can create a family profile for you instead.
+            </div>
+          )}
+
           {state !== "invalid" && (
             <>
               <h1 className="mt-5 text-xl font-semibold text-star-100">
                 You&apos;re invited!
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-stardust-300">
-                {inviterLabel} invited{" "}
-                <span className="font-medium text-star-100">
-                  {preview!.invite_email}
-                </span>{" "}
-                to join {childName}&apos;s family on Pookie.
-              </p>
+              {user ? (
+                <p className="mt-2 text-sm leading-relaxed text-stardust-300">
+                  {inviterLabel} invited{" "}
+                  <span className="font-medium text-star-100">
+                    {preview!.invite_email}
+                  </span>{" "}
+                  to join {childName}&apos;s family on Pookie.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm leading-relaxed text-stardust-300">
+                  {preAuthInviter} invited{" "}
+                  <span className="font-medium text-star-100">
+                    {preview!.invite_email}
+                  </span>{" "}
+                  to join their family on Pookie. Sign in with that email to
+                  see the invite details.
+                </p>
+              )}
 
               {state === "signin" && (
                 <a

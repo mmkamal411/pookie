@@ -3,6 +3,68 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:20 EDT — Security Engineer (Platform Team 1): RLS + UNDER-13 BANS STAGED, RPC REVIEW COMPLETE
+
+**MD FREEZE honored:** no files created/modified in `supabase/migrations/`. All SQL staged durably at `~/workspace/pookie-security-staging/` (NOT /tmp — /tmp was wiped mid-session in this environment):
+- `rls_foundation.sql` (32 KB, 77 statements, pglast-parse-clean) — policies + tenancy gate + integration fixes
+- `under13_bans.sql` (10.7 KB, 15 statements, pglast-parse-clean) — is_minor_13 + 4 triggers
+Fold into the renumbered sequence after all-clear. Policy/trigger names are FINAL — keep them stable for the Fractional Team 2 audit.
+
+**🚨 P0 — BROKEN FILE IN TREE:** `supabase/migrations/025_rls_foundation.sql` (my pre-freeze draft) is TRUNCATED mid-function (unbalanced `$$`, Parts 2c/3/4 missing) — it will fail on apply and break the whole chain. It MUST be replaced by `rls_foundation.sql` during folding. Do not attempt to repair it in place.
+
+**Reconciled against LANDED backend migrations** 017 (profiles), 018 (access authority), 019 (link_codes), 020 (access_requests), 021 (access_events). Schema notes: 017 uses `profiles.date_of_birth` (not `dob` — staging corrected); 018's status CHECK is `('active','revoked','scheduled_revoke','pending_coapproval')`; `child_access.expires_at/grant_kind/grant_purpose` land in 030.
+
+### New RLS policies (file:line in rls_foundation.sql — Fractional Team 2 audit map)
+| Policy | Table | Line | Rule |
+|---|---|---|---|
+| `profiles_owner_read` | profiles | 430 | owner SELECT own row (`user_id = safe_auth_uid()`) |
+| `profiles_owner_insert` | profiles | 433 | owner INSERT own row |
+| `profiles_owner_update` | profiles | 436 | owner UPDATE own row; no DELETE policy |
+| `link_codes_creator_select` | link_codes | 448 | `created_by` reads own rows |
+| `link_codes_creator_insert` | link_codes | 451 | `created_by` inserts own rows |
+| `link_codes_creator_update` | link_codes | 454 | `created_by` updates own rows; no DELETE policy |
+| `access_requests_read` | access_requests | 465 | requester (requester_id OR legacy email arm) + active parents + linked teen 13+ |
+| `access_requests_requester_insert` | access_requests | 491 | requester binds own identity (email + requester_id) |
+| `access_requests_parent_update` | access_requests | 500 | active parents decide (kept from 001, safe_auth_uid) |
+| `access_events_teen_select` | access_events | 530 | linked teen reads full timeline on own record |
+| `access_events_subject_select` | access_events | 537 | effective-access viewer reads own subject events; revoked = zero rows |
+| `emergency_access_grants_teen_select` | emergency_access_grants | 549 | teen-only read; NO parent arm exists |
+
+### New triggers + helpers (under13_bans.sql)
+- `is_minor_13(uuid)` (L27) — TRUE if `children.date_of_birth` < 13y ago; NULL/missing DOB fails closed (treated as minor); emancipation never overrides (COPPA is status-agnostic).
+- `trg_child_access_under13` (L76) — BEFORE INSERT/UPDATE OF role,child_id: `NEW.role='child'` + under-13 → `under13_child_login_denied`. No privileged bypass, ever.
+- `trg_link_codes_under13` (L101) — BEFORE INSERT/UPDATE OF child_id: under-13 target → `under13_link_code_denied`.
+- `trg_access_requests_under13` (L176) — BEFORE INSERT: under-13 target + requester asserting child-role linkage (is the linked teen user, OR requester's own profile is minor) → `under13_child_linkage_denied`. Adult requesters unaffected.
+- `trg_children_dob_under13_sever` (L231) — AFTER UPDATE OF date_of_birth: if the child is newly under-13, DELETE child-role `child_access` rows immediately + write `revoke_effective` to `access_events` (sentinel device/ip hashes; guarded by `to_regclass`).
+
+### Tenancy gate (rls_foundation.sql L175)
+`current_child_ids()` rewritten: effective access = `status='active'` OR (`status='scheduled_revoke'` with unexpired `cooling_off_until` — the 13–15 cooling keeps the grant effective until elapse, per panel §1.4.1) AND (`expires_at IS NULL OR expires_at > now()`); `auth.uid()` → `safe_auth_uid()`. This single funnel propagates to every tenant-table policy (001/007/008/015/019/020) — revoked/expired/lapsed rows become invisible everywhere, immediately. `child_access` 001 policies kept unchanged (their self-checks re-enter through RLS).
+
+### Hardened in-tree functions (rls_foundation.sql Part 2 — CREATE OR REPLACE, fail-closed)
+- `invites_before_write()` (L214): invite-mint check now requires ACTIVE/unexpired parent membership (015 checked role only — a soft-revoked parent would keep minting).
+- `create_child()` (L261): same hardening on the parent-membership gate.
+- `revoke_child_access()` (L331): caller gate + last-parent guard count effective parents only.
+- `audit_event()` (L383): `auth.uid()` → `safe_auth_uid()` for actor attribution (agent JWTs hard-errored the audit write).
+
+### INTEGRATION FIX shipped in staging (Part 5, L595) — backend to adopt canonically
+**P0 root cause:** 018/019/020 call `log_access_event(child, actor, subject, event, granted_by, reason, dev, ip)` (sol-access §3.2, 8 args) but 021 implemented the 7-arg form `(child, actor, event, subject, reason, metadata, cents)`. **Every grant/revoke/link/request RPC fails at runtime** ("function does not exist"). Staging adds the 8-arg overload mapping into 021's table (additive, SECURITY DEFINER + search_path + REVOKE/GRANT), extends the `event_type` CHECK with `'revoke','request','block'` (used by call sites, missing from 021), and seeds missing reason codes (`pending_coapproval`, `coapproval_granted`, `coapproval_declined`, `pending_cancelled`, `cooling_off_scheduled`, `link_code_redeemed`, `access_requested`, `request_expired`).
+
+### RPC security review — Backend 017–021 (all functions verified SECURITY DEFINER + SET search_path=public + REVOKE ALL FROM PUBLIC)
+**PASS:** fail-closed ordering everywhere; `safe_auth_uid()` used in all 018/019/020 RPCs; `granted_by` derived from caller, never input (018); `p_role` restricted to `'parent'` in `grant_access` (no self-mint of child role); revoke matrix A–I enforced server-side incl. `child_grant_untouchable`; `approve_grant`/`decline_grant` teen-only; `apply_cooling_off_revocations` service_role-only; D6 caps/co-approval logic sound.
+**P0-1 (above):** log_access_event arity mismatch — ALL of grant_access, revoke_access, approve/decline_grant, generate/redeem_link_code, request_access, decide_access_request, expire_stale_access_requests, apply_cooling_off_revocations broken at runtime. Fixed via staging Part 5 overload.
+**P0-2:** `request_access` (020) INSERTs `(child_id, requester_id, status)` but 001's `requester_email` is NOT NULL with no default → every call fails with null-violation. Fix in 020: populate `requester_email` from the caller's `users` row in the INSERT (do NOT just DROP NOT NULL — the 001 unique index and email-match arms assume it).
+**P1-1:** `redeem_link_code` (019) brute-force logic is inverted: `attempt_count` increments on EVERY attempt (incl. success) and the `>= 5` lockout only fires when the CORRECT code is presented on attempt 6+; wrong guesses never lock (no row matched → `code_invalid_or_expired`, nothing counted). No IP-based rate limiting, no cross-code attempt tracking (sol-access §5.2's `link_code_attempts` was not built). Recommend: count failures per code + per ip_hash, lock at 5, 1h IP cooldown.
+**P1-2:** `generate_link_code` (019) does not check `re_request_locked_until` (sol-access §7.4 requires it) — a revoked adult inside the 30-day lockout can get a fresh link code.
+**P2 (convention):** 017/019/020/021 RLS policies use raw `auth.uid()`; staging recreates the ones it owns with `safe_auth_uid()` (014 convention). Recommend backend adopt `safe_auth_uid()` in `link_codes_parent_read` (019) at next touch.
+**Note:** `handle_new_profile()` trigger on `auth.users` auto-creates profiles rows — fine. `expire_stale_access_requests` DELETEs expired pendings (deviation from 001's ledger-like no-DELETE, but it audit-logs first — accepted, documented in 020).
+
+### Open risks / flags for coordinator
+1. `emergency_access_grants` has NO spec'd schema anywhere — staging defines it (Part 0e). If any team lands a competing definition, reconcile before apply.
+2. `019.link_codes_parent_read` (parent metadata arm) coexists with staging's `link_codes_creator_*` arms — both SELECT policies OR together. Brief's "no direct SELECT on code_hash for non-creators" is softened by 019's arm (hash is bcrypt, useless without the code — accepted, documented).
+3. `child_access.expires_at` enforcement in `current_child_ids()` references the column before 030 adds it — staging Part 0a adds it idempotently, so the folded migration is self-sufficient regardless of order.
+4. Staging Part 2 rewrites four 001/015 functions — if backend's later migrations also touch them, last-writer-wins; the hardened versions must survive.
+
+
 ## 2026-10-12 ~03:55 EDT — Squad 4 QA (staging-build): TEST PLANS v1.0 + QA RUNS (no deploy)
 
 **`docs/squad4/TEST-PLANS.md` v1.0** — complete test plans for all 7 Squad 4 modules (129 test IDs: S4-W21/W20/W11/W7/W24/W14/W12, S4-SEC, S4-NF, S4-BLK, S4-BUG) with pass/fail criteria, blocked items carrying named dependencies.
@@ -1076,3 +1138,39 @@ which was never written (only the unrelated `college-extra.ts` existed).
 
 **Review gates open:** RC-022-1..4, RC-023-1..3, RC-024-1..3, RC-025-1..3, RC-026-1..3, RC-027-1..3, RC-028-1..3, RC-RLS-1..5, RC-RPC-1..3, RC-API-1..3 (Fractional Team 1 compliance + Team 2 RLS audit).
 **Not deployed.** Legal gate (NFR-LEGAL: counsel H0–H3 sign-off) blocks production DATA, not schema.
+
+## 2026-10-12 — Squad 4 (Home & Money) backend complete — Tech Lead 73204527-f367-455d-9fd9-13a8ea76d440
+
+**Scope:** W21 Mail · W20 Shopping (audit) · W11 Spending · W7 Vault · W24 Credit · W14 Co-parenting · W12 Babysitters.
+**Not deployed** (staging-build branch, per directive).
+
+**Migrations — HELD (MD freeze 2026-10-12, do not file under these numbers):**
+`supabase/migrations/024_w21_mail_retention.sql` (extract-then-mask helper, auto_delete_at ≤30d purge fn, amounts/due_dates/action_items arrays) ·
+`025_w11_spending.sql` (plaid_items encrypted tokens, spending_accounts masked, transactions + teen-privacy RLS + spending_summary() aggregate RPC, ledger_entry_id FKs for the 007/008 seams) ·
+`026_w7_vault.sql` (vault_documents, pgcrypto pgp_sym_encrypt via service_role-only definer helpers, per-type retention schedule, purge fn) ·
+`027_w24_credit.sql` (credit_freezes, re-scoped to O.C.G.A. §§ 10-1-914/914.1 minor freeze management, counsel-gate CHECK) ·
+`028_w14_coparenting.sql` (coparenting_log, immutable INSERT-only, logistics-only CHECK, parallel-parenting RLS) ·
+`029_w12_babysitters.sql` (babysitters + sitter_grants, D6 tiered caps 8/30d trusted + 2/30d first_time, installment detection, teen co-approval for new grantees 13–15, scope allowlist, block propagation, idempotent 023 expires_at columns).
+All six are complete on disk, UNCOMMITTED, awaiting MD renumbering.
+
+**Plaid — real integration (MD no-placeholder directive):** official `plaid@^48` SDK added; `src/server/services/plaid.ts` implements Link token → exchange (access token encrypted with pgp_sym_encrypt before storage; plaintext in memory only) → transactions/sync cursor loop (idempotent upsert on plaid_transaction_id, masked account refs) → webhook receiver (triggers sync only; bypasses handleRoute since Plaid has no session) → disconnect (cryptographic erasure). Needs `PLAID_CLIENT_ID`/`PLAID_SECRET`/`PLAID_ENV`/`PLAID_TOKEN_ENCRYPTION_KEY`; without them routes return UPSTREAM_UNAVAILABLE and everything else in W11 (manual entry, CSV import, rule-based categorization, RLS, aggregates) works against real data.
+
+**Services:** `src/server/services/{spending,plaid,vault,babysitters,credit,coparenting,mail}.ts`. **Routes:** 20 new route files under `src/app/api/v1/household/{spending,vault,babysitters,mail}/` + `children/[childId]/{credit,coparenting/log}/`, following handleRoute → assertHousehold/assertTenant → service → auditEvent.
+**OCR:** `extract.ts` +`maskAccountNumbers`/`extractAllAmounts`; `pipeline.ts` masks ocr_text before persist (extract-then-mask, NFR-PRIVACY-009).
+
+**W20 audit:** done (state machine, dedupe, price learning, ledger-like RLS); gaps documented in `docs/squad4/BACKEND-CONTRACTS.md` (ledger FK lands with W11 migration; display-name RPC gap; W13 worker unwired).
+
+**Contracts:** `docs/squad4/BACKEND-CONTRACTS.md` — full request/response shapes, RLS policy designs as SQL text, D6 design details, file index.
+
+**Verification:** `npx tsc --noEmit` clean for all squad files. (Pre-existing type errors in `src/app/api/v1/health/*` from another team — untouched.)
+**Committed:** everything EXCEPT `supabase/migrations/` (frozen — commit holds services, routes, OCR, docs, package.json).
+
+## 2026-10-12 ~03:55 EDT — Platform Team 1: onboarding + profiles (Full-stack, f67c0be3)
+**Delivered (staging-build):**
+- `/onboarding` route: 3-step wizard (name → children → done), Nebula theme, skippable at every step ("Skip for now" completes onboarding → "just me" mode). Add-child branch: guardian attestation checkbox (required), birthdate (drives age tier), optional email, school-transparency disclosure, live under-13 COPPA notice.
+- `src/lib/onboarding/actions.ts`: `completeOnboarding(displayName)` (upserts profiles, 42P01-defensive), `createChildProfile` (zod validation, server-side age computation, caller's own under-13 gate, fires existing `sendChildInvite` hook for ≥13+email; under-13 email ignored per COPPA).
+- Root router (`src/app/page.tsx`): `profiles.onboarding_completed=false` → `/onboarding`; legacy no-memberships → `/login?error=no-invite` fallback kept.
+- DOB gate (UX layer) on both invite-accept paths (`acceptInvite` + `/?invite=` auto-consume): verifying user with own DOB <13 is blocked with plain-English message; DB trigger remains the backstop.
+- CRITICAL-1 fix: `/verify-invite` pre-auth view no longer renders `child_first_name`/`child_nickname` (validity + inviter display name only); post-auth preview unchanged.
+**Notes for other teams:** `createChildProfile` calls SECURITY DEFINER RPC `provision_onboarding_child` — SQL staged at `src/lib/onboarding/provision_onboarding_child.sql`, NOT in `supabase/migrations/` (MD freeze 2026-10-12); DBA to place post-freeze. "Just me" users (completed, 0 memberships) currently hit `/login?error=no-invite` per brief — needs a personal dashboard before it makes sense.
+**tsc:** clean for all touched files (remaining repo errors are other teams' pre-existing).

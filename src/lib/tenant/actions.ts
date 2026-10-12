@@ -116,6 +116,17 @@ const childEmailSchema = z
   .email("invalid_email")
   .max(254, "invalid_email");
 
+/** Full years between a YYYY-MM-DD date and today (DOB-gate helper). */
+function ageYears(isoDate: string): number {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const now = new Date();
+  let age = now.getFullYear() - y;
+  if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) {
+    age -= 1;
+  }
+  return age;
+}
+
 /** Max pending child invites one parent may create per rolling 24h window. */
 const MAX_PENDING_INVITES_PER_DAY = 5;
 
@@ -245,6 +256,22 @@ export async function acceptInvite(token: string): Promise<AcceptInviteResult> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "not_signed_in" };
+
+  // DOB gate (UX layer): a verifying user whose own profiles.date_of_birth
+  // (if present) shows age < 13 cannot link a child role. The DB trigger
+  // is the backstop — this is the plain-English message.
+  const { data: dobProfile } = await supabase
+    .from("profiles")
+    .select("date_of_birth")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (dobProfile?.date_of_birth && ageYears(dobProfile.date_of_birth) < 13) {
+    return {
+      ok: false,
+      error:
+        "Pookie accounts are for ages 13 and up. A parent or guardian can create a family profile for you instead.",
+    };
+  }
 
   const { data: childId, error } = await supabase.rpc("consume_invite", {
     p_token: trimmed,
