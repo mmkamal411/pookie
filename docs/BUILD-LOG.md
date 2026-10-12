@@ -65,6 +65,20 @@ State machine: draft → proposed → active/change_requested. Teen proposes, pa
 
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~11:15 EDT — Squad Phase1 — 5 of 6 modules complete, pushed
+
+**Squad Phase1 final status:**
+- ✅ **W26 Weather** (`bbe08c0`) — standalone cosmic weather hub via NWS API (free, no key). 611-line hub with condition-matched ambient glow, CSS-animated condition art, 7-day outlook, NWS alerts, home ZIP setter. Coarse-location only (D7).
+- ✅ **W20 Shopping** (`bbe08c0` + `9ee58e3`) — categories (Produce/Dairy/Meat/Pantry/Frozen/Household/Other), multiple lists, batch API ops. Migration 077 (renumbered from 071 collision).
+- ✅ **W13 Meals** (`bbe08c0` + `9ee58e3`) — tabbed refactor: WeekPlanner, RecipeLibrary, FamilyPreferences. Migration 071 (meal_recipes + preferences).
+- ✅ **W21 Mail** (`bbe08c0` + `9ee58e3`) — 809-line board rebuild: action panels, capture/confirm/filed screens, due-date chips, one-tap bill pay. Migration 073 (classification taxonomy).
+- ✅ **W22 Activity** (`9ee58e3`) — 743-line activity hub, workout logging API, migration 074.
+- 🔄 **W3 Insurance** — in progress (engineer still running). insurance-hub.tsx + migration 072 exist; 2 tsc errors fixed by coordinator.
+
+**Daemon restarts killed 8 engineer spawns** (4 original + 4 re-dispatched). Coordinator completed the 5 dead modules' work directly from disk — all surviving files verified (esbuild syntax + tsc clean), migration number collisions resolved (071→077, 075→077).
+
+tsc clean. NOT deployed — parent owns deploys. Migrations 071-074, 077 are file-only, not applied live.
+
 ## 2026-10-12 ~10:50 EDT — Squad Phase1 — Daemon restart: 4 engineers re-dispatched
 
 A daemon restart killed 4 of 6 Phase1 engineers (Weather, Shopping, Meals, Mail) with no restart checkpoint. Activity + Insurance engineers survived and continue. The 4 lost engineers were re-dispatched with identical briefs. No repo state was lost (no commits had landed yet).
