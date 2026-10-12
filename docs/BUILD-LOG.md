@@ -3,6 +3,23 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Squad 5 PM (PMP) (staging-build): SQUAD 5 KICKOFF (Travel, Marketplace & Support UI)
+
+**Squad 5 — Travel, Marketplace & Support UI** spun up per the Managing Director's team charters. PM (PMP) delivered the squad backlog:
+- **`docs/squads/squad5/BACKLOG.md`** — 12 sequenced work items (S5-001…S5-012), least-dependent first, each with FR traceability, complexity (🟢–🔴), data-source line, dependencies (technical/data/compliance/human), blocked-by, testable acceptance criteria, and a "No mock data; verified against live source" criterion per item.
+
+**Scope:** W25 Fuel & Charging (EIA + OpenChargeMap) · W26 Weather (NWS/NOAA api.weather.gov, never LLM) · W27 Events (🛑 redesigned: curation policy in SQL, municipal seeds) · W28 Restaurants (🟡 verified listings, allergen hard-blocks, DPH scores) · W29 Trails (🛑 redesigned: official sources only, no solo <16, dusk guard) · W30 Flights (🛑 redesigned: 18+ purchaser server-side invariant, UM rules engine) · W31 Rental Cars (🛑 redesigned: hidden from teens, hard age-gate) · W6 Driving School (🛑 redesigned: GA DDS rules engine, Joshua's Law log) · W12 Babysitters (directory + time-boxed grant UX, MD D6 tiered caps) · S1 FAQ (~90-article corpus, legal accordions) · S2 AI support chat (tripwires + crisis pattern-interrupt) · S3 tickets (window-aware SLA, agent RBAC, teen-privacy API enforcement).
+
+**MD directives incorporated:** NO PLACEHOLDERS — every item ships full working implementation (real tables/APIs/UI/RLS, end-to-end against real data); data-source column per item (MD-specified sources); D1–D7 applied (D2 "never train" gates S2 disclosure copy; D4 $50 in-ticket authority + holiday on-call in S3 AC; D6 tiered grant caps in W12 AC; D7 coarse-only location everywhere).
+
+**Cross-squad inputs tracked:** Platform 015–023 + menu shell + D7 architecture; Squad 1 (trusted adults, Explorer Setup gate, crisis protocol, trails/events schemas, allergy list, custody flag); Squad 4 (babysitters schema, grant RPCs); Fractional Compliance (attorney sign-offs, DPA verification); 2 support agents to be hired.
+
+**Risks flagged for MD/Tech Lead:** R-001 migration-number collision (028/029 claimed by both sol-support and sol-safety/Squad 1) — needs a single migration registry; R-003 SLA table conflict (FR-SUPPORT-003 authoritative over sol-support §D.1 proposal); Squad 1 vs Squad 5 schema ownership seam on trails/events (recommended split: Squad 1 = schema+RPCs, Squad 5 = UI+curation).
+
+**Wave 1 siblings (parallel):** UX Designer (screen specs + copy deck) · Tech Lead (migrations, RPCs, `BACKEND-CONTRACTS.md`) · QA Engineer (executes the AC lists, owns 🛑 anti-criteria fail-closed checks). Frontend Engineer joins Wave 2.
+
+**No deploy.** Branch `staging-build`. Code cleanliness enforced.
+
 ## 2026-10-12 ~03:50 EDT — Squad 1 Safety Track Coordinator (staging-build): PM + QA DELIVERED (2/5)
 
 **Delivered and committed:**
