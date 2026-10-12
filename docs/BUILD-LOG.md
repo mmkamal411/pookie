@@ -1,5 +1,9 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:50 EDT — Squad Phase1 — Daemon restart: 4 engineers re-dispatched
+
+A daemon restart killed 4 of 6 Phase1 engineers (Weather, Shopping, Meals, Mail) with no restart checkpoint. Activity + Insurance engineers survived and continue. The 4 lost engineers were re-dispatched with identical briefs. No repo state was lost (no commits had landed yet).
+
 ## 2026-10-12 ~10:40 EDT — Phase1-Weather — W26 standalone weather hub built
 
 **W26 Weather** is now a standalone household module (`/household/weather`), wired into the module registry (More tab → Travel grove → Weather).
