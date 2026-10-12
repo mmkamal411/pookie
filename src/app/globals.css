@@ -3,10 +3,11 @@
 @import "../styles/neon-system.css";
 
 /* ==========================================================================
-   POOKIE DESIGN LANGUAGE — Nebula.
-   Deep Space by default: an animated starfield canvas with drifting nebula
-   clouds (violet/cyan/magenta), glassy glowing cards, starlight text.
-   Pookie's comet-green is the signature accent in the dark.
+   POOKIE DESIGN LANGUAGE — Spacecraft Command Deck.
+   Space Black by default: an animated starfield canvas with drifting
+   cyan/teal nebula wisps, glassy glowing cards, starlight text.
+   Neon accents: cyan / teal / green / amber only. BANNED (both themes):
+   lavender, purple washes, pink accents, warm tones. Zero warmth.
    Bright Bridge ([data-theme="bright-bridge"]): the same ship with the lights
    fully on — icy blues, cyans, clean whites. Zero lavender, zero pink.
    Tokens defined once here, reused on every surface. No exceptions.
@@ -28,12 +29,13 @@
   --color-comet-500: #22c55e;
   --color-comet-600: #16a34a;
 
-  /* Nova — the pink accent (#f472b6): links, eyebrows, active states, CTAs */
-  --color-nova-200: #fbcfe8;
-  --color-nova-300: #f9a8d4;
-  --color-nova-400: #f472b6;
-  --color-nova-500: #ec4899;
-  --color-nova-600: #db2777;
+  /* Nova — legacy accent name, now the cyan accent (zero pink, zero purple).
+     Links, eyebrows, active states, CTAs. */
+  --color-nova-200: #cffafe;
+  --color-nova-300: #67e8f9;
+  --color-nova-400: #22d3ee;
+  --color-nova-500: #00b8d4;
+  --color-nova-600: #0e7490;
 
   /* Starlight — primary text, warm white */
   --color-star-100: #f4f4ff;
@@ -56,9 +58,9 @@
   --color-halo-200: #fef9c3;
   --color-halo-300: #fde68a;
 
-  /* Nebula glows — violet/cyan, never harsh */
-  --shadow-glow-sm: 0 0 14px rgb(167 139 250 / 0.28);
-  --shadow-glow-md: 0 0 28px rgb(167 139 250 / 0.38), 0 0 72px rgb(34 211 238 / 0.14);
+  /* Spacecraft glows — cyan/teal, never harsh */
+  --shadow-glow-sm: 0 0 14px rgb(0 229 255 / 0.28);
+  --shadow-glow-md: 0 0 28px rgb(0 229 255 / 0.38), 0 0 72px rgb(34 211 238 / 0.14);
   --shadow-sun-warm: 0 0 24px rgb(251 191 36 / 0.25);
 
   /* Divine radiance — sacred light, warm and protective */
@@ -167,10 +169,10 @@ body {
   display: none;
 }
 
-/* Starlit text — bright with a violet nebula glow */
+/* Starlit text — bright with a cyan nebula glow */
 .text-sunlit {
   color: var(--color-star-200);
-  text-shadow: 0 0 20px rgb(167 139 250 / 0.5);
+  text-shadow: 0 0 20px rgb(0 229 255 / 0.5);
 }
 
 /* Dappled-light button — starlight sweeping across nova pink */
@@ -196,18 +198,18 @@ body {
   transform: translateY(0) scale(1);
 }
 
-/* Glassy nebula card — frosted deep-space glass, glowing violet edge */
+/* Glassy command card — frosted deep-space glass, glowing cyan edge */
 .card-living {
-  background: linear-gradient(165deg, rgb(30 30 70 / 0.55), rgb(11 11 30 / 0.65));
+  background: linear-gradient(165deg, rgb(17 24 50 / 0.55), rgb(11 16 32 / 0.65));
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid rgb(167 139 250 / 0.22);
+  border: 1px solid rgb(0 229 255 / 0.22);
   box-shadow: var(--shadow-glow-sm), inset 0 1px 0 rgb(255 255 255 / 0.06);
   transition: box-shadow 0.35s ease, transform 0.25s ease, border-color 0.35s ease;
 }
 .card-living:hover {
   box-shadow: var(--shadow-glow-md), inset 0 1px 0 rgb(255 255 255 / 0.08);
-  border-color: rgb(167 139 250 / 0.45);
+  border-color: rgb(0 229 255 / 0.45);
   transform: translateY(-2px);
 }
 [data-theme="bright-bridge"] .card-living {
@@ -1370,12 +1372,12 @@ body {
 /* --- 3. Glass + cards glow a little brighter --- */
 .glass-pane {
   background: linear-gradient(180deg,
-    rgb(34 34 78 / 0.52),
-    rgb(18 18 48 / 0.58));
-  border: 1px solid rgb(167 139 250 / 0.3);
+    rgb(17 24 50 / 0.52),
+    rgb(11 16 32 / 0.58));
+  border: 1px solid rgb(0 229 255 / 0.3);
   box-shadow:
-    0 0 48px rgb(139 92 246 / 0.16),
-    0 0 24px rgb(244 114 182 / 0.08),
+    0 0 48px rgb(0 229 255 / 0.16),
+    0 0 24px rgb(0 255 200 / 0.08),
     0 18px 60px rgb(5 5 18 / 0.4),
     inset 0 1px 0 rgb(255 255 255 / 0.1),
     inset 0 0 80px rgb(40 40 100 / 0.25);
@@ -1485,7 +1487,7 @@ body {
 /* --- 2. LED-strip accents: thin lines of cool light ---
    The signature Lumina detail. A 1px line of cool light along the top
    edge of a surface — like an LED panel strip in a Dragon capsule.
-   Cool tones only: ice blue, cyan, violet-blue. */
+   Cool tones only: ice blue, cyan, sky. */
 .led-strip {
   position: relative;
 }
@@ -1498,15 +1500,11 @@ body {
   background: linear-gradient(90deg,
     transparent,
     rgb(103 232 249 / 0.9) 20%,
-    rgb(165 180 252 / 0.85) 50%,
+    rgb(103 232 249 / 0.85) 50%,
     rgb(125 211 252 / 0.9) 80%,
     transparent);
   box-shadow: 0 0 12px rgb(103 232 249 / 0.7), 0 0 28px rgb(125 211 252 / 0.35);
   pointer-events: none;
-}
-.led-strip-violet::before {
-  background: linear-gradient(90deg, transparent, rgb(139 146 250 / 0.9) 30%, rgb(139 146 250 / 0.9) 70%, transparent);
-  box-shadow: 0 0 12px rgb(139 146 250 / 0.75);
 }
 .led-strip-teal::before {
   background: linear-gradient(90deg, transparent, rgb(103 232 249 / 0.9) 30%, rgb(103 232 249 / 0.9) 70%, transparent);

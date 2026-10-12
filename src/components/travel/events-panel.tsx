@@ -117,8 +117,8 @@ export function EventsPanel({ isTeen }: { isTeen: boolean }) {
   return (
     <div className="space-y-4">
       {/* Happenings header */}
-      <section className="holo-panel led-strip-violet px-5 py-5">
-        <p className="text-[10px] font-bold tracking-[0.2em] text-violet-200/70 uppercase">
+      <section className="holo-panel led-strip-teal px-5 py-5">
+        <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-200/70 uppercase">
           Happenings
         </p>
         <h2 className="mt-1 text-xl font-bold text-star-100">What&apos;s on the horizon?</h2>
