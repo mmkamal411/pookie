@@ -2453,3 +2453,23 @@ Fitness framed as "training for the mission" throughout. Device integrations def
 - Plan: Workers tab = WIN/MAC fleet cards (online/offline, last heartbeat, responsibilities, gears spin while syncing); Sync tab = live run console from school_sync_runs (timestamp/source/rows/success/duration, filters, per-source Sync Now); School Logins tab = portal credential cards (ParentVUE, CTLS Parent, StudentVUE, CTLS Learn) with test-connection, passwords never displayed.
 - Data: school_sync_runs + school_sync_health + sync_heartbeats + sync_jobs queue. NO MOCK DATA — "awaiting first contact" when silent.
 - Sync Now → existing sync_request_job RPC (generic job; labeled honestly as queued full sync).
+
+## 2026-10-12 ~15:45 EDT — Phase1-Insurance — insurance policy tracker (W3) shipped
+
+**Shipped:** "the ship's shield status" — policy tracking + renewal alerts (not a document store; policy PDFs stay in the document vault).
+1. **DB migration `supabase/migrations/072_insurance_policies.sql`**: `insurance_policies` table (id, owner_user_id, type auto/home/health/life/renter, provider, policy_number **masked-display only**, premium_amount, premium_frequency monthly/quarterly/semiannual/annual, renewal_date, coverage_summary, agent_name, agent_phone, notes, created_at/updated_at + touch trigger). RLS via `is_household_member()` per the 064 pattern. Note: migration 071 is unclaimed/reserved — skipped per W3 task naming.
+2. **Service `src/server/services/insurance.ts`**: zod schemas + CRUD; `maskPolicyNumber()` masks server-side before insert — full policy numbers are never persisted (only `••••1234`).
+3. **API `src/app/api/v1/household/insurance/`**: `route.ts` (GET list, POST create), `[policyId]/route.ts` (PUT update, DELETE remove) — all through `handleRoute` auth.
+4. **UI `src/components/insurance/insurance-hub.tsx`** + page `src/app/household/insurance/page.tsx`:
+   - Shield status banner (divine orb glow): Secure / Attention / Breach / Offline states
+   - Coverage at a glance: policy count, monthly-equivalent cost, renewals ≤30d, types covered
+   - Policy cards grouped by type with renewal countdown pill + urgency color (calm ≤60d / watch / urgent ≤30d / overdue red)
+   - Add/edit form in BottomSheet (provider required; number stored masked)
+   - "Remind in Bills" — posts the renewal as an unpaid yearly bill to `/api/v1/household/bills` (straightforward Bills feed; in-module countdowns otherwise)
+   - Vault link card → `/household/vault` (IDs & insurance section) for policy PDFs
+   - NO BLANK PAGES: LoadVeil → WarmError with retry → empty state with CTA
+5. **Design**: spaceship cosmic dark (nebula/stardust/nova tokens), Title Case labels, subtle orb accents, trustworthy calm. Reused `home-money/shared` primitives (PageHeader, WarmError, LoadVeil, QuietConfirm, daysUntil, fmtMoney, fmtDate).
+
+**Verification:** `npx tsc --noEmit` — zero errors in all 6 new files. Full `next build` attempted multiple times; environment contention (parallel squad builds holding the build lock, OOM kills on shared 7GB VM) prevented a clean solo build — queued retry; failure seen (`[__metadata_id__]` phantom in `/api/v1/ai/crisis-signal`) is unrelated to insurance files and likely concurrent-tree churn. tsc error pair in `shopping/linked-ships.tsx` + `lib/health/actions.ts` is another squad's uncommitted work, not Phase1-Insurance.
+
+**Not deployed** (per W3 directive). Next: migration 072 needs applying to staging DB before the page has data.
