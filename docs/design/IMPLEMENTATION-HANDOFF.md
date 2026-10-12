@@ -316,13 +316,13 @@ tile flag (taking-root → live) ──► Groves tiles, Garden rails, freshness
 
 **Placeholder seed table ownership:** each module's seed schema is defined by the module's owning team (Team A for W5/W6 school seeds, Team B for W25–W31/W24 life seeds, Shell team for none — but Shell owns the shared seed-form component, the StatusPill, and the interest CTA). **The placeholder writes against the FINAL schema** — so when the module team builds the real migration later, they must not change the seed-table schema the placeholder shipped against. Schema review at placeholder time, not at graduation time.
 
-**Handoff discipline:** phases are sequential at the *flag* level (a phase's exit criteria gate the next phase's flag flips), but teams work in parallel inside a phase. The Shell team is the bottleneck resource — Phase 0 and Phase 1 are shell-bound; Team A/B de-risk Phase 2 by wiring W1/W20/W21 data paths (behind `taking-root` flags, off the demo) while the shell lands.
+**Handoff discipline:** phases are sequential at the *flag* level (a phase's exit criteria gate the next phase's flag flips), but teams work in parallel inside a phase. The Shell team is the bottleneck resource — Phase 0 and Phase 1 are shell-bound; Team A/B de-risk Phase 2 by wiring W1/W20/W21 data paths (behind `taking-root` flags) while the shell lands.
 
 ---
 
 ## 9. Milestone 1 gate checklist — the founder's break-it-or-make-it review
 
-**The gate condition, in the founder's own words (PRODUCT-SCOPE §2):** open Pookie on a random Tuesday morning and say, without prompting, *"Pookie runs my family's life."* The review runs on **staging, styled build, demo mode**, in both personas (the dad: Dawson + Ella; Maya: childless). Each item below is PASS/FAIL — one FAIL is a failed gate.
+**The gate condition, in the founder's own words (PRODUCT-SCOPE §2):** open Pookie on a random Tuesday morning and say, without prompting, *"Pookie runs my family's life."* The review runs on **staging, styled build**, in both personas (the dad: Dawson + Ella; Maya: childless). Each item below is PASS/FAIL — one FAIL is a failed gate.
 
 ### 9.1 The canonical truths (regression tests against the QA kill list)
 
@@ -355,7 +355,6 @@ tile flag (taking-root → live) ──► Groves tiles, Garden rails, freshness
 
 - [ ] **"Groves" vs "Menu":** QA's 5-second test FAILED "Groves." The tab ships under the `NAV.FIFTH_LABEL` token — the founder rules (keep "Groves," or flip to "Menu"), and engineering applies the one-token change. **No gate verdict without this ruling.**
 - [ ] **Phase 4 graduation order for W24–W31** confirmed or reordered (§6.4).
-- [ ] **Demo-mode data declared:** demo personas' data is clearly labeled as sample where it could be mistaken for the founder's real data (no fake grades presented as real).
 
 ---
 
@@ -368,7 +367,7 @@ tile flag (taking-root → live) ──► Groves tiles, Garden rails, freshness
 *Impact:* the classic failure is a placeholder and a real screen racing on the same route, or Groves saying "live" while the Garden rail says "taking root." *Mitigation:* **one flag, three readers** (§3.3) — the swap is a single `module_state` flip in ONE deploy; the module isn't ready until it can flip in one deploy. Graduation checklist (§6.4) runs before every flip. *Owner:* the module's owning team; DevOps verifies the flag read in staging.
 
 **R3. The unstyled-deploy issue blocks the actual gate review.**
-*Impact:* demo mode is live on staging but unstyled — the founder judges *design*, and an unstyled build fails Milestone 1 regardless of what's built. *Mitigation:* the CSS deploy fix runs as a **separate DevOps track with its own owner and its own acceptance test** (styled staging build verified before the gate is scheduled). The gate does not convene until that test passes. Engineering phases proceed in parallel — the unstyled issue blocks only the review, never the build. *Owner:* DevOps Manager.
+*Impact:* the styled build is not yet verified live on staging — the founder judges *design*, and an unstyled build fails Milestone 1 regardless of what's built. *Mitigation:* the CSS deploy fix runs as a **separate DevOps track with its own owner and its own acceptance test** (styled staging build verified before the gate is scheduled). The gate does not convene until that test passes. Engineering phases proceed in parallel — the unstyled issue blocks only the review, never the build. *Owner:* DevOps Manager.
 
 **R4. W9 is the product and it is unbuilt — the highest-risk dependency.**
 *Impact:* every V1 module is decoration without the engine; the briefing is the composition layer where all integration bugs concentrate (band slips, double-counted items, ranking failures). *Mitigation:* the **feeder contract** (§4.2) decouples modules from the engine — Team A/B can build and test feeders against a stub engine while the Shell team builds ranking/banding/snooze. The 7:12 AM storyboard (UI-V1-MODULES) is the integration acceptance test: one question, two taps, three modules closing visibly. A-N17 (band slip) and A-N16 (two lenses) are explicit regression items in §9. *Owner:* Shell team (engine); Team A/B (feeders).

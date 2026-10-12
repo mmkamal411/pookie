@@ -57,7 +57,7 @@ All values are the canonical source. Existing tokens keep their values; NEW toke
 **Sunlight — warm gold (light through leaves).**
 | Token | Hex | Role |
 |---|---|---|
-| `sunlight-200` | `#fef3c7` | Warm banner text, demo banner copy |
+| `sunlight-200` | `#fef3c7` | Warm banner text |
 | `sunlight-300` | `#fde68a` | Attention eyebrows, warmth accents |
 | `sunlight-400` | `#fbbf24` | Attention glow source, star/sparkle fills |
 
@@ -155,7 +155,7 @@ Base font: Geist Sans (`--font-sans`). Numbers always `tabular-nums`. No serif a
 - Base unit 4px. Card padding: `p-5` (20px). Section gap: `gap-4` (16px). Page padding: `px-4` mobile, `px-6` ≥sm.
 - Content width: mobile-first single column; `max-w-2xl` for reading surfaces; `max-w-5xl` for dashboards ≥lg.
 - Radii: `rounded-2xl` (16px) default surfaces · `rounded-3xl` (24px) cards/heroes · `rounded-full` pills, orbs, avatars · `rounded-xl` (12px) inputs, chips. Nothing sharper than 12px — the app has no hard corners.
-- Z-index scale: content 0–10 · sticky banners 40 · app nav 45 · top banner (demo/staleness) 50 · sheets/modals 60 · command bar 70 · toasts 80 · Pookie orb (FAB) 55.
+- Z-index scale: content 0–10 · sticky banners 40 · app nav 45 · top banner (staleness) 50 · sheets/modals 60 · command bar 70 · toasts 80 · Pookie orb (FAB) 55.
 
 ### 1.5 Motion
 
@@ -182,7 +182,7 @@ All live in `src/components/ui/`. Props named exactly as below.
 
 ### 2.1 AppShell
 
-**Anatomy:** `TopBannerSlot` (demo/staleness/quiet-hours stack) → `AppHeader` → `main` → `BottomNav` (mobile) / `IconRail` (desktop ≥lg) → `PookieOrb` (FAB) → `ToastSlot`.
+**Anatomy:** `TopBannerSlot` (staleness/quiet-hours stack) → `AppHeader` → `main` → `BottomNav` (mobile) / `IconRail` (desktop ≥lg) → `PookieOrb` (FAB) → `ToastSlot`.
 
 - `main` has `pt` for sticky banners, `pb-24` on mobile for bottom nav clearance.
 - Background: `bg-canopy-950` with a fixed, non-interactive garden backdrop: 3–5 `.firefly` dots + one large soft `halo` radial top-center at 6% opacity. Backdrop NEVER carries text or interaction.
@@ -233,7 +233,7 @@ Anatomy top→bottom: `GreetingHero` ("Good morning, Mehedi ☀️" + date + one
 ### 2.5 Badges & pills
 
 - **GradeBadge:** `rounded-full border px-2.5 py-1 text-small font-semibold` in band colors (§1.2). Always pairs numeric + letter where grades appear.
-- **StatusPill:** neutral states — `Synced`, `Pending approval`, `Paused by [child]`, `Demo`. Base: `border-bark-500/30 text-bark-300`. Never uses band colors for non-grade states.
+- **StatusPill:** neutral states — `Synced`, `Pending approval`, `Paused by [child]`. Base: `border-bark-500/30 text-bark-300`. Never uses band colors for non-grade states.
 - **CountPill:** for quantities (e.g. "3 due") — `bg-sunlight-400/15 text-sunlight-300 border-sunlight-400/30`. Counts are warm, not alarming.
 - **Do:** pills describe state, never judge ("Needs tending", not "Behind"). **Don't:** red pills for grades/missing work — red is safety-only.
 
@@ -267,9 +267,8 @@ Anatomy top→bottom: `GreetingHero` ("Good morning, Mehedi ☀️" + date + one
 
 ### 2.9 Banners
 
-Stack order in `TopBannerSlot`: Demo → Staleness → Quiet-hours.
+Stack order in `TopBannerSlot`: Staleness → Quiet-hours.
 
-- **DemoBanner** (existing): sticky top, `border-sunlight-400/30 bg-canopy-900/95 shadow-sun-warm`, ✨ copy "Demo mode — you're seeing mock data, not real grades".
 - **StalenessBanner NEW:** `border-gold-400/30 bg-canopy-900/95`, copy "Last updated {x} ago — the garden may have grown since." + `Sync now` button. Appears when any primary source is stale (>60 min grades, >24h health rollups).
 - **QuietHoursBanner NEW:** 10 PM–6 AM local: `border-halo-300/20`, copy "🌙 Quiet hours — approvals and nudges rest until 6:00 AM." Non-blocking, dismissible per night.
 - **Do:** banners inform, never scold. **Don't:** red/urgent styling for staleness — stale data is a fact, not a failure.
