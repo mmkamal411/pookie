@@ -7,6 +7,7 @@
  * send encouragement. No grade changes, no teacher messages, no health data.
  */
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { ApiError } from "@/components/home-money/shared";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -126,6 +127,15 @@ export function MentorOverview({ childId }: { childId: string }) {
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 pt-10 pb-8">
+      {/* Prism E5 2026-10-12: the weakest back-path in the app — a mentor
+          drilling in had no visible way back to the roster. */}
+      <Link
+        href="/village"
+        className="inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
+        style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+      >
+        ← Who You&apos;re Helping
+      </Link>
       <div>
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           The crew · {RELATIONSHIP_LABEL[overview.relationship] ?? "Mentor"} view

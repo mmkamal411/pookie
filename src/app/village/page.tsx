@@ -41,6 +41,14 @@ export default function VillagePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
+      {/* Prism E5 2026-10-12: back-to-app — the standby console has no tabs. */}
+      <Link
+        href="/"
+        className="mb-4 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
+        style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+      >
+        ← Back to Ship
+      </Link>
       <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
         The crew
       </p>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
 import { InviteGenerator } from "./invite-generator";
+import { AccountBackNav } from "@/components/account-back-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,8 @@ export default async function FamilyInvitePage() {
 
   return (
     <>
+      {/* Prism E5 2026-10-12: back-to-app — the standby console has no tabs. */}
+      <AccountBackNav />
       <InviteGenerator children={eligible} />
       {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
       <div className="h-32 shrink-0" aria-hidden="true" />
