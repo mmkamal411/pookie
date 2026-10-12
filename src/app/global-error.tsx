@@ -32,14 +32,14 @@ export default function GlobalError({
         <main className="flex min-h-screen min-h-dvh items-center justify-center px-6">
           <div className="card-living w-full max-w-md rounded-3xl p-8 text-center">
             <p className="text-4xl" aria-hidden="true">
-              🌿
+              🛸
             </p>
             <h1 className="text-sunlit mt-4 text-2xl font-semibold">
-              Something didn&apos;t grow right
+              Hull Breach Detected
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-stardust-300">
-              Pookie hit a problem loading this page. It might be temporary
-              — or your account might be in a bad state.
+              Pookie hit a system malfunction loading this module. It might
+              be temporary — or your ship&apos;s log might be corrupted.
             </p>
             {error.digest && (
               <p className="mt-2 text-xs text-stardust-400">
@@ -52,19 +52,19 @@ export default function GlobalError({
                 onClick={reset}
                 className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950"
               >
-                Try again
+                Rerun Diagnostics
               </button>
               <Link
                 href="/login"
                 className="block w-full rounded-2xl border border-white/15 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/30"
               >
-                Start over with a fresh account
+                Board a Fresh Ship
               </Link>
             </div>
             <p className="mt-4 text-xs leading-relaxed text-stardust-400">
-              Starting over signs you in fresh. If your old account is
-              stuck, you can delete it from Settings → Profile once
-              you&apos;re back in.
+              Boarding fresh signs you in with a new session. If your old
+              ship&apos;s log is corrupted, you can decommission it from
+              Settings → Profile once you&apos;re back aboard.
             </p>
           </div>
         </main>

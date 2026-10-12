@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 /**
  * NebulaBackground — the Deep Space canvas.
- * Twinkling stars, drifting nebula clouds (violet/cyan/magenta), occasional
+ * Twinkling stars, drifting nebula clouds (deep blue/cyan), occasional
  * shooting stars, a soft moon, distant planets, and blinking satellites.
  * Stars brighten near the pointer (touch/mouse) — the sky notices you.
  * Sits behind all content with a readability overlay.
