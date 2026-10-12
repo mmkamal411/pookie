@@ -1,5 +1,66 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~14:35 EDT — Squad Telemetry E5 — BUILD COMPLETE (API + Pages)
+
+**Delivered on staging-build (pushed to origin):**
+
+**Overview page** (`/c/[slug]/school`) — rebuilt d-dash-comprehensive:
+- Did You Know trivia card (deterministic daily fact, shuffleable, 14 facts)
+- Semester card: Fall 2026, GP2 of 3, Aug 3–Dec 18, live day counters, progress bar, GPA block (UW/Weighted/HOPE), expandable attendance, collapsible GPA What-If simulator (per-class sliders)
+- Data-freshness strip (per-source dots + Mission Control link)
+- Classes list: period badge, name, teacher · room, grade pill (80|B), +X to 90
+- Due-next rail, daily check-in (existing teen-private form)
+- Reference (all collapsed): Walton bell schedules (Daily/WEB tabs), Cobb calendar month grid + legend, 5-day Marietta weather (Open-Meteo, server-cached)
+
+**Per-class pages** (`/c/[slug]/school/[classSlug]`) — all d-dash sections + Mehedi's 3 new requirements:
+- Grade hero (numeric|letter, gap-to-90 leading), 98% Playbook peer tips
+- **Debriefing Chamber**: astronaut mission-debrief check-in — glowing rotating neon border, scan-line, divine orb as debriefing officer; fields covered/clicked/fuzzy/due-next + handout uploads (auto-tagged to current unit) + mood/energy/confidence; writes checkins → checkin_class_details → checkin_uploads (E4 067)
+- Assignments grouped: Missing / Upcoming / Past + per-assignment What-If simulator (prefers live classes.grade_weights, falls back to curated Cobb weights)
+- Explain It Back 60-sec self-test (voice + text, saves to class files)
+- Study Materials from Drive (units, CURRENT badge, search)
+- **My Resource Library**: student-owned CRUD, seeded from curated picks; 13 types each with own visual identity (Khan green, YouTube red, Kahoot purple…), cards lift on hover
+- Curated Study Resources (overview, ebook, Khan, YouTube, cheat sheet, games, practice quiz), Class Files, Teacher Inbox + email compose
+
+**Pull-health mission control** (`/c/[slug]/school/health`) — first-class deliverable:
+- Per-source cards (StudentVUE, ParentVUE, CTLS Learn/Parent, Teacher Emails, District Calendar, Check-in App): fresh/stale/error/running/never dots, last run, next run, rows pulled, rows-by-table, freshness age, consecutive errors, last error; machine-level breakdown; "All Sources Fresh" banner; recompute_school_sync_health() on every read
+- Reads E4's school_sync_health (066 ✅ live); degrades to sync_heartbeats → "Awaiting First Run" when empty
+
+**API routes (11 new):** dashboard, sync-health, weather, calendar (prefers school_calendar, falls back to curated), materials, peer-tips, study-resources, resource-library (+[id], +restore), checkins/[id]/class-details, checkins/[id]/handouts. All handleRoute + assertTenant + audit; never 500 on missing data.
+
+**Verify:** tsc clean (exit 0), `npm run build` green (BUILD_ID + full manifests, verified 14:28). Commits: a6e4986, 9931d1d (+ swept E5 work in 98fbd9f/398b358/c0b681d/8ecbef4 via Anchor integration). Pushed to origin/staging-build per Mehedi's push rule. NOT deployed (Anchor owns deploys — deploy11 in flight with this work).
+
+**Blockers / follow-ups for coordinator:**
+1. 068_class_handouts_storage.sql needs Supabase dashboard SQL editor apply (storage schema) — handout uploads degrade gracefully until then (browser work, escalated).
+2. school_sync_health has no rows yet — dashboard shows "Awaiting First Run" until E1/E2/E3 workers report via telemetry/health.py.
+3. Lit & Geometry grade_weights are {} — what-if falls back to curated weights (E2 detail pull to fill).
+4. Live-browser visual verification of the chamber + dashboard still needed (subagent cannot operate live browser).
+
+
+## 2026-10-12 ~10:29 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/BUILD-LOG.md
+
+
+## 2026-10-12 ~10:29 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/BUILD-LOG.md
+
+
+## 2026-10-12 ~10:28 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** tsc failed:
+.next/types/validator.ts(5,79): error TS2307: Cannot find module './routes.js' or its corresponding type declarations.
+
+
+
 ## 2026-10-12 ~10:30 EDT — Squad Oracle — The orb as a living presence
 
 **Mehedi's identity:** "Divine bright light, all-knowing, part of God — here to guide you through your journey and on your side to help you win."
