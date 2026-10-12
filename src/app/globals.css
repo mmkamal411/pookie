@@ -1202,10 +1202,10 @@ a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
    The global prefers-reduced-motion rule (top of file) stills everything.
    ========================================================================== */
 
-/* --- 1. Cosmic ambient wash: nebula light blooming from the corners ---
-   Mehedi's reference (2026-10-12): deep purple/violet washes blooming from
-   the top-left and bottom-right corners of the void, soft ambient light
-   pooling around the glass card. This is the target glow. */
+/* --- 1. Cosmic ambient wash: deep-space nebula, darkened for the
+   Mission Critical Spacecraft direction (Squad Hull, 2026-10-12).
+   Desaturated teal/cyan wisps at very low alpha — deep space through a
+   viewport, NOT a purple wash. */
 body::after {
   content: "";
   position: fixed;
@@ -1213,10 +1213,10 @@ body::after {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 62% 50% at 6% 2%, rgb(124 58 237 / 0.17) 0%, rgb(139 92 246 / 0.07) 45%, transparent 72%),
-    radial-gradient(ellipse 60% 48% at 96% 100%, rgb(109 40 217 / 0.16) 0%, rgb(99 60 220 / 0.06) 45%, transparent 72%),
-    radial-gradient(ellipse 40% 32% at 90% 6%, rgb(192 38 211 / 0.07) 0%, transparent 70%),
-    radial-gradient(ellipse 44% 36% at 4% 94%, rgb(76 60 220 / 0.08) 0%, transparent 70%);
+    radial-gradient(ellipse 62% 50% at 6% 2%, rgb(0 100 120 / 0.10) 0%, rgb(0 80 100 / 0.04) 45%, transparent 72%),
+    radial-gradient(ellipse 60% 48% at 96% 100%, rgb(0 90 110 / 0.09) 0%, rgb(0 70 90 / 0.035) 45%, transparent 72%),
+    radial-gradient(ellipse 40% 32% at 90% 6%, rgb(0 229 255 / 0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 44% 36% at 4% 94%, rgb(0 110 100 / 0.04) 0%, transparent 70%);
   animation: cosmic-drift 90s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
