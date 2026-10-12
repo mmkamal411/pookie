@@ -322,3 +322,55 @@ Squad 3 starts after Platform Team 1's access-model core lands (per TEAM-CHARTER
 ---
 
 *PM notes: priority is owned here; execution is owned by the squad. Blockers → Managing Director via BUILD-LOG handoff. Acceptance rule (WBS dictionary): a work package is done only when its checklist/spec mark flips to ✅, re-verified by the owning expert domain or QA — not when code is written.*
+
+---
+
+## F. Tech-lead consolidation (2026-10-12) — implementation record
+
+Two backend implementations grew in parallel (`school-track.ts`/`family-links.ts`
+by the squad backend agent; migrations 026–033 + services by the tech lead).
+Consolidated to **one truth per surface** (details in §F.1). Deviations from the
+WP acceptance text above are flagged with rationale — functionality is
+preserved; only the storage shape changed.
+
+### F.1 Unification decisions
+
+| # | Decision | Rationale |
+|---|---|---|
+| 1 | Counselor segregation via `teacher_messages.sender_type` flag + `body_withheld` (NOT a separate `counselor_messages` table) | The flag contract is wired end-to-end (routes + `teacher-thread.tsx` renders counselor sections from `sender_type`). **Deviation from WP-S3-04's "separate table" text:** the ASCA B.2 visibility contract (parents = metadata-only, body withheld on every parent-visible read path) is preserved; one inbox truth avoids a schema fork. The withhold is enforced in `listMessagesV2`/`listTeacherMessagesLegacy` — the only parent-visible readers. |
+| 2 | Path-to-90 checkboxes live in `study_plans.plan[]` (NOT a separate `path_to_90_actions` table) | Wired frontend (`path-to-90.tsx` toggles via `PATCH plans/[planId] {items}`). **Parent read-only enforced at two layers:** service (`togglePlanItems` requires teen role) + DB trigger `study_plans_guard_teen_checkboxes` (045) rejecting parent-role UPDATEs of `plan`. |
+| 3 | Second-parent claims/invites via `parent_claims`/`parent_invites` + SECURITY DEFINER RPCs (049); `family-links.ts` delegates to them | The draft `family_claims` matching ran under caller-JWT RLS (cannot work: children RLS restricts to own tenants, or would be an enumeration oracle if permissive). RPC design: silent server-side match, uniform responses, in-DB rate limits (5/hr, 20/day), 30-day lockouts, 14-day escalation, atomic single-use redeem, hashed invite codes. `family_claims`/`family_invites` tables NOT created (047 §4 documents the supersession). |
+| 4 | Lab-safety pulse on `checkins.lab_read_safety_card` + `lab_anonymous_question` (047) — no separate table | Wired check-in contract; free-text box blocklisted from parent payloads (`PARENT_BLOCKED_FIELDS`). |
+| 5 | `checkin_estimates` = 042 rich schema + `label` column (047 patch) | Calibration engine needs `child_id/kind/description/estimate_date/error_pct`; wired contract needs `label`. Both present. |
+| 6 | `study_sparks.body` (not `spark_text`) + generated `ai_label` (043) | Wired `StudySpark` type; label as data. |
+| 7 | `requireChildRole` single definition in `services/school.ts` (throws `CHILD_ROLE_REQUIRED`); `school-track.ts` re-exports | The duplicate threw the wrong code (`PARENT_ROLE_REQUIRED`). |
+| 8 | `POST …/school/checkins` now requires the teen role | Route comment already promised "parents never POST here"; code now enforces it (FR-SCHOOL-003 teen ownership). |
+
+### F.2 Migration map (final, as renumbered by the migration coordinator)
+
+041 provenance (`teacher_messages.sender_type/source/safety_critical/fetched_at`, `authored_by`, provenance columns, `is_child_authority()`/`provenance_label()`)
+042 check-in calibration (`checkin_estimates`, `calibration_scores`, `teen_privacy_settings`, `recompute_calibration()`, `purge_expired_checkins()`)
+043 study sparks (`study_sparks` + qa/review queue + `purge_expired_sparks()`)
+044 quiz pipeline (`flashcards`, `quiz_items` fail-closed + opt-in trigger, `formula_bank`)
+045 forecast store (`forecasts`) + `study_plans_guard_teen_checkboxes` trigger
+047 frontend-contract patch (`checkin_estimates.label`, `checkins.lab_*`; supersession notes for family_* tables)
+049 second-parent claim (full RPC suite; requires Platform 018 `granted_by`/`status` first)
+032 college/504/graduation (+ GSFC `gsfc-2026.1` + GA 23-credit `ga-2026.1` seeds)
+033 AI governance (`safety_events` emitter → Squad 1 router; `user_verifications`; `direct_mode_eligible()`)
+
+### F.3 New API contracts (additive unless noted)
+
+`POST/GET …/school/forecast/compute|latest`, `…/calibration/estimates` (teen),
+`…/checkin-settings` (teen), `…/counselor-messages`, `…/quiz-items`,
+`…/flashcards`, `GET /api/v1/formulas`, `PATCH …/ai-practice-opt-in` (teen, under-13 refused),
+`…/graduation-audit`, `…/accommodations`, `GET /api/v1/ai/direct-mode/eligibility`,
+`POST /api/v1/ai/crisis-signal`.
+Changed: `GET …/teacher-messages` (parent CC-redaction + `body_redacted`, counselor `body_withheld` — additive fields);
+`POST …/teacher-messages` (stamps `authored_by`); `POST …/checkins` (teen-only).
+
+### F.4 Verification
+
+- `node --test` school-track suites: 24/24 pass (forecast golden fixtures + property tests; redaction; safety tagger; blocklist; spark fence; graduation audit; crisis detection)
+- `npx tsc --noEmit`: 0 errors required before commit
+- Migrations 032/033/041–050: pglast parse 17/17
+- Blockers: Platform 018 must land before 049 applies (asserted at apply time by the migration itself).

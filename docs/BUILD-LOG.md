@@ -3,6 +3,19 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~08:20 EDT — Squad 3 Tech Lead (staging-build): BACKEND CONSOLIDATION + API SURFACE COMPLETE
+
+**Consolidation:** two backend implementations had grown in parallel (`school-track.ts`/`family-links.ts` vs the 026–033 migration series + new services). Unified to one truth per surface — counselor mail on `teacher_messages.sender_type` (wired `teacher-thread.tsx` contract), Path-to-90 checkboxes on `study_plans.plan[]` + DB trigger `study_plans_guard_teen_checkboxes` (parents blocked even on direct DB writes), lab pulse on `checkins.lab_*`, second-parent on `parent_claims`/`parent_invites` + 049 RPCs (the draft `family_claims` matching could not work under caller-JWT RLS — RPCs do the silent match server-side), sparks on `study_sparks.body` + generated `ai_label`. NO PLACEHOLDERS: every RPC/endpoint is real — uniform anti-oracle responses, in-DB rate limits (5/hr, 20/day), 30-day lockouts, 14-day escalation, atomic single-use redeems, hashed invite codes, CC redaction (FR-SCHOOL-016, fail-closed), counselor body-withhold (ASCA B.2), parent blocklist on serializers, verified-DOB 18+ gate, fixed 988 handoff script. **Removed all degradation fallbacks** — schema is guaranteed by the migration chain; functions assume columns exist (fail loudly otherwise).
+
+**New (this commit):** 12 new API routes — `forecast/compute|latest`, `calibration/estimates` (teen-only), `checkin-settings` (teen-owned retention), `counselor-messages`, `quiz-items` (fail-closed: always `[]` in v1), `flashcards`, `formulas`, `ai-practice-opt-in` (teen-only, under-13 refused), `graduation-audit`, `accommodations`, `ai/direct-mode/eligibility`, `ai/crisis-signal`; `teacher-messages` GET switched to the redacting reader; `POST …/checkins` now teen-only; manual assignments stamped `app_generated`; `family-links.ts` adapted to the committed route contract (session-based: `createFamilyClaim(body)`, `listMyClaims()`, `listIncomingClaims()`, `decideClaim(claimId, decision)`, `acceptFamilyInvite(token)`). Migrations 041/042/043/044/045/047/049/032/033 all applied to the file tree (renumbered by the migration coordinator; 049 asserts Platform 018's `granted_by`/`status` at apply time). Squad backlog updated (`docs/squad3/BACKLOG.md` §F: unification table, API contracts, migration map, verification).
+
+**Verification:** `npx tsc --noEmit` — 0 errors in all Squad 3 files (remaining errors are other squads' pre-existing: driving/rules, faq, grants, coparenting, shopping-board, plaid, support chat); `node --test` — 24/24 pass (forecast golden fixtures + property tests; redaction; safety tagger; blocklist; spark fence; graduation audit; crisis detection); eslint — 0 errors/warnings on Squad 3 services; migrations pglast-parse 17/17.
+
+**Blockers:** (1) Platform Team 1's 018 must land before 049 applies — the migration asserts and fails loudly if absent; (2) live DB apply needs Mehedi's dashboard session (sandbox can't DDL) — single apply-and-verify session per SCHEDULE.md; (3) nightly workers (`purge_expired_checkins()`, `purge_expired_sparks()`, `escalate_stale_claims()`) are real service functions awaiting DevOps cron scheduling; (4) CAPTCHA on claim POST required before public launch (FR-AUTH-011).
+
+**Next:** frontend wires the new endpoints; quiz machine-verifier + spark generation pipeline are v2; claim human-review console is staff tooling.
+
+
 ## 2026-10-12 ~05:30 EDT — Squad 3 Senior Frontend Engineer (staging-build): SCHOOL TRACK UI COMPLETE (9 missions)
 
 **MD directives honored:** no placeholders (every screen fetches real endpoints; honest loading/error/empty states only), D5-revised open signup (full claim flow, not invite-only), "unfiltered" retired from all Pookie copy/comments (R7).

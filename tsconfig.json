@@ -13,6 +13,10 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    // Allows explicit `.ts` extensions on relative imports (used by the
+    // dependency-free pure modules so `node --test` can type-strip them
+    // without a bundler or path-alias loader). Permitted with noEmit.
+    "allowImportingTsExtensions": true,
     "plugins": [
       {
         "name": "next"

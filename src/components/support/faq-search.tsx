@@ -126,5 +126,3 @@ export function FaqSearch({ childSlug }: { childSlug: string }) {
     </div>
   );
 }
-
-export { SECTION_LABEL as FAQ_SECTION_LABEL };
