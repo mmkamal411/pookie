@@ -51,7 +51,7 @@ export const GROVES: Grove[] = [
       { id: "W2", name: "Health", watchOver: "Vitals, trends, and gentle glanceables — the body you live in.", seedAction: "Connect your health app", status: "live", route: "/health" },
       { id: "W8", name: "Wellbeing", watchOver: "The mood pulse — how the day actually felt.", seedAction: "Start the daily pulse", status: "live", route: "/health/wellbeing", teenPrivate: true },
       { id: "W13", name: "Meals", watchOver: "What's for dinner — planned, not panicked.", seedAction: "Plan this week's meals", status: "live", route: "/health/meals" },
-      { id: "W22", name: "Activity", watchOver: "Steps, workouts, the movement log — no streaks, no calorie burn for teens.", seedAction: "Connect your fitness tracker", status: "seedling", route: null },
+      { id: "W22", name: "Activity", watchOver: "Steps, workouts, the movement log — training for the mission, logged by hand.", seedAction: "Log your first workout", status: "live", route: "/health/activity" },
       { id: "W23", name: "Nutrition", watchOver: "Fuel for the day — learning and meal ideas, never calorie or weight-loss tracking for teens.", seedAction: "Explore food & fuel", status: "live", route: "/health/nutrition" },
     ],
   },
@@ -87,7 +87,7 @@ export const GROVES: Grove[] = [
     modules: [
       { id: "W3", name: "Safety", watchOver: "Policies and coverage — peace of mind, organized.", seedAction: "Add your first policy", status: "seedling", route: null },
       { id: "W19", name: "Emergency", watchOver: "When seconds count — the plan, the numbers, the vault.", seedAction: "Build the emergency plan", status: "seedling", route: null },
-      { id: "W15", name: "Screen Time", watchOver: "Screens with sanity — limits that actually stick.", seedAction: "Set the first boundary", status: "seedling", route: null },
+      { id: "W15", name: "Screen Time", watchOver: "Screens with sanity — limits that actually stick.", seedAction: "Set the first boundary", status: "live", route: "safety/screen-time" },
     ],
   },
   {
@@ -101,7 +101,7 @@ export const GROVES: Grove[] = [
       { id: "W27", name: "Events", watchOver: "What's happening near you — AI-curated, family-fit.", seedAction: "What does your family love?", status: "live", route: "/travel/events" },
       { id: "W28", name: "Restaurants", watchOver: "Where should we eat tonight — taste-learned, not stars.", seedAction: "Build your taste profile", status: "live", route: "/travel/restaurants" },
       { id: "W29", name: "Trails & Parks", watchOver: "Where can we go outside — conditions, kid-friendliness.", seedAction: "Set your home location", status: "live", route: "/travel/trails" },
-      { id: "W26", name: "Weather", watchOver: "The sky over your day — hyperlocal, decision-ready.", seedAction: "Where does your day happen?", status: "live", route: "/travel/weather" },
+      { id: "W26", name: "Weather", watchOver: "The sky over your day — hyperlocal, decision-ready.", seedAction: "Where does your day happen?", status: "live", route: "/household/weather" },
     ],
   },
   {

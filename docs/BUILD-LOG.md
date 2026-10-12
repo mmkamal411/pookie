@@ -2357,3 +2357,23 @@ No critical issues. Baseline diffs within animation noise.
 
 ### Age gate audit
 All gates verified server-side, never UI-only. When in doubt, restrict — confirmed.
+
+## 2026-10-12 — Phase1-Activity (W22) — Activity tracking module built from scratch
+
+**Status:** Complete. DB migration + API + UI + registry. Committed to staging-build, pushed to origin. Not deployed.
+
+### What was built
+- **Migration `074_activity_tracking.sql`** (renumbered — 071 collided with Meals squad): `workouts` (id, owner_user_id, child_id nullable, type, duration_min, distance_mi, calories, notes, logged_at, created_at) + `activity_steps` (owner_user_id, child_id nullable, logged_date, steps, step_goal; COALESCE unique index on owner+day+child). Household RLS via `is_household_member()` on both tables. Calories are logged-only, never a target.
+- **Service `src/server/services/activity.ts`** — zod schemas, child_access assertion, streak computation (consecutive days ending today/yesterday), last-6-week totals, select-then-write steps upsert.
+- **API** `src/app/api/v1/household/activity/` — GET (range=week|month, optional child_id → workouts + summary), POST (log workout), `[workoutId]/DELETE`, `steps/` GET+POST (manual step logging).
+- **UI `src/components/activity/activity-hub.tsx`** — 15-second quick log (7-type picker, duration presets, collapsible distance/calories/notes), This Week card (workouts, minutes, miles, day-streak), orb-celebrates milestones, Step Goal card with 7-day bars + honest "device sync arrives in a later phase" line, history with weekly totals + delete-with-confirm. Person toggle (Me / child). No blank pages — EmptyState with seed action.
+- **Page** `src/app/c/[childSlug]/health/activity/page.tsx` — tenant-scoped, force-dynamic.
+- **Registry `src/lib/modules.ts`** — W22 seedling → live, route `/health/activity`, seedAction "Log your first workout".
+
+### Verification
+- `tsc --noEmit`: zero errors in Phase1-Activity files (19 errors elsewhere are pre-existing in other squads' code — mail-board, insurance-hub, health/actions, .next validator for shopping/screen-time).
+- Migration check.sh: no 074 violations.
+- Not tested against a live Supabase (no apply yet — migration pending dashboard apply per APPLY_ORDER.md row added for 074).
+
+### MD directive compliance
+Fitness framed as "training for the mission" throughout. Device integrations deferred, nothing half-built.
