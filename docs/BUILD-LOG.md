@@ -3,6 +3,22 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — QA Engineer, Squad 2 Health Track (staging-build): QA-PLAN DELIVERED
+
+**Committed `docs/squads/squad2-health/QA-PLAN.md` (cbf6162). PLAN ONLY — executable the moment build starts; no code, no deploy.**
+
+**Coverage (every test maps to an FR/NFR ID; 🛑 = launch gate, health holds no real teen data until all pass on staging + sol-health §12 gates 2–6 clear):**
+- **§2 Tier × band matrix:** 27 cells (H0/H1/H2/H3 × <13/13–15/16–17/18+) each with positive + negative tests; H3-absolute bypass enumeration (grants, overrides, aggregates, break-glass, event metadata, parent-entered H3 content — all fail closed); unknown-DOB → teen_13_15 arm; `entered_by`-parent rows never widen visibility; property-based grant/revoke invariants (INV-1…INV-4).
+- **§3 RLS deny-by-default proofs:** `health_tier_visible()` unit truth table (committed JSON), policy-coverage audit on all 10 health tables, sibling-leakage (two children/same parent), revoked-grant immediacy (per-query predicate, no cache).
+- **§4 18+ cutover:** midnight job (grants expire, grace rows, `health_reconsent_status='pending'`, device tokens `suspended_pending_reauth`, `access_events`) runs without login; skip=`skipped_private`; per-tier toggles all default OFF; review–correct–seal with sealed-history exclusion; emergency-contact/access decoupling; idempotency test.
+- **§5 Deletion/retention:** tombstone immediacy, H3 hard-delete next-nightly, ≤30d hard delete + storage purge, backup-purge runbook, CI no-indefinite-retention audit query (H1>24mo, H3>12mo, tombstones>30d = build fail), grace auto-restrict with predicate-as-enforcement-point.
+- **§6 Negative/abuse:** `h0_minor_refusal`, H3 INSERT by parent → 403 + audit, calorie-field injection into `meal_checkins` (schema rejects; trigger backstop), deficit-target unrepresentability, link-code brute-force lockout, anon-key PostgREST bypass, IDOR, `granted_by` forgery; red-team chains (RT-001…RT-006 incl. compromised device tokens, support-agent RBAC).
+- **§7 Module suites:** W2 no-diagnosis (banned-word string-lint, anomaly path), W8 teen-only RLS + no parent aggregate endpoint by absence, W23/W13 <18 age-gate + engagement-only aggregates + clinician-gate NPI, W22 age rules, W28 allergy hard-blocks, G22 immunizations, SUD Part 2 separation (separate key, cross-reference build assertion, per-disclosure consent).
+- **§8 Non-functional:** EXPLAIN at 10k rows (p95 <200ms, >2× regression = CI fail), pg_cron idempotency, export PDF p95 <5s, 200-concurrent load, daily-update audit, a11y on consent flow.
+- **§9 Chaos:** Supabase down mid-cutover (transactional per subject, retryable), device token revoked mid-sync (fail closed, dedupe resume), missed grace sweeps, TZ-boundary birthdays.
+
+**Next:** fixtures/seed script (`tests/health/seed_health_qa.sql`) and CI wiring when migrations 022–028 land. Nothing executes until then — W2/W8 stay seedlings.
+
 ## 2026-10-12 ~03:45 EDT — Squad 1 Safety Track Coordinator (staging-build): SQUAD KICKOFF
 
 **Squad 1 — Safety Track** ⛑️ spun up per Mehedi's team charters (2 platform teams, 5 squads, 2 fractional teams). 5 expert agents fanned out in parallel:
