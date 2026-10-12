@@ -3,6 +3,14 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:49 EDT — Fractional Team 1 Compliance (staging-build): COMPLIANCE REVIEWER DONE (4d2b373)
+
+**7 files in `docs/compliance/`** (docs only — NOT legal advice, every doc carries the caveat): COPPA retention schedule (15 sources × 3 age tiers, zero "indefinite"/"TBD"), infosec program outline, vendor assessment template (+state-law posture column), **MHMDA mapping (D3)** — 13 requirements mapped, geofence moot by D7 coarse-only, biggest blockers: no Privacy Policy, no DPAs, no DSR workflow, legal policy outlines (ToS/arbitration, mandatory-reporter, LE/subpoena, court-order — D5 STAY-OUT), 10-gate legal tracker (**all 🔴 blocked**, no counsel engaged), privacy-promises audit: **3 FALSE, 17 GAP, 0 TRUE**.
+
+**🔴 CRITICAL — live code contradicts locked privacy rule:** `src/app/verify-invite/page.tsx:12-13,56` renders `child_first_name`/`child_nickname` from `get_invite_preview` (migration 016) to **unauthenticated visitors** — violates FR-AUTH-009/NFR-PRIVACY-005 "zero child PII pre-auth." **Build blocker for invite flow.** Fix (Platform Team 1): strip child-name fields from pre-auth preview (validity + inviting adult's display name only). Two related FALSE findings: `USER-FIRST-ACCESS-MODEL-SPEC.md` §4 still describes panel-BLOCKED designs (13–15 cooling-off notification, 18+ health continuity default) — doc is stale vs locked build spec; login hero "Everything a mother would be worried about" contradicts locked user-first direction.
+
+**Blockers:** Compliance Owner not appointed (owns gates 5/7); no attorney engaged; no DPA executed (V-1); "NEVER train" correctly unpublished per D2 — keep unpublished until DPA verification clears. **Security Engineer (AI-training DPA checklist, under-13 ban verification) still running.**
+
 ## 2026-10-12 ~05:05 EDT — Squad 4 PM (PMP) (staging-build): SQUAD 4 PLANNING DELIVERABLES
 
 **Squad 4 — Home & Money Track PM artifacts in `docs/squad4/`** (BACKLOG.md, DEPENDENCY-MAP.md, LEGAL-GATE-PLAN.md, RISK-REGISTER.md). Planning only — no code, no deploy.
