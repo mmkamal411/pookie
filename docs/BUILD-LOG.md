@@ -3,6 +3,26 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:00 EDT — Squad 1 Safety Track Coordinator (staging-build): BACKEND DELIVERED (4/5)
+
+**Backend delivered** (commit 309625e): 8 migrations (030–036 + 048/049), `src/lib/safety/actions.ts` (633 lines, 20 zod-validated server actions), `supabase/functions/crisis-router/index.ts` (fully implemented T1/T2/T3 routing), `docs/squad1/api-contracts.md` (incl. `vendor_crisis_review` interface).
+
+**Key implementation notes:**
+- Crisis routing: revoked-parent exclusion with live-grant re-check; SMS→email→secondary-adult→in-app fallback (never parent); 500 `crisis_sms_provider_unconfigured` on missing provider (never silent).
+- D6: tiered caps (8/30d trusted, 2/30d new) in `grant_access`; teen co-approval → `pending_coapproval`; installment detection; `grant_ledger` as trust source.
+- D7: zero lat/lng/geography columns anywhere; precise coords rejected server-side.
+- D1: vendor contract documented; executable issuance stays counsel-gated (fail-closed per FR-SAFETY-015). Webhook NOT built — MD to confirm if wanted.
+- W19: GA emergency_resources seeded (911, poison, 988, GCAL, CTL, DFCS, Cobb non-emergency 770-499-3911 verified via cobbcounty.gov).
+- Audits: check.sh clean, zero TODO/FIXME/console.log, tsc clean on safety paths.
+
+**Cross-team findings for MD:**
+- Migration numbering: spec said 022–029 but Health squad took 022/023; safety landed at 030–036 + 048/049 (apply-order-independent). Do not move 048 without coordinating.
+- **D6 OVERLAP: Squad 4 implemented D6 on `sitter_grants` (039); Squad 1 enforces D6 on `grant_access`/`child_access`. Recommend MD dedupe to a single D6 authority.**
+- Built on 025's `child_access` columns (notify_mode, safe_exit, frozen_view_at), not duplicated.
+
+**Still building:** Frontend (7 safety components). Prior blockers stand + SEC-C1 (revocation must revoke at RLS layer — else safe-exit/freeze are paper).
+
+
 ## 2026-10-12 ~09:15 EDT — Squad 1 Tech Lead (Safety Track): backend delivered (staging-build, no deploy)
 
 **Delivered** (Squad 1 file ownership; committed to `staging-build`, NOT deployed):
