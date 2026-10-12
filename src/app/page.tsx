@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isDemoRequest } from "@/lib/demo";
+import { shouldShowDemo } from "@/lib/demo";
 import {
   consumeInvite,
   getActiveChildId,
@@ -32,7 +32,9 @@ export default async function Home({
 
   // Demo mode: no session needed — the /demo route already set the
   // active-child cookie. Walk straight into the demo dashboard.
-  if (!user && (await isDemoRequest())) {
+  // shouldShowDemo is false for real users: a stale demo cookie never
+  // hijacks a logged-in session.
+  if (await shouldShowDemo(user)) {
     redirect("/c/dawson");
   }
 

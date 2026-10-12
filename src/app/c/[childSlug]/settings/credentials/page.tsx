@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { getDemoMemberships, isDemoRequest } from "@/lib/demo";
+import { getDemoMemberships, shouldShowDemo } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
+import { createClient } from "@/lib/supabase/server";
 import { SettingsTabs, ParentOnlyNotice } from "@/components/settings/settings-ui";
 import { PortalsView } from "@/components/settings/credentials-view";
 import { DEMO_CHILD_ID } from "@/lib/management-demo";
@@ -12,7 +13,13 @@ export const dynamic = "force-dynamic";
 export default async function CredentialsPage({ params }: { params: Promise<{ childSlug: string }> }) {
   const { childSlug } = await params;
 
-  if (await isDemoRequest()) {
+  // Real sessions always win over a stale demo cookie.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (await shouldShowDemo(user)) {
     const child = getDemoMemberships()[0].child;
     const name = child.nickname ?? child.first_name;
     return (

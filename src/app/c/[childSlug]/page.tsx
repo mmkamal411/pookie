@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { getDemoMemberships, getDemoSchoolOverview, isDemoRequest } from "@/lib/demo";
+import { getDemoMemberships, getDemoSchoolOverview, shouldShowDemo } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
+import { createClient } from "@/lib/supabase/server";
 import { getSchoolOverview } from "@/server/services/school";
 import { OverviewDashboard } from "@/components/overview/overview-dashboard";
 
@@ -16,7 +17,13 @@ export const dynamic = "force-dynamic";
 export default async function HomePage({ params }: { params: Promise<{ childSlug: string }> }) {
   const { childSlug } = await params;
 
-  if (await isDemoRequest()) {
+  // Real sessions always win over a stale demo cookie.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (await shouldShowDemo(user)) {
     const child = getDemoMemberships()[0].child;
     return (
       <OverviewDashboard

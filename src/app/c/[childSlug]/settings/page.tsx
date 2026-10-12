@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { isDemoRequest } from "@/lib/demo";
+import { shouldShowDemo } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
+import { createClient } from "@/lib/supabase/server";
 import { SettingsTabs, ParentOnlyNotice } from "@/components/settings/settings-ui";
 import { SettingsView } from "@/components/settings/settings-view";
 import { demoProfile, demoChildren, demoNotificationPrefs } from "@/lib/management-demo";
@@ -15,7 +16,13 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage({ params }: { params: Promise<{ childSlug: string }> }) {
   const { childSlug } = await params;
 
-  if (await isDemoRequest()) {
+  // Real sessions always win over a stale demo cookie.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (await shouldShowDemo(user)) {
     return (
       <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
         <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Settings</h1>

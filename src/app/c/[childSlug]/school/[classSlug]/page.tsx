@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getDemoClassDetail, getDemoMemberships, isDemoRequest, DEMO_CHILD_ID } from "@/lib/demo";
+import { getDemoClassDetail, getDemoMemberships, shouldShowDemo, DEMO_CHILD_ID } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getClassDetail, hasCheckinToday } from "@/server/services/school";
@@ -20,7 +20,13 @@ export default async function ClassPage({
 }) {
   const { childSlug, classSlug } = await params;
 
-  if (await isDemoRequest()) {
+  // Real sessions always win over a stale demo cookie.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (await shouldShowDemo(user)) {
     const detail = getDemoClassDetail(classSlug);
     if (!detail) notFound();
     const child = getDemoMemberships()[0].child;
@@ -41,7 +47,6 @@ export default async function ClassPage({
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
-  const supabase = await createClient();
   const { data: cls } = await supabase
     .from("classes")
     .select("id")

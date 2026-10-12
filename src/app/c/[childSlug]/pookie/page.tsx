@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { getDemoMemberships, getDemoSchoolOverview, isDemoRequest } from "@/lib/demo";
+import { getDemoMemberships, getDemoSchoolOverview, shouldShowDemo } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
+import { createClient } from "@/lib/supabase/server";
 import { getSchoolOverview } from "@/server/services/school";
 import { PookieChat } from "@/components/pookie/pookie-chat";
 import { PookieNudgeHost } from "@/components/pookie/pookie-nudge";
@@ -17,7 +18,13 @@ export const dynamic = "force-dynamic";
 export default async function PookiePage({ params }: { params: Promise<{ childSlug: string }> }) {
   const { childSlug } = await params;
 
-  if (await isDemoRequest()) {
+  // Real sessions always win over a stale demo cookie.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (await shouldShowDemo(user)) {
     const child = getDemoMemberships()[0].child;
     const name = child.nickname ?? child.first_name;
     const overview = getDemoSchoolOverview();
