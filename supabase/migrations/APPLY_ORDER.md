@@ -32,8 +32,21 @@ a file that already applied; always check that table first.
 | 021 | `021_*.sql` | TBD (Backend — must land before any RPC that writes events) | ❌ File not yet on branch |
 | 022 | `022_*.sql` | TBD (Backend — not landed yet) | ❌ File not yet on branch |
 | 023 | `023_*.sql` | TBD incl. expires_at column (Backend — must land AFTER 018; Squad 4 W12 depends on expires_at) | ❌ File not yet on branch |
-| 024 | `024_*.sql` | TBD (Security — not landed yet) | ❌ File not yet on branch |
-| 025 | `025_*.sql` | TBD (Security — not landed yet) | ❌ File not yet on branch |
+| 024 | `024_w21_mail_retention.sql` | W21 mail retention policy | ❌ Pending — Mehedi dashboard apply |
+| 025 | `025_access_scopes.sql` + `025_w11_spending.sql` + `025_wellbeing.sql` | Visibility scopes + W11 spending + Wellbeing shell (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 026 | `026_immunizations.sql` + `026_support_tickets.sql` | Immunizations + support tickets (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 027 | `027_faq.sql` + `027_nutrition_agegate.sql` | FAQ + nutrition age gate (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 028 | `028_sud_separation.sql` + `028_support_grants.sql` | SUD separation + support grants (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 029 | `029_immunizations.sql` | Immunizations | ❌ Pending — Mehedi dashboard apply |
+| 030 | `030_safety_crisis_and_grant_tiers.sql` + `030_sud_separation.sql` | Squad 1: crisis_rulesets/events/alerts + D6 grant_ledger + grant_access redefined (D6 caps/co-approval) + SUD separation (multiple files share the number; `030_safety_*` sorts first) | ❌ Pending — Mehedi dashboard apply |
+| 031 | `031_nutrition_agegate.sql` + `031_safety_pending_revokes.sql` | Nutrition age gate + Squad 1: pending_revokes + parent_sync_frozen_until + revoke/safe-exit RPCs (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 032 | `032_college_504_graduation.sql` + `032_support_tickets_base.sql` + `032_safety_outing_plans.sql` | College 504/graduation + support tickets base + Squad 1: outing_plans + Explorer Setup gate (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 033 | `033_ai_governance.sql` + `033_support_tickets_rbac.sql` + `033_safety_emergency.sql` | AI governance + support tickets RBAC + Squad 1: W19 emergency_resources + emergency_medical + break-glass tokens (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 034 | `034_support_grants.sql` + `034_safety_trails.sql` | Support grants + Squad 1: trails + trail_safety_guidance + age-gated rpc_get_trails (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 035 | `035_w11_spending.sql` + `035_safety_events.sql` | W11 spending + Squad 1: events vetting model + age-gated rpc_get_events + reports (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 036 | `036_w7_vault.sql` + `036_safety_extensions.sql` | W7 vault + Squad 1: emergency_requests (break-glass Paths A+B, counsel-gated schema only) + court_orders (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 048 | `048_safety_trusted_adults.sql` | Squad 1: trusted_adults + Vault-backed contacts + link-code verification + is_teen_of() + log_access_event 8-arg overload (repairs 018's call shape). NOTE: 030–036 were written apply-order-independent of this file (inlined teen checks; FKs backfilled in 049) | ❌ Pending — Mehedi dashboard apply |
+| 049 | `049_second_parent_claim.sql` + `049_safety_trusted_adult_fks.sql` | Second-parent claim + Squad 1: FK backfill trusted_adults → crisis_events/crisis_alerts/outing_plans/emergency_requests (multiple files share the number; `049_safety_*` sorts first, both after 048) | ❌ Pending — Mehedi dashboard apply |
 
 ### Status notes
 - **001–014:** last BUILD-LOG evidence (2026-10-12, DBA/BE entries) says these were delivered
@@ -68,8 +81,8 @@ When a new migration file lands on the branch:
    gap unexplained.
 
 ## ⚠️ Active collision risk (2026-10-12)
-Multiple teams have claimed overlapping ranges: Squad 1 Tech Lead owns 022–029
-(`trusted_adults`, crisis tables), Squad 2 Tech Lead drafted 022–027
-(health_tier enum — DRAFT, explicitly not for apply). Platform Team 1 Backend
-reserves 017–023 here. **Coordinators: renumber Squad 1 to 026+ and Squad 2
-health amendments to stay DRAFT or take 030+ before any of these apply.**
+Multiple teams have claimed overlapping ranges. RESOLVED for Squad 1: the
+022–029 safety migrations renumbered to **029–036** (landed 2026-10-12, rows
+above). Squad 2 health amendments stay DRAFT or take 030+ — note 030 is now
+taken by Squad 1 (crisis + grant tiers). Platform Team 1 Backend 017–023 all
+landed. Coordinators: the next free number is 037.

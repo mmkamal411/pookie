@@ -3,6 +3,25 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~09:15 EDT — Squad 1 Tech Lead (Safety Track): backend delivered (staging-build, no deploy)
+
+**Delivered** (Squad 1 file ownership; committed to `staging-build`, NOT deployed):
+- Migrations: `030_safety_crisis_and_grant_tiers.sql` (crisis_rulesets/events/alerts + D6 grant_ledger + grant_access redefined with D6 caps/co-approval), `031_safety_pending_revokes.sql` (pending_revokes + parent_sync_frozen_until + initiate/cancel/execute/safe-exit/regrant RPCs), `032_safety_outing_plans.sql` (outing_plans + Explorer Setup gate + dusk guard), `033_safety_emergency.sql` (W19 resources GA seed + emergency_medical + break-glass tokens), `034_safety_trails.sql` (trails + guidance + age-gated rpc_get_trails), `035_safety_events.sql` (events vetting + age-gated rpc_get_events + reports), `036_safety_extensions.sql` (emergency_requests counsel-gated schema + court_orders), `049_safety_trusted_adult_fks.sql` (FK backfill). Trusted-adults core (`trusted_adults`, Vault-backed contacts, link-code verification, `is_teen_of()`, `log_access_event` 8-arg overload) lives at `048_safety_trusted_adults.sql` per the coordinator's renumber.
+- `src/lib/safety/actions.ts` + `src/lib/safety/notify.ts` (server actions; zod; typed `{ok,data}|{ok:false,error}`; SMS/email webhook contract, loud failure when unconfigured).
+- `supabase/functions/crisis-router/index.ts` (T1/T2/T3 routing, trusted-adult chain with revoked-parent exclusion, SMS→email→secondary-adult→in-app fallback, 500 on unconfigured provider, D7 lat/lng rejection, service-role + secret auth).
+- `docs/squad1/api-contracts.md` (every RPC/Edge Function signature, `vendor_crisis_review` interface per D1, sync-worker contract for `parent_sync_frozen_until`, D6/D7 rules, launch gates).
+- `APPLY_ORDER.md` rows for 029–036/048/049.
+
+**MD decisions incorporated:** D1 (break-glass Path A built against the `vendor_crisis_review` API contract — interface + schema only; executable disclosure tooling stays counsel-gated per FR-SAFETY-015), D6 (grant_access: 8/30d trusted vs 2/30d new caps, teen co-approval for new grantees, installment flagging, timeboxed grants ≤90d with operational scopes only), D7 (coarse-only location: no lat/lng columns anywhere; RPCs/Edge Function reject precise coordinates server-side).
+**NO-PLACEHOLDERS:** full DDL/RLS/RPC logic, GA emergency seed, v1 crisis ruleset seed; check.sh clean on all Squad 1 files; zero TODO/FIXME/console.log; tsc clean on `src/lib/safety/*`.
+
+**Cross-team notes:**
+- **SEC-C2 (audit) is repaired by 048:** the `log_access_event` 8-arg overload maps 018/019/020's call shape onto 021's `access_events` table (additive; 021 untouched). 018's `grant_access`/`revoke_access`/`apply_cooling_off_revocations` calls now resolve.
+- **Dependency-order hardening:** the coordinator's renumber put `trusted_adults` at 048, after files that reference it. 030–036 are written apply-order-independent: teen checks are inlined in RLS policies (the `is_teen_of()` helper is still in 048 for RPC bodies, which resolve at call time), and the four `trusted_adults` FKs are backfilled by `049_safety_trusted_adult_fks.sql` (guarded, idempotent). Do NOT move 048 earlier without coordinating — the current layout applies cleanly.
+- **Flag for MD/coordinator:** Squad 4's `039_w12_babysitters.sql` implements D6 separately on `sitter_grants`; mine enforces D6 on `grant_access`/`child_access` (030). Two enforcement points for the same decision — recommend a single D6 authority (or an explicit scope split) in the dedupe pass. Also `grant_access` 3-arg callers now resolve to the D6 version (old signature dropped per 018's own forward note); SEC-H7 (invite-verification bypass) remains a founder call.
+- **Depends on:** SEC-C1 fix (revocation must actually revoke at the RLS layer, else `parent_sync_frozen_until` and safe-exit are paper); notify fan-out workstream for delivery of `notify_mode` intents (031 records intent + timing; delivery is out of scope per the 001 precedent).
+- **Not built (gated):** break-glass disclosure tooling, LE portal, approval UI, vendor webhook issuance (FR-SAFETY-015/NFR-LEGAL-006); vendor selection is the MD's action item.
+
 ## 2026-10-12 ~08:30 EDT — Security Engineer (Fractional Team 2): SECURITY AUDIT COMPLETE — 4 CRITICALS BLOCK 017+
 
 **Scope:** static audit of `supabase/migrations/001–016` (47 tables, 114 CREATE POLICY statements — all RLS-enabled, per-table matrix in `docs/security/SECURITY-AUDIT-REPORT.md`) + blocking-issue review of 017–050 as landed. **Findings: 🔴4 Critical · 🟠8 High · 🟡6 Medium · 🟢5 Low.** Full report: `docs/security/SECURITY-AUDIT-REPORT.md`. (Corroborates 04:50 compliance entry: `children.user_id` phantom column independently confirmed in 021/025 policies.)
