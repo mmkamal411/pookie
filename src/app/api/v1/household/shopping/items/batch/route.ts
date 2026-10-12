@@ -24,6 +24,7 @@ const batchSchema = z.object({
     .max(50),
   source: z.enum(['meal-plan', 'recurring', 'ai-suggestion']),
   source_ref: z.record(z.string(), z.unknown()).optional(),
+  list_id: z.string().uuid().optional(),
 });
 
 export const POST = handleRoute(async (ctx, req) => {
@@ -33,7 +34,7 @@ export const POST = handleRoute(async (ctx, req) => {
     failWith(ErrorCodes.PARENT_ROLE_REQUIRED);
   }
   const supabase = await createClient();
-  const list = await resolveHouseholdList(supabase, household);
+  const list = await resolveHouseholdList(supabase, household, body.list_id);
   const result = await addItemsBatch(
     supabase,
     list.id,

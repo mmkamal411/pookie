@@ -35,8 +35,11 @@ import type {
   HealthTier,
   HubTierSection,
   MealCheckin,
+  MealIngredient,
   MealKind,
   MealPlan,
+  MealPreference,
+  MealRecipe,
   NutritionEngagement,
   NutritionState,
   ReconsentStatus,
@@ -856,6 +859,9 @@ const mealPlanDaySchema = z.object({
   lunchIdea: z.string().max(120).default(""),
   dinnerIdea: z.string().max(120).default(""),
   notes: z.string().max(280).default(""),
+  breakfastRecipeId: z.string().uuid().nullable().optional(),
+  lunchRecipeId: z.string().uuid().nullable().optional(),
+  dinnerRecipeId: z.string().uuid().nullable().optional(),
 });
 
 const mealPlanSchema = z
@@ -1584,4 +1590,348 @@ export async function saveEmergencyContacts(
     "dependency_not_ready",
     "Emergency contacts save with the Emergency module (Squad 1). Your sharing choices above are unaffected.",
   );
+}
+
+// ---------------------------------------------------------------------------
+// W13 elevate — recipe library, family preferences, allergen context
+//
+// Contract: meal_recipes + meal_preferences (migration 071), H1. No calorie
+// fields, no food logs. Explicit entry only; nothing is inferred.
+// ---------------------------------------------------------------------------
+
+const mealIngredientSchema = z.object({
+  name: z.string().min(1).max(80),
+  quantity: z.number().positive().max(9999).default(1),
+  unit: z.string().max(20).default(""),
+});
+
+const mealRecipeSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    name: z.string().min(1).max(120),
+    ingredients: z.array(mealIngredientSchema).max(40).default([]),
+    instructions: z.string().max(4000).default(""),
+    photoUrl: z.string().url().max(500).nullable().optional(),
+    tags: z.array(z.string().max(30)).max(12).default([]),
+    favorite: z.boolean().default(false),
+  })
+  .strict();
+
+const mealPreferenceSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    personLabel: z.string().min(1).max(60),
+    likes: z.array(z.string().max(40)).max(20).default([]),
+    dislikes: z.array(z.string().max(40)).max(20).default([]),
+    allergenFlags: z.array(z.string().max(40)).max(20).default([]),
+  })
+  .strict();
+
+function toMealRecipe(row: Record<string, unknown>): MealRecipe | null {
+  const id = typeof row.id === "string" ? row.id : null;
+  const name = typeof row.name === "string" ? row.name : null;
+  if (!id || !name) return null;
+  const ingredients: MealIngredient[] = Array.isArray(row.ingredients)
+    ? (row.ingredients as Array<Record<string, unknown>>)
+        .map((i) => ({
+          name: typeof i.name === "string" ? i.name : "",
+          quantity:
+            typeof i.quantity === "number" && i.quantity > 0 && i.quantity <= 9999
+              ? i.quantity
+              : 1,
+          unit: typeof i.unit === "string" ? i.unit : "",
+        }))
+        .filter((i) => i.name.length > 0)
+    : [];
+  return {
+    id,
+    name,
+    ingredients,
+    instructions: typeof row.instructions === "string" ? row.instructions : "",
+    photoUrl: typeof row.photo_url === "string" ? row.photo_url : null,
+    tags: Array.isArray(row.tags)
+      ? (row.tags as unknown[]).filter((t): t is string => typeof t === "string")
+      : [],
+    favorite: row.favorite === true,
+    updatedAt:
+      typeof row.updated_at === "string" ? row.updated_at : new Date().toISOString(),
+  };
+}
+
+/** Read the recipe library, most-recently-touched first. */
+export async function getMealRecipes(
+  childId: string,
+): Promise<HealthResult<{ recipes: MealRecipe[] }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from("meal_recipes")
+      .select("id, name, ingredients, instructions, photo_url, tags, favorite, updated_at")
+      .eq("subject_id", childId)
+      .order("updated_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+      return fail("read_failed", "Could not load your recipes. Try again.");
+    }
+    const recipes = (data ?? [])
+      .map((r) => toMealRecipe(r as Record<string, unknown>))
+      .filter((r): r is MealRecipe => r !== null);
+    return ok({ recipes });
+  } catch {
+    return fail("read_failed", "Could not load your recipes. Check your connection and try again.");
+  }
+}
+
+/** Create or update one recipe. */
+export async function saveMealRecipe(
+  childId: string,
+  raw: unknown,
+): Promise<HealthResult<{ recipeId: string | null }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  const refused = refuseMinorNumerics(raw, true); // recipes never hold numerics-as-health-data
+  if (refused) return refused;
+  const parsed = mealRecipeSchema.safeParse(raw);
+  if (!parsed.success) return fail("validation_failed", "That recipe did not look right. Try again.");
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+
+  const supabase = await createClient();
+  try {
+    const payload = {
+      subject_id: childId,
+      name: parsed.data.name.trim(),
+      ingredients: parsed.data.ingredients.map((i) => ({
+        name: i.name.trim(),
+        quantity: i.quantity,
+        unit: i.unit.trim(),
+      })),
+      instructions: parsed.data.instructions.trim(),
+      photo_url: parsed.data.photoUrl ?? null,
+      tags: parsed.data.tags.map((t) => t.trim()).filter(Boolean),
+      favorite: parsed.data.favorite,
+      updated_at: new Date().toISOString(),
+    };
+    let id: string | null = null;
+    if (parsed.data.id) {
+      const { data, error } = await supabase
+        .from("meal_recipes")
+        .update(payload)
+        .eq("id", parsed.data.id)
+        .eq("subject_id", childId)
+        .select("id")
+        .single();
+      if (error || !data) {
+        if (error && isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+        return fail("write_failed", "Could not save that recipe. Try again.");
+      }
+      id = data.id;
+    } else {
+      const { data, error } = await supabase
+        .from("meal_recipes")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        if (error && isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+        return fail("write_failed", "Could not save that recipe. Try again.");
+      }
+      id = data.id;
+    }
+    return ok({ recipeId: id });
+  } catch {
+    return fail("write_failed", "Could not save that recipe. Try again.");
+  }
+}
+
+/** Delete a recipe. Plans that referenced it keep their meal name as text. */
+export async function deleteMealRecipe(
+  childId: string,
+  recipeId: string,
+): Promise<HealthResult<{ done: boolean }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+  const supabase = await createClient();
+  try {
+    const { error } = await supabase
+      .from("meal_recipes")
+      .delete()
+      .eq("id", recipeId)
+      .eq("subject_id", childId);
+    if (error) {
+      if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+      return fail("write_failed", "Could not delete that recipe. Try again.");
+    }
+  } catch {
+    return fail("write_failed", "Could not delete that recipe. Try again.");
+  }
+  return ok({ done: true });
+}
+
+/** Read the per-person preference rows. */
+export async function getMealPreferences(
+  childId: string,
+): Promise<HealthResult<{ preferences: MealPreference[] }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from("meal_preferences")
+      .select("id, person_label, likes, dislikes, allergen_flags")
+      .eq("subject_id", childId)
+      .order("person_label", { ascending: true })
+      .limit(12);
+    if (error) {
+      if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+      return fail("read_failed", "Could not load family preferences. Try again.");
+    }
+    const strArr = (v: unknown): string[] =>
+      Array.isArray(v) ? (v as unknown[]).filter((t): t is string => typeof t === "string") : [];
+    const preferences: MealPreference[] = (data ?? [])
+      .filter((r) => typeof r.person_label === "string")
+      .map((r) => ({
+        id: r.id ?? null,
+        personLabel: r.person_label,
+        likes: strArr(r.likes),
+        dislikes: strArr(r.dislikes),
+        allergenFlags: strArr(r.allergen_flags),
+      }));
+    return ok({ preferences });
+  } catch {
+    return fail("read_failed", "Could not load family preferences. Check your connection and try again.");
+  }
+}
+
+/**
+ * Save the whole preference list (upsert by person label). Rows omitted from
+ * the payload are removed, so the UI is the single source of truth.
+ */
+export async function saveMealPreferences(
+  childId: string,
+  raw: unknown,
+): Promise<HealthResult<{ done: boolean }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  const parsed = z.array(mealPreferenceSchema).max(12).safeParse(raw);
+  if (!parsed.success) return fail("validation_failed", "Those preferences did not look right. Try again.");
+  const labels = parsed.data.map((p) => p.personLabel.trim().toLowerCase());
+  if (new Set(labels).size !== labels.length) {
+    return fail("validation_failed", "Each person needs their own name.");
+  }
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+
+  const supabase = await createClient();
+  try {
+    const clean = parsed.data
+      .map((p) => p.personLabel.trim())
+      .filter(Boolean);
+    // Upsert each person, then drop rows no longer present.
+    for (const p of parsed.data) {
+      const label = p.personLabel.trim();
+      if (!label) continue;
+      const { error } = await supabase.from("meal_preferences").upsert(
+        {
+          subject_id: childId,
+          person_label: label,
+          likes: p.likes.map((s) => s.trim()).filter(Boolean),
+          dislikes: p.dislikes.map((s) => s.trim()).filter(Boolean),
+          allergen_flags: p.allergenFlags.map((s) => s.trim()).filter(Boolean),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "subject_id,person_label" },
+      );
+      if (error) {
+        if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+        return fail("write_failed", "Could not save preferences. Try again.");
+      }
+    }
+    if (clean.length > 0) {
+      const { error } = await supabase
+        .from("meal_preferences")
+        .delete()
+        .eq("subject_id", childId)
+        .not("person_label", "in", `(${clean.map((c) => `"${c.replace(/"/g, "")}"`).join(",")})`);
+      if (error && !isRelationMissing(error)) {
+        return fail("write_failed", "Could not tidy up old preferences. Try again.");
+      }
+    }
+  } catch {
+    return fail("write_failed", "Could not save preferences. Try again.");
+  }
+  return ok({ done: true });
+}
+
+/**
+ * Best-effort read of the H2 allergy list (sol-health section 10.1) for
+ * callers who may already see it: the subject themself, or a steward parent
+ * of an under-13. Everyone else gets an empty list — the planning UI falls
+ * back to the explicit meal_preferences allergen flags. Never fails the
+ * page; allergen warnings are advisory, never hard blocks here.
+ */
+export async function getMealAllergenContext(
+  childId: string,
+): Promise<HealthResult<{ allergens: Array<{ allergen: string; severity: string }> }>> {
+  let ctx: HealthContext;
+  try {
+    ctx = await requireContext(childId);
+  } catch (e) {
+    return e as HealthFailure;
+  }
+  const h2Visible = ctx.isSubject || (ctx.band === "under13" && ctx.role === "parent");
+  if (!h2Visible) return ok({ allergens: [] });
+  if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from("allergy_list")
+      .select("allergen, allergen_custom, severity")
+      .eq("subject_id", childId)
+      .is("deleted_at", null)
+      .limit(40);
+    if (error) {
+      if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
+      return ok({ allergens: [] });
+    }
+    const allergens = (data ?? [])
+      .map((r) => ({
+        allergen:
+          typeof r.allergen_custom === "string" && r.allergen_custom.trim()
+            ? r.allergen_custom.trim()
+            : typeof r.allergen === "string"
+              ? r.allergen
+              : "",
+        severity: typeof r.severity === "string" ? r.severity : "",
+      }))
+      .filter((a) => a.allergen.length > 0);
+    return ok({ allergens });
+  } catch {
+    return ok({ allergens: [] });
+  }
 }

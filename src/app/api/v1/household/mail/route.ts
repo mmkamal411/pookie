@@ -15,7 +15,7 @@ import { intakeMailPhoto, intakeMailManual, listMailItems } from '@/server/servi
 const listSchema = z.object({
   status: z.enum(['new', 'triaged', 'actioned', 'dismissed']).optional(),
   classification: z
-    .enum(['bill', 'tax', 'legal', 'insurance', 'medical', 'other', 'junk'])
+    .enum(['bill', 'tax', 'legal', 'insurance', 'medical', 'school', 'personal', 'other', 'junk'])
     .optional(),
   limit: z.coerce.number().int().positive().max(200).optional(),
 });

@@ -11,13 +11,14 @@ import { resolveHouseholdList, getHouseholdItem, removeItem } from '@/server/ser
 
 const removeSchema = z.object({
   reason: z.string().max(300).optional(),
+  list_id: z.string().uuid().optional(),
 });
 
 export const POST = handleRoute<{ itemId: string }>(async (ctx, req) => {
   const household = await assertHousehold();
   const body = removeSchema.parse(await req.json().catch(() => ({})));
   const supabase = await createClient();
-  const list = await resolveHouseholdList(supabase, household);
+  const list = await resolveHouseholdList(supabase, household, body.list_id);
   const existing = await getHouseholdItem(supabase, list.id, ctx.params.itemId);
   if (existing.added_by !== household.userId && household.role !== 'parent') {
     failWith(ErrorCodes.PARENT_ROLE_REQUIRED);

@@ -12,13 +12,15 @@ const addItemSchema = z.object({
   quantity: z.coerce.number().positive().max(9999).default(1),
   unit: z.string().max(20).optional(),
   note: z.string().max(300).optional(),
+  category: z.string().max(20).optional(),
+  list_id: z.string().uuid().optional(),
 });
 
 export const POST = handleRoute(async (ctx, req) => {
   const household = await assertHousehold();
   const body = addItemSchema.parse(await req.json());
   const supabase = await createClient();
-  const list = await resolveHouseholdList(supabase, household);
+  const list = await resolveHouseholdList(supabase, household, body.list_id);
   const { item, merged } = await addItem(supabase, list.id, household.userId, body);
   await auditEvent(household.anchorChildId, 'shopping_item.added', {
     item_id: item.id,
