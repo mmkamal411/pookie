@@ -2412,3 +2412,8 @@ All gates verified server-side, never UI-only. When in doubt, restrict — confi
 
 ### MD directive compliance
 Fitness framed as "training for the mission" throughout. Device integrations deferred, nothing half-built.
+
+## 2026-10-12 — Squad Telemetry E5: verification pass (post-compaction session)
+- Re-verified E5 deliverables on live staging-build tree: all school pages/routes/components present, E5 commits (9bdc5b4 and ancestors) in HEAD ancestry and pushed to origin/staging-build.
+- `npx tsc --noEmit` clean on live tree (exit 0). Full `npm run build` green on E5 tree; live-tree full builds currently running by other squads (did not fight the .next lock).
+- No E5 code changes in this session (tree already complete); no deploy (coordinator owns deploys).
