@@ -1653,3 +1653,15 @@ Built the full UI for all 7 Squad 4 modules against BACKEND-CONTRACTS.md, per UX
 
 ## 2026-10-12 08:12 EDT — Squad Stardust (voice & copy) claims
 Files: src/app/login/**, src/app/page.tsx, src/app/onboarding/**, copy in src/components/ui/empty-state.tsx, src/components/ui/status-pill.tsx, home/today/school page copy, src/app/me/page.tsx copy, src/app/select-child/page.tsx copy. Copy+styling only, no logic changes. Will skip files actively being edited by other squads.
+
+## 2026-10-12 ~08:25 EDT — Squad Quantum COMPLETE (commit 7cff703)
+
+**Delivered the unified lighting language.** All 4 missions done:
+1. Continuous neon borders: `.neon-pipe` (pink, Console) + `.neon-pipe-teal` + `.neon-pipe-violet` (Quantum) — one pipe language, three palette voices.
+2. Hover/touch: `.neon-pipe-lift` hover (Console) + `.quantum-press` active-state (Quantum) — 300ms eased everywhere, no snapping.
+3. Warmth pass: `.quantum-warm` golden undertone on empty states; elevated shared ui kit (Card/Badge/StatusPill/EmptyState/CollapseRow) + school spark cards + handled-disclosure. Chat bubbles, error panels, and Console's in-flight components untouched (their own visual languages).
+4. Consistency: glow palette documented (pink #f472b6 heart / teal #2dd4bf calm / violet #a78bfa depth / gold #fbbf24 warmth-sparing); `.quantum-ring` focus style for keyboard users.
+
+**Verification:** tsc clean on all touched files (2 remaining errors pre-existing in HEAD 4747b63, unrelated). Full `npm run build` completed exit 0 with these changes in-tree. CSS braces balanced; all new classes present.
+
+**For other squads:** `neon-pipe-teal/violet`, `quantum-warm`, `quantum-press`, `quantum-ring`, `pill-glow` are yours to use. Note: this commit also carried Console's in-flight globals.css sections (console/pipe/glide) — Console's components remain uncommitted for their own commit.
