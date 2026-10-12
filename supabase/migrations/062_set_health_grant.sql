@@ -59,42 +59,47 @@ DECLARE
   v_is_steward boolean;
 BEGIN
   IF v_uid IS NULL THEN
-    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'not_authenticated';
+    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'P0001';
   END IF;
 
   IF p_tier NOT IN ('H1', 'H2') THEN
     RAISE EXCEPTION 'health grant tier refused: % (only H1/H2 are grantable)', p_tier
-      USING ERRCODE = 'health_grant_tier_refused';
+      USING ERRCODE = 'P0001';
   END IF;
 
   IF p_child_id IS NULL OR p_grantee_user_id IS NULL OR p_enabled IS NULL THEN
     RAISE EXCEPTION 'child, grantee and enabled are required'
-      USING ERRCODE = 'health_grant_args_required';
+      USING ERRCODE = 'P0001';
   END IF;
 
   -- Authority: subject themself, or steward of an under-13 child.
+  -- SECURITY (2026-10-12): status='active' required — revoked/scheduled_revoke
+  -- rows must not pass the authority check.
   SELECT EXISTS (
     SELECT 1 FROM public.child_access ca
     WHERE ca.user_id = v_uid AND ca.child_id = p_child_id AND ca.role = 'child'
+      AND ca.status = 'active'
   ) INTO v_is_subject;
   SELECT EXISTS (
     SELECT 1 FROM public.child_access ca
     WHERE ca.user_id = v_uid AND ca.child_id = p_child_id AND ca.role = 'parent'
+      AND ca.status = 'active'
   ) AND public.is_minor_13(p_child_id) INTO v_is_steward;
 
   IF NOT (v_is_subject OR v_is_steward) THEN
     RAISE EXCEPTION 'only the data subject (or steward of an under-13 child) can change health grants'
-      USING ERRCODE = 'health_grant_authority_denied';
+      USING ERRCODE = 'P0001';
   END IF;
 
   -- Grantee must be a linked parent on the same child (parallel-parenting safe).
+  -- SECURITY (2026-10-12): status='active' required.
   IF NOT EXISTS (
     SELECT 1 FROM public.child_access ca
     WHERE ca.user_id = p_grantee_user_id AND ca.child_id = p_child_id
-      AND ca.role = 'parent'
+      AND ca.role = 'parent' AND ca.status = 'active'
   ) THEN
     RAISE EXCEPTION 'grantee is not a linked parent of this child'
-      USING ERRCODE = 'health_grant_grantee_not_linked';
+      USING ERRCODE = 'P0001';
   END IF;
 
   IF p_enabled THEN

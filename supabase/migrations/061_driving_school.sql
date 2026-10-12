@@ -118,15 +118,30 @@ CREATE INDEX IF NOT EXISTS driving_log_child_date_idx
 
 ALTER TABLE public.driving_log ENABLE ROW LEVEL SECURITY;
 
--- Teen (child-role with access) and parents of the child: full row access.
+-- Teen (child-role with access) and parents of the child: row access.
 -- Parents may log on the teen's behalf; the log is append-only (no DELETE).
+-- SECURITY (2026-10-12): INSERT binds logged_by to the caller — a family
+-- member cannot attribute entries to another member via direct table writes.
+-- The RPC (rpc_log_driving_hours) also forces logged_by = auth.uid().
 DROP POLICY IF EXISTS driving_log_family_all ON public.driving_log;
 CREATE POLICY driving_log_family_all ON public.driving_log
-  FOR ALL TO authenticated
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.child_access ca
+                 WHERE ca.user_id = auth.uid() AND ca.child_id = driving_log.child_id));
+DROP POLICY IF EXISTS driving_log_family_update ON public.driving_log;
+CREATE POLICY driving_log_family_update ON public.driving_log
+  FOR UPDATE TO authenticated
   USING (EXISTS (SELECT 1 FROM public.child_access ca
                  WHERE ca.user_id = auth.uid() AND ca.child_id = driving_log.child_id))
   WITH CHECK (EXISTS (SELECT 1 FROM public.child_access ca
                  WHERE ca.user_id = auth.uid() AND ca.child_id = driving_log.child_id));
+DROP POLICY IF EXISTS driving_log_family_insert ON public.driving_log;
+CREATE POLICY driving_log_family_insert ON public.driving_log
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    logged_by = auth.uid()
+    AND EXISTS (SELECT 1 FROM public.child_access ca
+                WHERE ca.user_id = auth.uid() AND ca.child_id = driving_log.child_id));
 REVOKE DELETE ON public.driving_log FROM authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.driving_log TO authenticated;
 
@@ -142,20 +157,20 @@ DECLARE
   v_id uuid;
 BEGIN
   IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'not_authenticated';
+    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'P0001';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM public.child_access ca
                  WHERE ca.user_id = auth.uid() AND ca.child_id = p_child_id) THEN
-    RAISE EXCEPTION 'no access to that child' USING ERRCODE = 'child_access_denied';
+    RAISE EXCEPTION 'no access to that child' USING ERRCODE = 'P0001';
   END IF;
   IF p_minutes_total IS NULL OR p_minutes_total <= 0 OR p_minutes_total > 1440 THEN
-    RAISE EXCEPTION 'minutes_total must be 1-1440' USING ERRCODE = 'bad_minutes';
+    RAISE EXCEPTION 'minutes_total must be 1-1440' USING ERRCODE = 'P0001';
   END IF;
   IF p_minutes_night < 0 OR p_minutes_night > p_minutes_total THEN
-    RAISE EXCEPTION 'minutes_night must be 0..minutes_total' USING ERRCODE = 'bad_minutes';
+    RAISE EXCEPTION 'minutes_night must be 0..minutes_total' USING ERRCODE = 'P0001';
   END IF;
   IF p_drive_date IS NULL OR p_drive_date > CURRENT_DATE THEN
-    RAISE EXCEPTION 'drive_date cannot be in the future' USING ERRCODE = 'bad_date';
+    RAISE EXCEPTION 'drive_date cannot be in the future' USING ERRCODE = 'P0001';
   END IF;
   INSERT INTO public.driving_log
     (child_id, logged_by, drive_date, minutes_total, minutes_night,
@@ -186,13 +201,13 @@ DECLARE
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.child_access ca
                  WHERE ca.user_id = auth.uid() AND ca.child_id = p_child_id) THEN
-    RAISE EXCEPTION 'no access to that child' USING ERRCODE = 'child_access_denied';
+    RAISE EXCEPTION 'no access to that child' USING ERRCODE = 'P0001';
   END IF;
   CASE p_state_code
     WHEN 'GA' THEN v_total_t := 2400; v_night_t := 360;
     WHEN 'FL' THEN v_total_t := 3000; v_night_t := 600;
     ELSE RAISE EXCEPTION 'no supervised-hours requirement on file for %', p_state_code
-      USING ERRCODE = 'unknown_state';
+      USING ERRCODE = 'P0001';
   END CASE;
   RETURN QUERY
   SELECT coalesce(sum(minutes_total),0)::bigint,

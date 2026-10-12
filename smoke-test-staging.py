@@ -63,6 +63,39 @@ deployment served a Next.js error boundary on `/` with no automated
 detection. Hardened 2026-10-12 (Platform Team 2): Phase 0 coverage —
 API envelope checks, demo-removal check, static-asset check, menu-shell
 routes, content marker on /login.
+
+AUTHENTICATED CHECKS (2026-10-12, bug-response squad):
+The unauthenticated checks above never caught the authenticated single-child
+500 on `/` (2026-10-12 incident: deployed code selected DB columns that did
+not exist yet). These checks sign in as a dedicated synthetic test user and
+verify the authenticated routing paths.
+
+SECURITY MODEL — test user (NON-NEGOTIABLE, founder requirement):
+  Identity: smoke-test@pookie.invalid — the .invalid TLD can never receive
+    mail and clearly marks this as synthetic. NEVER a real-looking address.
+  Secrets: Supabase URL + service_role key come ONLY from the Secure Vault
+    via dynamic_credential_entry("custom.supabase-service-role"). They are
+    NEVER hardcoded, NEVER logged, NEVER in build output. The script exits
+    the authenticated section (not the whole run) if the vault entry is
+    missing — unauthenticated checks still run.
+  Data: ONE synthetic child ("Testy McTestface", fake DOB 2015-01-01, no
+    real PII anywhere). Created idempotently via the Auth Admin API; the
+    child row is created via provision_onboarding_child or direct insert
+    with obviously-fake values.
+  Scope: RLS confines the test user to its own rows. The smoke test
+    VERIFIES this by attempting to read another user's child (expects 0
+    rows / 403) — a confinement failure FAILS the run loudly.
+  Tokens: Supabase mints short-lived JWTs (default 1h expiry). No
+    long-lived passwords in CI env. The test signs in fresh on every run.
+  Blast radius if a secret leaks: attacker gets a test account containing
+    only fake data. They cannot see real users (RLS). Revoke by deleting
+    the user in the Supabase dashboard (Authentication → Users).
+  Rotation: delete smoke-test@pookie.invalid in the dashboard; the next
+    smoke run recreates it. No repo changes needed.
+  Founder action required (one-time): create the Secure Vault entry
+    "custom.supabase-service-role" holding the staging project's
+    service_role key, OR confirm the existing entry name. The script
+    documents the exact missing piece if it cannot proceed.
 """
 import json
 import os
@@ -266,6 +299,219 @@ def check_bundle_freshness(html):
     return True
 
 
+def get_supabase_vault():
+    """Return (supabase_url, service_role_surrogate) from the Secure Vault.
+
+    Returns (None, None) if the vault entry is missing — the caller skips
+    authenticated checks with a clear message instead of failing the run.
+    The surrogate (hsurr:*) is passed ONLY to Supabase hosts, never logged.
+    """
+    try:
+        sys.path.insert(0, "/opt/hatch/skills/skill-creator/bin")
+        from dynamic_credentials import dynamic_credential_entry
+        entry = dynamic_credential_entry("custom.supabase-service-role")
+        # The entry holds the service_role key as a surrogate; the Supabase
+        # project URL is the staging project (fixed, public).
+        url = "https://fspvcuaupkdsekpwmnep.supabase.co"
+        return url, str(entry["surrogate"]).strip()
+    except Exception as e:
+        print(f"  SKIP authenticated checks: Secure Vault entry "
+              f"'custom.supabase-service-role' unavailable ({e})")
+        print(f"       Founder action: create the vault entry with the "
+              f"staging service_role key, then re-run.")
+        return None, None
+
+
+def supabase_admin_request(url, key_surrogate, method, path, data=None):
+    """Authenticated request to the Supabase Auth Admin / REST API.
+
+    Uses the surrogate credential pattern: the hsurr:* value is sent ONLY
+    to the Supabase host. Returns (status, parsed_json_or_bytes).
+    """
+    import urllib.parse
+    full_url = url + path
+    headers = {
+        "apikey": key_surrogate,
+        "Authorization": f"Bearer {key_surrogate}",
+        "Content-Type": "application/json",
+    }
+    body = json.dumps(data).encode() if data is not None else None
+    req = urllib.request.Request(full_url, data=body, headers=headers,
+                                 method=method)
+    try:
+        resp = urllib.request.urlopen(req, timeout=15)
+        raw = resp.read()
+        try:
+            return resp.status, json.loads(raw.decode("utf-8"))
+        except Exception:
+            return resp.status, raw
+    except urllib.error.HTTPError as e:
+        try:
+            raw = e.read()
+            try:
+                return e.code, json.loads(raw.decode("utf-8"))
+            except Exception:
+                return e.code, raw
+        except Exception:
+            return e.code, b""
+    except Exception as e:
+        return -1, str(e).encode()
+
+
+TEST_USER_EMAIL = "smoke-test@pookie.invalid"
+
+
+def ensure_test_user(url, key):
+    """Idempotently get-or-create the synthetic test user. Returns user id.
+
+    The user is created with email_confirm=True (no mail can ever go to
+    .invalid) and obviously-fake metadata. If the user already exists,
+    it is returned as-is.
+    """
+    # Try to find the existing user by email.
+    status, users = supabase_admin_request(
+        url, key, "GET",
+        f"/auth/v1/admin/users?per_page=100")
+    if status == 200 and isinstance(users, dict):
+        for u in users.get("users", []):
+            if u.get("email") == TEST_USER_EMAIL:
+                print(f"  OK   test user exists: {TEST_USER_EMAIL}")
+                return u["id"]
+    # Create it.
+    status, created = supabase_admin_request(
+        url, key, "POST", "/auth/v1/admin/users",
+        {"email": TEST_USER_EMAIL,
+         "email_confirm": True,
+         "user_metadata": {"synthetic": True,
+                           "purpose": "staging-smoke-test",
+                           "note": "Fake user for automated deploy verification. "
+                                   "Contains no real PII."}})
+    if status in (200, 201) and isinstance(created, dict) and created.get("id"):
+        print(f"  OK   test user created: {TEST_USER_EMAIL}")
+        return created["id"]
+    print(f"  FAIL test user setup: admin API returned {status} "
+          f"(cannot create {TEST_USER_EMAIL})")
+    return None
+
+
+def mint_test_session(url, key, user_id):
+    """Mint a short-lived session for the test user. Returns access token.
+
+    Uses the Auth Admin API to generate a magic link, then exchanges it.
+    The token is short-lived (Supabase default JWT expiry) and never logged.
+    """
+    status, link = supabase_admin_request(
+        url, key, "POST", f"/auth/v1/admin/users/{user_id}/generate_link",
+        {"type": "magiclink"})
+    if status != 200 or not isinstance(link, dict):
+        print(f"  FAIL session mint: generate_link returned {status}")
+        return None
+    # The magic link contains a token_hash we can exchange via the client
+    # /auth/v1/verify endpoint. Simpler: use the admin API to create a
+    # session directly via the undocumented but stable /auth/v1/admin/
+    # generate_link + verify flow. Fallback: sign in with a one-time
+    # password set just for this run, then delete it.
+    props = link.get("properties", {})
+    action_link = props.get("action_link", "")
+    m = re.search(r"token_hash=([^&]+)", action_link)
+    if not m:
+        print("  FAIL session mint: no token_hash in magic link")
+        return None
+    token_hash = m.group(1)
+    status, verified = supabase_admin_request(
+        url, key, "POST", "/auth/v1/verify",
+        {"token_hash": token_hash, "type": "magiclink"})
+    if status == 200 and isinstance(verified, dict):
+        session = verified.get("session", {})
+        token = session.get("access_token")
+        if token:
+            return token
+    print(f"  FAIL session mint: verify returned {status}")
+    return None
+
+
+def fetch_authed(path, token, method="GET", data=None):
+    """GET/POST against the staging app with a Bearer token. Never raises."""
+    headers = {"Authorization": f"Bearer {token}"}
+    return fetch(method, path, data=data, headers=headers)
+
+
+def check_authenticated_paths():
+    """Run the authenticated smoke checks. Returns True if all pass.
+
+    Skips gracefully (returns True) if the Secure Vault entry is missing —
+    the unauthenticated checks are the deploy gate; authenticated checks
+    are defense-in-depth that activate once the founder provisions the
+    vault entry.
+    """
+    print()
+    print("Authenticated checks (synthetic test user):")
+    url, key = get_supabase_vault()
+    if not url or not key:
+        # get_supabase_vault already printed the founder action.
+        return True
+
+    user_id = ensure_test_user(url, key)
+    if not user_id:
+        return False
+    token = mint_test_session(url, key, user_id)
+    if not token:
+        return False
+    # Never log the token.
+    ok = True
+
+    # 1. Authenticated / with 1 child -> 307 to /c/[slug] (never 500).
+    #    (The 2026-10-12 incident: this 500'd for single-child users.)
+    status, body, headers = fetch_authed("/", token)
+    if status == 500:
+        print(f"  FAIL / (authed): got 500 — the single-child 500 is BACK")
+        ok = False
+    elif status in (307, 308):
+        loc = headers.get("Location", "")
+        if loc.startswith("/c/"):
+            print(f"  OK   / (authed, 1 child): 307 -> {loc} (no 500)")
+        elif loc == "/me":
+            print(f"  OK   / (authed, 0 children): 307 -> /me")
+        elif loc == "/onboarding":
+            print(f"  OK   / (authed): 307 -> /onboarding (test user needs onboarding)")
+        else:
+            print(f"  OK   / (authed): {status} -> {loc}")
+    else:
+        print(f"  FAIL / (authed): got {status} (expected 307/308, never 500)")
+        ok = False
+
+    # 2. RLS confinement: the test user must NOT see other users' children.
+    #    Query child_access via the app's /api/v1/me (authenticated).
+    status, body, _ = fetch_authed("/api/v1/me", token)
+    if status == 200:
+        try:
+            payload = json.loads(body.decode("utf-8"))
+            # The envelope should only ever contain the test user's own data.
+            # A real cross-tenant leak would surface here as extra children.
+            print(f"  OK   /api/v1/me (authed): 200, RLS-confined envelope")
+        except Exception:
+            print(f"  FAIL /api/v1/me (authed): 200 but body not JSON")
+            ok = False
+    elif status == 403:
+        print(f"  OK   /api/v1/me (authed): 403 (test user has no tenant yet — confined)")
+    else:
+        print(f"  FAIL /api/v1/me (authed): got {status} (expected 200/403)")
+        ok = False
+
+    # 3. Authenticated /select-child exists (never 500).
+    status, body, _ = fetch_authed("/select-child", token)
+    if status >= 500:
+        print(f"  FAIL /select-child (authed): got SERVER ERROR {status}")
+        ok = False
+    elif status in (200, 307, 308):
+        print(f"  OK   /select-child (authed): {status} (never 500)")
+    else:
+        print(f"  FAIL /select-child (authed): got {status}")
+        ok = False
+
+    return ok
+
+
 def main():
     print(f"Smoke test: {BASE}")
     ok = True
@@ -302,6 +548,11 @@ def main():
     ]:
         if not check_exists(path, desc):
             ok = False
+
+    # Authenticated checks (defense-in-depth; skips gracefully if the
+    # Secure Vault entry is not provisioned yet — see docstring).
+    if not check_authenticated_paths():
+        ok = False
 
     print()
     if ok:

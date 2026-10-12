@@ -372,13 +372,13 @@ BEGIN
             'users', v_uid::text,
             jsonb_build_object('reason', 'grace_period_expired'));
 
-    -- Grants for children this user parents (their rows die with children,
-    -- but be explicit for clarity).
+    -- Grants for children this user owns. Scoped STRICTLY to the purged
+    -- user's children (2026-10-12): the old OR deletion_requested_at clause
+    -- wiped grants for unrelated children with pending deletions.
     DELETE FROM public.child_access ca
     USING public.children c
     WHERE ca.child_id = c.id
-      AND (c.parent_user_id = v_uid
-           OR (c.deletion_requested_at IS NOT NULL));
+      AND c.parent_user_id = v_uid;
 
     -- Their grants on any child.
     DELETE FROM public.child_access WHERE user_id = v_uid;

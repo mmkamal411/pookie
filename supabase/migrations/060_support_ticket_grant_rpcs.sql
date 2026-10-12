@@ -75,7 +75,7 @@ BEGIN
    WHERE id = p_ticket_id AND user_id = v_uid AND status = 'resolved';
   IF NOT FOUND THEN
     RAISE EXCEPTION 'ticket not found, not yours, or not resolved'
-      USING ERRCODE = 'confirm_not_allowed';
+      USING ERRCODE = 'P0001';
   END IF;
   INSERT INTO public.ticket_events (ticket_id, author_type, kind, body, metadata)
   VALUES (p_ticket_id, 'system', 'status_change', 'You confirmed the fix. Ticket closed — thanks!',
@@ -107,7 +107,7 @@ BEGIN
   RETURNING support_tickets.reopened_count INTO v_count;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'ticket not found, not yours, or not reopenable'
-      USING ERRCODE = 'reopen_not_allowed';
+      USING ERRCODE = 'P0001';
   END IF;
   INSERT INTO public.ticket_events (ticket_id, author_type, kind, body, metadata)
   VALUES (p_ticket_id, 'system', 'status_change', 'You reopened this ticket. We are on it again.',
@@ -129,23 +129,23 @@ DECLARE
   v_consenter uuid;
 BEGIN
   IF v_uid IS NULL THEN
-    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'not_authenticated';
+    RAISE EXCEPTION 'not authenticated' USING ERRCODE = 'P0001';
   END IF;
   SELECT * INTO v_g FROM public.support_grants WHERE id = p_grant_id;
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'grant not found' USING ERRCODE = 'grant_not_found';
+    RAISE EXCEPTION 'grant not found' USING ERRCODE = 'P0001';
   END IF;
   IF v_g.status <> 'pending' THEN
-    RAISE EXCEPTION 'grant is not pending' USING ERRCODE = 'grant_not_pending';
+    RAISE EXCEPTION 'grant is not pending' USING ERRCODE = 'P0001';
   END IF;
   IF v_g.expires_at < now() THEN
     UPDATE public.support_grants SET status = 'expired' WHERE id = p_grant_id;
-    RAISE EXCEPTION 'grant request expired' USING ERRCODE = 'grant_expired';
+    RAISE EXCEPTION 'grant request expired' USING ERRCODE = 'P0001';
   END IF;
   v_consenter := public.support_grant_consenter(v_g.ticket_id);
   IF v_consenter IS DISTINCT FROM v_uid THEN
     RAISE EXCEPTION 'only the data owner can decide (the teen, for teen-owned data — sol-support C2)'
-      USING ERRCODE = 'not_data_owner';
+      USING ERRCODE = 'P0001';
   END IF;
 
   IF p_approve THEN

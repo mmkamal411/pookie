@@ -1,10 +1,4 @@
-// Path-to-90 actions + forecast compute glue — FR-SCHOOL-007.
-//
-// PARENT RULE: parents are READ-ONLY on the teen's checkboxes. RLS enforces it
-// (parent SELECT-only policy, migration 030); these service functions ALSO
-// require the teen role for writes (defense in depth). The what-if simulator
-// is client-side and never writes — only the teen's own checkbox state
-// persists.
+// Path-to-90 forecast compute glue — FR-SCHOOL-007.
 //
 // FORECAST COMPUTE: builds the engine inputs from school-of-record data
 // (gradebook sync → per-category earned/possible; classes.grade_weights;
@@ -12,11 +6,13 @@
 // (forecast.ts — the LLM never computes grades), stores the row with
 // engine_version + inputs_hash + citations, and marks older rows stale when
 // the inputs hash changes.
-import { z } from "zod";
+//
+// NOTE: Teen checkbox actions live in study_plans.plan[] (migration 045) —
+// there is no separate path_to_90_actions table. The action CRUD functions
+// that referenced it were removed 2026-10-12 as dead code.
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ApiError, ErrorCodes, failWith, mapDbError } from "@/server/errors";
-import { requireChildRole } from "@/server/services/school";
 import {
   computeForecast,
   hashForecastInputs,
@@ -27,85 +23,6 @@ import {
   type RemainingAssessment,
 } from "@/server/services/forecast";
 
-export const actionSchema = z.object({
-  action_text: z.string().min(1).max(500),
-  rank: z.number().int().min(1).max(10),
-});
-
-export const actionPatchSchema = z.object({
-  done: z.boolean().optional(),
-  action_text: z.string().min(1).max(500).optional(),
-  rank: z.number().int().min(1).max(10).optional(),
-});
-
-export async function listActions(childId: string, classId?: string) {
-  const supabase = await createClient();
-  let query = supabase
-    .from("path_to_90_actions")
-    .select("id, class_id, action_text, rank, done, done_at, created_by, created_at")
-    .eq("child_id", childId)
-    .order("rank");
-  if (classId) query = query.eq("class_id", classId);
-  const { data, error } = await query;
-  if (error) throw new ApiError(mapDbError(error, crypto.randomUUID()));
-  return { actions: data ?? [] };
-}
-
-/** Teen creates a checkbox action (parents: 403 — read-only). */
-export async function createAction(childId: string, classId: string, input: z.infer<typeof actionSchema>) {
-  const userId = await requireChildRole(childId);
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("path_to_90_actions")
-    .insert({
-      child_id: childId,
-      class_id: classId,
-      action_text: input.action_text,
-      rank: input.rank,
-      created_by: userId,
-    })
-    .select("id, class_id, action_text, rank, done, done_at, created_by, created_at")
-    .single();
-  if (error) throw new ApiError(mapDbError(error, crypto.randomUUID()));
-  return { action: data };
-}
-
-/** Teen toggles/edits their checkbox (parents: 403 — read-only). */
-export async function patchAction(childId: string, actionId: string, input: z.infer<typeof actionPatchSchema>) {
-  await requireChildRole(childId);
-  const supabase = await createClient();
-  const patch: Record<string, unknown> = {};
-  if (input.done !== undefined) {
-    patch.done = input.done;
-    patch.done_at = input.done ? new Date().toISOString() : null;
-  }
-  if (input.action_text !== undefined) patch.action_text = input.action_text;
-  if (input.rank !== undefined) patch.rank = input.rank;
-  const { data, error } = await supabase
-    .from("path_to_90_actions")
-    .update(patch)
-    .eq("id", actionId)
-    .eq("child_id", childId)
-    .select("id, class_id, action_text, rank, done, done_at, created_by, created_at")
-    .single();
-  if (error) throw new ApiError(mapDbError(error, crypto.randomUUID()));
-  return { action: data };
-}
-
-/** Teen deletes their checkbox (parents: 403 — read-only). */
-export async function deleteAction(childId: string, actionId: string) {
-  await requireChildRole(childId);
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("path_to_90_actions")
-    .delete()
-    .eq("id", actionId)
-    .eq("child_id", childId);
-  if (error) throw new ApiError(mapDbError(error, crypto.randomUUID()));
-  return { deleted: true };
-}
-
-// ---------------------------------------------------------------------------
 // Forecast compute glue
 // ---------------------------------------------------------------------------
 
