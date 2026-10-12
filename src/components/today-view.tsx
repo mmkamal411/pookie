@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PookieOrb } from "@/components/pookie-orb";
 import { TaskBoard } from "@/components/tasks/task-board";
 import { BillBoard } from "@/components/bills/bill-board";
+import { MorningBriefing } from "@/components/morning-briefing";
 import type { SchoolOverview } from "@/lib/school/types";
 import { dueDateLabel } from "@/components/school/styles";
 import { byUrgency, daysUntil, statusStyle } from "@/components/overview/due-helpers";
@@ -44,6 +45,8 @@ export function TodayView({
       <p className="animate-bloom mt-2 text-sm text-stardust-300" style={{ animationDelay: "0.12s" }}>
         {new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date())}
       </p>
+
+      <MorningBriefing schoolDueCount={dueToday.length} checkinDone={!!overview.checkin_today} />
 
       {!overview.checkin_today && (
         <Link
