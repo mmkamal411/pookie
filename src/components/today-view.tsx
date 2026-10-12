@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PookieOrb } from "@/components/pookie-orb";
 import { TaskBoard } from "@/components/tasks/task-board";
+import { BillBoard } from "@/components/bills/bill-board";
 import type { SchoolOverview } from "@/lib/school/types";
 import { dueDateLabel } from "@/components/school/styles";
 import { byUrgency, daysUntil, statusStyle } from "@/components/overview/due-helpers";
@@ -126,6 +127,10 @@ export function TodayView({
 
       <div className="animate-bloom mt-8" style={{ animationDelay: "0.34s" }}>
         <TaskBoard compact />
+      </div>
+
+      <div className="animate-bloom mt-8" style={{ animationDelay: "0.35s" }}>
+        <BillBoard compact />
       </div>
 
       <Link
