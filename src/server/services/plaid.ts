@@ -268,7 +268,7 @@ export async function syncPlaidItem(plaidItemRowId: string): Promise<SyncResult>
       if (!error) removed += 1;
     }
 
-    cursor = body.cursor;
+    cursor = (body as unknown as { cursor?: string }).cursor;
     hasMore = body.has_more;
   }
 

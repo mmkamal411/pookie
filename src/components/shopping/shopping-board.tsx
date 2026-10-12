@@ -494,7 +494,7 @@ export function ShoppingBoard() {
     itemId: string;
     store?: string;
     price?: number;
-    timer: ReturnType<typeof setTimeout>;
+    timer: number;
   } | null>(null);
 
   const [name, setName] = useState("");
