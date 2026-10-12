@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Everything a mother would be worried about and track — powered by AI.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
