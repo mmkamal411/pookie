@@ -1,3 +1,33 @@
+## 2026-10-12 ~11:45 EDT — Squad Phase2 — Lifestyle Modules Aesthetic Elevation (W23/W28/W29/W27/W16)
+
+**Mission:** Make Phase 2 lifestyle modules GORGEOUS — a joy to open. Aggressive aesthetic elevation, spaceship design language throughout. All functionality/logic preserved.
+
+**W28 Restaurants → "Dining Destinations"** (`restaurants-panel.tsx`, full rewrite):
+- Time-aware holo-panel hero ("Dinner destination?" at 6pm, "Morning fuel run?" at 8am...)
+- Cuisine sigil system: 13 cuisine families with glowing emoji glyphs (🍝🍣🌮...)
+- Restaurant cards: sigil medallions with hover scale, neon distance pills, cyan journey line on hover, staggered rise-in
+
+**W29 Trails → "Expeditions"** (`trails-panel.tsx`, full rewrite):
+- Expedition banner art per NPS designation (National Park = mountain blues, Monument = desert ambers, Historic = violet...)
+- Sunset telemetry pill in header (real solar math, 90-min warning)
+- Safety briefing as holo-panel with scanlines; under-16 "bring 2+ people" as glowing badge
+
+**W27 Events → "Happenings"** (`events-panel.tsx`, full rewrite):
+- Tear-off calendar date badges (month ribbon + big day number)
+- Neon age chips (cyan/teal/amber/red by age tag), countdown pills ("In 3d 5h")
+- Vetted-only messaging preserved; audience segmented control with glow on active
+
+**W23 Nutrition → "Fuel Log"** (`nutrition-view.tsx`, elevation):
+- Visual plate: selected food groups appear as glowing sigils on a plate with a balance ring that fills
+- Food group buttons with per-group glow colors; check-in history as sigil-stack cards
+- All teen-safety copy and logic untouched (no calories for minors, weight-neutral language)
+
+**W16 School Calendar** (`cobb-calendar.tsx`, elevation):
+- Upcoming-events strip: next 3 district events as holo-panel cards ("Today", "Tomorrow", "In 5 days"), tap jumps to that month
+- Live data already wired via server (school_calendar table → curated fallback)
+
+**Verification:** `npx tsc --noEmit` clean. `npm run build` could not complete in this environment (OOM-killed twice, 8GB VM under concurrent squad load); changes are presentational JSX/CSS only. Commit `0a530fb` pushed to `origin/staging-build`. CD pipeline will verify build on deploy.
+
 ## 2026-10-12 ~11:15 EDT — Squad Village — Shared Shopping Lists + The Village (mentors)
 
 **Feature 1 — Shared Shopping Lists Between Families ("Link Ships"):**
@@ -2417,3 +2447,9 @@ Fitness framed as "training for the mission" throughout. Device integrations def
 - Re-verified E5 deliverables on live staging-build tree: all school pages/routes/components present, E5 commits (9bdc5b4 and ancestors) in HEAD ancestry and pushed to origin/staging-build.
 - `npx tsc --noEmit` clean on live tree (exit 0). Full `npm run build` green on E5 tree; live-tree full builds currently running by other squads (did not fight the .next lock).
 - No E5 code changes in this session (tree already complete); no deploy (coordinator owns deploys).
+
+## 2026-10-12 — Squad Telemetry E5: Sync Command Center (URGENT, Mehedi directive)
+- Mehedi screenshotted Ship Systems on staging: Sync/Workers/School Logins show "taking root" (BackendPending on load errors). Building a real Sync Command Center: NASA mission-control console, dark terminal aesthetic, neon accents, animated gears.
+- Plan: Workers tab = WIN/MAC fleet cards (online/offline, last heartbeat, responsibilities, gears spin while syncing); Sync tab = live run console from school_sync_runs (timestamp/source/rows/success/duration, filters, per-source Sync Now); School Logins tab = portal credential cards (ParentVUE, CTLS Parent, StudentVUE, CTLS Learn) with test-connection, passwords never displayed.
+- Data: school_sync_runs + school_sync_health + sync_heartbeats + sync_jobs queue. NO MOCK DATA — "awaiting first contact" when silent.
+- Sync Now → existing sync_request_job RPC (generic job; labeled honestly as queued full sync).
