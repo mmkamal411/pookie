@@ -56,15 +56,15 @@ export function moduleForPathname(pathname: string): ModuleInfo {
 }
 
 const MODULES: ModuleInfo[] = [
-  { id: "home", name: "Home", readout: "Nav", glow: "#a78bfa", route: "/", closable: false },
+  { id: "home", name: "Home", readout: "Nav", glow: "#00E5FF", route: "/", closable: false },
   { id: "today", name: "Today", readout: "Scan", glow: "#6ee7b7", route: "/today", closable: true },
-  { id: "pookie", name: "Pookie", readout: "Comms", glow: "#f472b6", route: "/pookie", closable: true },
+  { id: "pookie", name: "Pookie", readout: "Comms", glow: "#ffd88a", route: "/pookie", closable: true },
   { id: "progress", name: "Progress", readout: "Trajectory", glow: "#fbbf24", route: "/school", closable: true },
   { id: "settings", name: "Ship Systems", readout: "Sys", glow: "#7dd3fc", route: "/settings", closable: true },
   { id: "health", name: "Health", readout: "Bio", glow: "#6ee7b7", route: "/health", closable: true },
-  { id: "marketplace", name: "Marketplace", readout: "Trade", glow: "#c4b5fd", route: "/marketplace", closable: true },
+  { id: "marketplace", name: "Marketplace", readout: "Trade", glow: "#2dd4bf", route: "/marketplace", closable: true },
   { id: "travel", name: "Travel", readout: "Voyage", glow: "#67e8f9", route: "/travel", closable: true },
-  { id: "coparenting", name: "Co-parenting", readout: "Crew", glow: "#fda4af", route: "/coparenting", closable: true },
+  { id: "coparenting", name: "Co-parenting", readout: "Crew", glow: "#4ade80", route: "/coparenting", closable: true },
   { id: "credit", name: "Credit", readout: "Ledger", glow: "#fcd34d", route: "/credit", closable: true },
   { id: "support", name: "Support", readout: "Beacon", glow: "#93c5fd", route: "/support", closable: true },
 ];
@@ -149,8 +149,8 @@ const WINDOW_CSS = `
 }
 .modwin-dot {
   width: 9px; height: 9px; border-radius: 9999px; flex-shrink: 0;
-  background: var(--modwin-glow, #a78bfa);
-  box-shadow: 0 0 10px var(--modwin-glow, #a78bfa), 0 0 22px var(--modwin-glow, #a78bfa);
+  background: var(--modwin-glow, #00E5FF);
+  box-shadow: 0 0 10px var(--modwin-glow, #00E5FF), 0 0 22px var(--modwin-glow, #00E5FF);
   animation: modwin-pulse 3.2s ease-in-out infinite;
 }
 .modwin-readout {
@@ -177,7 +177,7 @@ const WINDOW_CSS = `
 }
 .modwin-btn:active { transform: scale(0.92); }
 .modwin-btn:focus-visible {
-  outline: 2px solid var(--modwin-glow, #a78bfa); outline-offset: 2px;
+  outline: 2px solid var(--modwin-glow, #00E5FF); outline-offset: 2px;
 }
 .modwin-body { position: relative; }
 .modwin-minimizing { animation: modwin-minimize 280ms cubic-bezier(0.4, 0, 0.6, 1) forwards; }
@@ -214,7 +214,7 @@ const WINDOW_CSS = `
   white-space: nowrap; flex-shrink: 0;
   background: linear-gradient(180deg, rgb(40 38 80 / 0.92), rgb(16 15 38 / 0.94));
   border: 1px solid rgb(255 255 255 / 0.14);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5), 0 0 16px var(--modwin-glow-soft, rgb(167 139 250 / 0.25));
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5), 0 0 16px var(--modwin-glow-soft, rgb(0 229 255 / 0.25));
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   animation: modwin-chip-pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
   cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -222,7 +222,7 @@ const WINDOW_CSS = `
 }
 .modwin-chip:active { transform: scale(0.94); }
 .modwin-chip:focus-visible {
-  outline: 2px solid var(--modwin-glow, #a78bfa); outline-offset: 2px;
+  outline: 2px solid var(--modwin-glow, #00E5FF); outline-offset: 2px;
 }
 .modwin-chip .modwin-dot { animation: none; }
 .modwin-chip-hint { font-size: 10px; color: rgb(255 255 255 / 0.5); font-weight: 500; }

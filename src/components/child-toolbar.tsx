@@ -219,13 +219,13 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   }, [pathname, base, childSlug]);
 
   const tabs: TabDef[] = [
-    { id: "home", label: "Home", href: base, glow: "#a78bfa", sector: "Sector · Home", glyph: HabitatRingGlyph, active: pathname === base },
+    { id: "home", label: "Home", href: base, glow: "#00E5FF", sector: "Sector · Home", glyph: HabitatRingGlyph, active: pathname === base },
     { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", sector: "Sector · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
     { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", sector: "AI Core", orb: true, active: pathname.startsWith(`${base}/pookie`) },
     { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", sector: "Sector · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page. It also carries
     // the active glow while a module page is current (see onModulePage).
-    { id: "more", label: "More", href: "", glow: "#c4b5fd", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen || onModulePage },
+    { id: "more", label: "More", href: "", glow: "#2dd4bf", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen || onModulePage },
   ];
 
   const activeTab = tabs.find((t) => t.active);
