@@ -2520,6 +2520,8 @@ Fitness framed as "training for the mission" throughout. Device integrations def
 
 **Not deployed** (per W3 directive). Next: migration 072 needs applying to staging DB before the page has data.
 
+**Build verified green 2026-10-12 ~16:00 EDT:** full `next build` EXIT 0 — `/api/v1/household/insurance`, `/api/v1/household/insurance/[policyId]`, and `/household/insurance` all compile as dynamic routes. (Earlier transient `[__metadata_id__]` failure in `/api/v1/ai/crisis-signal` was concurrent-tree churn from parallel squads, not insurance code.)
+
 ## 2026-10-12 ~11:30 EDT — Squad Singularity — The One Orb (Mehedi directives)
 
 **Removed the bouncy ball.** `PookiePinball` (the rubber ball that dropped/bounced into the toolbar on every page load) is deleted — `src/components/pookie-pinball.tsx` removed via `git rm`, usage dropped from `src/app/c/[childSlug]/layout.tsx`. Mehedi: "replace the bouncy ball with a flying orb."
