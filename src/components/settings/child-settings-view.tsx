@@ -222,9 +222,9 @@ export function ChildSettingsView({
       </SettingsCard>
 
       {/* Appearance — real, local */}
-      <SettingsCard title="Appearance" description="Nebula Dawn (light) or Deep Space (dark).">
+      <SettingsCard title="Appearance" description="Space Black (dark) or Bright Bridge (light).">
         <div className="flex gap-2.5">
-          {(["light", "dark"] as const).map((t) => (
+          {(["space-black", "bright-bridge"] as const).map((t) => (
             <button
               key={t}
               type="button"
@@ -236,7 +236,7 @@ export function ChildSettingsView({
                   : "border-white/10 text-white/60 hover:border-white/25"
               }`}
             >
-              {t === "light" ? "Nebula Dawn" : "Deep Space"}
+              {t === "bright-bridge" ? "Bright Bridge" : "Space Black"}
             </button>
           ))}
         </div>

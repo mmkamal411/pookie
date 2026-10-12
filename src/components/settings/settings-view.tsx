@@ -514,24 +514,58 @@ export function SettingsView() {
         )}
       </SettingsCard>
 
-      {/* Theme — local only */}
-      <SettingsCard title="Appearance" description="Nebula Dawn (light) or Deep Space (dark).">
-        <div className="flex gap-2.5">
-          {(["light", "dark"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTheme(t)}
-              aria-pressed={theme === t}
-              className={`flex-1 rounded-2xl border px-4 py-2.5 text-sm font-medium capitalize transition ${
-                theme === t
-                  ? "border-nova-400/50 bg-nova-500/15 text-white"
-                  : "border-white/10 text-white/60 hover:border-white/25"
-              }`}
-            >
-              {t === "light" ? "Nebula Dawn" : "Deep Space"}
-            </button>
-          ))}
+      {/* Bridge Theme — Space Black (default) or Bright Bridge. Instant switch, persists. */}
+      <SettingsCard title="Bridge Theme" description="Space Black is the signature look. Bright Bridge lights the whole ship.">
+        <div className="flex gap-2.5" role="group" aria-label="Bridge theme">
+          {(
+            [
+              { id: "space-black", label: "Space Black", hint: "Deep space black, neon glows" },
+              { id: "bright-bridge", label: "Bright Bridge", hint: "Bright, icy, well-lit" },
+            ] as const
+          ).map((t) => {
+            const selected = theme === t.id;
+            const darkSwatch = t.id === "space-black";
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTheme(t.id)}
+                aria-pressed={selected}
+                className={`flex flex-1 items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+                  selected
+                    ? "border-cyan-400/60 bg-cyan-400/10 shadow-glow-sm"
+                    : "border-white/10 hover:border-white/25"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-10 w-10 shrink-0 rounded-lg border"
+                  style={{
+                    background: darkSwatch ? "#050510" : "#F4F8FA",
+                    borderColor: darkSwatch ? "rgb(0 229 255 / 0.55)" : "rgb(0 184 212 / 0.5)",
+                    boxShadow: selected
+                      ? darkSwatch
+                        ? "0 0 14px rgb(0 229 255 / 0.5)"
+                        : "0 0 14px rgb(0 184 212 / 0.45)"
+                      : "none",
+                  }}
+                >
+                  <span
+                    className="mx-auto mt-2 block h-1 w-6 rounded-full"
+                    style={{ background: darkSwatch ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.85)" }}
+                  />
+                  <span
+                    className="mx-auto mt-1.5 block h-1 w-4 rounded-full"
+                    style={{ background: darkSwatch ? "rgb(0 255 136 / 0.7)" : "rgb(0 200 83 / 0.7)" }}
+                  />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-white">{t.label}</span>
+                  <span className="block truncate text-xs text-white/55">{t.hint}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </SettingsCard>
 
