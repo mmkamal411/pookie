@@ -3,6 +3,21 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Squad 1 Safety Track Coordinator (staging-build): PM + QA DELIVERED (2/5)
+
+**Delivered and committed:**
+- **PM implementation plan** (`docs/squad1/implementation-plan.md`, commit 401fc79): 10 work packages, 54 acceptance criteria (AC-001–054). All MD directives incorporated: D1 vendor-contract Path A (deny-closed until vendor selected; no disclosure tooling per NFR-LEGAL-006), D7 NFR-LOC-001 (precise GPS rejected at ingestion), D6 tiered caps (8/30d trusted, 2/30d new) as cross-squad contract, D4 holiday on-call routing. No-placeholders DoD per package. API contract summary (9 RPCs + vendor callback). 14-item risk log. Contract drift check: aligned with QA test-plan; backend api-contracts.md pending reconciliation.
+- **QA test plan** (`docs/squad1/test-plan.md`, commit 298a9fb, 618 lines): ~150 numbered test cases across 17 flows; adversarial suite ADV-001–013 (client tamper, revoked-parent queries, forged vendor webhooks, QR replay, precise-GPS injection); placeholder audit with repeatable grep (zero hits required); per-flow sign-off checklist (functional · RLS/security · a11y · copy · placeholder · E2E · integration). Static review complete; execution starts on implementation landing. No sign-offs issued yet.
+
+**Still building:** UX Designer (ux-specs.md partial commit visible), Tech Lead/Backend (migrations 022–029 + actions + crisis-router), Frontend (7 safety components).
+
+**BLOCKERS escalated to Managing Director:**
+- 🔴 R-01 / SR-05: crisis-response vendor selection — MD action item; Path A cannot go live without it; D1 test doubles blocked.
+- 🔴 R-07: Mehedi's DB access required for migrations.
+- 🔴 R-08/R-09 / SR-08: DV-advocate review (cooling-off matrix strings) + attorney sign-offs (LE policy, mandatory-reporter program, court-order workflow, break-glass tooling NFR-LEGAL-006) need scheduling — launch gates. QA recommends CI/CODEOWNERS rule blocking LE/disclosure UI merges pre-sign-off.
+- 🔴 SR-04: crisis-ruleset contents not in design docs — needed before CR-001–006 sign-off.
+
+
 ## 2026-10-12 ~03:50 EDT — Squad 1 PM (staging-build): IMPLEMENTATION PLAN DELIVERED (all MD directives)
 
 **`docs/squad1/implementation-plan.md` written** — 10 work packages, 54 acceptance criteria (AC-001–054), dependency sequence, API contract summary, phase-exit checklist, risk log, contract drift watch.
