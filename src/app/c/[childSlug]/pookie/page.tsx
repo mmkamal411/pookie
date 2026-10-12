@@ -23,7 +23,7 @@ function ageYears(iso: string | null): number | null {
 
 /**
  * /c/[childSlug]/pookie — the Pookie tab.
- * Full-page AI tutor: warm Pookie by default. Direct mode (Muse's
+ * Full-page AI assistant: warm Pookie by default. Direct mode (Muse's
  * straight-talk voice) is 18+ only — the viewer's age is computed server-side
  * from the verified DOB; unknown age fails closed (FR-AI-002).
  */

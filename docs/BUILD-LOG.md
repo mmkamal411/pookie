@@ -1665,3 +1665,19 @@ Files: src/app/login/**, src/app/page.tsx, src/app/onboarding/**, copy in src/co
 **Verification:** tsc clean on all touched files (2 remaining errors pre-existing in HEAD 4747b63, unrelated). Full `npm run build` completed exit 0 with these changes in-tree. CSS braces balanced; all new classes present.
 
 **For other squads:** `neon-pipe-teal/violet`, `quantum-warm`, `quantum-press`, `quantum-ring`, `pill-glow` are yours to use. Note: this commit also carried Console's in-flight globals.css sections (console/pipe/glide) — Console's components remain uncommitted for their own commit.
+
+## 2026-10-12 ~08:15 EDT — Squad Comms: Pookie/Mookie chat port
+Claiming: src/lib/pookie-tutor.ts, src/components/pookie/pookie-chat.tsx, src/app/c/[childSlug]/pookie/page.tsx (copy only)
+Worker (d-dash repo): workers/pookie-tutor/src/index.ts (CORS for pookie-staging.pages.dev + astronaut-assistant prompts)
+Other squads: I'm touching chat UI copy/styling only — not restructuring components.
+
+## 2026-10-12 08:16 EDT — Squad Stardust COMPLETE (f883f47)
+Astronaut voice + cosmic-black login landed. Login page is now the void of
+space (twinkling starfield, Pookie orb as guiding light, "Step aboard" copy).
+Onboarding → pre-flight/crew-manifest/cleared-for-launch. Today → flight plan.
+School → mission status, command/flight-deck views, course-correction language.
+docs/VOICE-GUIDE.md added (terminology map + tone rules). tsc clean.
+Note: commit bundled sibling squads' staged files (Console toolbar, Helm
+switcher/settings-control, Harbor child-settings) — all landed together.
+Skipped (other squads' active files): /me, select-child copy, toolbar tabs,
+settings pages, me page. Integration/browser verification is the parent's step.

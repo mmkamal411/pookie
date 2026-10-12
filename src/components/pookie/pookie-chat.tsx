@@ -32,19 +32,16 @@ const LONG_MESSAGE = 300;
 
 const QUICK_REPLIES = ["What are my priorities today?"];
 
-/** Explicit depth requests escalate to the async Muse queue (separate from persona). */
+/** Explicit depth requests escalate to the async Mookie queue.
+ *  Exact keyword list from Mehedi — this list IS the escalation contract. */
 const WANTS_DEPTH =
-  /\bdeeper|more detail|better plan|go deeper|\bdetailed\b|\bcomprehensive\b|\bdeep\b|\btonight\b|\bdive\b|\bthorough\b|\btoday\b|this week|this month|this term|this semester|\bresearch\b|\bsearch\b|\bfind\b/i;
+  /\bmookie\b|deeper|more detail|better plan|go deeper|\bdetailed\b|\bcomprehensive\b|\bdeep\b|\bmore\b|\btonight\b|\bdive\b|\bthorough\b|\btoday\b|this week|this month|this term|this semester|studentvue|parentvue|\bctls\b|\bclever\b|\bresearch\b|\bsearch\b|\bfind\b|\btalk\b|\bthink\b/i;
 
 function loadHistory(childName: string): ChatMessage[] {
   const seed: ChatMessage[] = [
     {
       role: "pookie",
-      text: `Hey ${childName}. Ask me about your grades, what's due, or how to prep — I've got your numbers.`,
-    },
-    {
-      role: "pookie",
-      text: `Tip: I can explain any grade, what's due next, or how to study for it — just ask.`,
+      text: `Hey ${childName}, Captain! 🚀 Pookie here — your co-pilot for the whole mission. School, plans, tasks, questions about life — I've got your readings and I'm ready to help with all of it. What's our first move?`,
     },
   ];
   if (typeof window === "undefined") return seed;
@@ -94,7 +91,7 @@ function BotText({ text }: { text: string }) {
 }
 
 /**
- * Pookie tab chat — full-page AI tutor.
+ * Pookie tab chat — full-page AI co-pilot and assistant.
  *
  * FR-AI-002: "Direct mode" (Muse's straight-talk voice) is 18+ ONLY.
  * - Adults (viewerAge >= 18): an explicit Direct mode toggle. Same safety
@@ -189,7 +186,7 @@ export function PookieChat({
   function appendMuseDeep(response: string) {
     setMessages((prev) => {
       if (prev.some((m) => m.museDeep && m.text.includes(response.slice(0, 50)))) return prev;
-      return [...prev, { role: "pookie", text: response, museDeep: true, persona: "muse" }];
+      return [...prev, { role: "pookie", text: `🧠 **Mookie adds:**\n\n${response}`, museDeep: true, persona: "muse" }];
     });
   }
 
@@ -201,7 +198,7 @@ export function PookieChat({
         ...prev,
         {
           role: "pookie",
-          text: "Here's what I think so far.\n\nHang tight — Muse is putting together a deeper take…",
+          text: "Here's what I think so far 👆\n\nHang tight — Mookie is putting together a better plan for you… 🔬",
         },
       ]);
       setMuseThinking(true);
@@ -283,10 +280,22 @@ export function PookieChat({
       <div className="firefly" style={{ width: 6, height: 6, top: "30%", left: "92%", animationDelay: "1.8s" }} />
 
       <div className="animate-bloom flex items-center gap-4">
-        <PookieOrb size={52} />
+        <div className="relative">
+          <PookieOrb size={52} />
+          {/* comm signal indicator — the channel is open */}
+          <span
+            aria-hidden="true"
+            className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-nebula-950"
+          >
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+          </span>
+        </div>
         <div>
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Pookie · AI tutor</p>
-          <h1 className="text-sunlit mt-1 text-2xl font-semibold tracking-tight">Ask me anything</h1>
+          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+            <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-nova-400 align-middle" />
+            Ship comms · Pookie
+          </p>
+          <h1 className="text-sunlit mt-1 text-2xl font-semibold tracking-tight">Hailing your co-pilot</h1>
         </div>
       </div>
       {isAdult ? (
@@ -315,7 +324,7 @@ export function PookieChat({
         </div>
       ) : (
         <p className="animate-bloom mt-2 text-xs text-stardust-500" style={{ animationDelay: "0.08s" }}>
-          Pookie is your warm tutor. Direct mode is for adults (18+) — same safety, same smarts.
+          Your devoted co-pilot for the whole mission — school, plans, tasks, life. Direct mode is for adults (18+) — same safety, same smarts.
         </p>
       )}
 
@@ -336,7 +345,7 @@ export function PookieChat({
               <MiniPookie size={24} speaking />
               <div className="rounded-2xl rounded-bl-md border border-nova-400/20 bg-nebula-900/70 px-4 py-3">
                 <p className="animate-pulse text-sm text-stardust-300">
-                  {m.persona === "muse" ? "Muse is thinking…" : "Pookie is thinking…"}
+                  {m.persona === "muse" ? "Mookie is charting…" : "Pookie is plotting the course…"}
                 </p>
               </div>
             </div>
@@ -361,7 +370,7 @@ export function PookieChat({
               >
                 {(m.persona === "muse" || m.museDeep) && (
                   <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-orange-300 uppercase">
-                    Muse · straight talk
+                    {m.museDeep ? "Mookie · deeper take" : "Muse · straight talk"}
                   </p>
                 )}
                 <BotText text={m.text} />
@@ -373,7 +382,7 @@ export function PookieChat({
           <div className="flex gap-2.5">
             <MiniMuse size={24} />
             <div className="pookie-researching rounded-2xl rounded-bl-md border border-orange-400/40 bg-nebula-900/70 px-4 py-3">
-              <p className="animate-pulse text-sm text-orange-300">Muse is digging deeper…</p>
+              <p className="animate-pulse text-sm text-orange-300">🔬 Mookie is cooking up something good…</p>
             </div>
           </div>
         )}
@@ -403,7 +412,7 @@ export function PookieChat({
             ref={inputRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={isThinking ? "Pookie is thinking…" : "What's on your mind?"}
+            placeholder={isThinking ? "Holding the channel…" : "Hail Pookie — what's on your mind, Captain?"}
             aria-label="Message Pookie"
             className="min-w-0 flex-1 rounded-2xl border border-nova-400/25 bg-nebula-900/80 px-4 py-3 text-[15px] text-star-100 placeholder:text-stardust-500 focus:border-nova-400/60 focus:outline-none"
             style={{ boxShadow: `0 0 16px ${pookieNeon}22` }}

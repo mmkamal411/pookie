@@ -64,11 +64,11 @@ export function museSystemInstruction(childName: string): string {
 }
 
 export const FALLBACK_MESSAGE =
-  "Good question — here's what I can actually help with right now:\n\n" +
-  "• Your grades and the path to 90 in any class (try \"How do I raise Geometry?\")\n" +
-  "• What's due next, ordered by grade impact\n" +
-  "• Study plans and making up missing work\n\n" +
-  "Ask me one of those and I'll pull your real numbers.";
+  "Good question, Captain — here's what I can help with right from here:\n\n" +
+  "• Your classes and the path to 90 in any of them (try \"How do I raise Geometry?\")\n" +
+  "• What's coming up next, ordered by mission impact\n" +
+  "• Study plans, making up missing work, and planning your day\n\n" +
+  "Ask me one of those and I'll pull your live readings.";
 
 export interface ChatMessage {
   role: "user" | "pookie";
@@ -83,6 +83,8 @@ export interface ChatMessage {
 
 export interface TutorContext {
   studentName: string;
+  /** "pookie" selects the astronaut-assistant voice on the worker. */
+  app: "pookie";
   timeOfDay: string;
   grades: { class: string; grade: number | null; letter: string }[];
   weakestClass: { name: string; grade: number | null; letter: string } | null;
@@ -101,6 +103,7 @@ export function buildTutorContext(overview: SchoolOverview, childName: string): 
       : null;
   return {
     studentName: childName,
+    app: "pookie",
     timeOfDay,
     grades: overview.classes.map((c) => ({
       class: c.display_name ?? c.name,
