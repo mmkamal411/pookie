@@ -1681,3 +1681,22 @@ Note: commit bundled sibling squads' staged files (Console toolbar, Helm
 switcher/settings-control, Harbor child-settings) — all landed together.
 Skipped (other squads' active files): /me, select-child copy, toolbar tabs,
 settings pages, me page. Integration/browser verification is the parent's step.
+
+## 2026-10-12 ~08:35 EDT — Squad Verify: integration gate PASSED ✅
+
+**Scope:** All 9 spaceship squads (Aurora, Instrument, Harbor, Glide, Homeport, Quantum, Console, Helm, Stardust, Comms).
+
+**Checks:**
+- ✅ `npx tsc --noEmit`: clean (exit 0)
+- ✅ `npm run build`: green — all 56 routes compiled, no errors
+- ✅ Conflict hunt: no real conflicts. CSS duplicate class definitions are benign layered extensions (transitions, pseudo-variants). `overview-dashboard.tsx` (touched by Instrument + Homeport + Stardust) imports cleanly from all squads' components.
+- ✅ Comms commit `b5f9136` reviewed: 4 files, additive only (comment, fallback message, `app:"pookie"` field). No conflicts.
+- ✅ Crash fix intact: no `setActiveChild()` call in child layout (only the warning comment).
+- ✅ Theme tokens (`bg-nebula-950`, `text-nova-400`, `.text-sunlit`) all defined in `@theme`.
+- ✅ All 11 overview-dashboard imports resolve to existing files.
+
+**Notes:**
+- Two transient Turbopack ENOENT build failures during verification were caused by concurrent squad builds racing on `.next/` — resolved by waiting for builds to clear, then clean rebuild succeeded. Not a code issue.
+- Browser/visual verification NOT done (generic subagents can't operate live browser) — needs parent's signed-in visual pass before Mehedi sees it.
+
+**Verdict:** Integration is clean. Ready for Squad Polish → Squad Launch.
