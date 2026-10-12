@@ -1,5 +1,45 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:05 EDT — Squad Orb — Hypnotic, realistic, alive divine orb
+
+**Mission:** Mehedi's words — "realistic characteristics of an orb with hypnotizing effects when someone looks at it and alive interactive… the orb is live and interactive whenever possible."
+
+**What changed (src/components/pookie-orb.tsx + globals.css SQUAD ORB section):**
+1. **Volumetric body** — layered gradients (offset specular hotspot, luminous limb, soft falloff) = true 3D sphere, not a flat disc.
+2. **Hypnotic depths** — two counter-rotating inner-light veils (18s / 27s reverse, different blurs); interference shimmers like gazing into water.
+3. **Surface sheen** — slow 34s specular sweep, light playing across glass.
+4. **Inner motes** — 3 twinkling sparks drifting inside the orb.
+5. **Calm 4s breathing rhythm** — halo/aura/body on a resting-breath cycle.
+6. **Alive + interactive** — orb leans toward a nearby pointer (150px reach, 7px max lean via `translate` property, independent of the breathing transform) and brightens with attention; one shared rAF-throttled global pointermove listener serves all mounted orbs, direct DOM updates, off-screen orbs skipped.
+7. **Moods** via data-mood: thinking (quickened inner light, pulsing core), excited (faster breath, swelled radiance), celebrating (dancing sparks, flaring core). Wired: chat header orb shows "thinking" while Pookie thinks.
+8. **Light theme** (Nebula Dawn) adaptation — drops screen blend so the orb reads as golden light on bright surfaces.
+9. **Reduced motion** — all animation off, no pointer play.
+
+**Perf:** transforms/opacity/filter only; blur confined to small inner layers; no React state in the pointer loop.
+
+**Verified:** tsc clean, build green. Backward compatible (size-only callers unchanged). NOT deployed — parent owns deploys.
+
+
+## 2026-10-12 ~10:25 EDT — Squad Telemetry E5 — coordination with E4 (schema alignment)
+
+**Resolved:** my 066_school_sync_health.sql DELETED (superseded by E4's 066_school_telemetry.sql — E4 is Database Architect; their schema is authoritative). My dashboard now reads E4's actual `school_sync_health` columns: source_name, machine, cadence, expected_freshness, last_run_started/finished, last_success_at, rows_pulled, rows_by_table, error_text, consecutive_errors, next_scheduled_run, data_freshness_status. Aggregation: per source_name across machines (freshness = worst-of, age = freshest).
+
+**E4 built for E5 (067_class_resources_checkin_uploads.sql):** `checkin_class_details` renamed to debriefing fields (covered/clicked/fuzzy/due_next/confidence) — my Debriefing Chamber writes there; `class_resources` table — my resource library CRUDs there; `class-handouts` bucket + `checkin_uploads` metadata — my check-in handout uploads use those.
+
+**Changes:** (1) dashboard service → E4 columns + recompute_school_sync_health() RPC; (2) attendance reads E4's `school_attendance`; (3) calendar API prefers E4's `school_calendar`, falls back to curated Cobb static; (4) NEW APIs: resource library CRUD, check-in class details, checkin handout uploads (class-handouts + checkin_uploads metadata); (5) NEW components: DebriefingChamber, ResourceLibrary; (6) check.sh compliance for my migrations — none authored by me now (using E4's); my contract proposals go via BUILD-LOG, not new SQL files.
+
+
+## 2026-10-12 ~10:05 EDT — Squad Telemetry E5 — API + Pages Engineer START
+
+**Mission:** d-dash-comprehensive school pages (Overview + per-Class) in the Pookie spaceship language + first-class pull-health mission-control dashboard.
+
+**Plan:** (1) Migration 066 `school_sync_health` — E5-authored contract, DBA-review pattern; (2) curated data libs (bell schedules, Cobb calendar events, trivia, study resources ported from d-dash); (3) enrichment service (semester card, GPA block UW/W/HOPE, attendance, Open-Meteo weather); (4) sync-health service reading 066; (5) API routes: dashboard, sync-health, weather, calendar, materials, peer-tips, study-resources; (6) rebuilt Overview (Did You Know, semester card, GPA sim, classes list, freshness summary, bell schedule, Cobb calendar, weather, check-in) + per-class pages (peer playbook, grouped assignments, what-if sim, Explain It Back, Drive materials, study resources, email teacher); (7) mission-control health page + overview freshness summary; (8) tsc clean + build green, commit staging-build, NO deploy.
+
+**Coordination for E4:** if E4's `school_sync_health` lands with different columns, I will adapt — my dashboard degrades gracefully (table-missing → derives from sync_jobs/sync_heartbeats, all sources "Awaiting First Run").
+
+**NO BLANK PAGES — EVER:** every section renders a graceful awaiting-data or error state with a recovery path.
+
+
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
@@ -1924,3 +1964,56 @@ All: tsc clean. NOT deployed (parent owns deploys). Migrations 064/065 need Supa
 - `mission-briefing.tsx` — quote card becomes `holo-panel`.
 
 **Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys.
+
+## 2026-10-12 ~10:05 EDT — Squad Telemetry E4 (Database Architect) — SCHOOL SCHEMA + SYNC-HEALTH CONTRACT (E1/E2/E3 unblocked)
+
+**Status: CONTRACT PUBLISHED. Migration 066 written; applying + backfill + telemetry/health.py + SCHOOL-SCHEMA.md follow this entry.**
+
+### Design decision: extend, don't duplicate
+The pookie project already has a real school schema (001/002/006/026/041/042/045/047 — live in the DB). E4's job is to close the gaps, not fork a parallel `school_*` family. Mapping:
+
+| E1/E2/E3 need | Canonical table (live or in 066) | Notes |
+|---|---|---|
+| Classes | `classes` | EXTENDED in 066: `room`, `current_unit`, `color` added (has period/teacher/display_order/grade_weights already) |
+| Current grades | `grades` | UNIQUE (child_id, class_id, term) — upsert target. term e.g. 'GP2' |
+| Grade history | `grade_snapshots` | EXTENDED in 066: `category_averages jsonb` added (per-sync per-category avg+weight; feeds Path-to-90) |
+| Assignments | `assignments` | EXTENDED in 066: `assignment_type` added (homework/quiz/test/project/lab/final). Existing `due_next` view unchanged |
+| Attendance | `school_attendance` | **NEW in 066** |
+| Teacher/counselor emails | `teacher_messages` | EXTENDED in 066: `external_id` (gmail msg id, dedupe), `received_at`, `summary`. direction='inbound', status='received', sender_type teacher/counselor |
+| District calendar | `school_calendar` | **NEW in 066** (holiday/early_release/no_school/event; rolling 2-yr retention) |
+| Per-class check-ins | `checkin_class_details` | **NEW in 066** (FK to existing `checkins`; worked_on/confusing/due_next per class) |
+| Sync health (THE contract) | `school_sync_health` + `school_sync_runs` | **NEW in 066** — see contract below |
+
+Existing tables the crons depend on (`sync_requests`, `class_emails`, `parent_sync`, `studentvue_syncs`) are **untouched**.
+
+### THE SYNC-HEALTH CONTRACT (Mehedi directive 2026-10-12)
+`school_sync_health` — one row per (child_id, source_name, machine). Writers: E1/E2/E3 via shared `telemetry/health.py` (ships with this work). service_role writes; tenant read via `current_child_ids()`.
+
+Columns: `id uuid PK`, `child_id → children`, `source_name text` (e.g. 'studentvue' | 'parentvue' | 'gmail-teacher' | 'ctls-learn' | 'ccsd-calendar' | 'checkin-app'), `machine text CHECK IN ('laptop','macbook','sandbox','cloud')`, `cadence text` ('daily'|'hourly'|'weekly'|'manual'), `expected_freshness interval DEFAULT '26 hours'`, `last_run_started timestamptz`, `last_run_finished timestamptz`, `last_success_at timestamptz`, `rows_pulled int`, `rows_by_table jsonb` (e.g. {"grades":6,"assignments":42}), `error_text text`, `consecutive_errors int`, `next_scheduled_run timestamptz`, `data_freshness_status text CHECK IN ('fresh','stale','error','never')`, `provenance='app_generated'`, `created_at/updated_at`.
+
+Freshness rule (enforced identically in `telemetry/health.py` and SQL `recompute_school_sync_health()`): latest run failed → `error`; `last_success_at` NULL → `never`; `now - last_success_at > expected_freshness` → `stale`; else `fresh`.
+
+`school_sync_runs` — append-only per-run log (started/finished/rows/error, 90-day retention) for dashboard history + debugging.
+
+### RLS model
+Child-scoped via `child_id = ANY (public.current_child_ids())` (001 pattern). Sync tables (grades/grade_snapshots/attendance/sync_health/calendar) = tenant SELECT, writes service_role-only (no client write policies — same as 006). Assignments/teacher_messages keep parent-role write policies. GRANTs explicit; all statements idempotent (IF NOT EXISTS / DROP POLICY IF EXISTS / OR REPLACE) per check.sh.
+
+### Next from E4 (in flight)
+066 applied → `telemetry/health.py` → backfill from `studentvue-gradebook-2026-10-05.json` → `docs/SCHOOL-SCHEMA.md` (data-flow diagram, retention table, idempotency strategy).
+
+## 2026-10-12 ~10:15 EDT — Squad Telemetry E4 — Classes-requirements schema (E5 unblocked)
+
+**066 APPLIED LIVE** (mgmt API): school_attendance, school_calendar, checkin_class_details, school_sync_health, school_sync_runs + classes/grade_snapshots/assignments/teacher_messages extensions. **067 APPLIED LIVE**: class_resources, checkin_uploads, check-in field renames. **068 WRITTEN — needs dashboard SQL editor** (storage schema not API-writable): `class-handouts` bucket + policies.
+
+### E5 contract — new tables (all child-scoped via `child_id = ANY (public.current_child_ids())`)
+
+**`class_resources`** — per-class resource library. Columns: `id`, `child_id`, `class_id → classes`, `title`, `url` (NULL for uploads/notes), `resource_type` CHECK IN ('khan_academy','youtube','cheat_sheet','clever','kahoot','blooket','quizlet','desmos','deltamath','ap_classroom','ebook','game','other'), `description`, `unit_tag`, `is_seeded` bool (true = Pookie recommendation), `is_active` bool, `sort_order` int, `created_by → auth.users`, `created_at/updated_at`. RLS: tenant SELECT; INSERT any tenant member (created_by bound to auth.uid()); UPDATE/DELETE parent-role or creator.
+
+**`checkin_uploads`** — handout/photo upload metadata. Columns: `id`, `checkin_id → checkins`, `child_id`, `class_id → classes`, `unit_tag` (auto-filled from classes.current_unit at upload), `file_path` ('<child_id>/<class_slug>/<filename>'), `file_name`, `mime_type`, `size_bytes`, `uploaded_by → auth.users`, `uploaded_at`, UNIQUE (checkin_id, file_path). RLS: tenant SELECT; member INSERT (uploaded_by = auth.uid()); DELETE uploader or parent.
+
+**Storage bucket `class-handouts`** (private, 50 MB limit) — path convention **`<child_id>/<class_slug>/<filename>`**. 068 policies: SELECT/INSERT scoped to the caller's children's folders; UPDATE/DELETE uploader-or-parent. ⚠️ 068 must be applied in the dashboard SQL editor (file: `supabase/migrations/068_class_handouts_storage.sql`).
+
+### E5 contract — check-in fields (final names)
+Day level (`checkins`, existing): `mood`, `energy`, `stress` (1–5), `text`. Per-class (`checkin_class_details`, UNIQUE (checkin_id, class_id)): **`covered`** (what was covered), **`clicked`** (what clicked), **`fuzzy`** (still fuzzy), **`due_next`** (what's due next), **`confidence`** (1–5). Linked uploads via `checkin_uploads.checkin_id + class_id`. (Renamed in 067 from worked_on/confusing — nothing read the old names.)
+
+Remaining from E4: backfill run → `telemetry/health.py` done (unit-tested) → `docs/SCHOOL-SCHEMA.md` (data flow, retention, idempotency).

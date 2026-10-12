@@ -375,7 +375,7 @@ export function PookieChat({
 
       <div className="animate-bloom flex items-center gap-4">
         <div className="relative">
-          <PookieOrb size={52} />
+          <PookieOrb size={52} mood={isThinking ? "thinking" : "idle"} />
           {/* comm signal indicator — the channel is open */}
           <span
             aria-hidden="true"
