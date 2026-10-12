@@ -74,7 +74,7 @@ export const GROVES: Grove[] = [
   {
     name: "School",
     subtitle: "the school years, handled",
-    sigil: "🌿",
+    sigil: "🛰️",
     modules: [
       { id: "W1", name: "School", watchOver: "Grades, assignments, and the path to 90.", seedAction: "", status: "live", route: "/school" },
       { id: "W16", name: "School Calendar", watchOver: "Holidays, early releases — the school year at a glance. Lives inside School.", seedAction: "Sync the school calendar", status: "seedling", route: null },

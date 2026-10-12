@@ -167,7 +167,7 @@ export function CheckinForm({
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
         <div className="flex items-center gap-4">
           <div>
-            <p className="text-sm font-medium text-star-100">Checked in for today 🌱</p>
+            <p className="text-sm font-medium text-star-100">Checked in for today ✅</p>
             <p className="mt-0.5 text-xs text-stardust-300">
               Only you see this. It never appears in anything your parents see, and it
               never affects your access.
@@ -237,7 +237,7 @@ export function CheckinForm({
         <div>
           <h3 className="font-medium text-star-100">Daily Log</h3>
           <p className="text-xs text-stardust-300">
-            Your space. Honest answers grow the best plans — and only you see them.
+            Your space. Honest answers build the best flight plans — and only you see them.
           </p>
         </div>
       </div>

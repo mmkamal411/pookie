@@ -19,7 +19,7 @@ export default function ChildSegmentError({
   const refId = error.digest ?? "unknown";
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-      <div className="text-5xl" aria-hidden="true">🌱</div>
+      <div className="text-5xl" aria-hidden="true">🛸</div>
       <h2 className="mt-4 text-xl font-semibold text-stardust-100">
         We couldn&apos;t load this dashboard
       </h2>

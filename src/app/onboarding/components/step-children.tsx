@@ -127,7 +127,7 @@ export function StepChildren({
       <StepShell
         eyebrow="Crew manifest"
         title="Bring your crew aboard?"
-        sub="Pookie grows with your child — from full command, to shared flight, to their own independent ship."
+        sub="Pookie adapts as your child takes command — from full command, to shared flight, to their own independent ship."
       >
         <div className="flex flex-col gap-3">
           <button

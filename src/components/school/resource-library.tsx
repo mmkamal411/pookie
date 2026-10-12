@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { LibraryResource, ResourceType } from "@/server/services/school-resources";
 
 const TYPE_META: Record<ResourceType, { label: string; icon: string; color: string; glow: string }> = {
-  khan_academy: { label: "Khan Academy", icon: "🌿", color: "#4ade80", glow: "rgb(74 222 128 / 0.25)" },
+  khan_academy: { label: "Khan Academy", icon: "🎓", color: "#4ade80", glow: "rgb(74 222 128 / 0.25)" },
   youtube: { label: "YouTube", icon: "▶️", color: "#f87171", glow: "rgb(248 113 113 / 0.25)" },
   cheat_sheet: { label: "Cheat Sheet", icon: "📋", color: "#fbbf24", glow: "rgb(251 191 36 / 0.25)" },
   clever: { label: "Clever", icon: "🟠", color: "#fb923c", glow: "rgb(251 146 60 / 0.25)" },

@@ -161,7 +161,7 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
 
       <div className="mt-4">
         <InfoLine>
-          Some travel tools unlock as you grow up — Pookie grows with you.
+          Some travel tools unlock as you get older — Pookie flies with you.
         </InfoLine>
       </div>
 
@@ -218,7 +218,7 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
           <Card>
             <p className="text-sm text-stardust-300">
               Nothing here for you right now. Some parts of Pookie unlock as you get older. Pookie
-              grows with you.
+              flies with you.
             </p>
           </Card>
         </div>

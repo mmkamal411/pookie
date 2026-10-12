@@ -55,7 +55,7 @@ export function ParentOnlyNotice() {
 export function BackendPending({ feature }: { feature: string }) {
   return (
     <div className="card-living rounded-2xl px-5 py-6 text-center">
-      <p className="text-sm font-medium text-star-100">{feature} is taking root</p>
+      <p className="text-sm font-medium text-star-100">{feature} is coming online</p>
       <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stardust-300">
         The data service for this screen is still being built — check back soon. Nothing is broken.
       </p>

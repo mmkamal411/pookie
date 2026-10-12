@@ -128,7 +128,7 @@ export function IndependenceView() {
         description={`Signed in as ${status.childName ?? "you"}.`}
       >
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-center">
-          <p className="text-4xl" aria-hidden="true">🌱</p>
+          <p className="text-4xl" aria-hidden="true">🛸</p>
           <p className="mt-3 text-sm font-medium text-star-100">Not quite yet</p>
           {status.dateOfBirth ? (
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stardust-300">

@@ -1,7 +1,7 @@
 // Badge — a small Nebula status pill. Tones:
 //   info    — neutral stardust
 //   live    — "Live" module marker (nova pink glow)
-//   seedling— seedling marker (soft green)
+//   standby — standby module marker (soft green)
 //   law     — "Required by law" (amber)
 //   choice  — "Pookie's choice" (violet)
 //   warning — gentle caution

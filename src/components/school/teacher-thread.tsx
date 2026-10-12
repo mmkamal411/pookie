@@ -219,7 +219,7 @@ export function TeacherThread({
 
         <div className="mt-4 space-y-3">
           {teacherMsgs.length === 0 && (
-            <p className="text-sm text-stardust-300">No messages yet — the thread grows here.</p>
+            <p className="text-sm text-stardust-300">No messages yet — the thread starts here.</p>
           )}
           {teacherMsgs.map((m) => (
             <MessageCard

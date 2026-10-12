@@ -216,7 +216,7 @@ function EventCard({
           </p>
           {event.prep_note && event.prep_due && !event.ack && (
             <p className="mt-2 rounded-xl bg-nebula-800/40 border border-comet-600/25 px-3 py-2 text-sm text-comet-300">
-              <span aria-hidden>🌱 </span>
+              <span aria-hidden>🛰️ </span>
               {event.prep_note}
             </p>
           )}

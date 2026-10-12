@@ -41,7 +41,7 @@ export function AttentionItems({
     return (
       <div className="card-white love-halo rounded-2xl px-5 py-4">
         <p className="text-sm text-[#1f1f4a]">
-          Nothing needs extra love right now — every class is at or above 80. 🌱
+          Nothing needs extra attention right now — every class is at or above 80. ✅
         </p>
       </div>
     );

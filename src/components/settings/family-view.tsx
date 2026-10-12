@@ -451,7 +451,7 @@ export function FamilyView() {
       >
         {invites.length === 0 ? (
           <p className="text-sm text-stardust-300">
-            No pending invites — everyone who&apos;s been invited has joined. 🌱
+            No pending invites — everyone who&apos;s been invited has joined. ✅
           </p>
         ) : (
           <ul className="space-y-2.5">

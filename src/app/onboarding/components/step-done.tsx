@@ -34,7 +34,7 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
         variant.kind === "justMe"
           ? "Your cockpit is all yours. You can bring crew aboard anytime from Ship Systems → Family."
           : variant.kind === "child"
-            ? "Pookie grows with your child — from full command, to shared flight, to their own independent ship."
+            ? "Pookie adapts as your child takes command — from full command, to shared flight, to their own independent ship."
             : "Your cockpit is ready. You can bring crew aboard anytime from Ship Systems → Family."
       }
     >

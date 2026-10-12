@@ -112,7 +112,7 @@ function ModuleRow({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-medium text-star-100">
-              <span aria-hidden="true" className="mr-1.5 text-xs">🌱</span>
+              <span aria-hidden="true" className="mr-1.5 text-xs">🛸</span>
               {mod.name}
             </p>
             <DevelopmentBadge />
@@ -125,7 +125,7 @@ function ModuleRow({
       </button>
       {seedOpen && (
         <div className="animate-rise mt-3 border-t border-nova-400/10 pt-3">
-          <p className="text-xs text-stardust-300">Taking root — the first step is small and real:</p>
+          <p className="text-xs text-stardust-300">On standby — the first step is small and real:</p>
           <p className="mt-1 text-sm font-medium text-aurum-300">{mod.seedAction}</p>
           {mod.teenPrivate && <p className="mt-1 text-[11px] text-stardust-500">Teen-private space</p>}
         </div>
@@ -339,7 +339,7 @@ export function MorePopup({
           </div>
 
           <p className="mt-6 text-center text-xs text-stardust-500">
-            {visibleByGrove.reduce((n, g) => n + g.hits.length, 0)} modules · growing one grove at a time
+            {visibleByGrove.reduce((n, g) => n + g.hits.length, 0)} modules · bringing systems online one deck at a time
           </p>
         </>
       )}

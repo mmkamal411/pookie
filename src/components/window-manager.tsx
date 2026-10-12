@@ -59,7 +59,7 @@ const MODULES: ModuleInfo[] = [
   { id: "home", name: "Home", readout: "Nav", glow: "#a78bfa", route: "/", closable: false },
   { id: "today", name: "Today", readout: "Scan", glow: "#6ee7b7", route: "/today", closable: true },
   { id: "pookie", name: "Pookie", readout: "Comms", glow: "#f472b6", route: "/pookie", closable: true },
-  { id: "progress", name: "Progress", readout: "Growth", glow: "#fbbf24", route: "/school", closable: true },
+  { id: "progress", name: "Progress", readout: "Trajectory", glow: "#fbbf24", route: "/school", closable: true },
   { id: "settings", name: "Ship Systems", readout: "Sys", glow: "#7dd3fc", route: "/settings", closable: true },
   { id: "health", name: "Health", readout: "Bio", glow: "#6ee7b7", route: "/health", closable: true },
   { id: "marketplace", name: "Marketplace", readout: "Trade", glow: "#c4b5fd", route: "/marketplace", closable: true },

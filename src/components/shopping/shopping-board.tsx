@@ -921,7 +921,7 @@ export function ShoppingBoard() {
 
       {/* needed */}
       <section aria-label="Needed" className="mt-8">
-        <SectionTitle count={grouped.needed.length}>🌱 Needed</SectionTitle>
+        <SectionTitle count={grouped.needed.length}>🛒 Needed</SectionTitle>
         <div className="mt-3 space-y-3">
           {grouped.needed.map((i) => (
             <ItemCard key={i.id} {...cardProps(i)} />
@@ -1007,7 +1007,7 @@ export function ShoppingBoard() {
         <SectionTitle>🏪 Where we shop</SectionTitle>
         {storeStats.length === 0 ? (
           <p className="mt-3 text-sm text-stardust-500">
-            Report a price when you buy something and the family&apos;s store smarts will grow here.
+            Report a price when you buy something and the family&apos;s store smarts will build up here.
           </p>
         ) : (
           <div className="mt-3 space-y-2">
