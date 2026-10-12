@@ -3,6 +3,24 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:45 EDT — Squad 1 Safety Track Coordinator (staging-build): SQUAD KICKOFF
+
+**Squad 1 — Safety Track** ⛑️ spun up per Mehedi's team charters (2 platform teams, 5 squads, 2 fractional teams). 5 expert agents fanned out in parallel:
+- **PM (PMP):** `docs/squad1/implementation-plan.md` — work breakdown, acceptance criteria, API contracts, risk log
+- **Tech Lead / Backend:** migrations 022–029 (`trusted_adults`, crisis tables, `pending_revokes`, `outing_plans`, emergency tables, trails, events, `access_events` extensions) + `src/lib/safety/actions.ts` + `crisis-router` Edge Function + `docs/squad1/api-contracts.md`
+- **Frontend:** `src/components/safety/` — TrustedAdultFlow, CrisisCard, CoolingOffFlow (+safe-exit), ScreenTimeCoSet, ExplorerSetup, EmergencyModule (W19), SharingRevoke
+- **QA:** `docs/squad1/test-plan.md` — full test matrix + adversarial tests + per-flow sign-off checklist (hard gate)
+- **UX:** `docs/squad1/ux-specs.md` — build-ready screen specs + copy deck (DV-advocate review flags)
+
+**Scope:** FR-SAFETY-001–015. Trusted-adult infra → crisis L1–L4 → W19 Emergency (Paths A+B schema only; NO disclosure tooling/LE portal per FR-SAFETY-015 counsel gate) → W3/W15 → safe-exit → cooling-off redesign.
+
+**Gates before phase completion:** QA sign-off per flow + Fractional Team 2 (security) review. Launch gates: DV-advocate string review, licensed-attorney sign-offs (checklist §5).
+
+**File ownership deconflicted:** backend owns `supabase/migrations/022-029`, `src/lib/safety/`, `supabase/functions/crisis-router/`; frontend owns `src/components/safety/` + safety routes. No overlap.
+
+**No deploy.** Branch `staging-build`. Code cleanliness enforced.
+
+
 ## 2026-10-12 ~03:45 EDT — Squad 4 Coordinator (staging-build): SQUAD 4 KICKOFF (Home & Money Track)
 
 **Squad 4 — Home & Money** (Managing Director directive). Five experts dispatched on `staging-build`:
