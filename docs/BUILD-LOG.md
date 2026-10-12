@@ -3,6 +3,25 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:35 EDT — Platform Team 2 DevOps (staging-build): DEPLOY PIPELINE VERIFIED + SMOKE TEST HARDENED + 2 BUILD BREAKS FIXED
+
+**`smoke-test-staging.py` hardened** — 11 real HTTP assertions, every one executed live (no skipped checks, no TODOs), runtime ~15s (well under 60s):
+- `/` → 307 · `/login` → 200 + "Pookie" content marker (catches error-boundary-on-200) · `/auth/callback` → 307 · `/demo` → 404 (demo removed) · `GET /api/v1/me` → **403 + canonical envelope** `{ok:false, error:{code,message,requestId}}` (403 not 401 is intentional: never-confirm/deny design in `src/server/errors.ts` maps missing session → TENANT_SCOPE_VIOLATION) · `POST /api/v1/tutor/chat` → 403 envelope (auth wrapper rejects before body parse) · first `/_next/static/*` asset referenced by /login → 200 (proves the `_routes.json` static exclusion works) · must-exist (never 404/500): `/c/dawson`, `/select-child`, `/c/dawson/more` (31-module menu shell incl. Support S1/S2/S3 seedlings), `/c/dawson/today`.
+- Notes: the popup menu renders `src/lib/modules.ts` client-side — **no data endpoint exists**, nothing to check. S1/S2/S3 have `route:null` (seedlings); Support squad is landing S1 API routes now (`src/app/api/v1/support/...` untracked) — smoke coverage should extend to them once stable. Covered today via the `/c/dawson/more` shell check, not fake route checks.
+- Validated against live `pookie-staging.pages.dev`: **10/11 green**. The 1 failure is a REAL finding (see below).
+
+**🔴 REAL FINDING — staging runs a stale build:** live staging still serves `/demo` → 307 → `/c/dawson` (with demo Set-Cookies). Demo was deleted from the repo in 35344d7 but staging was never redeployed after. The hardened `/demo → 404` check now fails loudly on staging — the gate works as designed. **Fix: redeploy staging** (`npx opennextjs-cloudflare build` → `python3 deploy-staging.py`); the post-deploy gate will flip this check green. Not deploying per task rules (verification only).
+
+**🔴 BUILD WAS RED — 2 breaks fixed by DevOps:**
+1. `src/lib/health/actions.ts:192` — `export function tierVisibleFor()` (sync) inside a `"use server"` file: "Server Actions must be async". No external importers → made module-private.
+2. `src/lib/onboarding/actions.ts:19` — `export function ageYears()` (sync) inside a `"use server"` file: same violation. No external importers (other files define their own local copies) → made module-private.
+3. `src/server/errors.ts:31` — another team's edit dropped an `if (...)` statement inside the `ErrorCodes` object literal (build failed at type-check). Fixed by that team as e9725fc; DevOps did not touch it.
+- After fixes: `npm run build` compiles clean (72s). `npx tsc --noEmit` / `npm run build` still RED from OTHER teams' in-progress files — not DevOps-owned, not fixed (actively being edited; fixing risks conflicts): `src/server/services/ai-gates.ts:48,63`, `forecast.test.ts:16`, `graduation.ts:15,18,44`, `school-track.test.ts:11-14,59`, `sparks.ts:18`, `src/app/api/v1/marketplace/driving/rules/route.ts:36`, `src/app/api/v1/support/faq/articles/[slug]/route.ts:61` (all untracked/in-flight), plus committed-but-broken `src/components/safety/ScreenTimeCoSet.tsx:188,205` (Squad 1, 2f54a35: `() => void` not assignable to `() => Promise<void>`) and in-flight `src/components/shopping/shopping-board.tsx:652`. **These must be green before any staging deploy — `npx opennextjs-cloudflare build` cannot complete until then.**
+
+**Deploy-readiness:** `deploy-staging.py` wiring unchanged and verified (build → wrangler deploy → 10s wait → smoke test, exit code propagates). Assembly logic dry-run into /tmp: `.open-next` → `.pages-deploy`, `_worker.js`, `_routes.json`, `favicon.ico` all land correctly. Favicon: `src/app/favicon.ico` is RGBA (PIL: RGBA, 48x48+32x32 32-bit) and Next/OpenNext emits it into `.open-next/assets/` automatically — the 2026-10-09 copy rule is satisfied by the OpenNext flow (no `public/` copy needed; no static `out/` dir in this repo). `wrangler.jsonc` clean (no env vars). No `_redirects` file. `NEXT_PUBLIC_DEMO_MODE` appears nowhere in src/config/env files (only in stale build artifacts) — **flag: remove it from the Cloudflare dashboard Pages env vars** (dashboard-side; DevOps did not touch per rules).
+
+**Committed to staging-build:** `smoke-test-staging.py` (hardened), `src/lib/health/actions.ts` + `src/lib/onboarding/actions.ts` (build fixes), this log entry. Other teams' files untouched.
+
 ## 2026-10-12 ~04:10 EDT — Squad 1 Safety Track Coordinator (staging-build): ALL 5 DELIVERED — SQUAD COMPLETE
 
 **Squad 1 — Safety Track: all 5 experts delivered.** tsc clean on squad files; placeholder audit zero hits.

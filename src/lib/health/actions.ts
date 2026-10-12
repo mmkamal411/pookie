@@ -188,8 +188,10 @@ interface TierCheck {
 /**
  * Code mirror of health_tier_visible(). Deny by default. RLS enforces the
  * same predicate in the database; this layer must never be more permissive.
+ * Module-private: "use server" files may only export async functions, and
+ * nothing imports this externally.
  */
-export function tierVisibleFor(check: TierCheck): boolean {
+function tierVisibleFor(check: TierCheck): boolean {
   const { band, isSubject, tier, hasGrant, hasOverride } = check;
   if (tier === "H0") return isSubject && band === "adult";
   if (isSubject) return true;

@@ -15,8 +15,9 @@ import { sendChildInvite } from "@/lib/tenant/actions";
  * guardian attestation and the first-child-only rule server-side.
  */
 
-/** Full years between a YYYY-MM-DD date and today. */
-export function ageYears(isoDate: string): number {
+/** Full years between a YYYY-MM-DD date and today. Module-private: "use server"
+ * files may only export async functions, and nothing imports this externally. */
+function ageYears(isoDate: string): number {
   const [y, m, d] = isoDate.split("-").map(Number);
   const now = new Date();
   let age = now.getFullYear() - y;
