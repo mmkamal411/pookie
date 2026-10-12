@@ -65,7 +65,7 @@ export function FaqSearch({ childSlug }: { childSlug: string }) {
   }, [q]);
 
   return (
-    <div className="sticky top-0 z-10 -mx-4 bg-[#050510]/90 px-4 pt-2 pb-3 backdrop-blur-md">
+    <div className="sticky top-0 z-10 -mx-4 bg-nebula-950/90 px-4 pt-2 pb-3 backdrop-blur-md">
       <label htmlFor="faq-search" className="sr-only">
         Search the help center
       </label>

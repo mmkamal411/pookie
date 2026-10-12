@@ -15,22 +15,10 @@ import { signOut } from "@/lib/tenant/actions";
  *
  * Shared rules (both themes): no top toolbar, Title Case, spacecraft
  * metaphors only, zero purple/lavender/pink/warmth.
+ *
+ * Keyframes (cc-unfold, cc-beacon-blink, cc-ring-breathe) live in
+ * src/app/globals.css — no inline <style> injection.
  */
-
-const CC_KEYFRAMES = `
-  @keyframes cc-unfold {
-    0% { opacity: 0; transform: scaleY(0.9) scale(0.97) translateY(-8px); }
-    100% { opacity: 1; transform: none; }
-  }
-  @keyframes cc-beacon-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-  @keyframes cc-ring-breathe {
-    0%, 100% { box-shadow: 0 0 8px rgb(0 229 255 / 0.25), 0 0 20px rgb(0 229 255 / 0.08); }
-    50% { box-shadow: 0 0 14px rgb(0 229 255 / 0.5), 0 0 34px rgb(0 229 255 / 0.16); }
-  }
-`;
 
 const MONO = 'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace';
 
@@ -418,7 +406,6 @@ export function CommandCenterButton({
       className="fixed z-50"
       style={{ top: "max(0.75rem, env(safe-area-inset-top))", right: "0.75rem" }}
     >
-      <style>{CC_KEYFRAMES}</style>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

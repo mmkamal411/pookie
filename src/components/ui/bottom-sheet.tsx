@@ -56,7 +56,7 @@ export function BottomSheet({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#050510]/75 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-nebula-950/75 backdrop-blur-sm"
       />
       <div
         className={`animate-rise module-dock-panel absolute inset-x-0 bottom-0 mx-auto w-full ${maxWidth} overflow-hidden rounded-t-[28px]`}

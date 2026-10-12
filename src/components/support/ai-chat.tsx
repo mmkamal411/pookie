@@ -223,7 +223,7 @@ export function AiChat({
   return (
     <div className="flex min-h-[60dvh] flex-col">
       {/* Persistent AI disclosure — always visible, never dismissible. */}
-      <div className="sticky top-0 z-10 -mx-4 bg-[#050510]/90 px-4 py-2 backdrop-blur-md">
+      <div className="sticky top-0 z-10 -mx-4 bg-nebula-950/90 px-4 py-2 backdrop-blur-md">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-nova-400/30 bg-nebula-900/80 px-3 py-1 text-xs font-medium text-stardust-200">
           🤖 AI assistant — not a person
         </span>
@@ -357,7 +357,7 @@ export function AiChat({
         <div ref={bottomRef} />
       </div>
 
-      <div className="sticky bottom-20 mt-4 -mx-4 bg-[#050510]/90 px-4 py-2 backdrop-blur-md">
+      <div className="sticky bottom-20 mt-4 -mx-4 bg-nebula-950/90 px-4 py-2 backdrop-blur-md">
         {!online && (
           <div className="mb-2">
             <InfoLine tone="amber">

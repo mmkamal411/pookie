@@ -11,19 +11,19 @@ export function PrimaryButton({
   children,
   onClick,
   disabled,
-  tone = "pink",
+  tone = "glow",
   type = "button",
 }: {
   children: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
-  tone?: "pink" | "neutral";
+  tone?: "glow" | "neutral";
   type?: "button" | "submit";
 }) {
   const toneClass =
-    tone === "pink"
+    tone === "glow"
       ? "btn-dapple text-white"
-      : "border border-slate-500/50 bg-slate-700/60 text-slate-100 hover:bg-slate-700";
+      : "border border-stardust-500/50 bg-nebula-700/60 text-star-100 hover:bg-nebula-700";
   return (
     <button
       type={type}
@@ -72,7 +72,7 @@ export function EqualWeightButtons({
   secondDisabled?: boolean;
 }) {
   const cls =
-    "min-h-[48px] flex-1 rounded-2xl border border-slate-500/50 bg-slate-700/60 px-5 py-3 text-base font-semibold text-slate-100 transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50";
+    "min-h-[48px] flex-1 rounded-2xl border border-stardust-500/50 bg-nebula-700/60 px-5 py-3 text-base font-semibold text-star-100 transition-colors hover:bg-nebula-700 disabled:cursor-not-allowed disabled:opacity-50";
   return (
     <div className="flex flex-col gap-6 sm:flex-row">
       <button type="button" onClick={first} className={cls}>
@@ -96,11 +96,13 @@ export function FullPageFlow({ children, wide }: { children: ReactNode; wide?: b
   );
 }
 
-/** Nebula-Boring: plain system sheet for decline / safe-exit / quiet exits. */
+/** Nebula-Boring: plain system sheet for decline / safe-exit / quiet exits.
+    "Boring" means no glow, no motion — the sheet still follows the active
+    theme via tokens so it never renders as a stray dark slab. */
 export function BoringSheet({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto flex min-h-[70vh] w-full items-center justify-center bg-slate-950 px-4 py-10">
-      <div className="w-full max-w-[520px] rounded-xl border border-slate-700 bg-slate-900 p-6 text-slate-200">
+    <main className="mx-auto flex min-h-[70vh] w-full items-center justify-center bg-nebula-950 px-4 py-10">
+      <div className="w-full max-w-[520px] rounded-xl border border-nebula-700 bg-nebula-900 p-6 text-star-200">
         {children}
       </div>
     </main>
@@ -150,7 +152,7 @@ export function AcknowledgmentCheckbox({
     <label
       htmlFor={id}
       className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${
-        boring ? "border-slate-700 bg-slate-950" : "border-nova-400/20 bg-nebula-800/60"
+        boring ? "border-nebula-700 bg-nebula-950" : "border-nova-400/20 bg-nebula-800/60"
       }`}
     >
       <input
@@ -158,7 +160,7 @@ export function AcknowledgmentCheckbox({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-6 w-6 shrink-0 accent-pink-400"
+        className="mt-1 h-6 w-6 shrink-0 accent-teal-400"
       />
       <span className="text-[15px] leading-relaxed">{label}</span>
     </label>
@@ -280,10 +282,10 @@ export function CrisisResourceBlock({ boring }: { boring?: boolean }) {
   return (
     <div
       className={`rounded-2xl p-5 ${
-        boring ? "border border-slate-700 bg-slate-950 text-slate-200" : "bg-white text-slate-900"
+        boring ? "border border-nebula-700 bg-nebula-950 text-star-200" : "bg-white text-slate-900"
       }`}
     >
-      <p className={`text-sm font-semibold ${boring ? "text-slate-200" : "text-slate-900"}`}>
+      <p className={`text-sm font-semibold ${boring ? "text-star-200" : "text-slate-900"}`}>
         Help, whenever you need it
       </p>
       <ul className="mt-2 space-y-1.5 text-[15px] leading-relaxed">
@@ -291,13 +293,13 @@ export function CrisisResourceBlock({ boring }: { boring?: boolean }) {
           <a href="tel:988" className="font-bold underline underline-offset-2">
             Call or text 988
           </a>{" "}
-          <span className={boring ? "text-slate-400" : "text-slate-600"}>(Suicide and Crisis Lifeline)</span>
+          <span className={boring ? "text-stardust-300" : "text-slate-600"}>(Suicide and Crisis Lifeline)</span>
         </li>
         <li>
           <a href="sms:741741?body=HOME" className="font-bold underline underline-offset-2">
             Text HOME to 741741
           </a>{" "}
-          <span className={boring ? "text-slate-400" : "text-slate-600"}>(Crisis Text Line)</span>
+          <span className={boring ? "text-stardust-300" : "text-slate-600"}>(Crisis Text Line)</span>
         </li>
       </ul>
     </div>
@@ -320,7 +322,7 @@ export function TwoTapConfirm({
 }) {
   return (
     <div className="space-y-6">
-      <p className="text-lg font-semibold leading-relaxed text-slate-100">{question}</p>
+      <p className="text-lg font-semibold leading-relaxed text-star-100">{question}</p>
       <EqualWeightButtons
         first={onBack}
         firstLabel="Go back"

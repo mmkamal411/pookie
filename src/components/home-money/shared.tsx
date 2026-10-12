@@ -101,7 +101,7 @@ export function LoadVeil({ label }: { label: string }) {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-[#050510]/60 backdrop-blur-[2px]"
+        className="pointer-events-none fixed inset-0 bg-nebula-950/60 backdrop-blur-[2px]"
       />
       <div className="relative text-center">
         <div

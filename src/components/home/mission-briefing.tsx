@@ -42,7 +42,7 @@ function WeatherGlyph({ icon }: { icon: WeatherDay["icon"] }) {
       );
     case "cloud":
       return (
-        <svg viewBox="0 0 24 24" className={`${cls} text-slate-300`} fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+        <svg viewBox="0 0 24 24" className={`${cls} text-stardust-300`} fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
           <path d="M7 19h10a4 4 0 0 0 .7-7.94A6 6 0 0 0 6.2 12.6 3.5 3.5 0 0 0 7 19Z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );

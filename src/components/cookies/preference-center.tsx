@@ -155,7 +155,7 @@ export function PreferenceCenter() {
       onClick={close}
     >
       <div
-        className="neon-card neon-teal flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#0b1020]/95 shadow-2xl sm:rounded-3xl"
+        className="neon-card neon-teal flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-nebula-900/95 shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

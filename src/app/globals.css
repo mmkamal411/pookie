@@ -22,6 +22,7 @@
   --color-nebula-900: #0b0b1e;
   --color-nebula-800: #141432;
   --color-nebula-700: #1f1f4a;
+  --color-nebula-600: #3f4794;
 
   /* Comet — Pookie's signature green, kept for grade semantics (≥90) */
   --color-comet-300: #86efac;
@@ -46,6 +47,7 @@
   --color-stardust-100: #d8d8f0;
   --color-stardust-200: #b9b9d6;
   --color-stardust-300: #a0a0c4;
+  --color-stardust-400: #adb3dc;
   --color-stardust-500: #6f6f94;
 
   /* Aurum — sunlight golds */
@@ -117,7 +119,7 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-canopy-950);
+  background: var(--color-nebula-950);
   color: var(--color-stardust-100);
   /* Squad Deck 2026-10-12 — iOS Safari: 100vh includes the area behind the
      dynamic browser chrome, causing layout jumps when it collapses. 100dvh
@@ -129,12 +131,18 @@ body {
 }
 
 /* Bright Bridge — icy, well-lit surfaces. Cool color temperature:
-   icy blues, cyans, clean whites. Zero lavender, zero pink, zero warmth. */
-[data-theme="bright-bridge"] {
+   icy blues, cyans, clean whites. Zero lavender, zero pink, zero warmth.
+   NOTE (Team 4, 2026-10-12): this selector is :root[data-theme=...] —
+   specificity (0,2,0) — so it wins over the later hand-written :root
+   palette-lift blocks (Squad Vista/Lumina) for the space-black default.
+   A bare [data-theme="bright-bridge"] selector ties :root at (0,1,0) and
+   LOSES by source order, which silently left bright-bridge dark. */
+:root[data-theme="bright-bridge"] {
   --color-nebula-950: #f2f6fa;
   --color-nebula-900: #e8eef5;
   --color-nebula-800: #dbe4ee;
   --color-nebula-700: #c3d2e4;
+  --color-nebula-600: #b4c9df;
   --color-comet-300: #166534;
   --color-comet-400: #16a34a;
   --color-comet-500: #22c55e;
@@ -150,6 +158,7 @@ body {
   --color-stardust-100: #1e2a3a;
   --color-stardust-200: #3a4a5e;
   --color-stardust-300: #55677e;
+  --color-stardust-400: #687a92;
   --color-stardust-500: #7a8aa0;
   --color-aurum-200: #0369a1;
   --color-aurum-300: #0284c7;
@@ -214,6 +223,22 @@ body {
 }
 [data-theme="bright-bridge"] .card-living {
   background: linear-gradient(165deg, rgb(255 255 255 / 0.7), rgb(226 240 252 / 0.6));
+}
+
+/* Bright Bridge decision (Team 4, 2026-10-12): the viewscreen is frosted
+   GLASS — on the lit bridge it reads as light-frosted glass with an icy
+   cyan edge. A dark slab on a white page would look like a rendering bug,
+   so the pane flips light. Intentional, not an accident. */
+[data-theme="bright-bridge"] .glass-pane {
+  background: linear-gradient(180deg,
+    rgb(255 255 255 / 0.72),
+    rgb(226 238 250 / 0.66));
+  border: 1px solid rgb(0 184 212 / 0.35);
+  box-shadow:
+    0 0 48px rgb(0 184 212 / 0.14),
+    0 18px 60px rgb(22 32 46 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    inset 0 0 80px rgb(186 230 253 / 0.18);
 }
 
 /* White glass card — the Home tab. Dark ink on white glass, cyan glow edge. */
@@ -1257,8 +1282,9 @@ body::before {
    never rewrites of other squads' selectors.
 
    1. Palette lift — :root redefinition wins over @theme by source order.
-   2. body base — the old --color-canopy-950 token was never defined; set an
-      explicit luminous deep-space base (canvas covers it when healthy).
+   2. body base — the luminous deep-space base (the canvas covers it when
+      healthy). Note: an earlier revision referenced a --color-canopy-950
+      token that was never defined; the base now uses --color-nebula-950.
    3. Brighter glass + cards so content pops from the background.
    4. Cosmic scene layers (CosmicSceneDirector) — crossfading nebula scenes.
    5. Vista hero — the open window: home greets you with open cosmos first.
@@ -2268,4 +2294,25 @@ a,
   html {
     background: var(--color-nebula-950);
   }
+}
+
+/* ==========================================================================
+   TEAM 4 — 2026-10-12. Command Center keyframes, hoisted here from the
+   component's inline <style> tag. The beacon blink (2.4s) and ring breathe
+   (3s) are deliberately subtle: findable, never dominant. The unfold
+   (240ms) matches the menu's eased open. All GPU-cheap (opacity /
+   box-shadow / transform); the global prefers-reduced-motion rule at the
+   top of this file stills them.
+   ========================================================================== */
+@keyframes cc-unfold {
+  0% { opacity: 0; transform: scaleY(0.9) scale(0.97) translateY(-8px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cc-beacon-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+@keyframes cc-ring-breathe {
+  0%, 100% { box-shadow: 0 0 8px rgb(0 229 255 / 0.25), 0 0 20px rgb(0 229 255 / 0.08); }
+  50% { box-shadow: 0 0 14px rgb(0 229 255 / 0.5), 0 0 34px rgb(0 229 255 / 0.16); }
 }
