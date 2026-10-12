@@ -66,6 +66,7 @@ export const createChild = (input: {
   nickname?: string | null;
   schoolName?: string | null;
   gradeLevel?: string | null;
+  dateOfBirth?: string | null;
 }) => api<{ id: string }>("/api/v1/children", { method: "POST", body: JSON.stringify(input) });
 
 /** PATCH /api/v1/children/[childId] — camelCase fields; slug/status excluded. */

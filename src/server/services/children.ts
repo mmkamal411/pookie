@@ -1,6 +1,7 @@
 // Framework-free business logic. Handlers (REST/actions) are thin adapters:
 // validate → resolve tenant → call service → shape response. No framework imports here.
 import { createClient } from '@/lib/supabase/server';
+import { ApiError, ErrorCodes } from '@/server/errors';
 
 export interface ChildSummary {
   id: string;
@@ -49,6 +50,25 @@ export interface CreateChildInput {
   schoolName?: string | null;
   gradeLevel?: string | null;
   timezone?: string | null;
+  /** YYYY-MM-DD. Feeds the 018 age-tiering model via 053's p_date_of_birth. */
+  dateOfBirth?: string | null;
+}
+
+/** True for a real calendar date (YYYY-MM-DD), not in the future, age ≤ 150. */
+function isUsableBirthdate(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (
+    dt.getUTCFullYear() !== y ||
+    dt.getUTCMonth() !== m - 1 ||
+    dt.getUTCDate() !== d
+  ) {
+    return false;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (iso > today) return false;
+  return Number(today.slice(0, 4)) - y <= 150;
 }
 
 /**
@@ -56,8 +76,18 @@ export interface CreateChildInput {
  * child row + the caller's parent access row atomically. Requires the caller
  * to already hold a parent role somewhere (or the invite path for the first
  * child). Returns the new child id.
+ *
+ * The birthdate is validated here (never trust the RPC's raw Postgres cast
+ * error to reach the client) and stored via 053's optional p_date_of_birth.
  */
 export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
+  if (
+    input.dateOfBirth !== undefined &&
+    input.dateOfBirth !== null &&
+    !isUsableBirthdate(input.dateOfBirth)
+  ) {
+    throw new ApiError(ErrorCodes.VALIDATION_FAILED);
+  }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('create_child', {
     p_first_name: input.firstName,
@@ -67,6 +97,7 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
     p_school_name: input.schoolName ?? null,
     p_grade_level: input.gradeLevel ?? null,
     p_timezone: input.timezone ?? 'America/New_York',
+    p_date_of_birth: input.dateOfBirth ?? null,
   });
   if (error) throw error;
   return { id: data as string };

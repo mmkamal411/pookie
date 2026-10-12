@@ -84,7 +84,7 @@ export function SettingsView() {
   // Child form state
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ firstName: "", lastName: "", nickname: "", schoolName: "", gradeLevel: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", nickname: "", schoolName: "", gradeLevel: "", dateOfBirth: "" });
   const [nameDraft, setNameDraft] = useState("");
 
   const reloadChildren = async () => {
@@ -171,7 +171,7 @@ export function SettingsView() {
   }
 
   function openAdd() {
-    setForm({ firstName: "", lastName: "", nickname: "", schoolName: "", gradeLevel: "" });
+    setForm({ firstName: "", lastName: "", nickname: "", schoolName: "", gradeLevel: "", dateOfBirth: "" });
     setEditingId(null);
     setShowAdd(true);
   }
@@ -187,6 +187,7 @@ export function SettingsView() {
         nickname: child.nickname ?? "",
         schoolName: child.schoolName ?? "",
         gradeLevel: child.gradeLevel ?? "",
+        dateOfBirth: "",
       });
     } catch {
       // Fall back to summary fields if the detail fetch fails.
@@ -196,6 +197,7 @@ export function SettingsView() {
         nickname: child.nickname ?? "",
         schoolName: child.schoolName ?? "",
         gradeLevel: child.gradeLevel ?? "",
+        dateOfBirth: "",
       });
     }
     setEditingId(child.id);
@@ -226,6 +228,7 @@ export function SettingsView() {
           nickname: form.nickname.trim() || null,
           schoolName: form.schoolName.trim() || null,
           gradeLevel: form.gradeLevel.trim() || null,
+          dateOfBirth: form.dateOfBirth || null,
         });
         await reloadChildren();
       }
@@ -392,6 +395,20 @@ export function SettingsView() {
                 />
               </Field>
             </div>
+            {!editingId && (
+              <Field label="Birthdate">
+                <input
+                  type="date"
+                  value={form.dateOfBirth}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                  className={inputClass}
+                />
+                <p className="mt-1 text-xs text-white/45">
+                  Sets the right age protections — under 13, teen, or adult.
+                </p>
+              </Field>
+            )}
             <div className="flex gap-2.5">
               <PrimaryButton onClick={saveChild} disabled={saving}>
                 {saving ? "Saving…" : editingId ? "Save changes" : "Add child"}
