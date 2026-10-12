@@ -1,0 +1,38 @@
+{
+  "ts": "20261012-142623",
+  "base_url": "https://pookie-staging.pages.dev",
+  "critical": [],
+  "warnings": [],
+  "rows": [
+    {
+      "page": "login-desktop",
+      "verdict": "PASS",
+      "detail": "http=200 mean=12.7 std=39.4 bright=1.75% diff=0.0%"
+    },
+    {
+      "page": "login-mobile",
+      "verdict": "PASS",
+      "detail": "http=200 mean=22.0 std=47.0 bright=1.81% diff=0.0%"
+    },
+    {
+      "page": "root-desktop",
+      "verdict": "PASS",
+      "detail": "http=200 mean=12.7 std=39.3 bright=1.75% diff=0.0%"
+    },
+    {
+      "page": "/select-child",
+      "verdict": "PASS",
+      "detail": "HTTP 403 -> needs signed-in validation"
+    },
+    {
+      "page": "/c/dawson",
+      "verdict": "PASS",
+      "detail": "HTTP 403 -> needs signed-in validation"
+    },
+    {
+      "page": "/c/dawson/today",
+      "verdict": "PASS",
+      "detail": "HTTP 403 -> needs signed-in validation"
+    }
+  ]
+}
