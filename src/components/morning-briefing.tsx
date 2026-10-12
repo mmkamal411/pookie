@@ -60,33 +60,37 @@ export function MorningBriefing({
   }, []);
 
   const items: { label: string; urgent: boolean }[] = [];
-  if (schoolDueCount > 0) items.push({ label: `${schoolDueCount} school ${schoolDueCount === 1 ? "item" : "items"} due`, urgent: true });
+  if (schoolDueCount > 0) items.push({ label: `${schoolDueCount} School ${schoolDueCount === 1 ? "Item" : "Items"} Due`, urgent: true });
   if (data) {
-    if (data.tasksOverdue > 0) items.push({ label: `${data.tasksOverdue} overdue ${data.tasksOverdue === 1 ? "task" : "tasks"}`, urgent: true });
-    if (data.tasksDueToday > 0) items.push({ label: `${data.tasksDueToday} ${data.tasksDueToday === 1 ? "task" : "tasks"} due today`, urgent: false });
-    if (data.billsDueSoon > 0) items.push({ label: `${data.billsDueSoon} ${data.billsDueSoon === 1 ? "bill" : "bills"} due this week${data.billsTotal ? ` (${data.billsTotal})` : ""}`, urgent: data.billsDueSoon > 0 });
+    if (data.tasksOverdue > 0) items.push({ label: `${data.tasksOverdue} Overdue ${data.tasksOverdue === 1 ? "Task" : "Tasks"}`, urgent: true });
+    if (data.tasksDueToday > 0) items.push({ label: `${data.tasksDueToday} ${data.tasksDueToday === 1 ? "Task" : "Tasks"} Due Today`, urgent: false });
+    if (data.billsDueSoon > 0) items.push({ label: `${data.billsDueSoon} ${data.billsDueSoon === 1 ? "Bill" : "Bills"} Due This Week${data.billsTotal ? ` (${data.billsTotal})` : ""}`, urgent: data.billsDueSoon > 0 });
   }
-  if (!checkinDone) items.push({ label: "Check-in not logged", urgent: false });
+  if (!checkinDone) items.push({ label: "Check-In Not Logged", urgent: false });
+
+  const accent = items.some((item) => item.urgent) ? "hull-amber" : "hull-cyan";
 
   if (items.length === 0) {
     return (
-      <div className="glass-pane animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
-        <p className="text-sm text-stardust-200">🌤️ Clear skies — nothing urgent on the board today.</p>
+      <div className="hull-panel hull-green animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
+        <p className="hull-readout text-sm text-neon-green">All Clear — Nothing Urgent on the Board Today.</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-pane animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
-      <p className="text-xs font-semibold capitalize tracking-widest text-nova-300">Morning briefing</p>
+    <div className={`hull-panel hull-panel-accent animate-bloom mt-6 p-4 ${accent}`} style={{ animationDelay: "0.14s" }}>
+      <p className="hull-title">Morning Briefing</p>
       <ul className="mt-2 space-y-1.5">
         {items.map((item, i) => (
           <li key={i} className="flex items-center gap-2 text-sm">
             <span
-              className={`h-1.5 w-1.5 rounded-full ${item.urgent ? "bg-amber-400" : "bg-nova-400"}`}
+              className={`h-1.5 w-1.5 shrink-0 ${item.urgent ? "bg-neon-amber" : "bg-neon-cyan"}`}
               aria-hidden
             />
-            <span className={item.urgent ? "text-amber-200" : "text-stardust-200"}>{item.label}</span>
+            <span className={`hull-readout ${item.urgent ? "text-neon-amber" : "text-hull-text-dim"}`}>
+              {item.label}
+            </span>
           </li>
         ))}
       </ul>

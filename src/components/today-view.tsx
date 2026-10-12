@@ -11,7 +11,26 @@ import { byUrgency, daysUntil, statusStyle } from "@/components/overview/due-hel
 /**
  * Today tab — the day's schedule and tasks.
  * Due today, tonight's top 3, the check-in nudge. One glance, then go.
+ *
+ * Mission Critical Spacecraft skin: HUD panels with corner brackets,
+ * semantic status accents (cyan active, amber pending, green done, red overdue),
+ * monospace data readouts, no lavender, no pill radii.
  */
+
+function statusAccent(status: string): string {
+  // Missing/late = overdue (red); everything else on the radar is active (cyan).
+  return status === "missing" || status === "late" ? "hull-red" : "hull-cyan";
+}
+
+function statusColor(status: string): string {
+  return status === "missing" || status === "late" ? "text-neon-red" : "text-neon-cyan";
+}
+
+/** Tonight's priorities accent: overdue goes red, everything else is pending amber. */
+function priorityAccent(status: string): string {
+  return status === "missing" || status === "late" ? "hull-red" : "hull-amber";
+}
+
 export function TodayView({
   overview,
   childName,
@@ -28,19 +47,15 @@ export function TodayView({
   const tonight = [...overview.due_next].sort(byUrgency).slice(0, 3);
 
   return (
-    <main className="relative mx-auto max-w-3xl overflow-hidden px-4 pt-10 pb-8">
-      <div className="firefly" style={{ width: 8, height: 8, top: "8%", left: "12%" }} />
-      <div className="firefly" style={{ width: 6, height: 6, top: "26%", left: "86%", animationDelay: "1.4s" }} />
-
-      <div className="animate-bloom flex items-center gap-4">
-        <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-          Today · flight plan
-        </p>
-      </div>
-      <h1 className="text-sunlit animate-bloom mt-3 text-3xl font-semibold tracking-tight" style={{ animationDelay: "0.08s" }}>
-        Today&apos;s flight plan for {childName}
+    <main className="relative mx-auto max-w-3xl px-4 pt-10 pb-8">
+      <p className="hull-title animate-bloom">Today · Flight Plan</p>
+      <h1
+        className="animate-bloom mt-3 text-3xl font-semibold tracking-tight text-hull-text"
+        style={{ animationDelay: "0.08s" }}
+      >
+        Today&apos;s Flight Plan for {childName}
       </h1>
-      <p className="animate-bloom mt-2 text-sm text-stardust-300" style={{ animationDelay: "0.12s" }}>
+      <p className="hull-readout animate-bloom mt-2 text-xs text-hull-text-dim" style={{ animationDelay: "0.12s" }}>
         {new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date())}
       </p>
 
@@ -49,21 +64,21 @@ export function TodayView({
       {!overview.checkin_today && (
         <Link
           href={`/c/${childSlug}/school#checkin`}
-          className="card-living animate-bloom mt-6 block rounded-2xl border border-aurum-400/25 px-5 py-4"
-          style={{ animationDelay: "0.16s", boxShadow: "0 0 18px rgb(251 191 36 / 0.15)" }}
+          className="hull-panel hull-amber hull-panel-accent animate-bloom mt-6 block px-5 py-4"
+          style={{ animationDelay: "0.16s" }}
         >
-          <p className="text-sm font-medium text-star-100">Today&apos;s check-in isn&apos;t logged yet</p>
-          <p className="mt-1 text-sm text-stardust-300">Two minutes — how did the mission go today? →</p>
+          <p className="text-sm font-medium text-hull-text">Today&apos;s Check-In Isn&apos;t Logged Yet</p>
+          <p className="mt-1 text-sm text-hull-text-dim">Two minutes — how did the mission go today? →</p>
         </Link>
       )}
 
-      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 capitalize" style={{ animationDelay: "0.2s" }}>
-        On the radar today
+      <h2 className="hull-title animate-bloom mt-8" style={{ animationDelay: "0.2s" }}>
+        On the Radar Today
       </h2>
       <div className="mt-3 grid gap-3">
         {dueToday.length === 0 ? (
-          <p className="animate-bloom text-sm text-stardust-300" style={{ animationDelay: "0.22s" }}>
-            Nothing on the radar — clear skies ahead. 🌤️
+          <p className="animate-bloom text-sm text-hull-text-dim" style={{ animationDelay: "0.22s" }}>
+            Nothing on the radar — all clear.
           </p>
         ) : (
           dueToday.map((item, i) => {
@@ -72,17 +87,17 @@ export function TodayView({
               <Link
                 key={item.id}
                 href={`/c/${childSlug}/school/${item.class_slug}`}
-                className="card-living animate-bloom flex items-center justify-between gap-3 rounded-2xl px-5 py-4"
+                className={`hull-panel hull-panel-accent animate-bloom flex items-center justify-between gap-3 px-5 py-4 ${statusAccent(item.status)}`}
                 style={{ animationDelay: `${0.22 + i * 0.05}s` }}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-star-100">{item.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-stardust-300">
+                  <p className="truncate text-sm font-medium text-hull-text">{item.title}</p>
+                  <p className="mt-0.5 truncate text-xs text-hull-text-dim">
                     {item.class_name}
                     {item.category ? ` · ${item.category}` : ""}
                   </p>
                 </div>
-                <p className={`shrink-0 text-xs font-medium ${s.text}`}>
+                <p className={`hull-readout shrink-0 text-xs font-medium ${statusColor(item.status)}`}>
                   {item.status === "missing" || item.status === "late" ? s.label : dueDateLabel(item.due_date)}
                 </p>
               </Link>
@@ -91,12 +106,12 @@ export function TodayView({
         )}
       </div>
 
-      <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 capitalize" style={{ animationDelay: "0.28s" }}>
-        Tonight&apos;s flight priorities
+      <h2 className="hull-title animate-bloom mt-8" style={{ animationDelay: "0.28s" }}>
+        Tonight&apos;s Flight Priorities
       </h2>
       <div className="mt-3 grid gap-3">
         {tonight.length === 0 ? (
-          <p className="animate-bloom text-sm text-stardust-300" style={{ animationDelay: "0.3s" }}>
+          <p className="animate-bloom text-sm text-hull-text-dim" style={{ animationDelay: "0.3s" }}>
             The evening is yours — no priority maneuvers on the board.
           </p>
         ) : (
@@ -105,18 +120,18 @@ export function TodayView({
             return (
               <div
                 key={item.id}
-                className="card-living animate-bloom flex items-center gap-4 rounded-2xl px-5 py-4"
+                className={`hull-panel hull-panel-accent animate-bloom flex items-center gap-4 px-5 py-4 ${priorityAccent(item.status)}`}
                 style={{ animationDelay: `${0.3 + i * 0.05}s` }}
               >
                 <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-nova-400/30 text-sm font-bold text-nova-300"
+                  className="hull-readout flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-neon-cyan/30 text-sm font-bold text-neon-cyan"
                   aria-hidden="true"
                 >
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-star-100">{item.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-stardust-300">
+                  <p className="truncate text-sm font-medium text-hull-text">{item.title}</p>
+                  <p className="hull-readout mt-0.5 truncate text-xs text-hull-text-dim">
                     {item.class_name} · {item.status === "missing" || item.status === "late" ? s.label.split(" — ")[0] : dueDateLabel(item.due_date)}
                   </p>
                 </div>
@@ -136,10 +151,10 @@ export function TodayView({
 
       <Link
         href={`/c/${childSlug}/school`}
-        className="animate-bloom mt-8 inline-block text-sm font-medium text-nova-300 hover:text-nova-400"
+        className="hull-btn animate-bloom mt-8 inline-block px-4 py-2"
         style={{ animationDelay: "0.36s" }}
       >
-        Open the school console →
+        Open the School Console
       </Link>
     </main>
   );
