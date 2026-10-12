@@ -40,6 +40,22 @@ export async function isDemoRequest(): Promise<boolean> {
   return store.get(DEMO_COOKIE)?.value === "1";
 }
 
+/**
+ * True when the app should render demo UI/data: demo cookie present AND
+ * no authenticated Supabase user. A real login always wins over a stale
+ * demo cookie (fix 2026-10-12: demo cookie was overriding real sessions,
+ * showing "Demo Parent" to logged-in users).
+ *
+ * Pass the user object from `supabase.auth.getUser()` — null/undefined
+ * means no session.
+ */
+export async function shouldShowDemo(
+  user: { id: string } | null | undefined,
+): Promise<boolean> {
+  if (user) return false;
+  return await isDemoRequest();
+}
+
 /** One mock membership: demo parent + one child, Dawson. */
 export function getDemoMemberships(): TenantMembership[] {
   return [
