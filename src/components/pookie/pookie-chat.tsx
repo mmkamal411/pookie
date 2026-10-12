@@ -37,6 +37,31 @@ const QUICK_REPLIES = ["What are my priorities today?"];
 const WANTS_DEPTH =
   /\bmookie\b|deeper|more detail|better plan|go deeper|\bdetailed\b|\bcomprehensive\b|\bdeep\b|\bmore\b|\btonight\b|\bdive\b|\bthorough\b|\btoday\b|this week|this month|this term|this semester|studentvue|parentvue|\bctls\b|\bclever\b|\bresearch\b|\bsearch\b|\bfind\b|\btalk\b|\bthink\b/i;
 
+/** Action intents — "remind me to X", "add a task to X", "todo: X".
+ *  Squad Value: Pookie Chat → Actions. When detected, we create a real
+ *  family task via the API and confirm in-chat. */
+const TASK_INTENT =
+  /^(?:remind me to|remind me|add (?:a )?task(?: to)?|todo:?|task:?)\s+(.+)/i;
+
+async function tryCreateTaskFromIntent(text: string): Promise<string | null> {
+  const m = text.trim().match(TASK_INTENT);
+  if (!m) return null;
+  const title = m[1].trim().slice(0, 280);
+  if (!title) return null;
+  try {
+    const res = await fetch("/api/v1/household/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title, source: "pookie-chat" }),
+    });
+    const json = await res.json();
+    if (!json.ok) return null;
+    return title;
+  } catch {
+    return null;
+  }
+}
+
 function loadHistory(childName: string): ChatMessage[] {
   const seed: ChatMessage[] = [
     {
@@ -309,9 +334,17 @@ export function PookieChat({
     const thinking: ChatMessage = { role: "pookie", text: "", thinking: true, persona };
     setMessages((prev) => [...prev, userMsg, thinking].slice(-MAX_MESSAGES));
 
+    // Squad Value: Pookie Chat → Actions. Detect task intents and create
+    // a real family task. The confirmation rides along with Pookie's reply.
+    const taskPromise = tryCreateTaskFromIntent(trimmed);
+
     askTutor(history, trimmed, context, persona).then(
-      (reply) => {
-        const done: ChatMessage = { role: "pookie", text: reply, persona };
+      async (reply) => {
+        const createdTitle = await taskPromise;
+        const finalReply = createdTitle
+          ? `Done, Captain — I've added "${createdTitle}" to the family task list. ✓\n\n${reply}`
+          : reply;
+        const done: ChatMessage = { role: "pookie", text: finalReply, persona };
         setMessages((prev) => prev.map((m) => (m.thinking ? done : m)).slice(-MAX_MESSAGES));
         // Pookie shifts color to match the class being discussed.
         const neon = detectClassNeon(`${trimmed} ${reply}`);
