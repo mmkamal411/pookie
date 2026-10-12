@@ -56,15 +56,19 @@ export function BottomSheet({
         className="absolute inset-0 cursor-default bg-[#050510]/75 backdrop-blur-sm"
       />
       <div
-        className={`animate-rise absolute inset-x-0 bottom-0 mx-auto w-full ${maxWidth} overflow-hidden rounded-t-[28px] border-t border-x border-nova-400/25`}
+        className={`animate-rise module-dock-panel absolute inset-x-0 bottom-0 mx-auto w-full ${maxWidth} overflow-hidden rounded-t-[28px]`}
         style={{
           maxHeight: "88dvh",
           background: "linear-gradient(180deg, rgb(28 28 64 / 0.98), rgb(8 8 22 / 0.99))",
-          boxShadow: "0 -12px 48px rgb(5 5 16 / 0.6), 0 0 40px rgb(244 114 182 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08)",
         }}
       >
         <div className="flex justify-center pt-3" aria-hidden="true">
           <span className="h-1.5 w-12 rounded-full bg-nova-400/50 shadow-[0_0_12px_rgb(244_114_182/0.6)]" />
+        </div>
+        {/* Docking-module eyebrow — the sheet is a module docked with the console. */}
+        <div className="flex items-center gap-2 px-5 pt-3" aria-hidden="true">
+          <span className="module-dock-dot" />
+          <span className="module-dock-eyebrow">Docked module</span>
         </div>
         <div className="flex items-start justify-between gap-3 px-5 pt-3 pb-1">
           <div>

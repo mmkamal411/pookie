@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getMemberships, signOut } from "@/lib/tenant/actions";
 import { NebulaBackground } from "@/components/nebula-background";
 import { PookieOrb } from "@/components/pookie-orb";
+import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
+import PageGlide from "@/components/page-glide";
 
 // Session-dependent — always block, never prerender.
 export const dynamic = "force-dynamic";
@@ -44,8 +46,10 @@ export default async function MePage() {
   const name = profile?.display_name?.trim() || user.email?.split("@")[0] || "there";
 
   return (
+    <>
     <main className="relative flex min-h-screen w-full overflow-hidden bg-nebula-950">
       <NebulaBackground />
+      <PageGlide>
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-12">
         <div className="flex items-center gap-4">
           <PookieOrb size={56} />
@@ -102,6 +106,10 @@ export default async function MePage() {
           </button>
         </form>
       </div>
+      </PageGlide>
+      <StandbyConsoleSpacer />
     </main>
+    <StandbyConsole label="Your Pookie, watching over home" />
+    </>
   );
 }

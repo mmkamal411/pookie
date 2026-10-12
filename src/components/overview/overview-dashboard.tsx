@@ -85,15 +85,15 @@ export function OverviewDashboard({
             href={`/c/${childSlug}/school`}
             className="cta-glow mt-4 inline-block text-sm font-medium text-nova-600 hover:text-nova-500"
           >
-            Open the school board →
+            Open the school console →
           </Link>
         </OverviewSection>
 
-        <OverviewSection title="Needs extra love" badge={attentionCount || null} delay={0.24}>
+        <OverviewSection title="Course corrections" badge={attentionCount || null} delay={0.24}>
           <AttentionItems classes={classes} dueNext={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 
-        <OverviewSection title="Coming up" badge={overview.due_next.length || null} delay={0.28}>
+        <OverviewSection title="On the horizon" badge={overview.due_next.length || null} delay={0.28}>
           <UpcomingList items={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 
@@ -120,16 +120,16 @@ export function OverviewDashboard({
         )}
 
         {!overview.checkin_today && (
-          <OverviewSection title="Today's check-in" badge="!" delay={0.36}>
+          <OverviewSection title="Daily log" badge="!" delay={0.36}>
             <Link
               href={`/c/${childSlug}/school#checkin`}
               className="card-white block rounded-2xl px-5 py-4"
             >
               <p className="text-sm font-medium text-[#1f1f4a]">
-                {childName} hasn&apos;t checked in today yet.
+                {childName} hasn't logged today's check-in yet.
               </p>
               <p className="mt-1 text-sm text-[#55557e]">
-                Two minutes — how did school go? It shapes tonight&apos;s plan. →
+                Two minutes — how did the mission go? It shapes tonight's flight plan. →
               </p>
             </Link>
           </OverviewSection>
@@ -137,7 +137,7 @@ export function OverviewDashboard({
       </div>
 
       <p className="mt-10 text-center text-xs text-stardust-500">
-        {role === "parent" ? "Parent view" : "Student view"} · grades refresh with each school sync
+        {role === "parent" ? "Command view" : "Flight-deck view"} · grades refresh with each school sync
       </p>
     </main>
   );

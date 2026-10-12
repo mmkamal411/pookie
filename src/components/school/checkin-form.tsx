@@ -203,7 +203,7 @@ export function CheckinForm({
               onClick={() => setConfirmDelete(true)}
               className="text-xs font-medium text-stardust-500 underline-offset-2 hover:text-red-300 hover:underline"
             >
-              Delete today&apos;s check-in
+              Delete today&apos;s log
             </button>
           ) : (
             <span className="flex items-center gap-2 text-xs">
@@ -236,7 +236,7 @@ export function CheckinForm({
       <div className="flex items-center gap-3">
         <PookieOrb size={40} />
         <div>
-          <h3 className="font-medium text-star-100">Today&apos;s check-in</h3>
+          <h3 className="font-medium text-star-100">Daily log</h3>
           <p className="text-xs text-stardust-300">
             Your space. Honest answers grow the best plans — and only you see them.
           </p>

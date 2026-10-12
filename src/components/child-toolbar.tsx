@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PookieOrb } from "@/components/pookie-orb";
@@ -30,101 +30,178 @@ function ToolbarOrb() {
   );
 }
 
+/** Convert #rrggbb → rgb() with alpha for the soft-glow custom property. */
+function soft(hex: string, alpha = 0.55): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${r} ${g} ${b} / ${alpha})`;
+}
+
+const glyphProps = {
+  width: 22,
+  height: 22,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round",
+} as const;
+
+function HabitatRingGlyph() {
+  return (
+    <svg {...glyphProps} aria-hidden="true">
+      <circle cx="12" cy="12" r="7.5" />
+      <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function OrbitGlyph() {
+  return (
+    <svg {...glyphProps} aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" />
+      <ellipse cx="12" cy="12" rx="9.5" ry="4.6" transform="rotate(-24 12 12)" />
+      <circle cx="19.6" cy="7.6" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function TrajectoryGlyph() {
+  return (
+    <svg {...glyphProps} aria-hidden="true">
+      <path d="M4 19 L10.5 12.5 L14 14.5 L20 5.5" />
+      <path d="M15.5 5.5 H20 V10" />
+    </svg>
+  );
+}
+function ModuleGridGlyph() {
+  const pts = [6.5, 12, 17.5];
+  return (
+    <svg {...glyphProps} aria-hidden="true">
+      {pts.map((x) =>
+        pts.map((y) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="1.5" fill="currentColor" stroke="none" />
+        )),
+      )}
+    </svg>
+  );
+}
+
+type TabDef = {
+  id: string;
+  label: string;
+  href: string;
+  glow: string;
+  readout: string;
+  glyph?: () => ReactElement;
+  orb?: boolean;
+  popup?: boolean;
+  active: boolean;
+};
+
 /**
- * Bottom toolbar — exactly: Home · Today · Pookie (center orb) · Progress · More.
- * Fixed on every /c/[childSlug]/ page. The center orb opens the Pookie tab.
+ * Bottom toolbar — the ship's MAIN CONTROL CONSOLE.
+ * Home · Today · Pookie (center orb, docked) · Progress · More.
+ * Fixed on every /c/[childSlug]/ page; a slim standby variant covers
+ * authenticated pages outside the tenant scope.
  */
 export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const pathname = usePathname();
   const base = `/c/${childSlug}`;
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const tabs = [
-    { id: "home", label: "Home", href: base, active: pathname === base },
-    { id: "today", label: "Today", href: `${base}/today`, active: pathname.startsWith(`${base}/today`) },
-    { id: "pookie", label: "Pookie", href: `${base}/pookie`, active: pathname.startsWith(`${base}/pookie`), orb: true },
-    { id: "progress", label: "Progress", href: `${base}/school`, active: pathname.startsWith(`${base}/school`) },
+  const tabs: TabDef[] = [
+    { id: "home", label: "Home", href: base, glow: "#a78bfa", readout: "NAV · HOME", glyph: HabitatRingGlyph, active: pathname === base },
+    { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", readout: "NAV · TODAY", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
+    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#f472b6", readout: "POOKIE · AI", orb: true, active: pathname.startsWith(`${base}/pookie`) },
+    { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", readout: "NAV · PROGRESS", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page.
-    { id: "more", label: "More", href: "", active: moreOpen, popup: true },
+    { id: "more", label: "More", href: "", glow: "#c4b5fd", readout: "MODULES", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
   ];
+
+  const activeTab = tabs.find((t) => t.active);
+  const readout = pathname.includes("/settings")
+    ? "SHIP SYSTEMS"
+    : (activeTab?.readout ?? "NAV · MODULE");
+
+  const tabStyle = (glow: string): CSSProperties =>
+    ({ "--tab-glow": glow, "--tab-glow-soft": soft(glow) }) as CSSProperties;
 
   return (
     <>
       <MorePopup open={moreOpen} onClose={() => setMoreOpen(false)} childSlug={childSlug} />
       <nav
-      aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-nova-400/20"
-      style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
-        background: "linear-gradient(180deg, rgb(20 20 50 / 0.55), rgb(5 5 16 / 0.82))",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        boxShadow: "0 -8px 32px rgb(5 5 16 / 0.5), 0 -1px 0 rgb(244 114 182 / 0.12)",
-      }}
-    >
-      <div className="mx-auto grid max-w-lg grid-cols-5 items-end px-2 pt-1.5 pb-1.5">
-        {tabs.map((tab) =>
-          tab.orb ? (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              id="toolbar-pookie-orb"
-              aria-label="Pookie — AI tutor"
-              aria-current={tab.active ? "page" : undefined}
-              className="-mt-7 flex flex-col items-center gap-0.5"
-            >
-              <span
-                className={`rounded-full transition-transform hover:scale-105 ${tab.active ? "tab-active-glow" : ""}`}
-                style={tab.active ? { filter: "drop-shadow(0 0 12px rgb(244 114 182 / 0.5))" } : undefined}
+        aria-label="Primary"
+        className="console-housing fixed inset-x-0 bottom-0 z-40"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {/* Status strip — the ship's whisper */}
+        <div className="console-status-strip" aria-hidden="true">
+          <span>
+            <span className="console-status-dot" />
+            Systems nominal
+          </span>
+          <span>{readout}</span>
+        </div>
+
+        <div className="mx-auto grid max-w-lg grid-cols-5 items-end px-2 pt-0.5 pb-2">
+          {tabs.map((tab) =>
+            tab.orb ? (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                id="toolbar-pookie-orb"
+                aria-label="Pookie — AI tutor"
+                aria-current={tab.active ? "page" : undefined}
+                data-active={tab.active}
+                className="console-tab-btn relative -mt-9 flex flex-col items-center"
+                style={tabStyle(tab.glow)}
               >
-                <ToolbarOrb />
-              </span>
-              <span
-                className={`text-[11px] font-medium ${tab.active ? "text-nova-300" : "text-stardust-500"}`}
+                <span className="relative">
+                  <span className="console-orb-socket block" data-active={tab.active}>
+                    <ToolbarOrb />
+                  </span>
+                  <span className="console-orb-pool" aria-hidden="true" />
+                </span>
+                <span className="console-tab-label mt-1 text-[11px] font-medium text-stardust-500">
+                  {tab.label}
+                </span>
+              </Link>
+            ) : tab.popup ? (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                aria-expanded={moreOpen}
+                aria-haspopup="dialog"
+                data-active={tab.active}
+                className="console-tab console-tab-btn flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5"
+                style={tabStyle(tab.glow)}
               >
-                {tab.label}
-              </span>
-            </Link>
-          ) : "popup" in tab && tab.popup ? (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setMoreOpen(true)}
-              aria-expanded={moreOpen}
-              aria-haspopup="dialog"
-              className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-transform hover:scale-105 ${tab.active ? "tab-active-glow" : ""}`}
-            >
-              <span
-                className={`h-1 w-8 rounded-full transition-colors ${tab.active ? "bg-nova-400 shadow-glow-sm" : "bg-transparent"}`}
-                aria-hidden="true"
-              />
-              <span
-                className={`text-[11px] font-medium ${tab.active ? "text-nova-300" : "text-stardust-500"}`}
+                <span className="console-tab-glyph">{tab.glyph?.()}</span>
+                <span className="console-tab-slot" aria-hidden="true" />
+                <span className="console-tab-label text-[11px] font-medium text-stardust-500">
+                  {tab.label}
+                </span>
+              </button>
+            ) : (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                aria-current={tab.active ? "page" : undefined}
+                data-active={tab.active}
+                className="console-tab console-tab-btn flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5"
+                style={tabStyle(tab.glow)}
               >
-                {tab.label}
-              </span>
-            </button>
-          ) : (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              aria-current={tab.active ? "page" : undefined}
-              className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2 transition-transform hover:scale-105 ${tab.active ? "tab-active-glow" : ""}`}
-            >
-              <span
-                className={`h-1 w-8 rounded-full transition-colors ${tab.active ? "bg-nova-400 shadow-glow-sm" : "bg-transparent"}`}
-                aria-hidden="true"
-              />
-              <span
-                className={`text-[11px] font-medium ${tab.active ? "text-nova-300" : "text-stardust-500"}`}
-              >
-                {tab.label}
-              </span>
-            </Link>
-          )
-        )}
-      </div>
-    </nav>
+                <span className="console-tab-glyph">{tab.glyph?.()}</span>
+                <span className="console-tab-slot" aria-hidden="true" />
+                <span className="console-tab-label text-[11px] font-medium text-stardust-500">
+                  {tab.label}
+                </span>
+              </Link>
+            ),
+          )}
+        </div>
+      </nav>
     </>
   );
 }

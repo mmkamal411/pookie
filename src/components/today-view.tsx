@@ -33,11 +33,11 @@ export function TodayView({
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={52} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
-          Today · the plan
+          Today · flight plan
         </p>
       </div>
       <h1 className="text-sunlit animate-bloom mt-3 text-3xl font-semibold tracking-tight" style={{ animationDelay: "0.08s" }}>
-        Today for {childName}
+        Today&apos;s flight plan for {childName}
       </h1>
       <p className="animate-bloom mt-2 text-sm text-stardust-300" style={{ animationDelay: "0.12s" }}>
         {new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date())}
@@ -49,18 +49,18 @@ export function TodayView({
           className="card-living animate-bloom mt-6 block rounded-2xl border border-aurum-400/25 px-5 py-4"
           style={{ animationDelay: "0.16s", boxShadow: "0 0 18px rgb(251 191 36 / 0.15)" }}
         >
-          <p className="text-sm font-medium text-star-100">Today&apos;s check-in isn&apos;t done yet</p>
-          <p className="mt-1 text-sm text-stardust-300">Two minutes — how did school go? →</p>
+          <p className="text-sm font-medium text-star-100">Today&apos;s check-in isn&apos;t logged yet</p>
+          <p className="mt-1 text-sm text-stardust-300">Two minutes — how did the mission go today? →</p>
         </Link>
       )}
 
       <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.2s" }}>
-        Due today
+        On the radar today
       </h2>
       <div className="mt-3 grid gap-3">
         {dueToday.length === 0 ? (
           <p className="animate-bloom text-sm text-stardust-300" style={{ animationDelay: "0.22s" }}>
-            Nothing due today — a clear runway. 🌤️
+            Nothing on the radar — clear skies ahead. 🌤️
           </p>
         ) : (
           dueToday.map((item, i) => {
@@ -89,12 +89,12 @@ export function TodayView({
       </div>
 
       <h2 className="animate-bloom mt-8 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.28s" }}>
-        Tonight&apos;s top 3
+        Tonight&apos;s flight priorities
       </h2>
       <div className="mt-3 grid gap-3">
         {tonight.length === 0 ? (
           <p className="animate-bloom text-sm text-stardust-300" style={{ animationDelay: "0.3s" }}>
-            The evening is yours — no urgent work on the board.
+            The evening is yours — no priority maneuvers on the board.
           </p>
         ) : (
           tonight.map((item, i) => {
@@ -128,7 +128,7 @@ export function TodayView({
         className="animate-bloom mt-8 inline-block text-sm font-medium text-nova-300 hover:text-nova-400"
         style={{ animationDelay: "0.36s" }}
       >
-        Open the school board →
+        Open the school console →
       </Link>
     </main>
   );

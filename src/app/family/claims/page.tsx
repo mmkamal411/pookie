@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ClaimsInbox } from "./claims-inbox";
+import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 
 export const dynamic = "force-dynamic";
 
@@ -20,5 +21,11 @@ export default async function ClaimsInboxPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/family/claims");
 
-  return <ClaimsInbox />;
+  return (
+    <>
+      <ClaimsInbox />
+      <StandbyConsoleSpacer />
+      <StandbyConsole label="Family claims" />
+    </>
+  );
 }

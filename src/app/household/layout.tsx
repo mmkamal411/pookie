@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
+import PageGlide from "@/components/page-glide";
 
 // Household namespace — NOT under /c/[childSlug]. The data here is
 // per-household (owner_user_id-anchored), so a child-scoped URL would imply
@@ -17,5 +19,11 @@ export default async function HouseholdLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  return <>{children}</>;
+  return (
+    <>
+      <PageGlide>{children}</PageGlide>
+      <StandbyConsoleSpacer />
+      <StandbyConsole label="Household systems" />
+    </>
+  );
 }

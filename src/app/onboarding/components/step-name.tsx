@@ -57,9 +57,9 @@ export function StepName({
 
   return (
     <StepShell
-      eyebrow="Welcome"
-      title="Meet Pookie"
-      sub="The assistant that grows with you. Your day, your family, your plans — in one calm place. It takes 30 seconds to start."
+      eyebrow="Pre-flight"
+      title="Meet your co-pilot"
+      sub="The AI co-pilot that grows with you. Your time, your family, your plans — one cockpit. Thirty seconds to launch."
     >
       <form
         onSubmit={(e) => {
@@ -68,7 +68,7 @@ export function StepName({
         }}
       >
         <label htmlFor="display-name" className={labelClass}>
-          What should Pookie call you?
+          What should your co-pilot call you?
         </label>
         <input
           id="display-name"
@@ -80,7 +80,7 @@ export function StepName({
           autoComplete="given-name"
           className={inputClass}
         />
-        <InfoLine>Just a display name. You can change it anytime.</InfoLine>
+        <InfoLine>Just a callsign. You can change it anytime.</InfoLine>
         <div className="mt-6">
           <PrimaryButton>Continue</PrimaryButton>
         </div>

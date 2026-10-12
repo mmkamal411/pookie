@@ -71,7 +71,7 @@ export function CommandStrip({
       tone: graded.length === 0 ? "neutral" : atGoal === graded.length ? "good" : atGoal >= graded.length / 2 ? "warn" : "bad",
       detail:
         graded.length === 0
-          ? "No graded classes yet."
+          ? "No graded classes on the instruments yet."
           : `${atGoal} of ${graded.length} classes at or above the 90% goal.`,
     },
     {
@@ -81,25 +81,25 @@ export function CommandStrip({
       detail:
         gpa != null
           ? `Unweighted 4.0-scale average across ${graded.length} graded classes.`
-          : "GPA appears once grades land.",
+          : "GPA appears once grades land on the instruments.",
     },
     {
-      label: "Due soon",
+      label: "On the radar",
       value: urgent.length > 0 ? String(urgent.length) : "0",
       tone: urgent.length === 0 ? "good" : urgent.length <= 2 ? "warn" : "bad",
       detail:
         urgent.length === 0
-          ? "Clear runway — nothing urgent due."
+          ? "Clear skies — nothing urgent on the radar."
           : `${urgent.length} high-impact ${urgent.length === 1 ? "item" : "items"} due soon.`,
     },
     {
-      label: "Check-in streak",
+      label: "Log streak",
       value: checkinStreak > 0 ? `${checkinStreak}d` : "—",
       tone: checkinStreak >= 5 ? "good" : checkinStreak >= 2 ? "warn" : "neutral",
       detail:
         checkinStreak > 0
           ? `${checkinStreak} consecutive day${checkinStreak === 1 ? "" : "s"} of check-ins.`
-          : "No streak yet — today is day one.",
+          : "No streak yet — today is day one of the mission.",
     },
   ];
 

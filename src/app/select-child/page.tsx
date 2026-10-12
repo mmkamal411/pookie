@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
+import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
+import PageGlide from "@/components/page-glide";
 
 // Reads the session — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -23,7 +25,9 @@ export default async function SelectChildPage() {
   }
 
   return (
+    <>
     <main className="flex min-h-screen items-center justify-center bg-nebula-950 px-4">
+      <PageGlide>
       <div className="w-full max-w-md">
         <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
           Pookie
@@ -62,6 +66,10 @@ export default async function SelectChildPage() {
           ))}
         </div>
       </div>
+      </PageGlide>
+      <StandbyConsoleSpacer />
     </main>
+    <StandbyConsole label="Choose who to tend to" />
+    </>
   );
 }

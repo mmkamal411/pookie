@@ -125,9 +125,9 @@ export function StepChildren({
   if (mode === "choice") {
     return (
       <StepShell
-        eyebrow="Family"
-        title="Do you want to track children in Pookie?"
-        sub="Pookie grows with your child — from managing everything, to shared oversight, to their own independent assistant."
+        eyebrow="Crew manifest"
+        title="Bring your crew aboard?"
+        sub="Pookie grows with your child — from full command, to shared flight, to their own independent ship."
       >
         <div className="flex flex-col gap-3">
           <button
@@ -140,7 +140,7 @@ export function StepChildren({
               Add a child
             </span>
             <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
-              Set up grades, school, and daily rhythm for your kid.
+              School, grades, and daily rhythm — all on your console.
             </span>
           </button>
           <button
@@ -155,7 +155,7 @@ export function StepChildren({
             <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
               {busy
                 ? "One moment…"
-                : "No kids to track. Your Pookie is all yours."}
+                : "Solo flight. Your Pookie is all yours."}
             </span>
           </button>
           <button
@@ -185,9 +185,9 @@ export function StepChildren({
 
   return (
     <StepShell
-      eyebrow="Add a child"
-      title="Tell us about your child"
-      sub="Birthdate sets up the right protections for their age. You can add more children later from Settings → Family."
+      eyebrow="Crew manifest"
+      title="Tell us about your young astronaut"
+      sub="Birthdate sets the right shields for their age. You can add more crew later from Ship systems → Family."
     >
       <form onSubmit={submitChild} className="flex flex-col gap-4">
         <div>
@@ -225,8 +225,8 @@ export function StepChildren({
           )}
           {isTeen && (
             <InfoLine>
-              Teens 13–17 get their own login with built-in privacy
-              protections — they control what Pookie shares.
+              Teens 13–17 get their own login with built-in shields —
+              they control what Pookie shares.
             </InfoLine>
           )}
         </div>

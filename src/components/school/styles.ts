@@ -81,17 +81,17 @@ export function bandStyleFor(band: GradeBand, tone: "dark" | "white" = "dark"): 
 }
 /** Gap-to-90 in words — the mission frame for every class. */
 export function gapCopy(gap: number | null): string {
-  if (gap == null) return "Not graded yet this term — no judgment, just watching.";
-  if (gap <= 0) return "Holding strong at the 90 goal — keep growing.";
-  return `${gap.toFixed(1)} points from the 90 goal`;
+  if (gap == null) return "No grades on the instruments yet — holding position.";
+  if (gap <= 0) return "Holding the 90 line — steady as she goes.";
+  return `${gap.toFixed(1)} points to the 90 line`;
 }
 
-/** 7-day delta in words — a cause to plan around, not a red number. */
+/** 7-day delta in words — a course to plot, not a red number. */
 export function deltaCopy(delta: number | null): string | null {
   if (delta == null) return null;
-  if (delta > 0.05) return `Up ${delta.toFixed(1)} this week — growth is showing.`;
-  if (delta < -0.05) return `Down ${Math.abs(delta).toFixed(1)} this week — the plan below answers it.`;
-  return "Steady this week.";
+  if (delta > 0.05) return `Up ${delta.toFixed(1)} this week — climbing.`;
+  if (delta < -0.05) return `Down ${Math.abs(delta).toFixed(1)} this week — course correction below.`;
+  return "Holding steady this week.";
 }
 
 export function dueDateLabel(iso: string | null): string {
@@ -99,7 +99,7 @@ export function dueDateLabel(iso: string | null): string {
   const due = new Date(iso);
   const now = new Date();
   const days = Math.ceil((due.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-  if (days < 0) return "Overdue — gentle nudge";
+  if (days < 0) return "Course correction needed";
   if (days === 0) return "Due today";
   if (days === 1) return "Due tomorrow";
   return due.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });

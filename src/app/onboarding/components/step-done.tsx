@@ -22,20 +22,20 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
 
   return (
     <StepShell
-      eyebrow="All set"
+      eyebrow="Cleared for launch"
       title={
         variant.kind === "child"
-          ? `${variant.result.childName} is on board`
+          ? `${variant.result.childName} is aboard`
           : variant.kind === "justMe"
-            ? "Got it — just you"
-            : "You're in"
+            ? "Solo flight confirmed"
+            : "You're aboard"
       }
       sub={
         variant.kind === "justMe"
-          ? "Your Pookie is all yours. You can add children anytime from Settings → Family."
+          ? "Your cockpit is all yours. You can bring crew aboard anytime from Ship systems → Family."
           : variant.kind === "child"
-            ? "Pookie grows with your child — managing everything, then shared oversight, then their own independent assistant."
-            : "Your Pookie is ready. You can add children anytime from Settings → Family."
+            ? "Pookie grows with your child — from full command, to shared flight, to their own independent ship."
+            : "Your cockpit is ready. You can bring crew aboard anytime from Ship systems → Family."
       }
     >
       {variant.kind === "child" && variant.result.ageTier === "under13" && (
@@ -63,7 +63,7 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
           <InfoLine>
             No email was added, so this is parent-managed for now. You can
             invite {variant.result.childName} to their own login later from
-            Settings → Family.
+            Ship systems → Family.
           </InfoLine>
         )}
       {variant.kind === "child" && variant.result.emailIgnored && (
@@ -74,7 +74,7 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
       )}
       <div className="mt-6">
         <PrimaryButton type="button" onClick={() => router.push("/")}>
-          Go to my Pookie
+          Take the helm
         </PrimaryButton>
       </div>
     </StepShell>

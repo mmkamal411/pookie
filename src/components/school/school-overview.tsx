@@ -47,15 +47,15 @@ export function SchoolOverview({
       <div className="animate-bloom flex items-center gap-4">
         <PookieOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
-          School · keeping up
+          School · mission status
         </p>
       </div>
 
       <h1 className="text-sunlit animate-bloom mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-        How {childName} is growing at school
+        {childName}&apos;s school, from the flight deck
       </h1>
       <p className="animate-bloom mt-3 max-w-xl leading-relaxed text-stardust-300" style={{ animationDelay: "0.08s" }}>
-        The goal: <span className="font-semibold text-star-100">90%+ in every class</span>. Every
+        The mission: <span className="font-semibold text-star-100">90%+ in every class</span>. Every
         number below is a starting point for a plan — never a judgment.
         {needsAttention > 0 && (
           <>
@@ -133,7 +133,7 @@ export function SchoolOverview({
       </div>
 
       <p className="mt-8 text-center text-xs text-stardust-500">
-        Grades refresh with each school sync · {role === "parent" ? "Parent view" : "Student view"}
+        Grades refresh with each school sync · {role === "parent" ? "Command view" : "Flight-deck view"}
       </p>
     </main>
   );

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
 import { InviteGenerator } from "./invite-generator";
+import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 
 export const dynamic = "force-dynamic";
 
@@ -42,5 +43,11 @@ export default async function FamilyInvitePage() {
       name: m.child.nickname ?? m.child.first_name,
     }));
 
-  return <InviteGenerator children={eligible} />;
+  return (
+    <>
+      <InviteGenerator children={eligible} />
+      <StandbyConsoleSpacer />
+      <StandbyConsole label="Family invites" />
+    </>
+  );
 }

@@ -123,7 +123,7 @@ export function PathTo90({
           <p className="mt-1 text-xs text-stardust-300">
             {plan
               ? `Week of ${plan.week_start} · ${plan.plan.filter((a) => a.done).length} of ${plan.plan.length} steps growing`
-              : "No plan growing for this week yet."}
+              : "No flight plan plotted for this week yet."}
           </p>
         </div>
         {plan && role === "parent" && (

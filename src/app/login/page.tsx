@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { PookieOrb } from "@/components/pookie-orb";
 
 /**
- * Landing + auth. First thing a family sees: warmth, not a form.
- * Magic-link sign-in (no passwords anywhere). Invite links land here
- * with ?token=… and are consumed after sign-in. ?next=… carries a
- * post-auth return URL (e.g. /verify-invite?token=…) for both flows.
+ * Landing + auth. The void of space — boarding the ship.
+ * Cosmic black, a field of distant stars, and the Pookie orb as a guiding
+ * light on the horizon. Magic-link sign-in (no passwords anywhere). Invite
+ * links land here with ?token=… and are consumed after sign-in. ?next=…
+ * carries a post-auth return URL (e.g. /verify-invite?token=…) for both flows.
  *
  * Rate-limit UX: Supabase throttles magic-link sends (429 / "rate limit"
  * messages — the founder hit a project-wide throttle on launch night).
@@ -41,11 +42,11 @@ export default function LoginPage({
   // recovery hint matched to the failure kind.
   const authError = params.error ?? null;
   const authErrorCopy: Record<string, string> = {
-    auth: "Sign-in didn't finish — please try again.",
+    auth: "Boarding didn't complete — try again, astronaut.",
     auth_expired:
-      "That sign-in link expired — request a fresh one below.",
+      "That boarding pass expired — request a fresh one below.",
     auth_pkce:
-      "Your browser blocked part of the sign-in. Enable cookies and try again — or use a magic link below.",
+      "Your browser blocked part of boarding. Enable cookies and try again — or take the magic-link airlock below.",
   };
 
   // Fresh start after self-service deletion: confirm what happened.
@@ -82,7 +83,7 @@ export default function LoginPage({
   }
 
   const RATE_LIMIT_COPY =
-    "Too many sign-in attempts right now — wait a minute and try again, or continue with Google above.";
+    "Too many boarding attempts right now — hold position for a minute, or continue with Google above.";
 
   async function signInWithGoogle() {
     setOauthBusy(true);
@@ -163,60 +164,61 @@ export default function LoginPage({
   }
 
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-nebula-950">
-      <Fireflies />
+    <main className="relative flex min-h-screen overflow-hidden bg-[#010104]">
+      <Starfield />
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-6 py-16 lg:grid-cols-2">
         {/* Hero — the promise */}
         <section className="animate-bloom">
           <p className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
-            Pookie
+            Pookie · mission control
           </p>
           <h1 className="text-sunlit mt-4 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
-            Everything a mother would be worried about — gently watched over.
+            Your whole life, flown from one cockpit.
           </h1>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-stardust-300">
-            Grades, health, safety, and dreams — growing together like a
-            garden, tended with care, guided by intelligence that feels like
-            love.
+            Time, tasks, school, family, health, money — every system on a
+            single console, with a warm AI co-pilot who believes in you.
           </p>
           <ul className="mt-8 space-y-3 text-stardust-300">
             {[
-              "School, watched over daily",
-              "Health, held with care",
-              "Safety, wrapped in warmth",
-              "Futures, nurtured patiently",
+              "Today's flight plan, briefed every morning",
+              "School, health, and family — all systems monitored",
+              "Course corrections, gently suggested",
+              "A co-pilot that never stops believing in you",
             ].map((line, i) => (
               <li
                 key={line}
                 className="animate-rise flex items-center gap-3"
                 style={{ animationDelay: `${0.15 + i * 0.1}s` }}
               >
-                <LeafDot />
+                <NavDot />
                 <span>{line}</span>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* Auth card — the doorway */}
+        {/* Auth card — the airlock */}
         <section className="animate-bloom" style={{ animationDelay: "0.2s" }}>
           <div className="card-living mx-auto w-full max-w-sm rounded-3xl p-8">
-            <div className="mx-auto flex w-fit">
+            <div className="mx-auto flex w-fit flex-col items-center">
               <PookieOrb size={72} />
+              <p className="mt-2 text-[11px] tracking-[0.18em] text-stardust-500 uppercase">
+                Your guiding light
+              </p>
             </div>
             <h2 className="mt-5 text-center text-xl font-semibold text-star-100">
-              Come on in
+              Step aboard
             </h2>
             <p className="mt-1 text-center text-sm text-stardust-300">
-              Sign in with Google or your email — we&apos;ll send a magic
-              link. No passwords, ever.
+              Sign in with Google or a magic link — no passwords, ever.
             </p>
 
             {freshStart && (
               <div className="animate-bloom mt-6 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
                 <p className="text-sm font-medium text-star-100">
-                  Done. Your old account will be permanently erased
+                  Done. Your old ship will be decommissioned
                   {purgeDate ? (
                     <>
                       {" "}on <strong>{purgeDate}</strong>
@@ -228,7 +230,7 @@ export default function LoginPage({
                 </p>
                 <p className="mt-1 text-sm text-stardust-300">
                   Sign in below anytime before then to cancel and restore
-                  everything — or start fresh right now.
+                  everything — or launch fresh right now.
                 </p>
               </div>
             )}
@@ -236,8 +238,8 @@ export default function LoginPage({
             {sent ? (
               <div className="animate-bloom mt-6 space-y-4 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
                 <p className="text-sm text-stardust-200">
-                  Your link is fluttering toward your inbox — check your email
-                  (and the spam folder, just in case).
+                  Your boarding pass is on its way — check your inbox (and
+                  the spam folder, just in case).
                 </p>
                 {resent && (
                   <p className="text-xs text-nova-300">
@@ -274,9 +276,9 @@ export default function LoginPage({
                       {authErrorCopy[authError]}
                     </p>
                     <p className="mt-1 text-xs text-stardust-400">
-                      Links expire after a while — and private-mode tabs
-                      sometimes drop the handoff. A fresh link usually fixes
-                      it.
+                      Boarding passes expire after a while — and private-mode
+                      tabs sometimes drop the handoff. A fresh link usually
+                      fixes it.
                     </p>
                   </div>
                 )}
@@ -344,7 +346,8 @@ function GoogleGlyph() {
   );
 }
 
-function LeafDot() {
+/** Nav beacon — the ship's position light, replacing the garden leaf dot. */
+function NavDot() {
   return (
     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nova-500/15 shadow-glow-sm">
       <span className="h-2 w-2 rounded-full bg-nova-400" />
@@ -352,58 +355,53 @@ function LeafDot() {
   );
 }
 
-function Fireflies() {
-  const dots = [
-    { left: "8%", top: "20%", size: 10, delay: "0s" },
-    { left: "18%", top: "70%", size: 7, delay: "1.2s" },
-    { left: "42%", top: "12%", size: 12, delay: "0.6s" },
-    { left: "65%", top: "82%", size: 8, delay: "2s" },
-    { left: "78%", top: "28%", size: 11, delay: "1.6s" },
-    { left: "90%", top: "62%", size: 6, delay: "0.3s" },
-    { left: "30%", top: "45%", size: 5, delay: "2.4s" },
-    { left: "55%", top: "55%", size: 9, delay: "1s" },
-  ];
-  const ascenders = [
-    { left: "12%", top: "60%", size: 6, delay: "0s" },
-    { left: "35%", top: "75%", size: 8, delay: "2.5s" },
-    { left: "58%", top: "65%", size: 5, delay: "1.2s" },
-    { left: "72%", top: "70%", size: 7, delay: "4s" },
-    { left: "88%", top: "55%", size: 6, delay: "3s" },
+/**
+ * Starfield — the void. Tiny distant stars with a slow twinkle, a few soft
+ * drifting motes, and a whisper of nebula color far below so the black
+ * stays cosmic, not flat.
+ */
+function Starfield() {
+  const stars = [
+    { left: "6%", top: "14%", size: 2, delay: "0s", dur: "3.2s" },
+    { left: "12%", top: "68%", size: 3, delay: "1.1s", dur: "4s" },
+    { left: "19%", top: "32%", size: 2, delay: "2.2s", dur: "3.6s" },
+    { left: "27%", top: "82%", size: 3, delay: "0.6s", dur: "4.4s" },
+    { left: "35%", top: "8%", size: 2, delay: "1.8s", dur: "3s" },
+    { left: "44%", top: "48%", size: 2, delay: "0.3s", dur: "3.8s" },
+    { left: "52%", top: "22%", size: 3, delay: "2.6s", dur: "4.2s" },
+    { left: "61%", top: "74%", size: 2, delay: "1.4s", dur: "3.4s" },
+    { left: "68%", top: "12%", size: 3, delay: "0.9s", dur: "4.6s" },
+    { left: "74%", top: "58%", size: 2, delay: "2s", dur: "3.1s" },
+    { left: "81%", top: "30%", size: 3, delay: "1.6s", dur: "3.9s" },
+    { left: "88%", top: "80%", size: 2, delay: "0.2s", dur: "4.1s" },
+    { left: "94%", top: "44%", size: 2, delay: "2.9s", dur: "3.5s" },
+    { left: "23%", top: "55%", size: 2, delay: "1.2s", dur: "3.7s" },
+    { left: "57%", top: "90%", size: 2, delay: "2.4s", dur: "4.3s" },
+    { left: "47%", top: "66%", size: 3, delay: "0.7s", dur: "3.3s" },
   ];
   return (
     <div className="absolute inset-0" aria-hidden="true">
-      {dots.map((d, i) => (
+      {stars.map((s, i) => (
         <span
-          key={`f-${i}`}
-          className="firefly"
+          key={i}
+          className="absolute rounded-full bg-white"
           style={{
-            left: d.left,
-            top: d.top,
-            width: d.size,
-            height: d.size,
-            animationDelay: d.delay,
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            opacity: 0.55,
+            animation: `twinkle ${s.dur} ease-in-out ${s.delay} infinite`,
+            boxShadow: "0 0 6px rgb(255 255 255 / 0.5)",
           }}
         />
       ))}
-      {ascenders.map((d, i) => (
-        <span
-          key={`a-${i}`}
-          className="ascend-particle"
-          style={{
-            left: d.left,
-            top: d.top,
-            width: d.size,
-            height: d.size,
-            animationDelay: d.delay,
-          }}
-        />
-      ))}
-      {/* divine light wash — dappled sunlight + heavenly radiance from above */}
+      {/* whisper of nebula far below — depth without light pollution */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 90% 55% at 50% -10%, rgb(254 243 199 / 0.1), transparent 60%), radial-gradient(ellipse 80% 60% at 70% 20%, rgb(244 114 182 / 0.08), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgb(251 191 36 / 0.05), transparent 60%)",
+            "radial-gradient(ellipse 70% 45% at 50% 115%, rgb(76 29 149 / 0.14), transparent 65%), radial-gradient(ellipse 50% 35% at 85% -5%, rgb(244 114 182 / 0.05), transparent 60%)",
         }}
       />
     </div>

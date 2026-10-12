@@ -1,10 +1,12 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 import { ChildSwitcher } from "@/components/child-switcher";
+import { ShipSettingsControl } from "@/components/ship-settings-control";
 import { ChildToolbar } from "@/components/child-toolbar";
+import { GlassPane } from "@/components/glass-pane";
+import PageGlide from "@/components/page-glide";
 import { PookiePinball } from "@/components/pookie-pinball";
 
 // Tenant-scoped route — always renders at request time.
@@ -14,6 +16,14 @@ export const dynamic = "force-dynamic";
  * Child dashboard shell — slug-routed tenant context from day one.
  * Verifies the slug belongs to the caller's membership set; anything
  * else 404s (RLS would deny the data regardless).
+ *
+ * Header identity model (Mehedi 2026-10-12): the top-right crew cluster
+ * shows the LOGGED-IN USER (parent) as a pilot readout, grouped with the
+ * ship-systems control. Tapping the name docks the crew-roster module to
+ * switch which child is viewed. The child name never sits in the header.
+ *
+ * Every page renders inside <GlassPane> — one consistent digital-glass
+ * viewscreen (same max-width site-wide).
  */
 export default async function ChildDashboard({
   params,
@@ -36,6 +46,16 @@ export default async function ChildDashboard({
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
+  // Parent display name for the crew cluster. profiles (017) may not be
+  // applied yet — degrade to the email handle, never crash.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const parentName =
+    profile?.display_name?.trim() || user.email?.split("@")[0] || "You";
+
   // NOTE: Do NOT call setActiveChild() here. cookies().set() throws
   // "Cookies can only be modified in a Server Action or Route Handler"
   // when executed during Server Component render, which 500s this layout
@@ -57,18 +77,21 @@ export default async function ChildDashboard({
             WebkitBackdropFilter: "blur(16px)",
           }}
         >
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5">
-            <ChildSwitcher />
-            <Link
-              href={`/c/${childSlug}/settings`}
-              aria-label="Settings"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-nova-400/20 bg-nebula-900/70 text-lg text-stardust-300 transition-colors hover:border-nova-400/40 hover:text-nova-300"
-            >
-              <span aria-hidden="true">⚙</span>
-            </Link>
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2">
+            <p className="instrument-label" aria-hidden="true">
+              Pookie
+            </p>
+            {/* Crew + ship-controls cluster: parent readout + systems dial */}
+            <div className="console-cluster flex items-center gap-0.5 rounded-full py-1 pr-1.5 pl-1">
+              <ChildSwitcher parentName={parentName} role={membership.role} />
+              <span className="console-cluster-divider" aria-hidden="true" />
+              <ShipSettingsControl childSlug={childSlug} />
+            </div>
           </div>
         </header>
-        {children}
+        <GlassPane>
+          <PageGlide>{children}</PageGlide>
+        </GlassPane>
         {/* Spacer so the fixed bottom toolbar never covers page content. */}
         <div className="h-24" aria-hidden="true" />
         <ChildToolbar childSlug={childSlug} />
