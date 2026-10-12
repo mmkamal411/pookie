@@ -3,13 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
-## 2026-10-12 ~09:05 EDT — Squad Windows — window/applet paradigm (IN FLIGHT)
+## 2026-10-12 ~09:05 EDT — Squad Windows — window/applet paradigm (COMPLETE)
 
-**Lane:** window chrome ONLY. New files: `src/components/window-manager.tsx` (context + module registry), `src/components/module-window.tsx` (title bar + minimize/close frame), `src/components/minimized-dock.tsx` (floating restore chips). One surgical edit: `src/app/c/[childSlug]/layout.tsx` — wrap the existing `<GlassPane><PageGlide>{children}</PageGlide></GlassPane>` block with `<WindowManagerProvider>` + `<ModuleWindowFrame>`, add `<MinimizedDock/>` after GlassPane. Preserving Squad Viewport's uncommitted changes to that file (their ChildToolbar removal + spacer comment stay intact).
+**Built:** `src/components/window-manager.tsx` (context + 11-module registry + self-contained CSS), `src/components/module-window.tsx` (title bar + minimize/close frame), `src/components/minimized-dock.tsx` (floating restore chips). Surgical edit to `src/app/c/[childSlug]/layout.tsx` (provider wraps GlassPane; frame wraps page content; dock after GlassPane). Note: files were swept into Squad Deck's commit deb1988 (parallel commit race) — all Squad Windows code verified intact in the tree.
 
-**Not touching:** `src/app/layout.tsx`, `src/app/globals.css` (Viewport), `src/components/command-deck.tsx` / `child-toolbar.tsx` / `more-popup.tsx` (Viewport/others), `src/components/development-badge.tsx` (Atlas). All window CSS is self-contained in a `<style>` tag rendered by the provider — zero globals.css edits.
+**UX decisions:**
+- Title bar: glow dot (module color, soft pulse) + tiny letter-spaced readout prefix (NAV/SCAN/COMMS…) + prominent plain-English name. Mehedi hates metaphorical names — the human word dominates.
+- Minimize: 280ms collapse animation → chip pops in above the Command Deck (z-30, bottom 118px + safe-area, clear of toolbar buttons and the Pookie orb). Window content fully stowed → pure cosmic background visible. Chip shows glow dot + name + "tap to open".
+- Close (X): 280ms animation → routes home (the open viewport). Home has NO close button — it IS the viewport (minimize-only).
+- Anti-strand rules: minimize state lives at layout level (survives route changes); navigating to a minimized module's tab auto-restores it; toolbar tabs always work; chips always visible when anything is stowed.
+- Mobile-first: 44px touch targets on all chrome buttons; dock horizontally scrollable; prefers-reduced-motion kills all animations.
+- Brighter direction applied: luminous title-bar gradient, high-contrast text (white 94%), vibrant glow dots.
+- Zero globals.css edits — all CSS self-contained in provider's <style> tag (Squad Viewport owns globals.css).
 
-**Design:** each tenant module renders as a ship window — title bar (glow dot + readout prefix + prominent plain-English name), working minimize (collapses to a floating chip docked above the Command Deck; cosmic background fully visible), working close/X (returns to home viewport; hidden on home itself). Minimize state is per-module, survives route changes (provider lives at layout level), auto-restores when navigating to a minimized module's tab. Mobile-first: 44px+ touch targets, chips clear of toolbar buttons and the Pookie orb.
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green (all routes). NOT deployed — integration squad owns deploys. Browser verification of minimize/restore/close animations still needed (subagent can't operate live browser).
 
 ## 2026-10-12 ~08:50 EDT — Squad Bugfix — 4 glitches fixed (commit 23a934b, staging-build)
 
