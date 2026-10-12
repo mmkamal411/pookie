@@ -11,7 +11,8 @@
 -- the locked briefs: children(date_of_birth), child_access(granted_by,
 -- granted_by_user_id).
 --
--- REQUIRES: 001 (children, child_access, ensure_user), 004 (audit_event).
+-- REQUIRES: 001 (children, child_access, ensure_user), 004 (audit_event),
+-- 018 (child_access.granted_by, granted_by_user_id — the INSERT writes them).
 
 -- Migration: onboarding first-child provisioning RPC
 --

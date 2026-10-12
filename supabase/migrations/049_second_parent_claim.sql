@@ -1,4 +1,4 @@
--- Migration 031: Second-parent onboarding — full claim flow v1 (FR-AUTH-011, D5 revised)
+-- Migration 049: Second-parent onboarding — full claim flow v1 (FR-AUTH-011, D5 revised)
 --
 -- D5 (REVISED 2026-10-12): OPEN SIGNUP. v1 ships BOTH:
 --   (a) invite-from-inside (deep link/QR) — fastest path, OPTIONAL not required;

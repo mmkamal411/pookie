@@ -45,35 +45,82 @@ a file that already applied; always check that table first.
 | 034 | `034_support_grants.sql` + `034_safety_trails.sql` | Support grants + Squad 1: trails + trail_safety_guidance + age-gated rpc_get_trails (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 035 | `035_w11_spending.sql` + `035_safety_events.sql` | W11 spending + Squad 1: events vetting model + age-gated rpc_get_events + reports (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 036 | `036_w7_vault.sql` + `036_safety_extensions.sql` | W7 vault + Squad 1: emergency_requests (break-glass Paths A+B, counsel-gated schema only) + court_orders (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
+| 037 | `037_w24_credit.sql` | W24 Credit — minor security-freeze management (FR-MOD-W24) | ❌ Pending — Mehedi dashboard apply |
+| 038 | `038_w14_coparenting.sql` | W14 Co-parenting — immutable logistics log, parallel-parenting (FR-MOD-W14) | ❌ Pending — Mehedi dashboard apply |
+| 039 | `039_w12_babysitters.sql` | W12 Babysitters — directory + time-boxed grants with D6 tiered caps (FR-MOD-W12) | ❌ Pending — Mehedi dashboard apply |
+| 040 | `040_w21_mail_retention.sql` | W21 mail — extract-then-mask enforcement + raw-image auto-deletion (FR-MOD-W21, NFR-PRIVACY-009) | ❌ Pending — Mehedi dashboard apply |
+| 041 | `041_school_provenance.sql` | School data provenance + teacher/counselor inbox segregation | ❌ Pending — Mehedi dashboard apply |
+| 042 | `042_checkin_calibration.sql` | Teen-owned check-in calibration system (FR-SCHOOL-003) | ❌ Pending — Mehedi dashboard apply |
+| 043 | `043_study_sparks.sql` | Study Sparks (FR-SCHOOL-004, G8, R6) | ❌ Pending — Mehedi dashboard apply |
+| 044 | `044_quiz_flashcards.sql` | Quiz pipeline (fail-closed) + source-text flashcards + formula bank | ❌ Pending — Mehedi dashboard apply |
+| 045 | `045_path90_forecast.sql` | Path-to-90 forecast store + teen checkbox actions (FR-SCHOOL-007) | ❌ Pending — Mehedi dashboard apply |
+| 046 | `046_faq.sql` | FAQ corpus tables (S1 Help Center) | ❌ Pending — Mehedi dashboard apply |
+| 047 | `047_school_track_frontend.sql` | School track frontend contracts (Squad 3, 2026-10-12) | ❌ Pending — Mehedi dashboard apply |
 | 048 | `048_safety_trusted_adults.sql` | Squad 1: trusted_adults + Vault-backed contacts + link-code verification + is_teen_of() + log_access_event 8-arg overload (repairs 018's call shape). NOTE: 030–036 were written apply-order-independent of this file (inlined teen checks; FKs backfilled in 049) | ❌ Pending — Mehedi dashboard apply |
 | 049 | `049_second_parent_claim.sql` + `049_safety_trusted_adult_fks.sql` | Second-parent claim + Squad 1: FK backfill trusted_adults → crisis_events/crisis_alerts/outing_plans/emergency_requests (multiple files share the number; `049_safety_*` sorts first, both after 048) | ❌ Pending — Mehedi dashboard apply |
+| 050 | `050_checkins_teen_privacy_fix.sql` | SEC-001 corrective — teen-only check-in RLS (+ SEC-002 throttle table) | ❌ Pending — Mehedi dashboard apply |
+| 051 | `051_log_access_event_canonical.sql` | Canonical log_access_event signature (fixes SEC-C2): drops the 021 7-param overload, keeps the 8-param canonical form | ❌ Pending — Mehedi dashboard apply |
 | 052 | `052_provision_onboarding_child.sql` | Squad 1 (auth ignition): onboarding first-child RPC — atomic children row (with date_of_birth) + caller parent access row for zero-membership users; guardian attestation gate; promoted from standalone `src/lib/onboarding/provision_onboarding_child.sql` (deleted) | ❌ Pending — Mehedi dashboard apply |
 | 053 | `053_create_child_dob.sql` | Squad 1 (auth ignition): create_child() gains optional trailing `p_date_of_birth` (drops + recreates the 7-arg overload so old callers resolve to the new signature); feeds 018 age tiering for post-onboarding adds | ❌ Pending — Mehedi dashboard apply |
+| 054 | `054_invite_preview_pii_fix.sql` | CRITICAL-1 (Fractional Compliance): get_invite_preview() returns valid/expired/used/inviter only (DROP+CREATE — return shape changes); NEW get_invite_detail() authenticated-only post-auth enrichment (email-ownership gated). ⚠️ verify-invite/page.tsx must switch to get_invite_detail() BEFORE live apply | ❌ Pending — Mehedi dashboard apply |
+| 055 | `055_consume_invite_age_gate.sql` | CRITICAL-2 (Fractional Compliance): consume_invite() COPPA age gate (under_13_no_login / age_verification_required) + dob_under13() + children_dob_guard BEFORE trigger; coexists with 027's AFTER sever trigger | ❌ Pending — Mehedi dashboard apply |
+| 056 | `056_transaction_notes.sql` | transaction_notes table (Plaid user annotations read by src/server/services/plaid.ts); owner-scoped RLS | ❌ Pending — Mehedi dashboard apply |
+| 057 | `057_faq_seed.sql` | FAQ seed corpus (Squad 5): 23 reviewed articles into 046's faq_articles; ON CONFLICT DO UPDATE | ❌ Pending — Mehedi dashboard apply |
+| 058 | `058_go_independent.sql` | go_independent() teen flow (13–15 cooling-off / 16–17 instant revoke; staged 01 leftover) adapted to the 051 canonical 8-arg log_access_event + child_access_expiry_sweep_idx for 030's expire_timeboxed_grants() | ❌ Pending — Mehedi dashboard apply |
 
 ### Status notes
+- **2026-10-12 (Squad 3 data-layer sweep):** manifest completed — rows added for
+  037–047, 050, 051 and new 054–058 (CRITICAL-1/2 compliance folds,
+  transaction_notes, FAQ seed, go_independent). 052/053 landed concurrently
+  from Squad 1 (auth ignition). Dependency rules 5–11 added (duplicate-number
+  filename order; 018→052; 048→049; 051→058; 054 frontend blocker; 051 caller
+  breakage in 023/024/030_sud/034/031).
 - **2026-10-12 (Squad 2 reconciliation):** health rows 022–024, 028, 029 updated to the
   files actually on `staging-build`. 017–021 exist now (manifest still says TBD).
   Number collisions are REAL and need a coordinator ruling before live apply:
-  030×2, 031×2, 032×3, 033×2, 034×2, 035×2, 036×2.
+  030×2, 031×2, 032×3, 033×3, 034×2, 035×2, 036×2, 049×2. Rule 5 documents the
+  filename-order apply behavior; no renumbering (applied-history safety).
 - **001–014:** last BUILD-LOG evidence (2026-10-12, DBA/BE entries) says these were delivered
   **files-only, NOT applied to any live DB**; a subagent could not query
   `schema_migrations` from the sandbox. Whoever runs the apply MUST run
   `SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;`
   first and skip any file already listed. Status flips to ✅ only when the
   applier confirms via the DB.
-- **015–016:** committed on `staging-build`, pending Mehedi's dashboard apply.
-- **017–025:** reserved for Platform Team 1 Backend (017–023) + Security (024–025).
-  Numbering is provisional until files land.
+- **015–058:** committed on `staging-build`, pending Mehedi's dashboard apply
+  (single apply-and-verify session per SCHEDULE.md).
 
 ## Dependency rules (enforced at apply time)
 1. **017 before** any onboarding code that references `profiles`.
 2. **018 before 023** — `granted_by` must exist before `expires_at` logic builds on it.
 3. **021 before** any RPC that writes events.
 4. **016 after 015** — requires `invites.invited_by_user_id` + `graduate_child_access()` from 015.
-5. Each migration must be **re-runnable** without error: `IF NOT EXISTS` on
+5. **Duplicate numbers apply in filename order** — Supabase applies migrations
+   lexicographically, so within a shared number the alphabetical order IS the
+   apply order (e.g. `030_safety_crisis_and_grant_tiers.sql` before
+   `030_sud_separation.sql`; `049_safety_trusted_adult_fks.sql` before
+   `049_second_parent_claim.sql`). Never rely on creation order.
+6. **018 before 052** — 052's `child_access` INSERT writes `granted_by` /
+   `granted_by_user_id` (018 columns).
+7. **048 before 049** — `049_safety_trusted_adult_fks.sql` backfills FKs onto
+   `trusted_adults` (048).
+8. **051 before 058** — 058's `go_independent()` calls the canonical 8-arg
+   `log_access_event`; 051 drops the old 7-param overload it would otherwise
+   (mis)resolve against.
+9. **054 before live use of the invite flow** — the return shape of
+   `get_invite_preview()` changes; `src/app/verify-invite/page.tsx` must be
+   switched to `get_invite_detail()` first (frontend blocker, Squad 1).
+10. **051 breaks 6-arg `log_access_event` callers** — 023, 024,
+    `030_sud_separation`, 034 call the old 7-param form positionally and will
+    fail at runtime after 051 applies; those squads must adapt to the 8-arg
+    canonical form before the apply session. (`031_safety_pending_revokes`
+    passes `jsonb` as the 8th arg in 4 calls — same class of break; Squad 1.)
+11. Each migration must be **re-runnable** without error: `IF NOT EXISTS` on
    CREATE TABLE, `DROP POLICY IF EXISTS` before CREATE POLICY (Postgres has no
    CREATE POLICY IF NOT EXISTS), `DROP TRIGGER IF EXISTS` before CREATE TRIGGER,
    `CREATE OR REPLACE` on functions. CI check: `supabase/migrations/check.sh`.
+   NOTE: `check.sh` currently FAILS on the 13 pre-existing policies in
+   `002_school_systems.sql` (not preceded by DROP POLICY IF EXISTS) — 002 is
+   historical; do not edit applied history to fix the heuristic.
 
 ## Update procedure (no placeholders — keep this file live)
 When a new migration file lands on the branch:

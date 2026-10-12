@@ -3,6 +3,29 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~10:40 EDT — Squad 3 Data Layer (staging-build): STANDALONE-SQL SWEEP — 5 NEW MIGRATIONS (054–058)
+
+**Sweep:** every `.sql` outside `supabase/migrations/` cross-checked against the chain; every `.rpc()`/`.from()` in `src/` cross-checked against migrations; 041–050 dependency-traced; RLS on children/child_access/profiles audited for onboarding blockers. No double-build with Squad 1's concurrent 052/053 (reviewed theirs; fixed 052's REQUIRES comment to include 018 — the INSERT writes 018's `granted_by` columns).
+
+**New migrations (files only, NOT applied live):**
+- **054** `054_invite_preview_pii_fix.sql` — CRITICAL-1 fold: `get_invite_preview()` returns valid/expired/used/inviter only (DROP+CREATE — the staged file's bare CREATE OR REPLACE would fail live: "cannot change return type"). NEW `get_invite_detail()` — authenticated-only post-auth enrichment, email-ownership gated (the staged header's suggested companion). ⚠️ **Frontend blocker:** `src/app/verify-invite/page.tsx:56-73` reads `preview.child_id/invite_email/child_first_name/child_nickname` — those vanish with 054. Page must switch to `get_invite_detail()` BEFORE live apply (Squad 1).
+- **055** `055_consume_invite_age_gate.sql` — CRITICAL-2 fold: age-gated `consume_invite()` (diffed vs 001's — strict superset, nothing dropped), `dob_under13()`, `children_dob_guard()` BEFORE trigger (coexists with 027's AFTER sever).
+- **056** `056_transaction_notes.sql` — `src/server/services/plaid.ts:303` reads `transaction_notes`; no migration ever created it. Owner-scoped RLS.
+- **057** `057_faq_seed.sql` — Squad 5's 23 reviewed articles into 046's `faq_articles` (ON CONFLICT DO UPDATE; CHECK values validated).
+- **058** `058_go_independent.sql` — `go_independent()` from staged `01_grant_revoke.sql` (only unmigrated piece), **adapted to 051's canonical 8-arg `log_access_event`** (the staged 6-arg calls would fail at runtime after 051 drops the 7-param overload); `child_age_tier` tiers + status CHECK + event CHECK cross-checked. Plus `child_access_expiry_sweep_idx` for 030's `expire_timeboxed_grants()` (staged 05's `apply_expired_grants` is covered by 030's sweeper — no gap).
+
+**Also fixed:** `049_second_parent_claim.sql` header said "Migration 031" → "049". `APPLY_ORDER.md` completed (rows for 037–047, 050, 051, 054–058; dependency rules 5–11: duplicate-number filename order, 018→052, 048→049, 051→058, 054 frontend blocker, 051 caller breakage). New `MIGRATION-STATUS.md` (same dir) — apply checklist + ordered live-apply list + founder decisions.
+
+**Verification:** pglast parse OK on all 5; `check.sh` clean on 052–058 (the 13 failures are pre-existing in `002_school_systems.sql` — historical, untouched); dependency trace on 041–050 and 054–058 (all ALTER targets resolve to earlier-or-equal migrations; all RPC-called functions/columns traced to defining migrations).
+
+**Cross-squad breaks found (not mine to fix — flagged with file:line):**
+- 051 drops the 7-param `log_access_event`; 6-arg positional callers in **023, 024, `030_sud_separation`, 034** fail at runtime after 051 applies → owning squads must move to the canonical 8-arg form before the apply session.
+- **031** (`031_safety_pending_revokes.sql:271,289,405,491`) passes `jsonb` as the 8th arg (`p_ip_hash text`) → runtime type error (Squad 1).
+- **Staged `04_emergency_access.sql`** (emergency_grants + 3 RPCs) never folded; 036 shipped a *different* break-glass model (`emergency_requests`) — fold or declare superseded, needs MD/Safety decision (counsel-gated; not folded unilaterally).
+- 052 may already be live (browser task applied the standalone via dashboard ~05:40) — 052 is idempotent, re-apply is a safe no-op; confirm via `schema_migrations`.
+
+**Founder decisions needed:** D1 fold-or-drop staged 04 (above); D2 number-collision ruling (030×2 … 049×2 — documented as filename-order, no renumbering); D3 apply-session sequencing for 054 (frontend first) and 051 (caller fixes first). **No deploy. No live DB touched.**
+
 ## 2026-10-12 ~10:10 EDT — Squad 1 Auth & Onboarding Ignition (staging-build): FRONT-DOOR DEAD ENDS KILLED
 
 **Gaps found (file:line evidence):**
