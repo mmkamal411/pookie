@@ -6,9 +6,11 @@ Verifies key routes return expected status codes after a Cloudflare Pages
 deployment. Fails loudly (non-zero exit) if any check fails.
 
 Usage:
-    python3 smoke-test-staging.py [base_url]
+    python3 smoke-test-staging.py [base_url] [--next-dir <local .next dir>]
 
     base_url defaults to https://pookie-staging.pages.dev
+    --next-dir enables the bundle-freshness byte-compare against the build
+    that was just made (used by deploy-staging.py and CI).
 
 Every check below is a REAL HTTP assertion against the live deployment —
 no skipped checks, no TODOs. Each one must pass for the deploy to be
@@ -18,8 +20,22 @@ Checks:
     GET /                    -> 307 (root redirects unauthenticated users)
     GET /login               -> 200 + HTML contains "Pookie"
                                 (shell renders; catches error-boundary-on-200)
+    BUNDLE FRESHNESS         -> the live deployment serves the fresh build:
+                                the first /_next/static chunk referenced by
+                                /login is fetched; the served JS must contain
+                                no staleness markers (NEXT_PUBLIC_DEMO_MODE /
+                                demoMode); when --next-dir <local .next> is
+                                given, the live chunk must be byte-identical
+                                to the chunk this build produced (chunk
+                                filenames are content-hashed, so a filename
+                                the local build never produced — or differing
+                                bytes — means a STALE build is live).
+                                (Added 2026-10-12 after the stale-build
+                                incident: route statuses alone cannot prove
+                                the deployed bundle is the fresh build.)
     GET /auth/callback       -> 307 (no code = graceful redirect to login)
-    GET /demo                -> 404 (demo removed; must not serve anything)
+    GET /demo                -> 307 (demo removed; middleware redirects
+                                unauthenticated users instead of 404)
     GET /api/v1/me           -> 403 + canonical error envelope
                                 (unauthenticated. 403 not 401 is intentional:
                                 src/server/errors.ts never-confirm/deny design
@@ -47,12 +63,27 @@ API envelope checks, demo-removal check, static-asset check, menu-shell
 routes, content marker on /login.
 """
 import json
+import os
 import re
 import sys
 import urllib.request
 import urllib.error
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "https://pookie-staging.pages.dev"
+# Optional: --next-dir <path to local .next> asserts the live deployment
+# serves byte-identical static chunks to the build we just made (proves
+# bundle freshness, not just route health).
+args = list(sys.argv[1:])
+NEXT_DIR = None
+if "--next-dir" in args:
+    i = args.index("--next-dir")
+    NEXT_DIR = args[i + 1]
+    del args[i:i + 2]
+
+BASE = args[0] if args else "https://pookie-staging.pages.dev"
+
+# Staleness markers that must never appear in the served JS bundle
+# (2026-10-12 incident: a stale build shipped demo-mode code).
+STALENESS_MARKERS = ["NEXT_PUBLIC_DEMO_MODE", "demoMode"]
 
 UA = "Mozilla/5.0 (Pookie-Smoke-Test) AppleWebKit/537.36"
 
@@ -183,6 +214,56 @@ def check_static_asset(html):
     return False
 
 
+def check_bundle_freshness(html):
+    """Prove the live deployment serves the fresh build, not a stale bundle.
+
+    Route statuses alone cannot do this: a stale deployment answers 200/307
+    on every route. Next.js 16/Turbopack does not expose a buildId in the
+    HTML, but chunk filenames are content-hashed, so we (1) fetch the first
+    static chunk referenced by /login, (2) assert the served JS contains no
+    staleness markers (the 2026-10-12 incident signature), and (3) when
+    --next-dir is given, assert the live chunk is byte-identical to the
+    chunk from the build we just made — a filename the local build never
+    produced (or bytes that differ) means a STALE build is live.
+    """
+    if html is None:
+        print("  FAIL bundle freshness: skipped because /login HTML was unavailable")
+        return False
+    chunk = re.search(r'["\'](/_next/static/(?:chunks|css)/[^"\']+\.(?:js|css))["\']', html)
+    if not chunk:
+        print("  FAIL bundle freshness: no /_next/static chunk reference in /login HTML")
+        return False
+    path = chunk.group(1)
+    status, body, _ = fetch("GET", path)
+    if status != 200:
+        print(f"  FAIL bundle freshness: live chunk {path} got {status}")
+        return False
+    text = body.decode("utf-8", errors="replace")
+    for marker in STALENESS_MARKERS:
+        if marker in text:
+            print(f"  FAIL bundle freshness: staleness marker '{marker}' "
+                  f"found in live JS bundle")
+            return False
+    if NEXT_DIR:
+        # path is /_next/static/<sub>/<file> -> <NEXT_DIR>/static/<sub>/<file>
+        local = os.path.join(NEXT_DIR, "static",
+                             *path.split("/_next/static/")[1].split("/"))
+        if not os.path.isfile(local):
+            print(f"  FAIL bundle freshness: live chunk {path} was not "
+                  f"produced by this build — STALE BUILD IS LIVE")
+            return False
+        with open(local, "rb") as fh:
+            if fh.read() != body:
+                print(f"  FAIL bundle freshness: live chunk {path} differs "
+                      f"from this build's chunk — STALE BUILD IS LIVE")
+                return False
+        print(f"  OK   bundle freshness: {path} byte-identical to this build")
+    else:
+        print(f"  OK   bundle freshness: {path} served, no staleness markers "
+              f"(no --next-dir: byte-compare skipped)")
+    return True
+
+
 def main():
     print(f"Smoke test: {BASE}")
     ok = True
@@ -192,6 +273,8 @@ def main():
         ok = False
     shell_ok, login_html = check_login_shell()
     if not shell_ok:
+        ok = False
+    elif not check_bundle_freshness(login_html):
         ok = False
     if not check_status("/auth/callback", 307, "callback without code redirects gracefully"):
         ok = False

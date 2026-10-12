@@ -88,7 +88,7 @@ jobs:
         id: smoke
         run: |
           sleep 10
-          if python3 smoke-test-staging.py https://pookie-staging.pages.dev --build-id "$(cat .next/BUILD_ID)"; then
+          if python3 smoke-test-staging.py https://pookie-staging.pages.dev --next-dir .next; then
             echo "result=pass" >> "$GITHUB_OUTPUT"
           else
             echo "result=fail" >> "$GITHUB_OUTPUT"

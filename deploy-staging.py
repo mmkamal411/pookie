@@ -146,10 +146,11 @@ def main():
     time.sleep(10)  # Give Cloudflare a moment to propagate the deployment
     smoke_cmd = [sys.executable, os.path.join(APP_DIR, "smoke-test-staging.py"),
                  STAGING_URL]
-    build_id_file = os.path.join(APP_DIR, ".next", "BUILD_ID")
-    if os.path.isfile(build_id_file):
-        with open(build_id_file) as fh:
-            smoke_cmd += ["--build-id", fh.read().strip()]
+    next_dir = os.path.join(APP_DIR, ".next")
+    if os.path.isdir(next_dir):
+        # Bundle-freshness gate: the live chunks must be byte-identical to
+        # the build this script just produced.
+        smoke_cmd += ["--next-dir", next_dir]
     s = subprocess.run(smoke_cmd, cwd=APP_DIR)
     smoke = "pass" if s.returncode == 0 else "fail"
     if s.returncode != 0:
