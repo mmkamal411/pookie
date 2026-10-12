@@ -3,6 +3,12 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~07:55 EDT — Squad Instrument — Spaceship Cockpit: page-content instrument styling (staging-build, in flight)
+
+**Lane:** page content only — dashboard pages (home/today/school tabs), grade readouts, empty states, section collapse, neon detail. Squad Aurora owns background/orb; Squad Console owns toolbar/popups. Cross-boundary note: appended shared CSS utilities to `src/app/globals.css` (`.readout`, `.instrument-divider`, `.awaiting-data`, `.cta-glow`, `@keyframes pulse-soft`) — clearly commented, safe for other squads to use.
+
+**Plan:** (1) instrument-panel restyle of overview components — luminous readout digits, glowing grade rings, hairline neon dividers; (2) fix the "0 classes + all-clear" contradiction — empty-state copy reflects "no data yet"; (3) neon detail pass — progress rings, dividers, love-banner glow, CTA glow; (4) collapsed-by-default audit — remove `defaultOpen` from Home tab sections. Poetic empty states, warm not cold. GPU-cheap, prefers-reduced-motion respected.
+
 ## 2026-10-12 ~06:10 EDT — Squad 5 Phase 2 — Release Execution: STAGING RELEASED (aefe21d), wrangler branch-detection trap fixed
 
 **Release:** pulled latest `staging-build` (HEAD `aefe21d` — all squad commits confirmed: Squad 1 x4, Squad 2 x6, Squad 3 daf6a79, Squad 4 x2, Phase 1 6dbf839). Fresh `npm run build` + `npx opennextjs-cloudflare build`. Bundle verified clean (no `NEXT_PUBLIC_DEMO_MODE` in chunks). Assembled via `scripts/assemble-pages-deploy.py`. Smoke test: **11/11 pass** incl. bundle-freshness gate. Live bundle verification: all 10 `/login` JS chunks downloaded from `https://pookie-staging.pages.dev` are **byte-identical** to the fresh build; zero demo code in live bytes; tutor URL baked into server bundle. Recorded in DEPLOY-LOG.md (pass). Production untouched.
@@ -1564,3 +1570,14 @@ Built the full UI for all 7 Squad 4 modules against BACKEND-CONTRACTS.md, per UX
 **Registry/nav**: `src/lib/modules.ts` — all 7 marked live with routes (household routes absolute; W24/W14 child-relative); `more-popup.tsx` link builder now supports absolute routes.
 
 **Open / needs owner ruling:** (1) W12 teen co-approval "Ask" creates the pending grant; the teen's yes/no surface is Squad 1's Sharing screen — parent UI polls for approval. (2) W11 parent aggregate per-teen split isn't offered by the summary RPC, so the parent card shows the combined teen-private total (labeled with the first child's name when exactly determinable) — parity holds by construction. (3) W14/W24 "pending review" banners are state-driven; flipping `counsel_review_status` unlocks the same screens, no redesign needed.
+
+## 2026-10-12 ~07:55 EDT — Squad Aurora (atmosphere & light, spaceship-cockpit redesign)
+
+**Touching (atmosphere/light only — no layout, no toolbar structure):**
+- `src/components/pookie-orb.tsx` — tame the harsh orb into soft ambient moonlight
+- `src/components/pookie-pinball.tsx` — soften ball glow (transient moment only)
+- `src/components/nebula-background.tsx` — parallax starfield layers + course-change drift/hue shift on navigation
+- `src/app/globals.css` — softer toolbar-orb glow override, neon accent utilities (divider, avatar pulse, underglow)
+- `src/components/child-switcher.tsx` — avatar-pulse class on the ACTIVE avatar only (one line)
+
+**Not touching:** toolbar structure/nav (`child-toolbar.tsx` — Squad Console's domain), page layouts, popups.

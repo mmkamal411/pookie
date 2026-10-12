@@ -167,8 +167,9 @@ export function PookiePinball() {
             position: "relative",
             backgroundColor: ballColor,
             backgroundImage:
-              "radial-gradient(circle at 34% 30%, rgba(255,255,255,0.4), rgba(255,255,255,0) 50%), radial-gradient(circle at 70% 80%, rgba(0,0,0,0.18), rgba(0,0,0,0) 60%)",
-            boxShadow: `0 0 32px 8px ${ballColor}55, 0 0 64px 16px ${ballColor}22`,
+              "radial-gradient(circle at 34% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0) 50%), radial-gradient(circle at 70% 80%, rgba(0,0,0,0.18), rgba(0,0,0,0) 60%)",
+            boxShadow: `0 0 18px 4px ${ballColor}44, 0 0 44px 10px ${ballColor}1c`,
+            opacity: 0.92,
           }}
         />
       </div>

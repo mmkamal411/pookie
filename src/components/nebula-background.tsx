@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * NebulaBackground — the Deep Space canvas.
@@ -18,6 +19,10 @@ import { useEffect, useRef, useState } from "react";
  */
 export function NebulaBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pathname = usePathname();
+  // Course-change state lives in a ref so the animation loop reads it
+  // without re-renders. ease → target each frame (~800ms bank into a turn).
+  const courseRef = useRef({ hue: 0, hueT: 0, dx: 0, dxT: 0, dy: 0, dyT: 0 });
   // Capability state via lazy initializers (no setState-in-effect): the
   // values are known synchronously on the client at first render.
   const [reduced, setReduced] = useState(
@@ -41,6 +46,17 @@ export function NebulaBackground() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // New course on every navigation — the ship banks into the turn.
+  // Hue drifts ±8°, the parallax vector picks a fresh gentle heading.
+  useEffect(() => {
+    const c = courseRef.current;
+    c.hueT = Math.random() * 16 - 8;
+    const ang = Math.random() * Math.PI * 2;
+    const mag = 0.35 + Math.random() * 0.45;
+    c.dxT = Math.cos(ang) * mag;
+    c.dyT = Math.sin(ang) * mag * 0.6;
+  }, [pathname]);
+
   // Animation loop — only when the canvas exists and motion is allowed.
   useEffect(() => {
     if (reduced || noCanvas) return;
@@ -58,13 +74,19 @@ export function NebulaBackground() {
     let w = 0;
     let h = 0;
     let raf = 0;
-    let stars: { x: number; y: number; r: number; tw: number; ts: number; hue: number }[] = [];
+    let stars: { x: number; y: number; r: number; tw: number; ts: number; hue: number; depth: number }[] = [];
     let nebulas: { x: number; y: number; r: number; hue: number; dx: number; dy: number }[] = [];
     let meteors: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }[] = [];
     let satellites: { x: number; y: number; vx: number; vy: number; size: number }[] = [];
     let planets: { x: number; y: number; r: number; colors: string[]; ring: boolean; dx: number }[] = [];
     let moon = { x: 0, y: 0, r: 28 };
     const pointer = { x: -9999, y: -9999 };
+    // Course-change state (Aurora, 2026-10-12): the ship banks into a turn on
+    // every navigation. Current values ease toward targets (~800ms settle);
+    // hue shifts ±8°, drift vector nudges the parallax layers. All refs —
+    // no re-renders, GPU-cheap canvas math only.
+    const course = courseRef.current;
+    const LAYER_SPEED = [0.05, 0.13, 0.3]; // far / mid / near parallax
     // Firefly sparks — Canopy soul: tiny green/cyan/gold embers drifting
     // slowly upward with a soft glow. Firefly, not floodlight.
     let sparks: { x: number; y: number; r: number; hue: number; vy: number; ph: number; sp: number; a: number }[] = [];
@@ -80,13 +102,18 @@ export function NebulaBackground() {
       const count = Math.min(200, Math.floor((w * h) / 8500));
       const hues = [0, 0, 0, 210, 280, 320]; // mostly white, some blue/violet/pink
       for (let i = 0; i < count; i++) {
+        // Depth layers for parallax: 0 = far (slow), 2 = near (fast).
+        // Weighted so the far field dominates — depth, not noise.
+        const roll = Math.random();
+        const depth = roll < 0.55 ? 0 : roll < 0.85 ? 1 : 2;
         stars.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          r: Math.random() * 1.5 + 0.3,
+          r: (Math.random() * 1.5 + 0.3) * (0.7 + depth * 0.35),
           tw: Math.random() * Math.PI * 2,
           ts: 0.5 + Math.random() * 2,
           hue: hues[Math.floor(Math.random() * hues.length)],
+          depth,
         });
       }
       nebulas = [
@@ -143,12 +170,24 @@ export function NebulaBackground() {
     let frame = 0;
     function draw() {
       frame++;
+      // Ease the ship into its new course (~800ms settle at 60fps).
+      const EASE = 0.055;
+      course.hue += (course.hueT - course.hue) * EASE;
+      course.dx += (course.dxT - course.dx) * EASE;
+      course.dy += (course.dyT - course.dy) * EASE;
+      const bank = Math.min(
+        1,
+        Math.abs(course.hueT - course.hue) / 8 +
+          Math.hypot(course.dxT - course.dx, course.dyT - course.dy)
+      );
+      const H = course.hue;
+
       g.clearRect(0, 0, w, h);
 
       const bg = g.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, "#050510");
-      bg.addColorStop(0.5, "#0a0a1e");
-      bg.addColorStop(1, "#050510");
+      bg.addColorStop(0, `hsl(${242 + H} 55% 3.5%)`);
+      bg.addColorStop(0.5, `hsl(${240 + H} 60% 6.5%)`);
+      bg.addColorStop(1, `hsl(${242 + H} 55% 3.5%)`);
       g.fillStyle = bg;
       g.fillRect(0, 0, w, h);
 
@@ -160,15 +199,35 @@ export function NebulaBackground() {
         if (n.y < -n.r) n.y = h + n.r;
         if (n.y > h + n.r) n.y = -n.r;
         const grad = g.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
-        grad.addColorStop(0, `hsla(${n.hue}, 65%, 30%, 0.14)`);
-        grad.addColorStop(0.5, `hsla(${n.hue}, 55%, 22%, 0.07)`);
+        grad.addColorStop(0, `hsla(${n.hue + H}, 65%, 30%, 0.14)`);
+        grad.addColorStop(0.5, `hsla(${n.hue + H}, 55%, 22%, 0.07)`);
         grad.addColorStop(1, "transparent");
         g.fillStyle = grad;
         g.fillRect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
       }
 
-      // Stars — twinkling, brightening near the pointer
+      // Banking wash — a whisper of violet while the ship turns.
+      if (bank > 0.03) {
+        const wa = Math.min(0.045, bank * 0.045);
+        const gx = w / 2 + course.dx * w * 0.35;
+        const gy = h / 2 + course.dy * h * 0.35;
+        const wash = g.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * 0.7);
+        wash.addColorStop(0, `hsla(${270 + H}, 75%, 45%, ${wa})`);
+        wash.addColorStop(1, "transparent");
+        g.fillStyle = wash;
+        g.fillRect(0, 0, w, h);
+      }
+
+      // Stars — twinkling, drifting in parallax layers, brightening near the pointer
       for (const s of stars) {
+        // Near stars slide faster along the course vector — the window moves.
+        const sp = LAYER_SPEED[s.depth];
+        s.x += course.dx * sp;
+        s.y += course.dy * sp;
+        if (s.x < -4) s.x = w + 4;
+        else if (s.x > w + 4) s.x = -4;
+        if (s.y < -4) s.y = h + 4;
+        else if (s.y > h + 4) s.y = -4;
         s.tw += 0.02 * s.ts;
         const dx = s.x - pointer.x;
         const dy = s.y - pointer.y;

@@ -109,7 +109,9 @@ export function ChildSwitcher() {
         aria-label={`Switch child — currently ${activeName}`}
         className="flex items-center gap-2.5 rounded-full border border-nova-400/20 bg-nebula-900/70 py-1.5 pr-3 pl-1.5 backdrop-blur transition-colors hover:border-nova-400/40"
       >
-        <ChildAvatar child={active.child} size={30} />
+        <span className="avatar-pulse inline-flex">
+          <ChildAvatar child={active.child} size={30} />
+        </span>
         <span className="max-w-28 truncate text-sm font-medium text-star-100">{activeName}</span>
         {showChevron && (
           <span
