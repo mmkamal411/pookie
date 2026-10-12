@@ -5,8 +5,9 @@
 // Silent workers are honest: "Awaiting First Contact", never mock data.
 
 import { useCallback, useEffect, useState } from "react";
-import { CommandShell, ConsoleError } from "./command-shell";
+import { BackendUnavailable, CommandShell, ConsoleError } from "./command-shell";
 import { Gear, StatusLight } from "./gear";
+import { isServiceNotReady, parseApiError } from "@/lib/management-api";
 
 interface FleetWorker {
   key: string;
@@ -112,15 +113,20 @@ export function WorkersView({ childId }: { childId: string }) {
   const [workers, setWorkers] = useState<FleetWorker[]>([]);
   const [pending, setPending] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 503 SERVICE_NOT_READY (fleet backend not wired up yet) — honest
+  // unavailable panel instead of an error loop.
+  const [notReady, setNotReady] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
+    setNotReady(false);
     try {
       const res = await fetch(`/api/v1/children/${childId}/school/workers`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw await parseApiError(res);
       const json = (await res.json()) as { data?: { workers: FleetWorker[] } };
       setWorkers(json.data?.workers ?? []);
     } catch (e) {
+      setNotReady(isServiceNotReady(e));
       setError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setPending(false);
@@ -145,6 +151,14 @@ export function WorkersView({ childId }: { childId: string }) {
             <div key={i} className="h-64 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
           ))}
         </div>
+      ) : notReady ? (
+        <BackendUnavailable
+          message={error ?? "The fleet monitor isn't connected yet."}
+          onRetry={() => {
+            setPending(true);
+            void load();
+          }}
+        />
       ) : error ? (
         <ConsoleError
           title="Couldn't reach the fleet monitor"

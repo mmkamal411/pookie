@@ -7,6 +7,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requestSync } from "@/server/services/sync";
+import { guardServiceError } from "@/server/services/backend-availability";
 
 /** Canonical fleet — Mehedi's names: windows-laptop is WIN, MacBook is MAC. */
 export const FLEET = [
@@ -63,9 +64,18 @@ function matchFleet(deviceName: string | null): FleetKey | null {
 
 /** Fleet status for one child — WIN and MAC cards, honest about silence. */
 export async function getFleetStatus(childId: string): Promise<{ workers: FleetWorker[] }> {
+  // Missing service key or missing tables (013/066 not migrated)
+  // → 503 SERVICE_NOT_READY, never a 500.
   const activeSince = new Date(Date.now() - 45 * 60_000).toISOString();
-  const [{ data: beats, error: beatErr }, { data: jobs, error: jobErr }, { data: active, error: actErr }] =
-    await Promise.all([
+  let beats: Array<{ device_name: string; status: string; last_heartbeat: string }> | null = null;
+  let jobs: Array<{ device_name: string; completed_at: string }> | null = null;
+  let active: Array<{ machine: string }> | null = null;
+  try {
+    const [
+      { data: beatRows, error: beatErr },
+      { data: jobRows, error: jobErr },
+      { data: activeRows, error: actErr },
+    ] = await Promise.all([
       supabaseAdmin
         .from("sync_heartbeats")
         .select("device_name, status, last_heartbeat")
@@ -86,26 +96,30 @@ export async function getFleetStatus(childId: string): Promise<{ workers: FleetW
         .is("finished_at", null)
         .gte("started_at", activeSince),
     ]);
-  if (beatErr) throw beatErr;
-  if (jobErr) throw jobErr;
-  if (actErr) throw actErr;
+    if (beatErr) throw beatErr;
+    if (jobErr) throw jobErr;
+    if (actErr) throw actErr;
+    beats = (beatRows ?? []) as Array<{ device_name: string; status: string; last_heartbeat: string }>;
+    jobs = (jobRows ?? []) as Array<{ device_name: string; completed_at: string }>;
+    active = (activeRows ?? []) as Array<{ machine: string }>;
+  } catch (err) {
+    guardServiceError(err);
+  }
 
   const lastSuccess = new Map<FleetKey, string>();
-  for (const j of (jobs ?? []) as Array<{ device_name: string; completed_at: string }>) {
+  for (const j of jobs ?? []) {
     const key = matchFleet(j.device_name);
     if (key && !lastSuccess.has(key)) lastSuccess.set(key, j.completed_at);
   }
   const syncing = new Set<FleetKey>();
-  for (const r of (active ?? []) as Array<{ machine: string }>) {
+  for (const r of active ?? []) {
     const key = matchFleet(r.machine);
     if (key) syncing.add(key);
   }
 
   const now = Date.now();
   const workers: FleetWorker[] = FLEET.map((f) => {
-    const beat = (beats ?? []).find(
-      (b: { device_name: string }) => matchFleet(b.device_name) === f.key,
-    ) as { device_name: string; status: string; last_heartbeat: string } | undefined;
+    const beat = (beats ?? []).find((b) => matchFleet(b.device_name) === f.key);
     const lastSeen = beat?.last_heartbeat ?? null;
     let status: FleetWorker["status"] = "never";
     if (lastSeen) {
@@ -148,17 +162,9 @@ export async function getSyncRuns(
   opts: { source?: string; limit?: number; before?: string } = {},
 ): Promise<{ runs: SyncRun[]; hasMore: boolean }> {
   const limit = Math.min(Math.max(Math.floor(opts.limit ?? 30), 1), 100);
-  let q = supabaseAdmin
-    .from("school_sync_runs")
-    .select("id, source_name, machine, started_at, finished_at, rows_pulled, rows_by_table, error_text, success")
-    .eq("child_id", childId)
-    .order("started_at", { ascending: false })
-    .limit(limit + 1);
-  if (opts.source) q = q.eq("source_name", opts.source);
-  if (opts.before) q = q.lt("started_at", opts.before);
-  const { data, error } = await q;
-  if (error) throw error;
-  const rows = (data ?? []) as Array<{
+  // Missing service key or missing school_sync_runs (066 not migrated)
+  // → 503 SERVICE_NOT_READY, never a 500.
+  let rows: Array<{
     id: string;
     source_name: string;
     machine: string;
@@ -169,6 +175,21 @@ export async function getSyncRuns(
     error_text: string | null;
     success: boolean | null;
   }>;
+  try {
+    let q = supabaseAdmin
+      .from("school_sync_runs")
+      .select("id, source_name, machine, started_at, finished_at, rows_pulled, rows_by_table, error_text, success")
+      .eq("child_id", childId)
+      .order("started_at", { ascending: false })
+      .limit(limit + 1);
+    if (opts.source) q = q.eq("source_name", opts.source);
+    if (opts.before) q = q.lt("started_at", opts.before);
+    const { data, error } = await q;
+    if (error) throw error;
+    rows = (data ?? []) as typeof rows;
+  } catch (err) {
+    guardServiceError(err);
+  }
   const hasMore = rows.length > limit;
   const runs: SyncRun[] = rows.slice(0, limit).map((r) => ({
     id: r.id,
@@ -207,15 +228,21 @@ export async function requestSourceSync(
 
 /** Distinct sources seen in school_sync_runs — powers the console filter. */
 export async function getRunSources(childId: string): Promise<{ sources: string[] }> {
-  const { data, error } = await supabaseAdmin
-    .from("school_sync_runs")
-    .select("source_name")
-    .eq("child_id", childId)
-    .order("source_name");
-  if (error) throw error;
-  const seen = new Set<string>();
-  for (const r of (data ?? []) as Array<{ source_name: string }>) {
-    if (r.source_name) seen.add(r.source_name);
+  // Missing service key or missing school_sync_runs (066 not migrated)
+  // → 503 SERVICE_NOT_READY, never a 500.
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("school_sync_runs")
+      .select("source_name")
+      .eq("child_id", childId)
+      .order("source_name");
+    if (error) throw error;
+    const seen = new Set<string>();
+    for (const r of (data ?? []) as Array<{ source_name: string }>) {
+      if (r.source_name) seen.add(r.source_name);
+    }
+    return { sources: [...seen].sort() };
+  } catch (err) {
+    guardServiceError(err);
   }
-  return { sources: [...seen].sort() };
 }

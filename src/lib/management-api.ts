@@ -22,6 +22,26 @@ export class ManagementApiError extends Error {
   }
 }
 
+/**
+ * Parse a non-OK fetch Response into a ManagementApiError carrying the
+ * server's plain-English message (never "HTTP 503"). For call sites that
+ * use raw fetch instead of api().
+ */
+export async function parseApiError(res: Response): Promise<ManagementApiError> {
+  const json = (await res.json().catch(() => null)) as {
+    error?: { code?: string; message?: string };
+  } | null;
+  return new ManagementApiError(
+    json?.error?.code ?? `http_${res.status}`,
+    json?.error?.message ?? `Request failed (${res.status}).`,
+  );
+}
+
+/** True when the backend for a feature isn't wired up yet (503 SERVICE_NOT_READY). */
+export function isServiceNotReady(e: unknown): boolean {
+  return e instanceof ManagementApiError && e.code === "SERVICE_NOT_READY";
+}
+
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {

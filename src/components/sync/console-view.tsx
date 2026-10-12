@@ -7,9 +7,14 @@
 // sync_jobs queue underneath.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CommandShell, ConsoleError } from "./command-shell";
+import { BackendUnavailable, CommandShell, ConsoleError } from "./command-shell";
 import { Gear, StatusLight } from "./gear";
-import { listSyncJobs, type SyncJob } from "@/lib/management-api";
+import {
+  isServiceNotReady,
+  listSyncJobs,
+  parseApiError,
+  type SyncJob,
+} from "@/lib/management-api";
 
 interface SyncRun {
   id: string;
@@ -142,6 +147,10 @@ export function SyncConsoleView({ childId }: { childId: string }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [pending, setPending] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // True when the API answers 503 SERVICE_NOT_READY (sync backend not wired
+  // up yet) — the console renders the honest unavailable panel and the
+  // Sync Now buttons stay disabled instead of dead-ending on a 500.
+  const [notReady, setNotReady] = useState(false);
   const [filter, setFilter] = useState<string>("all");
   const [jobs, setJobs] = useState<SyncJob[]>([]);
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -153,7 +162,7 @@ export function SyncConsoleView({ childId }: { childId: string }) {
       if (filter !== "all") params.set("source", filter);
       if (opts.before) params.set("before", opts.before);
       const res = await fetch(`/api/v1/children/${childId}/school/sync-runs?${params}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw await parseApiError(res);
       const json = (await res.json()) as { data?: { runs: SyncRun[]; hasMore: boolean; sources?: string[] } };
       const fresh = json.data?.runs ?? [];
       setRuns((prev) => (opts.append ? [...prev, ...fresh] : fresh));
@@ -165,12 +174,14 @@ export function SyncConsoleView({ childId }: { childId: string }) {
 
   const load = useCallback(async () => {
     setError(null);
+    setNotReady(false);
     try {
       const jobsPromise = listSyncJobs(childId, 10);
       await loadRuns();
       const { jobs: freshJobs } = await jobsPromise;
       setJobs(freshJobs);
     } catch (e) {
+      setNotReady(isServiceNotReady(e));
       setError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setPending(false);
@@ -211,11 +222,14 @@ export function SyncConsoleView({ childId }: { childId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw await parseApiError(res);
       const json = (await res.json()) as { data?: { note: string } };
       setNotice(json.data?.note ?? "Sync queued.");
       setTimeout(() => void load(), 2000);
     } catch (e) {
+      // A 503 here means the sync backend isn't wired up yet — disable the
+      // triggers and say so instead of letting the buttons dead-end.
+      if (isServiceNotReady(e)) setNotReady(true);
       setNotice(e instanceof Error ? `Couldn't queue the sync: ${e.message}` : "Couldn't queue the sync.");
     } finally {
       setSyncing(null);
@@ -234,15 +248,20 @@ export function SyncConsoleView({ childId }: { childId: string }) {
       <div className="mb-4 rounded-2xl border border-white/10 bg-black/40 p-3.5">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-[11px] tracking-widest text-cyan-300/70">Trigger Sync</p>
-          <p className="text-[11px] text-white/35">Queues a full pull — the worker picks it up within minutes</p>
+          <p className="text-[11px] text-white/35">
+            {notReady
+              ? "Sync triggers are unavailable until the sync backend is connected"
+              : "Queues a full pull — the worker picks it up within minutes"}
+          </p>
         </div>
         <div className="mt-2.5 flex flex-wrap gap-2">
           {SYNC_NOW_SOURCES.map((s) => (
             <button
               key={s}
               type="button"
-              disabled={syncing !== null}
+              disabled={syncing !== null || notReady}
               onClick={() => void syncNow(s)}
+              title={notReady ? "Sync isn't connected yet" : `Queue a sync for ${sourceLabel(s)}`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 font-mono text-[11px] text-cyan-200 transition hover:border-cyan-300/60 hover:bg-cyan-400/20 disabled:opacity-50"
             >
               <Gear active={syncing === s} size={16} glow="text-cyan-300" />
@@ -255,6 +274,14 @@ export function SyncConsoleView({ childId }: { childId: string }) {
 
       {pending ? (
         <div className="h-72 animate-pulse rounded-2xl border border-white/10 bg-white/5" aria-label="Loading console" />
+      ) : notReady ? (
+        <BackendUnavailable
+          message={error ?? "The sync service isn't connected yet."}
+          onRetry={() => {
+            setPending(true);
+            void load();
+          }}
+        />
       ) : error ? (
         <ConsoleError
           title="Console feed interrupted"

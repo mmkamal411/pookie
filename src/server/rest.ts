@@ -15,9 +15,30 @@ import {
   ApiError,
   ErrorCodes,
   httpStatusFor,
+  mapDbError,
   toApiError,
   type ErrorCode,
 } from './errors';
+
+/**
+ * Structured server error log (NO BLANK PAGES rule, 2026-10-12).
+ * Every server error carries: timestamp, traceable error ID (requestId),
+ * route (METHOD + pathname), and the actual error message. Raw detail stays
+ * server-side — the client only ever sees the plain-English envelope.
+ */
+function logRouteError(info: {
+  requestId: string;
+  method: string;
+  route: string;
+  code: ErrorCode;
+  err: unknown;
+}) {
+  const at = new Date().toISOString();
+  const detail = info.err instanceof Error ? info.err.message : String(info.err);
+  console.error(
+    `[${at}][${info.requestId}] ${info.method} ${info.route} :: ${info.code} :: ${detail}`,
+  );
+}
 
 export interface RouteContext {
   requestId: string;
@@ -57,11 +78,18 @@ export function handleRoute<P extends Params = Params>(
           { status: httpStatusFor(ErrorCodes.VALIDATION_FAILED) },
         );
       }
+      // Classify: domain errors (ApiError) keep their code; Postgres/RPC
+      // failures are mapped (missing tables/RPCs/service key → 503
+      // SERVICE_NOT_READY, never a bare 500); anything else → INTERNAL.
       const code: ErrorCode =
-        err instanceof ApiError ? err.code : ErrorCodes.INTERNAL;
-      if (code === ErrorCodes.INTERNAL) {
-        console.error(`[${requestId}] unhandled route error:`, err);
-      }
+        err instanceof ApiError ? err.code : mapDbError(err, requestId);
+      logRouteError({
+        requestId,
+        method: req.method,
+        route: req.nextUrl.pathname,
+        code,
+        err,
+      });
       return NextResponse.json(toApiError(code, requestId), {
         status: httpStatusFor(code),
       });

@@ -216,10 +216,15 @@ export async function removePortal(
   portalKey: string,
 ): Promise<{ removed: boolean }> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("remove_tenant_secret", {
-    p_child_id: childId,
-    p_portal_key: portalKey,
-  });
-  if (error) throw error;
-  return { removed: data === true };
+  // Missing remove_tenant_secret() (003 not migrated) → 503, never a 500.
+  try {
+    const { data, error } = await supabase.rpc("remove_tenant_secret", {
+      p_child_id: childId,
+      p_portal_key: portalKey,
+    });
+    if (error) throw error;
+    return { removed: data === true };
+  } catch (err) {
+    guardServiceError(err);
+  }
 }

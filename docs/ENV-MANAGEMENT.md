@@ -29,7 +29,7 @@
 | `POOKIE_TUTOR_URL` | **NO — server only** | Pages dashboard env | Same worker URL for the `/api/v1/tutor/chat` server proxy; never in client bundle |
 | `NEXT_PUBLIC_APP_URL` | yes | CI build env (`https://pookie-staging.pages.dev` / `https://pookie.pages.dev`) | Invite/claim links default to the **production** URL when unset — staging builds MUST bake the staging URL (src/lib/safety/actions.ts, src/server/services/parent-claim.ts) |
 | `NEXT_PUBLIC_ASSET_VERSION` | yes | CI (`${{ github.sha }}`) | Never set manually; pipeline injects it. Not yet consumed by the frontend (see `?v=` below) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **NO — server only** | Pages dashboard env | Server-side Supabase admin; sync/heartbeat routes 500 without it (`supabaseAdmin` throws at import) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **NO — server only** | Pages dashboard env | Server-side Supabase admin (`supabaseAdmin` is lazy — no import-time throw). Sync/heartbeat/workers/sync-runs routes answer 503 `SERVICE_NOT_READY` ("not connected yet", never a 500) without it; the settings UI renders the honest unavailable panel. |
 | `PLAID_CLIENT_ID` / `PLAID_SECRET` / `PLAID_ENV` | **NO — server only** | Pages dashboard env | Plaid; phone-held tokens, server never persists access_token |
 | `EIA_API_KEY`, `FOURSQUARE_API_KEY`, `NPS_API_KEY`, `OPENCHARGEMAP_API_KEY` | **NO — server only** | Pages dashboard env | Travel/marketplace data APIs |
 | `VAULT_DOC_ENCRYPTION_KEY` | **NO — server only** | Pages dashboard env | Document vault encryption |

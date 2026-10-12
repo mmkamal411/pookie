@@ -13,11 +13,12 @@ import {
   deletePortal,
   PORTAL_LABEL,
   PORTAL_KEYS,
+  isServiceNotReady,
   ManagementApiError,
   type PortalMeta,
   type PortalKey,
 } from "@/lib/management-api";
-import { CommandShell, ConsoleError } from "./command-shell";
+import { BackendUnavailable, CommandShell, ConsoleError } from "./command-shell";
 import { StatusLight } from "./gear";
 
 type PortalHealth = "connected" | "attention" | "missing";
@@ -138,6 +139,9 @@ export function LoginsView({ childId, childName }: { childId: string; childName:
   const [portals, setPortals] = useState<PortalMeta[]>([]);
   const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // True when the API answers 503 SERVICE_NOT_READY (credential vault not
+  // migrated yet) — the whole vault UI is honestly unavailable, not broken.
+  const [notReady, setNotReady] = useState(false);
   const [portalKey, setPortalKey] = useState<PortalKey>("studentvue");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -147,10 +151,12 @@ export function LoginsView({ childId, childName }: { childId: string; childName:
 
   const load = useCallback(async () => {
     setLoadError(null);
+    setNotReady(false);
     try {
       const { portals: fresh } = await listPortals(childId);
       setPortals(fresh);
     } catch (e) {
+      setNotReady(isServiceNotReady(e));
       setLoadError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setPending(false);
@@ -179,6 +185,9 @@ export function LoginsView({ childId, childName }: { childId: string; childName:
       await load();
       setNotice(`Saved the ${PORTAL_LABEL[portalKey]} login for ${childName}.`);
     } catch (e) {
+      // The vault RPC can be missing even when the metadata view exists
+      // (partial migration) — flip to the honest unavailable state.
+      if (isServiceNotReady(e)) setNotReady(true);
       setNotice(e instanceof ManagementApiError ? e.message : "Couldn't save the credential.");
     } finally {
       setSaving(false);
@@ -224,6 +233,14 @@ export function LoginsView({ childId, childName }: { childId: string; childName:
             <div key={i} className="h-36 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
           ))}
         </div>
+      ) : notReady ? (
+        <BackendUnavailable
+          message={loadError ?? "School logins aren't available yet."}
+          onRetry={() => {
+            setPending(true);
+            void load();
+          }}
+        />
       ) : loadError ? (
         <ConsoleError
           title="Couldn't reach the credential vault"

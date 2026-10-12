@@ -25,6 +25,7 @@
 // 014 lands, WorkerHeartbeat.version/last_error return null and `status`
 // carries the worker's coarse state ('idle' | 'running' | 'error').
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { guardServiceError } from "@/server/services/backend-availability";
 
 /** A worker is considered stale when it has not beaten for this long. Tunable. */
 const HEARTBEAT_STALE_MS = 15 * 60 * 1000;
@@ -76,14 +77,22 @@ export async function getSyncStatus(
   childId: string,
   limit = 20,
 ): Promise<{ jobs: SyncJobSummary[] }> {
-  const { data, error } = await supabaseAdmin
-    .from("sync_jobs")
-    .select("id, status, device_name, summary, log, created_at, claimed_at, completed_at")
-    .eq("child_id", childId)
-    .order("created_at", { ascending: false })
-    .limit(Math.min(Math.max(limit, 1), 50));
-  if (error) throw error;
-  const jobs: SyncJobSummary[] = ((data ?? []) as Array<{
+  // Backend-availability: missing service key or missing sync_jobs table
+  // (013 not migrated) → 503 SERVICE_NOT_READY, never a 500.
+  let rows: unknown[] | null;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("sync_jobs")
+      .select("id, status, device_name, summary, log, created_at, claimed_at, completed_at")
+      .eq("child_id", childId)
+      .order("created_at", { ascending: false })
+      .limit(Math.min(Math.max(limit, 1), 50));
+    if (error) throw error;
+    rows = data;
+  } catch (err) {
+    guardServiceError(err);
+  }
+  const jobs: SyncJobSummary[] = ((rows ?? []) as Array<{
     id: string;
     status: SyncJobStatus;
     device_name: string | null;
@@ -114,17 +123,23 @@ export async function getSyncStatus(
 export async function requestSync(
   childId: string,
 ): Promise<{ job: { id: string; status: ApiSyncJobStatus } }> {
-  const { data, error } = await supabaseAdmin.rpc("sync_request_job", {
-    p_child_id: childId,
-  });
-  if (error) throw error;
-  const job = data as { id: string; status: SyncJobStatus };
-  return {
-    job: {
-      id: job.id,
-      status: (job.status === "claimed" ? "running" : job.status) as ApiSyncJobStatus,
-    },
-  };
+  // Missing service key or missing sync_request_job() (013 not migrated)
+  // → 503 SERVICE_NOT_READY, never a 500.
+  try {
+    const { data, error } = await supabaseAdmin.rpc("sync_request_job", {
+      p_child_id: childId,
+    });
+    if (error) throw error;
+    const job = data as { id: string; status: SyncJobStatus };
+    return {
+      job: {
+        id: job.id,
+        status: (job.status === "claimed" ? "running" : job.status) as ApiSyncJobStatus,
+      },
+    };
+  } catch (err) {
+    guardServiceError(err);
+  }
 }
 
 export interface WorkerHeartbeat {
@@ -151,23 +166,33 @@ export interface WorkerHeartbeat {
 export async function getHeartbeats(
   childId: string,
 ): Promise<{ workers: WorkerHeartbeat[] }> {
-  const [{ data: beats, error: beatErr }, { data: jobs, error: jobErr }] = await Promise.all([
-    supabaseAdmin
-      .from("sync_heartbeats")
-      .select("device_name, status, last_job_id, last_heartbeat")
-      .eq("child_id", childId)
-      .order("last_heartbeat", { ascending: false }),
-    supabaseAdmin
-      .from("sync_jobs")
-      .select("device_name, completed_at")
-      .eq("child_id", childId)
-      .eq("status", "complete")
-      .not("device_name", "is", null)
-      .order("completed_at", { ascending: false })
-      .limit(100),
-  ]);
-  if (beatErr) throw beatErr;
-  if (jobErr) throw jobErr;
+  // Missing service key or missing tables (013 not migrated)
+  // → 503 SERVICE_NOT_READY, never a 500.
+  let beats: unknown[] | null;
+  let jobs: unknown[] | null;
+  try {
+    const [{ data: beatRows, error: beatErr }, { data: jobRows, error: jobErr }] = await Promise.all([
+      supabaseAdmin
+        .from("sync_heartbeats")
+        .select("device_name, status, last_job_id, last_heartbeat")
+        .eq("child_id", childId)
+        .order("last_heartbeat", { ascending: false }),
+      supabaseAdmin
+        .from("sync_jobs")
+        .select("device_name, completed_at")
+        .eq("child_id", childId)
+        .eq("status", "complete")
+        .not("device_name", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(100),
+    ]);
+    if (beatErr) throw beatErr;
+    if (jobErr) throw jobErr;
+    beats = beatRows;
+    jobs = jobRows;
+  } catch (err) {
+    guardServiceError(err);
+  }
   const lastSuccess = new Map<string, string>();
   for (const j of (jobs ?? []) as Array<{ device_name: string; completed_at: string }>) {
     if (!lastSuccess.has(j.device_name)) lastSuccess.set(j.device_name, j.completed_at);

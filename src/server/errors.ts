@@ -15,6 +15,11 @@ export const ErrorCodes = {
   UPSTREAM_UNAVAILABLE: 'UPSTREAM_UNAVAILABLE',
   GONE: 'GONE',
   INTERNAL: 'INTERNAL',
+  // Settings/sync data layer (fix(settings-sync) 2026-10-12): the server is
+  // running but the backend this feature needs is not wired up yet — the
+  // service-role key is unset, or its tables/RPCs were never migrated.
+  // 503 (not 500): the app is fine, the backend isn't. Never a blank page.
+  SERVICE_NOT_READY: 'SERVICE_NOT_READY',
   // Health track (FR-HEALTH). Codes are stable API — add, never rename.
   HEALTH_H0_REFUSED: 'HEALTH_H0_REFUSED',
   HEALTH_MINOR_CALORIE_REFUSED: 'HEALTH_MINOR_CALORIE_REFUSED',
@@ -54,6 +59,8 @@ const HUMAN_MESSAGES: Record<ErrorCode, string> = {
   UPSTREAM_UNAVAILABLE: 'A downstream service is unavailable. Please try again.',
   GONE: 'This feature has been retired. Device health data stays on your device — it is never uploaded.',
   INTERNAL: 'Something went wrong. Please try again.',
+  SERVICE_NOT_READY:
+    "This part of the app isn't connected yet — its setup is still in progress. Please try again later.",
   HEALTH_H0_REFUSED:
     'This type of health data is not collected for anyone under 18.',
   HEALTH_MINOR_CALORIE_REFUSED:
@@ -94,6 +101,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   UPSTREAM_UNAVAILABLE: 502,
   GONE: 410,
   INTERNAL: 500,
+  SERVICE_NOT_READY: 503,
   HEALTH_H0_REFUSED: 403,
   HEALTH_MINOR_CALORIE_REFUSED: 403,
   HEALTH_MINOR_SYNC_REFUSED: 403,
@@ -133,8 +141,16 @@ export function failWith(code: ErrorCode): never {
 /** Map a Postgres / RPC exception to a canonical code. Logs the raw detail. */
 export function mapDbError(err: unknown, requestId: string): ErrorCode {
   const message = err instanceof Error ? err.message : String(err);
-  // Log raw detail server-side with request correlation (never to client).
-  console.error(`[${requestId}] db error:`, message);
+  // Log raw detail server-side with timestamp + request correlation
+  // (never to client). Structured format: [timestamp][requestId] db error.
+  console.error(`[${new Date().toISOString()}][${requestId}] db error ::`, message);
+  // fix(settings-sync) 2026-10-12: the settings/sync backend isn't wired up
+  // yet (service-role key unset, or tables/RPCs never migrated). These are
+  // 503 SERVICE_NOT_READY — the app is fine, the backend isn't — never a 500.
+  if (message.includes('SUPABASE_SERVICE_ROLE_KEY is not set')) return ErrorCodes.SERVICE_NOT_READY;
+  if (message.includes('Could not find the function')) return ErrorCodes.SERVICE_NOT_READY;
+  if (/relation ".*" does not exist/.test(message)) return ErrorCodes.SERVICE_NOT_READY;
+  if (/schema ".*" does not exist/.test(message)) return ErrorCodes.SERVICE_NOT_READY;
   if (message.includes('invite_not_found_or_expired')) return ErrorCodes.INVITE_NOT_FOUND;
   if (message.includes('cannot_invite_self')) return ErrorCodes.CANNOT_INVITE_SELF;
   // Second-parent claim RPC exceptions (049) — raw strings never reach clients.

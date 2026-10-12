@@ -46,6 +46,40 @@ export function CommandShell({
   );
 }
 
+/**
+ * "Backend not wired up yet" panel — shown when the API answers 503
+ * SERVICE_NOT_READY (service key unset or tables/RPCs never migrated).
+ * Plain English, honest about the state, with a recovery path (retry —
+ * the backend may come online after the pending setup is applied).
+ * This is NOT an error to troubleshoot: nothing the user did is wrong.
+ */
+export function BackendUnavailable({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-cyan-300/25 bg-cyan-400/[0.04] px-5 py-6 text-center">
+      <p className="text-sm font-semibold text-cyan-100">Not connected yet</p>
+      <p className="mx-auto mt-1.5 max-w-md font-mono text-xs leading-relaxed text-white/55">{message}</p>
+      <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-white/40">
+        Nothing you did is wrong — the background setup for this part of the app
+        is still in progress. It usually comes online on its own; you can also
+        try again in a bit.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-4 rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-300/60 hover:bg-cyan-400/20"
+      >
+        Try Again
+      </button>
+    </div>
+  );
+}
+
 /** Honest error panel — never a blank page, never a "taking root" dead end. */
 export function ConsoleError({
   title,
