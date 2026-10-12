@@ -25,33 +25,42 @@ export default async function Home({
 }: {
   searchParams: Promise<{ invite?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    console.log("[DIAG /] Starting, env URL set:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const supabase = await createClient();
+    console.log("[DIAG /] Client created");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log("[DIAG /] getUser done, user:", user?.id ?? "null");
 
-  // Demo mode: no session needed — the /demo route already set the
-  // active-child cookie. Walk straight into the demo dashboard.
-  if (!user && (await isDemoRequest())) {
-    redirect("/c/dawson");
+    // Demo mode: no session needed — the /demo route already set the
+    // active-child cookie. Walk straight into the demo dashboard.
+    if (!user && (await isDemoRequest())) {
+      redirect("/c/dawson");
+    }
+
+    if (!user) redirect("/login");
+
+    const params = await searchParams;
+    if (params.invite) await consumeInvite(params.invite);
+
+    const memberships = await getMemberships();
+    console.log("[DIAG /] Memberships:", memberships.length);
+    if (memberships.length === 0) redirect("/login?error=no-invite");
+
+    const activeChildId = await getActiveChildId();
+    const active = memberships.find((m) => m.child_id === activeChildId);
+    if (active) redirect(`/c/${active.child.slug}`);
+
+    if (memberships.length === 1) {
+      await setActiveChild(memberships[0].child_id);
+      redirect(`/c/${memberships[0].child.slug}`);
+    }
+
+    redirect("/select-child");
+  } catch (e) {
+    console.error("[DIAG /] FATAL:", e instanceof Error ? e.message : String(e), e instanceof Error ? e.stack : "");
+    throw e;
   }
-
-  if (!user) redirect("/login");
-
-  const params = await searchParams;
-  if (params.invite) await consumeInvite(params.invite);
-
-  const memberships = await getMemberships();
-  if (memberships.length === 0) redirect("/login?error=no-invite");
-
-  const activeChildId = await getActiveChildId();
-  const active = memberships.find((m) => m.child_id === activeChildId);
-  if (active) redirect(`/c/${active.child.slug}`);
-
-  if (memberships.length === 1) {
-    await setActiveChild(memberships[0].child_id);
-    redirect(`/c/${memberships[0].child.slug}`);
-  }
-
-  redirect("/select-child");
 }
