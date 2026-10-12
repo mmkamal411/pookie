@@ -71,7 +71,6 @@ function Meter({
 export function DebriefingChamber({
   childId,
   classId,
-  classSlug,
   className,
   currentUnit,
   initialCheckinId,
@@ -79,7 +78,6 @@ export function DebriefingChamber({
 }: {
   childId: string;
   classId: string;
-  classSlug: string;
   className: string;
   currentUnit: string | null;
   initialCheckinId: string | null;

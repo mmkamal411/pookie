@@ -144,7 +144,6 @@ export function ClassDetailView({
         <DebriefingChamber
           childId={childId}
           classId={data.class.id}
-          classSlug={data.class.class_slug}
           className={displayName}
           currentUnit={currentUnit}
           initialCheckinId={checkinId}
