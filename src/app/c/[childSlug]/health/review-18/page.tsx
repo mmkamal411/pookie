@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getMemberships } from "@/lib/tenant/actions";
 import { getHealthContext, getReconsentState } from "@/lib/health/actions";
 import { Review18View } from "@/components/health/review-18-view";
@@ -31,6 +32,14 @@ export default async function Review18Page({ params }: { params: Promise<{ child
   if (!ctx.isSubject) {
     return (
       <main className="mx-auto max-w-2xl px-4 pt-16 pb-8 text-center">
+        {/* Prism E5 2026-10-12: this was a visual dead end for parents. */}
+        <Link
+          href={`/c/${childSlug}/health`}
+          className="mb-6 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
+          style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+        >
+          ← Back to Health
+        </Link>
         <h1 className="text-sunlit text-2xl font-semibold">A private review.</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-stardust-300">
           The 18th-birthday health review belongs to {ctx.displayName}. Parents do not see this

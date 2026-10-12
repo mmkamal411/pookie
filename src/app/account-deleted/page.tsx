@@ -3,6 +3,7 @@ import {
   getAccountDeletionStatus,
   cancelAccountDeletion,
 } from "@/lib/account/actions";
+import { signOut } from "@/lib/tenant/actions";
 import { PookieOrb } from "@/components/pookie-orb";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,7 @@ export default async function AccountDeletedPage() {
           <PookieOrb size={64} />
         </div>
         <h1 className="text-sunlit mt-5 text-2xl font-semibold">
-          This account is scheduled for deletion
+          This Account Is Scheduled for Deletion
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-stardust-300">
           Everything will be permanently erased on{" "}
@@ -59,6 +60,17 @@ export default async function AccountDeletedPage() {
           Changed your mind for good? Just sign out and let the date pass —
           no further action needed.
         </p>
+        {/* Prism E5 2026-10-12: the copy told users to sign out but offered
+            no sign-out control. */}
+        <form action={signOut} className="mt-4">
+          <button
+            type="submit"
+            className="w-full rounded-2xl border border-white/15 py-2.5 text-sm font-medium text-stardust-300 transition-all hover:border-nova-400/50 hover:text-nova-200"
+            style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.25)" }}
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </main>
   );
