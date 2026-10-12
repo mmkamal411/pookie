@@ -1767,3 +1767,19 @@ Seedlings have no dedicated pages (route: null), so the More-panel card is the
 only surface — the badge appears exactly where users encounter them.
 
 **Verification:** `npx tsc --noEmit` clean, `npm run build` green.
+
+## 2026-10-12 ~09:10 EDT — Squad Deck — Command Deck persistence + mobile hardening (commit deb1988, staging-build)
+
+**ROOT CAUSE of "toolbar disappears" (mobile):** `.console-housing { position: relative; }` in globals.css — unlayered CSS overrode Tailwind v4's `fixed` utility (layered). The toolbar was in normal document flow and scrolled off-screen. On mobile's small viewport this was devastating. Removed the declaration; deck is now truly fixed.
+
+**CommandDeck (new, src/components/command-deck.tsx):** Mounted ONCE in root layout. Never unmounts on route change, never scrolls away. Route-aware via usePathname: full ChildToolbar on /c/[slug]/* (slug extracted from URL), StandbyConsole with contextual labels on account pages (/select-child, /me, /household/*, /family/claims, /family/invite), hidden by design on /login, /onboarding, /add-child, /verify-invite, /family/invite/accept, /account-deleted (documented as intentional).
+
+**Consolidation:** Removed per-layout toolbar instances — [childSlug]/layout.tsx (ChildToolbar), household/layout.tsx, select-child, me, family/invite, family/claims (StandbyConsole). Single source of truth; spacers bumped h-28 → h-32 to clear the orb's -mt-9 overhang.
+
+**iOS Safari hardening:** viewport-fit=cover in root metadata; translateZ(0) compositing layers on .console-housing + .console-standby (survives momentum scroll); body min-height 100dvh w/ 100vh fallback; overscroll-behavior-y none (no white rubber-band).
+
+**Mobile glitch fixes:** status strip nowrap/ellipsis guards (no 320px collision); tab labels stardust-500 → stardust-200; glyph color brightened (0.85 → 0.95 alpha); console backgrounds lifted (well-lit cockpit direction).
+
+**NOTE:** This commit also swept in parallel squads' untracked files (cosmic-scene-director.tsx, minimized-dock.tsx, module-window.tsx, window-manager.tsx, overview-dashboard.tsx changes). Build is green with all of it; attribution to be sorted by parent.
+
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys. Browser re-verification still needed (subagent can't operate live browser).
