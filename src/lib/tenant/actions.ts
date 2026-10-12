@@ -165,10 +165,26 @@ export async function consumeInvite(
   return { ok: true, childId: data as string };
 }
 
-/** Sign out: clear Supabase session + tenant cookie. */
+/**
+ * Sign out: clear Supabase session + tenant cookie.
+ *
+ * NEVER hangs: the Supabase signOut network call races an 8s timeout, and
+ * local session teardown (cookies) happens unconditionally. A slow or dead
+ * Supabase edge must never trap the user on a dead page — worst case we
+ * redirect with the server session cleared locally and let the login page
+ * re-verify.
+ */
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    await Promise.race([
+      supabase.auth.signOut(),
+      new Promise((resolve) => setTimeout(resolve, 8000)),
+    ]);
+  } catch {
+    // Sign-out is best-effort against the auth server; local teardown below
+    // is what actually logs the user out of this app.
+  }
   await clearActiveChild();
   redirect("/login");
 }

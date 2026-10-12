@@ -115,7 +115,9 @@ export function PookieChat({
   const [directMode, setDirectMode] = useState(false);
   const [, setColorTick] = useState(0);
   const [museThinking, setMuseThinking] = useState(false);
+  const [museSlow, setMuseSlow] = useState(false);
   const musePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const museSlowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<ChatMessage[]>(messages);
@@ -131,7 +133,9 @@ export function PookieChat({
 
   useEffect(() => subscribePookieColor(() => setColorTick((t) => t + 1)), []);
 
-  // Resume polling for a pending Muse answer (survives reload).
+  // Resume polling for a pending Muse answer (survives reload AND remount —
+  // navigating away from the chat tab unmounts this component, which must
+  // not strand an answered-but-undisplayed Mookie response).
   // Deferred to a timeout callback so setState stays out of the effect body.
   useEffect(() => {
     const t = setTimeout(() => {
@@ -139,13 +143,9 @@ export function PookieChat({
         const pending = localStorage.getItem(QUEUE_KEY);
         if (pending && POOKIE_TUTOR_URL && !musePollRef.current) {
           const { qid, ts } = JSON.parse(pending) as { qid: string; ts: number };
-          if (qid && Date.now() - ts < 600000) {
+          if (qid && Date.now() - ts < 1800000) {
             setMuseThinking(true);
-            musePollRef.current = setInterval(async () => {
-              const response = await pollMuseQueue(qid);
-              if (response) stopMusePolling();
-              if (response) appendMuseDeep(response);
-            }, 2000);
+            startMusePoll(qid);
           } else {
             localStorage.removeItem(QUEUE_KEY);
           }
@@ -156,8 +156,15 @@ export function PookieChat({
     }, 0);
     return () => {
       clearTimeout(t);
+      // CRITICAL: reset the refs so a remount can resume polling. A stale
+      // non-null ref blocks the resume path above and strands the response.
+      // QUEUE_KEY is intentionally kept — the remount resumes from it.
       if (musePollRef.current) clearInterval(musePollRef.current);
+      musePollRef.current = null;
+      if (museSlowTimer.current) clearTimeout(museSlowTimer.current);
+      museSlowTimer.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -177,7 +184,10 @@ export function PookieChat({
   function stopMusePolling() {
     if (musePollRef.current) clearInterval(musePollRef.current);
     musePollRef.current = null;
+    if (museSlowTimer.current) clearTimeout(museSlowTimer.current);
+    museSlowTimer.current = null;
     setMuseThinking(false);
+    setMuseSlow(false);
     try {
       localStorage.removeItem(QUEUE_KEY);
     } catch {}
@@ -190,33 +200,84 @@ export function PookieChat({
     });
   }
 
+  /**
+   * Start (or restart) polling for a Mookie queue answer. Polls immediately
+   * once — the answer may already be waiting — then every 2s. After 5
+   * minutes without an answer, backs off to 10s and shows the "taking
+   * longer" state instead of silently giving up; the response is never
+   * stranded while this component (or a remount) is alive.
+   */
+  function startMusePoll(qid: string) {
+    if (musePollRef.current) clearInterval(musePollRef.current);
+    const tick = async () => {
+      const response = await pollMuseQueue(qid);
+      if (response) {
+        stopMusePolling();
+        appendMuseDeep(response);
+      }
+    };
+    // Immediate first poll — don't wait 2s when the answer is already there.
+    void tick();
+    musePollRef.current = setInterval(() => void tick(), 2000);
+    if (museSlowTimer.current) clearTimeout(museSlowTimer.current);
+    museSlowTimer.current = setTimeout(() => {
+      // 5 min with no answer: back off, don't abandon.
+      setMuseSlow(true);
+      if (musePollRef.current) clearInterval(musePollRef.current);
+      musePollRef.current = setInterval(() => void tick(), 10000);
+      // Hard stop at 30 min — the queue entry expires at 24h, but the UI
+      // shouldn't poll forever. The bridge message explains the state.
+      museSlowTimer.current = setTimeout(() => {
+        stopMusePolling();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "pookie",
+            text: "Mookie's deep dive is taking longer than usual, Captain — the request is still in the queue and will land here when it's ready. Ask me anything else in the meantime! 🔬",
+          },
+        ]);
+      }, 25 * 60 * 1000);
+    }, 5 * 60 * 1000);
+  }
+
   /** Escalate to async Muse for a deeper take (Pookie mode only). */
   const escalateToMuse = useCallback(
     async (question: string, llamaResponse: string) => {
-      if (!POOKIE_TUTOR_URL || museThinking) return;
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "pookie",
-          text: "Here's what I think so far 👆\n\nHang tight — Mookie is putting together a better plan for you… 🔬",
-        },
-      ]);
+      if (!POOKIE_TUTOR_URL) return;
+      if (museThinking) {
+        // Never silently drop a depth request — tell the user Mookie is
+        // already on it.
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "pookie",
+            text: "Mookie's already charting a deeper course on your last question, Captain — hang tight, it'll land here in a moment! 🔬",
+          },
+        ]);
+        return;
+      }
+      const bridge: ChatMessage = {
+        role: "pookie",
+        text: "Here's what I think so far 👆\n\nHang tight — Mookie is putting together a better plan for you… 🔬",
+      };
+      setMessages((prev) => [...prev, bridge]);
       setMuseThinking(true);
       try {
         const qid = await enqueueMuse(question, llamaResponse, context, messagesRef.current);
         try {
           localStorage.setItem(QUEUE_KEY, JSON.stringify({ qid, ts: Date.now() }));
         } catch {}
-        musePollRef.current = setInterval(async () => {
-          const response = await pollMuseQueue(qid);
-          if (response) {
-            stopMusePolling();
-            appendMuseDeep(response);
-          }
-        }, 2000);
-        setTimeout(() => stopMusePolling(), 300000);
+        startMusePoll(qid);
       } catch {
+        // Enqueue failed: retract the promise, don't leave it hanging.
         setMuseThinking(false);
+        setMessages((prev) => [
+          ...prev.filter((m) => m !== bridge),
+          {
+            role: "pookie",
+            text: "I tried to hail Mookie for a deeper take but the signal didn't get through, Captain. My answer above still stands — want me to try again?",
+          },
+        ]);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,7 +443,11 @@ export function PookieChat({
           <div className="flex gap-2.5">
             <MiniMuse size={24} />
             <div className="pookie-researching rounded-2xl rounded-bl-md border border-orange-400/40 bg-nebula-900/70 px-4 py-3">
-              <p className="animate-pulse text-sm text-orange-300">🔬 Mookie is cooking up something good…</p>
+              <p className="animate-pulse text-sm text-orange-300">
+                {museSlow
+                  ? "🔬 Mookie's deep dive is taking a little longer — still on it, Captain…"
+                  : "🔬 Mookie is cooking up something good…"}
+              </p>
             </div>
           </div>
         )}

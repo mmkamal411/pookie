@@ -76,6 +76,23 @@ function NotWiredYet({ feature }: { feature: string }) {
   );
 }
 
+/** Shimmer skeleton shown while a card's API probe is still in flight. */
+function CardSkeleton() {
+  return (
+    <div className="space-y-3" aria-label="Loading settings">
+      <div className="h-4 w-1/3 animate-pulse rounded bg-white/10" />
+      <div className="h-10 w-full animate-pulse rounded-xl bg-white/[0.06]" />
+      <div className="h-10 w-full animate-pulse rounded-xl bg-white/[0.06]" />
+    </div>
+  );
+}
+
+/**
+ * Tri-state for probed cards: null = probe in flight (show skeleton),
+ * true = API live (show fields), false = API absent (show NotWiredYet).
+ */
+type WiredState = boolean | null;
+
 export function ChildSettingsView({
   childId,
   firstName,
@@ -95,7 +112,7 @@ export function ChildSettingsView({
   const [notice, setNotice] = useState<string | null>(null);
 
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
-  const [prefsWired, setPrefsWired] = useState(false);
+  const [prefsWired, setPrefsWired] = useState<WiredState>(null);
 
   const [tone, setTone] = useState<AiTone>("pookie");
   useEffect(() => {
@@ -146,9 +163,22 @@ export function ChildSettingsView({
     }
   }
 
+  const [signingOut, setSigningOut] = useState(false);
+
   async function handleSignOut() {
+    if (signingOut) return;
     if (!confirm("Sign out of Pookie?")) return;
-    await signOut();
+    setSigningOut(true);
+    // Dead-man's switch: if the server action hasn't resolved in 15s,
+    // force the login page. Sign-out must never strand the user.
+    const fallback = setTimeout(() => {
+      window.location.href = "/login";
+    }, 15000);
+    try {
+      await signOut();
+    } finally {
+      clearTimeout(fallback);
+    }
   }
 
   const displayName = initialNickname ?? firstName;
@@ -212,9 +242,11 @@ export function ChildSettingsView({
         </div>
       </SettingsCard>
 
-      {/* Check-in reminders — probed, honest pending state */}
+      {/* Check-in reminders — probed; skeleton while the probe is in flight */}
       <SettingsCard title="Check-in reminders" description="Nudges for your daily check-in.">
-        {prefsWired && prefs ? (
+        {prefsWired === null ? (
+          <CardSkeleton />
+        ) : prefsWired && prefs ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-white/85">Daily check-in reminder</span>
@@ -270,7 +302,9 @@ export function ChildSettingsView({
 
       {/* Session */}
       <SettingsCard title="Session">
-        <DangerButton onClick={handleSignOut}>Sign out</DangerButton>
+        <DangerButton onClick={handleSignOut} disabled={signingOut}>
+          {signingOut ? "Signing out…" : "Sign out"}
+        </DangerButton>
       </SettingsCard>
 
       <p className="px-1 text-center text-xs text-stardust-500">

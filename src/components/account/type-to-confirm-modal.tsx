@@ -35,7 +35,7 @@ export function TypeToConfirmModal({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
     >
       <button
         type="button"

@@ -93,7 +93,7 @@ export function SharingRevoke({
           role="dialog"
           aria-modal="true"
           aria-label={`Remove ${person.firstName}'s access`}
-          className="fixed inset-0 z-50 overflow-y-auto bg-nebula-950/90 p-4"
+          className="fixed inset-0 z-[100] overflow-y-auto bg-nebula-950/90 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setFlowOpen(false);
           }}

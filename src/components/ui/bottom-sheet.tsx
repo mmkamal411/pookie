@@ -47,8 +47,11 @@ export function BottomSheet({
 
   if (!open) return null;
 
+  // z-[100]: modal sheets must sit above ALL fixed chrome — the console
+  // toolbar (z-40), the ambient pinball layer (z-[60]), and toasts (z-40).
+  // A sheet's Close button must never be occluded by the docked orb.
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={title}>
       <button
         type="button"
         aria-label="Close"

@@ -65,6 +65,26 @@ function NotWiredYet({ feature }: { feature: string }) {
   );
 }
 
+/** Shimmer skeleton shown while a card's API probe is still in flight.
+ *  Never show "not wired up yet" before the probe resolves — that's the
+ *  flash-of-wrong-content the tri-state below eliminates. */
+function CardSkeleton() {
+  return (
+    <div className="space-y-3" aria-label="Loading settings">
+      <div className="h-4 w-1/3 animate-pulse rounded bg-white/10" />
+      <div className="h-10 w-full animate-pulse rounded-xl bg-white/[0.06]" />
+      <div className="h-10 w-full animate-pulse rounded-xl bg-white/[0.06]" />
+    </div>
+  );
+}
+
+/**
+ * Tri-state for probed cards: null = probe in flight (show skeleton),
+ * true = API live (show fields), false = API absent (show NotWiredYet).
+ * A plain boolean defaults to false and flashes the wrong state.
+ */
+type WiredState = boolean | null;
+
 export function SettingsView() {
   const { theme, setTheme } = useTheme();
 
@@ -73,11 +93,12 @@ export function SettingsView() {
   const [childrenPending, setChildrenPending] = useState(true);
   const [childrenError, setChildrenError] = useState<string | null>(null);
 
-  // Profile + notifications — APIs not built; per-card pending states.
+  // Profile + notifications — probed; tri-state so the UI never flashes
+  // "not wired up yet" while the probe is still in flight.
   const [profile, setProfile] = useState<Profile | null>(null);
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
-  const [profileWired, setProfileWired] = useState(false);
-  const [prefsWired, setPrefsWired] = useState(false);
+  const [profileWired, setProfileWired] = useState<WiredState>(null);
+  const [prefsWired, setPrefsWired] = useState<WiredState>(null);
 
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -256,16 +277,32 @@ export function SettingsView() {
     }
   }
 
+  const [signingOut, setSigningOut] = useState(false);
+
   async function handleSignOut() {
+    if (signingOut) return;
     if (!confirm("Sign out of Pookie?")) return;
-    await signOut();
+    setSigningOut(true);
+    // Dead-man's switch: if the server action hasn't resolved in 15s
+    // (it shouldn't — it has its own 8s timeout), force the login page.
+    // Sign-out must never leave the user on a dead screen.
+    const fallback = setTimeout(() => {
+      window.location.href = "/login";
+    }, 15000);
+    try {
+      await signOut();
+    } finally {
+      clearTimeout(fallback);
+    }
   }
 
   return (
     <div className="space-y-4">
-      {/* Profile — API not built yet */}
+      {/* Profile — probed; skeleton while the probe is in flight */}
       <SettingsCard title="Profile">
-        {profileWired && profile ? (
+        {profileWired === null ? (
+          <CardSkeleton />
+        ) : profileWired && profile ? (
           <div className="space-y-3.5">
             <Field label="Email">
               <input type="email" value={profile.email} disabled className={`${inputClass} opacity-60`} />
@@ -430,9 +467,11 @@ export function SettingsView() {
         {notice && <p className="mt-3 text-xs text-white/60">{notice}</p>}
       </SettingsCard>
 
-      {/* Notifications — API not built yet */}
+      {/* Notifications — probed; skeleton while the probe is in flight */}
       <SettingsCard title="Notifications" description="What Pookie tells you about, and when.">
-        {prefsWired && prefs ? (
+        {prefsWired === null ? (
+          <CardSkeleton />
+        ) : prefsWired && prefs ? (
           <div className="space-y-3">
             {(
               [
@@ -498,7 +537,9 @@ export function SettingsView() {
 
       {/* Sign out */}
       <SettingsCard title="Session">
-        <DangerButton onClick={handleSignOut}>Sign out</DangerButton>
+        <DangerButton onClick={handleSignOut} disabled={signingOut}>
+          {signingOut ? "Signing out…" : "Sign out"}
+        </DangerButton>
       </SettingsCard>
 
       {/* Self-service account deletion */}
