@@ -34,6 +34,20 @@
 -- defaults counsel_reviewed=false and nothing in this migration (or 012)
 -- treats its rows as reviewed. Do not ship W22/W23 UI until counsel signs.
 
+-- AMENDED 2026-10-12 per docs/solutions/sol-health.md §1.7 (still unapplied;
+-- edit-in-place, single chain). Changes vs original draft:
+--   1. NEW public.health_tier enum ('H0','H1','H2','H3'); metric_defs.
+--      default_sensitivity REPLACED by metric_defs.health_tier (seed
+--      remapped routine->H1, sensitive->H2 per §1.6 backfill map).
+--   2. health_metric_visible() SUPERSEDED by health_tier_visible
+--      (subject_id, metric_key, tier) — the §1.3 tier x age-band matrix,
+--      deny-by-default. NEW health_tier_insert_allowed() write guard.
+--   3. health_safety_overrides: H2-ONLY (tier CHECK='H2'), expires_at with
+--      <=30-day CHECK, teen_appealed_at (16-17 early-revoke path).
+--   4. health_subject_age_band(): 'teen' split into 'teen_13_15' /
+--      'teen_16_17'; 'unknown' still fails closed into the 13–15 arm.
+-- Full chain still BLOCKED on the NFR-LEGAL gate (counsel clears H0–H3).
+
 -- ---------------------------------------------------------------------------
 -- health_subjects: the person registry. Every subject anchors to a child
 -- tenant (child_id) — that is the ONLY authorization key. owner_user_id is
@@ -119,6 +133,12 @@ CREATE TABLE IF NOT EXISTS public.health_metrics (
 
 CREATE INDEX IF NOT EXISTS health_metrics_subject_metric_recorded_idx
   ON public.health_metrics (subject_id, metric_key, recorded_at DESC);
+
+-- NOTE (2026-10-12, data-layer): the device-ingestion dedupe index
+-- (subject, metric, recorded_at, provenance, ignoring tombstoned rows) was
+-- drafted here but references provenance (added in 022) and deleted_at
+-- (added in 024). It now lives in 024_health_grace_and_deletion.sql, where
+-- both columns exist. See BUILD-LOG 2026-10-12 (Squad 2 coordination note).
 
 -- ---------------------------------------------------------------------------
 -- health_safety_overrides: the audited safety-override trail. Parent-only

@@ -12,9 +12,10 @@
 --     and adult subjects are tenant-visible.
 --   * Parents NEVER read the diary directly; they get the aggregates-only
 --     RPC nutrition_weekly_patterns() (parent-role on the subject's child).
--- Uncertainty ranges are REQUIRED: every food_logs row carries a NOT NULL
--- calorie range (low/high, high >= low). Photo estimates without ranges are
--- unrepresentable — the route refuses before the DB is even reached.
+-- Uncertainty ranges for 18+: the route requires calorie ranges
+-- (low/high, high >= low) on adult rows. For <18, calorie/macro columns are
+-- NULLABLE-by-schema and the enforce_no_calories_minor() trigger refuses any
+-- non-NULL value with 'nutrition_minor_calorie_refusal'.
 -- Targets: nutrition_targets.target_kind has NO deficit kind — under-18
 -- weight-loss mode is unrepresentable in this schema by design.
 -- Real-food-first as data: food_swaps seed + the deterministic supplement
@@ -53,6 +54,45 @@ CREATE INDEX IF NOT EXISTS food_logs_subject_logged_idx
   ON public.food_logs (subject_id, logged_at DESC);
 
 -- ---------------------------------------------------------------------------
+-- enforce_no_calories_minor(): schema backstop for the <18 nutrition age-gate
+-- (sol-health §6.7.1). If the subject's band is a minor band (under13 /
+-- teen_13_15 / teen_16_17 / unknown — unknown fails closed) and ANY
+-- calorie/macro column is non-NULL, the write is refused with the named code
+-- 'nutrition_minor_calorie_refusal'. The route checks first; this trigger is
+-- the backstop so no write path can smuggle numeric nutrition data for a minor.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.enforce_no_calories_minor()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_band text;
+BEGIN
+  v_band := public.health_subject_age_band(NEW.subject_id);
+  IF v_band IN ('under13', 'teen_13_15', 'teen_16_17', 'unknown')
+     AND (
+       NEW.calories_low  IS NOT NULL OR NEW.calories_high IS NOT NULL OR
+       NEW.protein_g_low IS NOT NULL OR NEW.protein_g_high IS NOT NULL OR
+       NEW.carbs_g_low   IS NOT NULL OR NEW.carbs_g_high   IS NOT NULL OR
+       NEW.fat_g_low     IS NOT NULL OR NEW.fat_g_high     IS NOT NULL
+     ) THEN
+    RAISE EXCEPTION 'nutrition_minor_calorie_refusal';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS food_logs_no_calories_minor ON public.food_logs;
+CREATE TRIGGER food_logs_no_calories_minor
+  BEFORE INSERT OR UPDATE ON public.food_logs
+  FOR EACH ROW EXECUTE FUNCTION public.enforce_no_calories_minor();
+
+REVOKE ALL ON FUNCTION public.enforce_no_calories_minor() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.enforce_no_calories_minor() TO authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
 -- nutrition_targets: the plan. target_kind deliberately has NO deficit /
 -- weight-loss kind — an under-18 weight-loss target cannot be represented,
 -- by schema. One active target per subject (partial unique index).
@@ -62,8 +102,13 @@ CREATE INDEX IF NOT EXISTS food_logs_subject_logged_idx
 CREATE TABLE IF NOT EXISTS public.nutrition_targets (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   subject_id      uuid NOT NULL REFERENCES public.health_subjects(id) ON DELETE CASCADE,
+  -- AMENDED 2026-10-12 (§6.7.2): 'clinician_supervised' is the ONLY
+  -- deficit-adjacent kind in the system — 18+ only, clinician gate required.
+  -- clinician_gate_id references clinician_gates(id); the table is created in
+  -- 025 and the FK is added there (keeps 012 self-contained).
   target_kind     text NOT NULL
-                  CHECK (target_kind IN ('maintain','athletic_performance','healthy_gain','medical_recovery')),
+                  CHECK (target_kind IN ('maintain','athletic_performance','healthy_gain','medical_recovery','clinician_supervised')),
+  clinician_gate_id uuid,
   daily_calorie_low  numeric CHECK (daily_calorie_low >= 0),
   daily_calorie_high numeric CHECK (daily_calorie_high >= daily_calorie_low),
   protein_g_target   numeric CHECK (protein_g_target >= 0),
@@ -73,7 +118,20 @@ CREATE TABLE IF NOT EXISTS public.nutrition_targets (
   active          boolean NOT NULL DEFAULT true,
   notes           text,
   data_class      text NOT NULL DEFAULT 'S' CHECK (data_class IN ('S','T','P')),
-  created_at      timestamptz NOT NULL DEFAULT now()
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  -- Gate rule (§6.4/§6.7.2): medical_recovery and clinician_supervised always
+  -- require a verified clinician gate; clinician_supervised additionally
+  -- requires an adult-band subject (checked via the age-band helper).
+  CONSTRAINT nutrition_targets_gate_required
+    CHECK (
+      (target_kind IN ('medical_recovery','clinician_supervised') AND clinician_gate_id IS NOT NULL)
+      OR target_kind NOT IN ('medical_recovery','clinician_supervised')
+    ),
+  CONSTRAINT nutrition_targets_supervised_adult_only
+    CHECK (
+      target_kind <> 'clinician_supervised'
+      OR public.health_subject_age_band(subject_id) = 'adult'
+    )
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS nutrition_targets_one_active_per_subject
@@ -250,6 +308,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_child_id uuid;
+  v_band     text;
   v_result   jsonb;
 BEGIN
   IF p_subject_id IS NULL THEN
@@ -275,6 +334,37 @@ BEGIN
     RAISE EXCEPTION 'nutrition_patterns_access_denied';
   END IF;
 
+  v_band := public.health_subject_age_band(p_subject_id);
+
+  -- AMENDED 2026-10-12 (§6.7.3): minor-band subjects -> ENGAGEMENT ONLY.
+  -- Calorie/macro averages are refused server-side (null +
+  -- detail='engagement_only_minor'); the trigger guarantees there is nothing
+  -- to average anyway. 18+ subjects (re-consent enforced on the read path)
+  -- get the full output.
+  IF v_band IN ('under13', 'teen_13_15', 'teen_16_17', 'unknown') THEN
+    WITH week AS (
+      SELECT fl.*
+      FROM public.food_logs fl
+      WHERE fl.subject_id = p_subject_id
+        AND fl.logged_at >= date_trunc('day', now()) - interval '6 days'
+    )
+    -- Engagement only: days logged + entry count. (food_logs carries no
+    -- meal_type column, so per-meal breakdowns come from meal_checkins in
+    -- 025, not from this RPC.)
+    SELECT jsonb_build_object(
+      'week_start', (date_trunc('day', now()) - interval '6 days')::date,
+      'days_logged', (SELECT count(DISTINCT (w.logged_at::date)) FROM week w),
+      'entries', (SELECT count(*) FROM week w),
+      'avg_calories_low', NULL,
+      'avg_calories_high', NULL,
+      'avg_protein_g', NULL,
+      'avg_carbs_g', NULL,
+      'avg_fat_g', NULL,
+      'detail', 'engagement_only_minor'
+    ) INTO v_result;
+    RETURN v_result;
+  END IF;
+
   WITH week AS (
     SELECT fl.*
     FROM public.food_logs fl
@@ -292,7 +382,8 @@ BEGIN
     'avg_carbs_g',   (SELECT round(avg((w.carbs_g_low + w.carbs_g_high) / 2), 1)
                       FROM week w WHERE w.carbs_g_low IS NOT NULL),
     'avg_fat_g',     (SELECT round(avg((w.fat_g_low + w.fat_g_high) / 2), 1)
-                      FROM week w WHERE w.fat_g_low IS NOT NULL)
+                      FROM week w WHERE w.fat_g_low IS NOT NULL),
+    'detail', 'full'
   ) INTO v_result;
 
   RETURN v_result;
