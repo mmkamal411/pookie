@@ -1,9 +1,10 @@
 "use client";
 
 import { PookieOrb } from "@/components/pookie-orb";
-import type { SchoolOverview } from "@/lib/school/types";
+import type { CalibrationSummary, SchoolOverview, TodayCheckin } from "@/lib/school/types";
 import { ClassCard } from "./class-card";
 import { CheckinForm } from "./checkin-form";
+import { ProvenanceLabel, ProvenanceLine } from "./provenance-label";
 import { dueDateLabel } from "./styles";
 
 /**
@@ -11,6 +12,10 @@ import { dueDateLabel } from "./styles";
  * Grades dashboard: 6 classes color-coded, gap-to-90 leading,
  * due-next rail, and today's check-in. The AI turns deltas into
  * causes and plans — never just red numbers.
+ *
+ * Provenance (FR-SCHOOL-001): grades + due-next are school-of-record
+ * (the school shares them with parents directly, outside Pookie's control);
+ * the check-in is app-generated and teen-private.
  */
 export function SchoolOverview({
   overview,
@@ -18,12 +23,18 @@ export function SchoolOverview({
   childSlug,
   childId,
   role,
+  calibration,
+  labToday,
+  todayCheckin,
 }: {
   overview: SchoolOverview;
   childName: string;
   childSlug: string;
   childId: string;
   role: "parent" | "child";
+  calibration?: CalibrationSummary | null;
+  labToday?: { class_name: string } | null;
+  todayCheckin?: TodayCheckin | null;
 }) {
   const needsAttention = overview.classes.filter((c) => c.numeric != null && c.numeric < 80).length;
 
@@ -54,18 +65,25 @@ export function SchoolOverview({
         )}
       </p>
 
-      <h2 className="animate-bloom mt-10 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.12s" }}>
-        Classes
-      </h2>
+      <div className="animate-bloom mt-6 flex items-center gap-3" style={{ animationDelay: "0.1s" }}>
+        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          Classes
+        </h2>
+        <ProvenanceLabel kind="school-of-record" />
+      </div>
+      <ProvenanceLine kind="school-of-record" className="mt-1" />
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {overview.classes.map((cls, i) => (
           <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} />
         ))}
       </div>
 
-      <h2 className="animate-bloom mt-10 text-sm font-medium tracking-[0.2em] text-nova-400 uppercase" style={{ animationDelay: "0.2s" }}>
-        Coming up next
-      </h2>
+      <div className="animate-bloom mt-10 flex items-center gap-3" style={{ animationDelay: "0.2s" }}>
+        <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">
+          Coming up next
+        </h2>
+        <ProvenanceLabel kind="school-of-record" />
+      </div>
       {overview.due_next.length > 0 ? (
         <div className="mt-4 grid gap-3">
           {overview.due_next.map((item, i) => (
@@ -94,7 +112,14 @@ export function SchoolOverview({
       )}
 
       <div className="mt-10" id="checkin">
-        <CheckinForm childId={childId} childName={childName} doneToday={overview.checkin_today} />
+        <CheckinForm
+          childId={childId}
+          childName={childName}
+          role={role}
+          todayCheckin={todayCheckin ?? null}
+          calibration={calibration ?? null}
+          labToday={labToday ?? null}
+        />
       </div>
 
       <p className="mt-8 text-center text-xs text-stardust-500">

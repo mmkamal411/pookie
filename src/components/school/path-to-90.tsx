@@ -2,23 +2,30 @@
 
 import { useState } from "react";
 import type { StudyPlan } from "@/lib/school/types";
+import { ProvenanceLabel } from "./provenance-label";
 
 /**
  * Path-to-90 — the ranked action checklist for one class.
- * Checkboxes persist to Supabase (PATCH plans/[planId]), not localStorage,
- * so progress syncs across devices and feeds guidance.
- * Parents can draft a new weekly plan and review safety_status.
+ * Checkboxes persist to Supabase (PATCH plans/[planId]) so progress syncs
+ * across devices and feeds guidance.
+ *
+ * FR-SCHOOL-007: the TEEN owns the checkboxes. Parent viewers are read-only —
+ * checkboxes render disabled with a plain-English explanation. Parents keep
+ * the draft-a-plan + review (safety_status) powers; those write a different
+ * field and are role-gated server-side too.
  */
 export function PathTo90({
   plan,
   childId,
   classId,
+  childName,
   role,
   onChanged,
 }: {
   plan: StudyPlan | null;
   childId: string;
   classId: string;
+  childName: string;
   role: "parent" | "child";
   onChanged: () => void;
 }) {
@@ -30,7 +37,7 @@ export function PathTo90({
   const [error, setError] = useState<string | null>(null);
 
   async function toggle(rank: number, done: boolean) {
-    if (!plan || role !== "parent") return;
+    if (!plan || role !== "child") return;
     setBusy(true);
     setError(null);
     try {
@@ -103,12 +110,17 @@ export function PathTo90({
         ? "border-red-400/40 text-red-300"
         : "border-aurum-400/40 text-aurum-300";
 
+  const isTeen = role === "child";
+
   return (
     <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-medium text-star-100">Path to 90</h3>
-          <p className="text-xs text-stardust-300">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-star-100">Path to 90</h3>
+            <ProvenanceLabel kind="app-generated" />
+          </div>
+          <p className="mt-1 text-xs text-stardust-300">
             {plan
               ? `Week of ${plan.week_start} · ${plan.plan.filter((a) => a.done).length} of ${plan.plan.length} steps growing`
               : "No plan growing for this week yet."}
@@ -125,6 +137,14 @@ export function PathTo90({
         )}
       </div>
 
+      {plan && role === "parent" && plan.plan.length > 0 && (
+        <p className="mt-3 rounded-2xl border border-stardust-500/20 bg-nebula-800/40 px-4 py-2.5 text-xs leading-relaxed text-stardust-300">
+          These steps are {childName}&apos;s — only they can check them off. You&apos;re
+          seeing their plan read-only; your review (below) is what counts as the parent
+          voice here.
+        </p>
+      )}
+
       {plan && plan.plan.length > 0 && (
         <ol className="mt-4 space-y-2">
           {plan.plan
@@ -134,15 +154,16 @@ export function PathTo90({
               <li key={a.rank}>
                 <label
                   className={`flex items-start gap-3 rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3 ${
-                    role === "parent" ? "cursor-pointer" : ""
+                    isTeen ? "cursor-pointer" : "cursor-default"
                   } ${a.done ? "opacity-60" : ""}`}
+                  title={isTeen ? undefined : "Only your teen can check steps off — this is their plan."}
                 >
                   <input
                     type="checkbox"
                     checked={a.done}
-                    disabled={role !== "parent" || busy}
+                    disabled={!isTeen || busy}
                     onChange={(e) => toggle(a.rank, e.target.checked)}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-nova-400"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-nova-400 disabled:cursor-not-allowed disabled:opacity-60"
                     aria-label={`Step ${a.rank}: ${a.action}`}
                   />
                   <span className="flex-1">

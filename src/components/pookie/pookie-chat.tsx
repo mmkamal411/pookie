@@ -44,7 +44,7 @@ function loadHistory(childName: string): ChatMessage[] {
     },
     {
       role: "pookie",
-      text: `Tip: say "be straight with me" any time you want the unfiltered take.`,
+      text: `Tip: I can explain any grade, what's due next, or how to study for it — just ask.`,
     },
   ];
   if (typeof window === "undefined") return seed;
@@ -95,20 +95,27 @@ function BotText({ text }: { text: string }) {
 
 /**
  * Pookie tab chat — full-page AI tutor.
- * Personality is keyword-triggered (detectPersonality): warm Pookie by
- * default, Muse's straight-talk voice when the message asks for it.
- * There is NO toggle — each message is classified independently and the
- * voice reverts to Pookie on the next message.
+ *
+ * FR-AI-002: "Direct mode" (Muse's straight-talk voice) is 18+ ONLY.
+ * - Adults (viewerAge >= 18): an explicit Direct mode toggle. Same safety
+ *   rules in both modes — mode is a tone preference, never a safety change.
+ * - Under 18 (or unknown age — fail closed): no toggle, no keyword trigger,
+ *   no footnote. Warm Pookie only, with a clear explanation of why.
+ * The word "unfiltered" is retired from copy, comments, and docs (R7).
  */
 export function PookieChat({
   overview,
   childName,
+  viewerAge,
 }: {
   overview: SchoolOverview;
   childName: string;
+  /** The viewer's age in years, computed server-side. Null = unknown = gated. */
+  viewerAge?: number | null;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory(childName));
   const [draft, setDraft] = useState("");
+  const [directMode, setDirectMode] = useState(false);
   const [, setColorTick] = useState(0);
   const [museThinking, setMuseThinking] = useState(false);
   const musePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -119,6 +126,10 @@ export function PookieChat({
 
   const context: TutorContext = buildTutorContext(overview, childName);
   const isThinking = messages.some((m) => m.thinking);
+  // FR-AI-002: 18+ gate, fail-closed on unknown age. Mode is tone only —
+  // the same safety layer serves both modes (sol-school-ai §13).
+  const isAdult = (viewerAge ?? 0) >= 18;
+  const effectiveDirect = isAdult && directMode;
   const pookieNeon = resolvePookieNeon(getPookieColor());
 
   useEffect(() => subscribePookieColor(() => setColorTick((t) => t + 1)), []);
@@ -220,8 +231,13 @@ export function PookieChat({
     if (!trimmed || isThinking) return;
     setDraft("");
 
-    // Keyword layer — Muse's voice takes this response when triggered.
-    const persona: ChatPersona = detectPersonality(trimmed);
+    // Persona layer — FR-AI-002: under-18 (or unknown age) never gets the
+    // Muse voice, keyword or otherwise. Adults: toggle, else keyword trigger.
+    const persona: ChatPersona = !isAdult
+      ? "pookie"
+      : effectiveDirect
+        ? "muse"
+        : detectPersonality(trimmed);
 
     const userMsg: ChatMessage = { role: "user", text: trimmed, persona };
 
@@ -273,9 +289,35 @@ export function PookieChat({
           <h1 className="text-sunlit mt-1 text-2xl font-semibold tracking-tight">Ask me anything</h1>
         </div>
       </div>
-      <p className="animate-bloom mt-2 text-xs text-stardust-500" style={{ animationDelay: "0.08s" }}>
-        Warm tutor by default — say &ldquo;be straight with me&rdquo; any time you want the unfiltered take.
-      </p>
+      {isAdult ? (
+        <div className="animate-bloom mt-3 flex items-center gap-3" style={{ animationDelay: "0.08s" }}>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={directMode}
+            onClick={() => setDirectMode((v) => !v)}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+              directMode ? "bg-nova-400/70" : "bg-nebula-700"
+            }`}
+            aria-label="Direct mode"
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-star-100 transition-all ${
+                directMode ? "left-[22px]" : "left-0.5"
+              }`}
+            />
+          </button>
+          <p className="text-xs text-stardust-300">
+            <span className="font-medium text-star-100">Direct mode</span>
+            {directMode ? " on — blunter answers. " : " — blunter answers when it's on. "}
+            Safety rules don&apos;t change.
+          </p>
+        </div>
+      ) : (
+        <p className="animate-bloom mt-2 text-xs text-stardust-500" style={{ animationDelay: "0.08s" }}>
+          Pookie is your warm tutor. Direct mode is for adults (18+) — same safety, same smarts.
+        </p>
+      )}
 
       <div
         ref={scrollRef}

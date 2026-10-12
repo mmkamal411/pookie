@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { PookieOrb } from "@/components/pookie-orb";
 import { gapTo90, gradeBand, letterGrade } from "@/lib/grades";
-import type { ClassDetail } from "@/lib/school/types";
+import type { CalibrationSummary, ClassDetail, StudySpark, TodayCheckin } from "@/lib/school/types";
 import { bandStyles, deltaCopy, dueDateLabel, gapCopy } from "./styles";
 import { PathTo90 } from "./path-to-90";
 import { TeacherThread } from "./teacher-thread";
 import { CheckinForm } from "./checkin-form";
 import { ClassFiles } from "./class-files";
+import { StudySparks } from "./study-sparks";
+import { ProvenanceLabel } from "./provenance-label";
 
 /**
  * /c/[childSlug]/school/[classSlug] — the class page.
@@ -24,6 +26,10 @@ export function ClassDetailView({
   childId,
   checkinToday,
   role,
+  sparks,
+  calibration,
+  labToday,
+  todayCheckin,
 }: {
   detail: ClassDetail;
   childName: string;
@@ -31,6 +37,10 @@ export function ClassDetailView({
   childId: string;
   checkinToday: boolean;
   role: "parent" | "child";
+  sparks?: StudySpark[];
+  calibration?: CalibrationSummary | null;
+  labToday?: { class_name: string } | null;
+  todayCheckin?: TodayCheckin | null;
 }) {
   const [data, setData] = useState(detail);
   const [version, setVersion] = useState(0);
@@ -75,6 +85,10 @@ export function ClassDetailView({
           <PookieOrb size={64} />
         </div>
 
+        <div className="mt-4">
+          <ProvenanceLabel kind="school-of-record" />
+        </div>
+
         <div className="mt-6 flex items-center gap-5">
           <p className={`text-5xl font-semibold tabular-nums sm:text-6xl ${s.text}`}>
             {data.grade?.numeric != null ? data.grade.numeric.toFixed(1) : "—"}
@@ -103,7 +117,10 @@ export function ClassDetailView({
 
       {/* Assignments */}
       <section className="mt-8">
-        <h2 className="animate-bloom text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Assignments</h2>
+        <div className="animate-bloom flex items-center gap-3">
+          <h2 className="text-sm font-medium tracking-[0.2em] text-nova-400 uppercase">Assignments</h2>
+          <ProvenanceLabel kind="school-of-record" />
+        </div>
         {data.assignments.length > 0 ? (
           <div className="mt-4 grid gap-3">
             {data.assignments.map((a, i) => (
@@ -144,11 +161,21 @@ export function ClassDetailView({
             plan={data.study_plan}
             childId={childId}
             classId={data.class.id}
+            childName={childName}
             role={role}
             onChanged={refresh}
           />
         </div>
       </section>
+
+      {/* Study Sparks */}
+      {sparks && sparks.length > 0 && (
+        <section className="mt-8">
+          <div className="mt-4">
+            <StudySparks sparks={sparks} />
+          </div>
+        </section>
+      )}
 
       {/* Teacher thread */}
       <section className="mt-8">
@@ -167,7 +194,14 @@ export function ClassDetailView({
 
       {/* Check-in + handouts below the hero */}
       <section className="mt-8 grid gap-4 lg:grid-cols-2">
-        <CheckinForm childId={childId} childName={childName} doneToday={checkinToday} />
+        <CheckinForm
+          childId={childId}
+          childName={childName}
+          role={role}
+          todayCheckin={todayCheckin ?? null}
+          calibration={calibration ?? null}
+          labToday={labToday ?? null}
+        />
         <ClassFiles childId={childId} classId={data.class.id} className={displayName} />
       </section>
     </main>

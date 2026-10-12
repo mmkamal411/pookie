@@ -91,6 +91,29 @@ export async function requireParentRole(childId: string): Promise<string> {
   return user.id;
 }
 
+/**
+ * Fail-closed teen check. Requires a REAL child_access row with role='child'
+ * — never the assertTenant() fall-through default. Used by every teen-only
+ * surface (calibration, estimates, teen-deletable check-ins, Path-to-90
+ * checkbox writes, AI-practice opt-in toggle).
+ */
+export async function requireChildRole(childId: string): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) failWith(ErrorCodes.TENANT_SCOPE_VIOLATION);
+  const { data: access } = await supabase
+    .from("child_access")
+    .select("role")
+    .eq("child_id", childId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (access as { role: string } | null)?.role;
+  if (role !== "child") failWith(ErrorCodes.CHILD_ROLE_REQUIRED);
+  return user.id;
+}
+
 /** Assert a class belongs to the child; 404 NOT_FOUND if not (safe: existence already tenant-scoped). */
 async function assertClassInTenant(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -299,7 +322,7 @@ export async function getClassDetail(childId: string, classId: string): Promise<
   const supabase = await createClient();
   const cls = await assertClassInTenant(supabase, childId, classId);
 
-  const [{ data: grade }, { data: history }, { data: assignments }, { data: plan }, { data: thread }] =
+  const [{ data: grade }, { data: history }, { data: assignments }, { data: plan }, thread] =
     await Promise.all([
       supabase
         .from("grades")
@@ -332,13 +355,7 @@ export async function getClassDetail(childId: string, classId: string): Promise<
         .order("week_start", { ascending: false })
         .limit(1)
         .maybeSingle(),
-      supabase
-        .from("teacher_messages")
-        .select("id, class_id, direction, subject, body, status, created_at, sent_at")
-        .eq("child_id", childId)
-        .eq("class_id", classId)
-        .order("created_at", { ascending: false })
-        .limit(20),
+      selectTeacherThread(supabase, childId, classId),
     ]);
 
   return {
@@ -347,8 +364,68 @@ export async function getClassDetail(childId: string, classId: string): Promise<
     history: ((history ?? []) as Array<{ taken_at: string; numeric: number | null }>),
     assignments: ((assignments ?? []) as AssignmentItem[]),
     study_plan: (plan as StudyPlan | null) ?? null,
-    teacher_thread: ((thread ?? []) as TeacherMessage[]),
+    teacher_thread: thread,
   };
+}
+
+/**
+ * Class-page teacher thread with provenance (FR-SCHOOL-001/002): the class
+ * thread plus the segregated counselor store (class_id NULL per the 006
+ * route rule, or sender_type='counselor'). Tries the 024 provenance columns,
+ * falls back to legacy columns until 024 is applied (SEAM).
+ */
+async function selectTeacherThread(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  childId: string,
+  classId: string,
+): Promise<TeacherMessage[]> {
+  const FULL =
+    "id, class_id, direction, subject, body, status, created_at, sent_at, sender_type, source, safety_critical, fetched_at";
+  const LEGACY = "id, class_id, direction, subject, body, status, created_at, sent_at";
+  const orFilter = `class_id.eq.${classId},class_id.is.null`;
+
+  let rows: Array<Record<string, unknown>> = [];
+  try {
+    const { data, error } = await supabase
+      .from("teacher_messages")
+      .select(FULL)
+      .eq("child_id", childId)
+      .or(orFilter)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    if (error) throw error;
+    rows = (data ?? []) as Array<Record<string, unknown>>;
+  } catch (err: unknown) {
+    const e = err as { code?: string; message?: string } | null;
+    const missingColumn = e?.code === "42703" || /column .* does not exist/i.test(e?.message ?? "");
+    if (!missingColumn) throw new ApiError(mapDbError(err, crypto.randomUUID()));
+    const { data, error } = await supabase
+      .from("teacher_messages")
+      .select(LEGACY)
+      .eq("child_id", childId)
+      .or(orFilter)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    if (error) throw new ApiError(mapDbError(error, crypto.randomUUID()));
+    rows = (data ?? []) as Array<Record<string, unknown>>;
+  }
+
+  return rows.map((m) => ({
+    id: m.id,
+    class_id: m.class_id,
+    direction: m.direction,
+    subject: m.subject,
+    body: m.body,
+    status: m.status,
+    created_at: m.created_at,
+    sent_at: m.sent_at,
+    sender_type:
+      (m.sender_type as "teacher" | "counselor" | undefined) ??
+      (m.class_id == null ? "counselor" : "teacher"),
+    source: (m.source as string | undefined) ?? "manual",
+    safety_critical: (m.safety_critical as boolean | undefined) ?? false,
+    fetched_at: (m.fetched_at as string | null | undefined) ?? null,
+  })) as TeacherMessage[];
 }
 
 // ---------------------------------------------------------------------------
@@ -449,6 +526,9 @@ export async function createAssignment(
       due_date: input.due_date ?? null,
       status: "upcoming",
       notes: input.notes ?? null,
+      // FR-SCHOOL-001: manual rows are app-generated (family-created), tagged
+      // at write time. Sync rows keep the school_of_record default.
+      provenance: "app_generated",
     })
     .select("id, class_id, title, category, due_date, status, points_earned, points_possible, notes")
     .single();
@@ -594,6 +674,7 @@ export async function listTeacherMessages(
 export async function draftTeacherMessage(
   childId: string,
   input: z.infer<typeof teacherMessageDraftSchema>,
+  authoredBy?: string,
 ): Promise<{ message: TeacherMessage }> {
   const supabase = await createClient();
   if (input.class_id) await assertClassInTenant(supabase, childId, input.class_id);
@@ -606,6 +687,12 @@ export async function draftTeacherMessage(
       subject: input.subject ?? null,
       body: input.body,
       status: "draft",
+      // FR-AI-004 parent-authorship: the draft is parent-composed (blank draft —
+      // no AI-generated draft, no template-filled send). authored_by records
+      // WHO wrote it; approval sends the exact approved bytes.
+      authored_by: authoredBy ?? null,
+      provenance: "app_generated",
+      source: "manual",
     })
     .select("id, class_id, direction, subject, body, status, created_at, sent_at")
     .single();

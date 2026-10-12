@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   completeOnboarding,
   createChildProfile,
@@ -81,9 +82,16 @@ export function StepChildren({
   onSkip: () => void;
   onChildAdded: (result: ChildAdded) => void;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState<"choice" | "form">("choice");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function connectFamily() {
+    // The claim flow lives on its own page — the wizard stays resumable
+    // via the back button; onboarding completes from the connect page.
+    router.push("/onboarding/connect");
+  }
 
   // Add-child form state.
   const [name, setName] = useState("");
@@ -176,6 +184,20 @@ export function StepChildren({
               {busy
                 ? "One moment…"
                 : "No kids to track. Your Pookie is all yours."}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={connectFamily}
+            disabled={busy}
+            className="rounded-2xl border border-nebula-700 bg-nebula-900/60 p-5 text-left transition hover:border-nova-400/60 hover:bg-nebula-900 disabled:opacity-60"
+          >
+            <span className="block text-sm font-semibold text-star-100">
+              Connect to my family
+            </span>
+            <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
+              Your child is already on Pookie — link yourself as their other
+              parent. Approval required, no invite needed.
             </span>
           </button>
         </div>
