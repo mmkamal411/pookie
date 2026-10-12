@@ -1,11 +1,16 @@
 name: Deploy staging
 
-# Staging auto-deploys on every push to main (after CI passes).
+# Staging auto-deploys on every push to staging-build (after CI passes).
 # Production NEVER auto-deploys — see deploy-production.yml (manual only).
+#
+# Build flow: npm run build → opennextjs-cloudflare build → assemble
+# .pages-deploy → wrangler pages deploy. The pipeline ALWAYS rebuilds from
+# source — never reuses a stale .open-next/ (lesson 2026-10-12: a stale
+# local build shipped demo-mode code to staging with zero visibility).
 
 on:
   push:
-    branches: [main]
+    branches: [staging-build]
   workflow_dispatch:
 
 jobs:
@@ -18,8 +23,17 @@ jobs:
     needs: ci-gate
     runs-on: ubuntu-latest
     environment: staging
+    # Contents write: commit docs/DEPLOY-LOG.md back to staging-build.
+    # (Pushes made with GITHUB_TOKEN do not trigger new workflow runs,
+    # so this cannot self-trigger another deploy.)
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: record-deploy.py lists commits since the last
+          # deploy via `git log <prev-sha>..HEAD`.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -29,21 +43,67 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (staging)
+      - name: Build (Next.js)
         run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
+          NEXT_PUBLIC_POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
+          # Staging builds must bake the staging URL (invite/claim links in
+          # src/lib/safety/actions.ts + src/server/services/parent-claim.ts
+          # default to the PRODUCTION URL when this is unset).
+          NEXT_PUBLIC_APP_URL: https://pookie-staging.pages.dev
           NEXT_PUBLIC_ASSET_VERSION: ${{ github.sha }}
 
+      - name: Build (OpenNext Cloudflare worker)
+        run: npx opennextjs-cloudflare build
+
+      - name: Verify fresh build (no stale demo code)
+        run: |
+          if grep -rq "NEXT_PUBLIC_DEMO_MODE" .open-next/assets/_next/static/chunks/ 2>/dev/null; then
+            echo "STALE BUILD: demo-mode code found in fresh build output"
+            exit 1
+          fi
+          echo "Build is fresh."
+
+      - name: Assemble Pages deploy directory
+        run: python3 scripts/assemble-pages-deploy.py
+
+      # Canonical staging URL is https://pookie-staging.pages.dev (the
+      # project's production alias — same target as deploy-staging.py and
+      # smoke-test-staging.py). Do NOT pass --branch here: a --branch deploy
+      # publishes only to the branch preview subdomain
+      # (staging-build.pookie-staging.pages.dev) and leaves the canonical
+      # URL on the old build, which is exactly the divergence found
+      # 2026-10-12 (two URLs serving different builds; the smoke test then
+      # verifies the WRONG deployment).
       - name: Deploy to Cloudflare Pages (pookie-staging)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # Account ID is not sensitive (matches deploy scripts in d-dash-app).
           accountId: 91264b3fa69afffd6ffe57bdb3c545a8
-          command: pages deploy ./out --project-name=pookie-staging --branch=main
+          command: pages deploy .pages-deploy --project-name=pookie-staging --commit-hash=${{ github.sha }} --commit-dirty=true
 
-      - name: Verify single asset version (?v= check)
-        run: bash scripts/verify-asset-version.sh https://pookie-staging.pages.dev
+      - name: Smoke test
+        id: smoke
+        run: |
+          sleep 10
+          if python3 smoke-test-staging.py https://pookie-staging.pages.dev --build-id "$(cat .next/BUILD_ID)"; then
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Record deployment
+        if: always()
+        run: python3 scripts/record-deploy.py staging ${{ github.sha }} "GitHub Actions" "${{ steps.smoke.outputs.result || 'unknown' }}"
+
+      - name: Commit deploy log back to staging-build
+        if: always()
+        run: |
+          git config user.name "pookie-deploy-bot"
+          git config user.email "pookie-deploy-bot@users.noreply.github.com"
+          git add docs/DEPLOY-LOG.md
+          git diff --cached --quiet || git commit -m "deploy: record staging deploy ${{ github.sha }}"
+          git push origin HEAD:staging-build
