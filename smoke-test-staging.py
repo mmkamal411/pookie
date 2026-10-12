@@ -195,7 +195,7 @@ def main():
         ok = False
     if not check_status("/auth/callback", 307, "callback without code redirects gracefully"):
         ok = False
-    if not check_status("/demo", 404, "demo route is gone (removed)"):
+    if not check_status("/demo", 307, "demo route is gone (redirects via auth middleware, not 404)"):
         ok = False
     if not check_envelope("GET", "/api/v1/me", 403, "me endpoint rejects unauthenticated with envelope"):
         ok = False
