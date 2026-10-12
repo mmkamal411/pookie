@@ -3,6 +3,37 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~09:55 EDT — Squad Nova — Living breathing cosmos + divine orb (commit 602e51e, staging-build)
+
+**Mission:** Mehedi's orders — (1) dark cosmic background STAYS (Horizon's white-bridge brightening overruled); (2) make it ALIVE — shooting stars, satellites, breathing space; (3) the Pookie orb becomes a DIVINE orb — angelic spiritual light with divine powers (Pookie and Mookie).
+
+**Reverted (Horizon brightening → a635df8 dark state):**
+- `cosmic-scene-director.tsx` — dark scene values restored (sky lightness back to 9–15%, washes 0.14–0.30).
+- `globals.css` — removed Horizon's body lit-interior, bridge-ambient wash, brightened glass-pane/console/cards, LED strip brightening, light-bleed, viewport-frame, bright focus. Kept Horizon's `.holo-panel` / `.holo-text` / `.holo-readout` (dark holographic displays suit a dark cosmos).
+- `layout.tsx` — removed `<div className="bridge-ambient" />` mount.
+- `overview-dashboard.tsx` — vista hero back to plain `vista-hero` (viewport-frame/light-bleed classes removed with their CSS).
+- `mission-briefing.tsx` — kept `holo-panel` (dark display, compatible).
+
+**Built — the living cosmos (`nebula-background.tsx`):**
+- Breathing nebulas: 4–6s organic cycles (sin phase per nebula, ±22% alpha swell).
+- Neon shooting stars: more frequent (every ~110 frames, up to 4 concurrent), white/cyan/violet trails with a two-pass glow+core stroke.
+- Satellites (4): silver body, solar-panel crossbar, sharp white strobe blink on individual rhythms, red/green nav lights pulsing.
+- Cross-flare sparkle stars: bright near stars throw a light cross at twinkle peaks.
+- Aurora band: neon phenomenon along the upper sky that swells every ~12–20s.
+- Supernova glints: distant stars flare and fade every ~8–23s.
+- The great planet: massive world cresting the bottom horizon — atmospheric cyan rim glow, drifting cloud bands, rotating terminator (~90s revolution), sunlit limb crescent.
+- All GPU-cheap: transforms + opacity only, no shadowBlur. prefers-reduced-motion → static fallback (unchanged).
+
+**Built — the divine orb (`pookie-orb.tsx` + globals.css "SQUAD NOVA" section):**
+- Four-layer angelic orb: far halo (breathing 6s), counter-breathing aura, celestial body (5s breathe), 24s rotating inner light (the wheel within the wheel), divine white-gold core.
+- Warm sacred radiance: white → gold gradient, `screen` blend on the dark cosmos.
+- Propagates everywhere the logo appears (login, chat, heroes, toolbar) — single component change.
+- Toolbar wrapper keyframes (`orb-glow`, `orb-glow-aurora`) retuned from pink/moonlight to divine gold.
+
+**Verify:** `npx tsc --noEmit` clean (exit 0), `npm run build` green (all routes). NOT deployed — parent owns deploys.
+
+**Blocked on parent:** deploy + live-browser visual verification of the living cosmos and divine orb.
+
 ## 2026-10-12 ~09:20 EDT — Squad Anchor — Integration gate + deploy (9045ee1, 5 Squad Value features)
 
 **Integrated:** 6f07e20 (Family Task System), bd551c4 (Bill Tracker), 83de243 (Meal Plan → Shopping List), aa2e674 (Pookie Chat → Actions), 0bfa235 (Morning Briefing Digest).
