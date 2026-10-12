@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { TaskBoard } from "@/components/tasks/task-board";
 import { BillBoard } from "@/components/bills/bill-board";
 import { MorningBriefing } from "@/components/morning-briefing";
@@ -34,7 +33,6 @@ export function TodayView({
       <div className="firefly" style={{ width: 6, height: 6, top: "26%", left: "86%", animationDelay: "1.4s" }} />
 
       <div className="animate-bloom flex items-center gap-4">
-        <ReactiveOrb size={52} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Today · flight plan
         </p>

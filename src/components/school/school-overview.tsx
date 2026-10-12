@@ -1,6 +1,5 @@
 "use client";
 
-import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { useGradeCelebration } from "@/lib/orb/use-grade-celebration";
 import type { CalibrationSummary, SchoolOverview, TodayCheckin } from "@/lib/school/types";
 import type { AttendanceSummary, GpaBlock, SemesterCard as SemesterCardData } from "@/server/services/school-enrich";
@@ -68,7 +67,6 @@ export function SchoolOverview({
       <DidYouKnow fact={enrich.trivia} />
 
       <div className="animate-bloom mt-6 flex items-center gap-4">
-        <ReactiveOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           School · Mission Status
         </p>

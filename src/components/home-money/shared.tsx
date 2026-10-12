@@ -19,9 +19,16 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  // FormData bodies need the browser's multipart boundary — never force a
+  // JSON content-type on them (it silently broke photo uploads).
+  const { headers: initHeaders, ...rest } = init ?? {};
+  const isForm = rest.body instanceof FormData;
   const res = await fetch(path, {
-    headers: { "content-type": "application/json" },
-    ...init,
+    ...rest,
+    headers: {
+      ...(isForm ? {} : { "content-type": "application/json" }),
+      ...((initHeaders as Record<string, string> | undefined) ?? {}),
+    },
   });
   const json = (await res.json().catch(() => null)) as {
     ok: boolean;

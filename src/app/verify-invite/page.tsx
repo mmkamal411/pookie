@@ -145,7 +145,7 @@ export default async function VerifyInvitePage({
   const invitedEmail = identity?.invite_email ?? null;
 
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-nebula-950">
+    <main className="relative flex min-h-screen min-h-dvh overflow-hidden bg-nebula-950">
       <div className="relative z-10 mx-auto flex w-full max-w-md flex-1 items-center px-6 py-16">
         <div className="card-living mx-auto w-full rounded-3xl p-8 text-center">
           <div className="mx-auto flex w-fit">

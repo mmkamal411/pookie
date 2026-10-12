@@ -1,0 +1,41 @@
+{
+  "background_color": "#050510",
+  "categories": [
+    "productivity",
+    "lifestyle",
+    "education"
+  ],
+  "description": "Your whole life, flown from one cockpit \u2014 time, tasks, school, family, health, money, with a divine AI co-pilot.",
+  "display": "standalone",
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "/icons/icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "/icons/icon-512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "/icons/maskable-512.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "Pookie \u2014 Your Life, Flown From One Cockpit",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "Pookie",
+  "start_url": "/",
+  "theme_color": "#050510",
+  "id": "/",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ]
+}

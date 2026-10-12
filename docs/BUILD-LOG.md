@@ -1,5 +1,25 @@
 ## 2026-10-12 ~11:45 EDT — Squad Phase2 — Lifestyle Modules Aesthetic Elevation (W23/W28/W29/W27/W16)
 
+## 2026-10-12 ~11:27 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/24H-CHECKLIST.md
+ M src/app/account-deleted/page.tsx
+ M src/app/add-child/page.tsx
+ M src/app/c/[childSlug]/layout.tsx
+ M src/app/c/[childSlug]/settings/credentials/page.tsx
+ M src/app/c/[childSlug]/settings/health/page.tsx
+ M src/app/c/[childSlug]/settings/sharing/page.tsx
+ M src/app/c/[childSlug]/settings/sync/page.tsx
+ M src/app/family/claims/claims-inbox.tsx
+ M src/app/family/invite/accept/accept-flow.tsx
+ M src/app/family/invite/invite-generator.tsx
+ M src/app/global-error.tsx
+ M src
+
+
 **Mission:** Make Phase 2 lifestyle modules GORGEOUS — a joy to open. Aggressive aesthetic elevation, spaceship design language throughout. All functionality/logic preserved.
 
 **W28 Restaurants → "Dining Destinations"** (`restaurants-panel.tsx`, full rewrite):
@@ -2499,3 +2519,22 @@ Fitness framed as "training for the mission" throughout. Device integrations def
 **Verification:** `npx tsc --noEmit` — zero errors in all 6 new files. Full `next build` attempted multiple times; environment contention (parallel squad builds holding the build lock, OOM kills on shared 7GB VM) prevented a clean solo build — queued retry; failure seen (`[__metadata_id__]` phantom in `/api/v1/ai/crisis-signal`) is unrelated to insurance files and likely concurrent-tree churn. tsc error pair in `shopping/linked-ships.tsx` + `lib/health/actions.ts` is another squad's uncommitted work, not Phase1-Insurance.
 
 **Not deployed** (per W3 directive). Next: migration 072 needs applying to staging DB before the page has data.
+
+## 2026-10-12 ~11:30 EDT — Squad Singularity — The One Orb (Mehedi directives)
+
+**Removed the bouncy ball.** `PookiePinball` (the rubber ball that dropped/bounced into the toolbar on every page load) is deleted — `src/components/pookie-pinball.tsx` removed via `git rm`, usage dropped from `src/app/c/[childSlug]/layout.tsx`. Mehedi: "replace the bouncy ball with a flying orb."
+
+**One orb.** Removed every extra orb instance from toolbar pages — the orb lives ONLY in the bottom toolbar:
+- `pookie-chat.tsx` — header orb replaced with an "AI core link" comm indicator; chat moods (listening/thinking/celebrating) now emit through the orb event bus so the toolbar orb reacts
+- `school/class-detail.tsx`, `school/did-you-know.tsx` (→ ✦ glyph), `school/sync-health-dashboard.tsx`, `me/page.tsx`, `family/claims/claims-inbox.tsx`, `family/invite/invite-generator.tsx` — content orbs removed
+- Kept: login page orb (locked login design, no toolbar there), onboarding + invite-accept + verify-invite + account-deleted (deck hidden on those routes — orb is the only presence)
+
+**Flying entrance.** New `.orb-descend` animation — on every navigation (keyed on pathname) the orb falls from the cosmos, glowing bright, and settles into her hover with a soft overshoot + landing glow. Not a bounce — a divine arrival. Followed by a gentle `.orb-hover` float. Respects reduced-motion.
+
+**No black plate.** `.console-orb-socket` deleted from markup + CSS. The orb hovers — only a breathing pool of light beneath (`.console-orb-pool`).
+
+**Vibrant prism colors.** New `orb-prism` 24s hue cycle on the toolbar orb's halo + aura (counter-rotating): gold → green → cyan → violet → pink, saturated neon. Mehedi: "I love how the orb changes colors — add more vibrant neon bright colors with subtle changes."
+
+**Spacecraft console toolbar.** "Systems nominal" / "Nav · Home" are gone. Left: live ship vitals — pulsing uplink dot, PWR 96–100% (breathes every ~3s) with lit segment bar, SHD 100. Right: sector per tab ("Sector · Home", "AI Core", "Module Bay", "Ship Systems", "Deep Space"), ticking mission clock (blinking colon), breathing signal bars. Standby console got the same treatment (fallback "Deep Space" instead of "Systems nominal").
+
+tsc clean, `npm run build` green. NOT deployed — parent owns deploys.

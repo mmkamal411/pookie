@@ -7,7 +7,13 @@ import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { getPookieColor, subscribePookieColor } from "@/components/pookie/pookie-color";
 import { MorePopup } from "@/components/more-popup";
 
-/** The center orb — takes on the pinball's color when Pookie eats it. */
+/**
+ * The one orb — Pookie herself, hovering in the center of the console.
+ * Squad Singularity (2026-10-12): Mehedi — "there should be just one orb
+ * and that's in the center toolbar, hovering, subtle glowing, hypnotizing,
+ * addictive, eager to please and help." No socket, no plate, no darkness:
+ * she floats on her own light.
+ */
 function ToolbarOrb() {
   const [color, setColor] = useState<string | null>(() => getPookieColor());
 
@@ -26,6 +32,83 @@ function ToolbarOrb() {
           style={{ background: `radial-gradient(circle at 50% 45%, ${color}55, transparent 70%)` }}
         />
       )}
+    </span>
+  );
+}
+
+/** Live mission clock — HH:MM, ticking every second, colon blinking. */
+function MissionClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = now.getSeconds();
+  return (
+    <span className="console-clock" aria-label={`Ship time ${hh}:${mm}`}>
+      {hh}
+      <span className={ss % 2 === 0 ? "console-clock-colon" : "console-clock-colon dim"}>:</span>
+      {mm}
+    </span>
+  );
+}
+
+/**
+ * Ship vitals — the left telemetry cluster. Power breathes 96–100%,
+ * shields hold steady, the uplink dot pulses. Feels alive, never noisy.
+ */
+function ShipVitals() {
+  const [power, setPower] = useState(98);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setPower((p) => {
+        const next = p + (Math.random() > 0.5 ? 1 : -1);
+        return Math.min(100, Math.max(96, next));
+      });
+    }, 2800);
+    return () => clearInterval(t);
+  }, []);
+  const bars = Math.round(((power - 96) / 4) * 4); // 0–4 lit segments
+  return (
+    <span className="console-telemetry">
+      <span className="console-vital-dot" aria-hidden="true" />
+      <span>
+        PWR <strong>{power}</strong>
+      </span>
+      <span className="console-powerbar" aria-hidden="true">
+        {[0, 1, 2, 3].map((i) => (
+          <i key={i} data-lit={i < bars} />
+        ))}
+      </span>
+      <span className="console-telemetry-sep" aria-hidden="true">
+        ·
+      </span>
+      <span>
+        SHD <strong>100</strong>
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Nav readout — the right telemetry cluster. Sector follows the active
+ * tab, the mission clock ticks, signal bars breathe.
+ */
+function NavReadout({ sector }: { sector: string }) {
+  return (
+    <span className="console-telemetry">
+      <span>{sector}</span>
+      <span className="console-telemetry-sep" aria-hidden="true">
+        ·
+      </span>
+      <MissionClock />
+      <span className="console-signal" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <i key={i} style={{ animationDelay: `${i * 0.35}s` }} />
+        ))}
+      </span>
     </span>
   );
 }
@@ -91,7 +174,7 @@ type TabDef = {
   label: string;
   href: string;
   glow: string;
-  readout: string;
+  sector: string;
   glyph?: () => ReactElement;
   orb?: boolean;
   popup?: boolean;
@@ -100,9 +183,13 @@ type TabDef = {
 
 /**
  * Bottom toolbar — the ship's MAIN CONTROL CONSOLE.
- * Home · Today · Pookie (center orb, docked) · Progress · More.
+ * Home · Today · Pookie (the one orb, hovering) · Progress · More.
  * Fixed on every /c/[childSlug]/ page; a slim standby variant covers
  * authenticated pages outside the tenant scope.
+ *
+ * Squad Singularity (2026-10-12): the orb descends from the cosmos and
+ * settles into her hover on every navigation — divine arrival, not a
+ * bounce. Keyed on pathname so the descent replays on each page change.
  */
 export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const pathname = usePathname();
@@ -110,18 +197,18 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const tabs: TabDef[] = [
-    { id: "home", label: "Home", href: base, glow: "#a78bfa", readout: "Nav · Home", glyph: HabitatRingGlyph, active: pathname === base },
-    { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", readout: "Nav · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
-    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", readout: "Pookie · Ai", orb: true, active: pathname.startsWith(`${base}/pookie`) },
-    { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", readout: "Nav · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
+    { id: "home", label: "Home", href: base, glow: "#a78bfa", sector: "Sector · Home", glyph: HabitatRingGlyph, active: pathname === base },
+    { id: "today", label: "Today", href: `${base}/today`, glow: "#6ee7b7", sector: "Sector · Today", glyph: OrbitGlyph, active: pathname.startsWith(`${base}/today`) },
+    { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", sector: "AI Core", orb: true, active: pathname.startsWith(`${base}/pookie`) },
+    { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", sector: "Sector · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page.
-    { id: "more", label: "More", href: "", glow: "#c4b5fd", readout: "Modules", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
+    { id: "more", label: "More", href: "", glow: "#c4b5fd", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen },
   ];
 
   const activeTab = tabs.find((t) => t.active);
-  const readout = pathname.includes("/settings")
+  const sector = pathname.includes("/settings")
     ? "Ship Systems"
-    : (activeTab?.readout ?? "Nav · Module");
+    : (activeTab?.sector ?? "Deep Space");
 
   const tabStyle = (glow: string): CSSProperties =>
     ({ "--tab-glow": glow, "--tab-glow-soft": soft(glow) }) as CSSProperties;
@@ -134,13 +221,10 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
         className="console-housing fixed inset-x-0 bottom-0 z-40"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* Status strip — the ship's whisper */}
+        {/* Ship telemetry — live vitals left, nav + mission clock right */}
         <div className="console-status-strip" aria-hidden="true">
-          <span>
-            <span className="console-status-dot" />
-            Systems nominal
-          </span>
-          <span>{readout}</span>
+          <ShipVitals />
+          <NavReadout sector={sector} />
         </div>
 
         <div className="mx-auto grid max-w-lg grid-cols-5 items-end px-2 pt-0.5 pb-2">
@@ -156,10 +240,11 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
                 className="console-tab-btn relative -mt-9 flex flex-col items-center"
                 style={tabStyle(tab.glow)}
               >
-                <span className="relative">
-                  <span className="console-orb-socket block" data-active={tab.active}>
-                    <ToolbarOrb />
-                  </span>
+                {/* The descent — she arrives from the cosmos on every page
+                    change and settles into her hover. Keyed on pathname so
+                    the arrival replays with each navigation. */}
+                <span key={pathname} className="orb-descend relative block">
+                  <ToolbarOrb />
                   <span className="console-orb-pool" aria-hidden="true" />
                 </span>
                 <span className="console-tab-label mt-1 text-[11px] font-medium text-stardust-200">

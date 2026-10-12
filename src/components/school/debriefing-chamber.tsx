@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import type { CheckinHandout } from "@/server/services/school-debrief";
 
 function todayIso(): string {
@@ -234,7 +233,6 @@ export function DebriefingChamber({
     return (
       <div className="card-living rounded-3xl border border-nova-400/20 px-5 py-4">
         <div className="flex items-center gap-3">
-          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">The debriefing chamber is the student&apos;s private space</p>
             <p className="mt-0.5 text-xs leading-relaxed text-stardust-300">
@@ -255,7 +253,6 @@ export function DebriefingChamber({
           onClick={() => setStage("briefing")}
           className="group flex w-full items-center gap-4 px-5 py-5 text-left"
         >
-          <ReactiveOrb size={48} />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-semibold text-star-100">Debriefing Chamber</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-stardust-300">
@@ -274,9 +271,6 @@ export function DebriefingChamber({
   if (stage === "logged") {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-comet-400/40 bg-nebula-900/80 px-6 py-10 text-center" style={{ boxShadow: "0 0 40px rgb(74 222 128 / 0.15)" }}>
-        <div className="mx-auto w-fit">
-          <ReactiveOrb size={72} />
-        </div>
         <h3 className="text-sunlit mt-4 text-xl font-semibold">Debriefing Logged</h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stardust-300">
           The orb has your report, {className} mission archived.
@@ -309,10 +303,6 @@ export function DebriefingChamber({
 
         {/* Debriefing officer */}
         <div className="flex flex-col items-center px-6 pb-2 pt-7 text-center">
-          <div className="relative">
-            <ReactiveOrb size={64} />
-            <span className="absolute inset-0 -m-2 animate-ping rounded-full border border-cyan-300/30" aria-hidden="true" />
-          </div>
           <p className="mt-3 text-[11px] font-semibold tracking-[0.22em] text-cyan-300/90 capitalize">
             Debriefing Chamber
           </p>

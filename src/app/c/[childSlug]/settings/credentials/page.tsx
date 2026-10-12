@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMemberships } from "@/lib/tenant/actions";
 import { SettingsTabs, ParentOnlyNotice } from "@/components/settings/settings-ui";
-import { PortalsView } from "@/components/settings/credentials-view";
+import { LoginsView } from "@/components/sync/logins-view";
 
 // Tenant-scoped route — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -18,13 +18,13 @@ export default async function CredentialsPage({ params }: { params: Promise<{ ch
   const name = membership.child.nickname ?? membership.child.first_name;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
+    <main className="mx-auto max-w-5xl px-4 pt-10 pb-8">
       <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">School logins</h1>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
         <SettingsTabs childSlug={childSlug} role="parent" />
       </div>
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
-        <PortalsView childId={membership.child_id} childName={name} />
+        <LoginsView childId={membership.child_id} childName={name} />
       </div>
     </main>
   );

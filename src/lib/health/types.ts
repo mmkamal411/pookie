@@ -190,6 +190,10 @@ export interface MealPlanDay {
   lunchIdea: string;
   dinnerIdea: string;
   notes: string;
+  /** Optional links into the recipe library (W13 elevate). */
+  breakfastRecipeId?: string | null;
+  lunchRecipeId?: string | null;
+  dinnerRecipeId?: string | null;
 }
 
 export interface MealPlan {
@@ -197,6 +201,36 @@ export interface MealPlan {
   weekStart: string;
   days: MealPlanDay[];
   groceryList: string[];
+}
+
+// ---------------------------------------------------------------------------
+// W13 elevate — recipes, preferences
+// ---------------------------------------------------------------------------
+
+export interface MealIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface MealRecipe {
+  id: string;
+  name: string;
+  ingredients: MealIngredient[];
+  instructions: string;
+  photoUrl: string | null;
+  tags: string[];
+  favorite: boolean;
+  updatedAt: string;
+}
+
+export interface MealPreference {
+  id: string | null;
+  personLabel: string;
+  likes: string[];
+  dislikes: string[];
+  /** Free-text allergen flags ("peanuts", "shellfish"). Explicit entry only. */
+  allergenFlags: string[];
 }
 
 // ---------------------------------------------------------------------------

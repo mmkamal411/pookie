@@ -1,0 +1,530 @@
++ npm run build
+
+> pookie-app@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 399ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 82s
+  Running TypeScript ...
+  Finished TypeScript in 31.8s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/58) ...
+  Generating static pages using 1 worker (14/58) 
+  Generating static pages using 1 worker (28/58) 
+  Generating static pages using 1 worker (43/58) 
+✓ Generating static pages using 1 worker (58/58) in 264ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /account-deleted
+├ ƒ /add-child
+├ ƒ /api/v1/ai/crisis-signal
+├ ƒ /api/v1/ai/direct-mode/eligibility
+├ ƒ /api/v1/children
+├ ƒ /api/v1/children/[childId]
+├ ƒ /api/v1/children/[childId]/college/deadlines
+├ ƒ /api/v1/children/[childId]/college/deadlines/[deadlineId]
+├ ƒ /api/v1/children/[childId]/college/essays
+├ ƒ /api/v1/children/[childId]/college/essays/[essayId]
+├ ƒ /api/v1/children/[childId]/college/essays/[essayId]/feedback
+├ ƒ /api/v1/children/[childId]/college/gpa
+├ ƒ /api/v1/children/[childId]/college/list
+├ ƒ /api/v1/children/[childId]/college/list/[entryId]
+├ ƒ /api/v1/children/[childId]/college/readiness
+├ ƒ /api/v1/children/[childId]/college/recommenders
+├ ƒ /api/v1/children/[childId]/college/recommenders/[recId]
+├ ƒ /api/v1/children/[childId]/college/test-scores
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]/report
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]/verify
+├ ƒ /api/v1/children/[childId]/college/transcript-releases
+├ ƒ /api/v1/children/[childId]/college/transcript-releases/[releaseId]/authorize
+├ ƒ /api/v1/children/[childId]/college/transcript-releases/[releaseId]/mark-sent
+├ ƒ /api/v1/children/[childId]/coparenting/log
+├ ƒ /api/v1/children/[childId]/credit
+├ ƒ /api/v1/children/[childId]/portals
+├ ƒ /api/v1/children/[childId]/portals/[portalKey]
+├ ƒ /api/v1/children/[childId]/portals/test
+├ ƒ /api/v1/children/[childId]/school/accommodations
+├ ƒ /api/v1/children/[childId]/school/accommodations/[planId]/delivery-log
+├ ƒ /api/v1/children/[childId]/school/ai-practice-opt-in
+├ ƒ /api/v1/children/[childId]/school/assignments
+├ ƒ /api/v1/children/[childId]/school/calendar
+├ ƒ /api/v1/children/[childId]/school/calibration
+├ ƒ /api/v1/children/[childId]/school/calibration/estimates
+├ ƒ /api/v1/children/[childId]/school/checkin-settings
+├ ƒ /api/v1/children/[childId]/school/checkins
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]/class-details
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]/handouts
+├ ƒ /api/v1/children/[childId]/school/classes
+├ ƒ /api/v1/children/[childId]/school/classes/[classId]
+├ ƒ /api/v1/children/[childId]/school/classes/[classId]/uploads
+├ ƒ /api/v1/children/[childId]/school/counselor-messages
+├ ƒ /api/v1/children/[childId]/school/dashboard
+├ ƒ /api/v1/children/[childId]/school/due-next
+├ ƒ /api/v1/children/[childId]/school/flashcards
+├ ƒ /api/v1/children/[childId]/school/flashcards/[flashcardId]
+├ ƒ /api/v1/children/[childId]/school/forecast/compute
+├ ƒ /api/v1/children/[childId]/school/forecast/latest
+├ ƒ /api/v1/children/[childId]/school/graduation-audit
+├ ƒ /api/v1/children/[childId]/school/materials
+├ ƒ /api/v1/children/[childId]/school/minutiae
+├ ƒ /api/v1/children/[childId]/school/minutiae/[eventId]
+├ ƒ /api/v1/children/[childId]/school/minutiae/ingest
+├ ƒ /api/v1/children/[childId]/school/overview
+├ ƒ /api/v1/children/[childId]/school/peer-tips
+├ ƒ /api/v1/children/[childId]/school/plans
+├ ƒ /api/v1/children/[childId]/school/plans/[planId]
+├ ƒ /api/v1/children/[childId]/school/quiz-items
+├ ƒ /api/v1/children/[childId]/school/resource-library
+├ ƒ /api/v1/children/[childId]/school/resource-library/[resourceId]
+├ ƒ /api/v1/children/[childId]/school/resource-library/restore
+├ ƒ /api/v1/children/[childId]/school/sparks
+├ ƒ /api/v1/children/[childId]/school/study-resources
+├ ƒ /api/v1/children/[childId]/school/sync-health
+├ ƒ /api/v1/children/[childId]/school/teacher-messages
+├ ƒ /api/v1/children/[childId]/school/teacher-messages/[msgId]/approve
+├ ƒ /api/v1/children/[childId]/school/teacher-messages/[msgId]/send
+├ ƒ /api/v1/children/[childId]/school/weather
+├ ƒ /api/v1/children/[childId]/sync/heartbeats
+├ ƒ /api/v1/children/[childId]/sync/requests
+├ ƒ /api/v1/colleges
+├ ƒ /api/v1/family/claims
+├ ƒ /api/v1/family/claims/[claimId]/decide
+├ ƒ /api/v1/family/claims/incoming
+├ ƒ /api/v1/family/invites
+├ ƒ /api/v1/family/invites/[token]
+├ ƒ /api/v1/family/invites/[token]/accept
+├ ƒ /api/v1/formulas
+├ ƒ /api/v1/health/immunizations
+├ ƒ /api/v1/health/immunizations/[id]
+├ ƒ /api/v1/health/ingest
+├ ƒ /api/v1/health/meal-checkins
+├ ƒ /api/v1/health/reconsent
+├ ƒ /api/v1/health/records
+├ ƒ /api/v1/health/transition-summary
+├ ƒ /api/v1/health/wellbeing
+├ ƒ /api/v1/household/babysitters
+├ ƒ /api/v1/household/babysitters/[sitterId]
+├ ƒ /api/v1/household/babysitters/[sitterId]/grants
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/approve
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/close
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/revoke
+├ ƒ /api/v1/household/bills
+├ ƒ /api/v1/household/bills/[billId]
+├ ƒ /api/v1/household/mail
+├ ƒ /api/v1/household/mail/[itemId]
+├ ƒ /api/v1/household/mail/[itemId]/ocr
+├ ƒ /api/v1/household/mail/[itemId]/photo-delete
+├ ƒ /api/v1/household/shopping/items
+├ ƒ /api/v1/household/shopping/items/[itemId]
+├ ƒ /api/v1/household/shopping/items/[itemId]/remove
+├ ƒ /api/v1/household/shopping/items/batch
+├ ƒ /api/v1/household/shopping/list
+├ ƒ /api/v1/household/shopping/preferences
+├ ƒ /api/v1/household/shopping/prices
+├ ƒ /api/v1/household/spending/csv-import
+├ ƒ /api/v1/household/spending/plaid/exchange
+├ ƒ /api/v1/household/spending/plaid/link-token
+├ ƒ /api/v1/household/spending/plaid/sync
+├ ƒ /api/v1/household/spending/plaid/webhook
+├ ƒ /api/v1/household/spending/summary
+├ ƒ /api/v1/household/spending/transactions
+├ ƒ /api/v1/household/tasks
+├ ƒ /api/v1/household/tasks/[taskId]
+├ ƒ /api/v1/household/vault/documents
+├ ƒ /api/v1/household/vault/documents/[docId]
+├ ƒ /api/v1/invites/consume
+├ ƒ /api/v1/marketplace/driving/log
+├ ƒ /api/v1/marketplace/driving/rules
+├ ƒ /api/v1/me
+├ ƒ /api/v1/me/notifications
+├ ƒ /api/v1/safety/explorer-setup
+├ ƒ /api/v1/support/chat
+├ ƒ /api/v1/support/credits
+├ ƒ /api/v1/support/credits/[id]/decide
+├ ƒ /api/v1/support/faq/articles/[slug]
+├ ƒ /api/v1/support/faq/feedback
+├ ƒ /api/v1/support/faq/search
+├ ƒ /api/v1/support/faq/tree
+├ ƒ /api/v1/support/grants
+├ ƒ /api/v1/support/grants/[id]/decide
+├ ƒ /api/v1/support/grants/[id]/decision
+├ ƒ /api/v1/support/tickets
+├ ƒ /api/v1/support/tickets/[id]
+├ ƒ /api/v1/support/tickets/[id]/claim
+├ ƒ /api/v1/support/tickets/[id]/confirm
+├ ƒ /api/v1/support/tickets/[id]/events
+├ ƒ /api/v1/support/tickets/[id]/reopen
+├ ƒ /api/v1/support/tickets/[id]/transition
+├ ƒ /api/v1/travel/chargers
+├ ƒ /api/v1/travel/events
+├ ƒ /api/v1/travel/fuel
+├ ƒ /api/v1/travel/modules/[module]/visibility
+├ ƒ /api/v1/travel/purchase/check
+├ ƒ /api/v1/travel/restaurants
+├ ƒ /api/v1/travel/trails
+├ ƒ /api/v1/travel/weather
+├ ƒ /api/v1/tutor/chat
+├ ƒ /auth/callback
+├ ƒ /c/[childSlug]
+├ ƒ /c/[childSlug]/coparenting
+├ ƒ /c/[childSlug]/credit
+├ ƒ /c/[childSlug]/health
+├ ƒ /c/[childSlug]/health/meals
+├ ƒ /c/[childSlug]/health/nutrition
+├ ƒ /c/[childSlug]/health/review-18
+├ ƒ /c/[childSlug]/health/wellbeing
+├ ƒ /c/[childSlug]/marketplace
+├ ƒ /c/[childSlug]/pookie
+├ ƒ /c/[childSlug]/school
+├ ƒ /c/[childSlug]/school/[classSlug]
+├ ƒ /c/[childSlug]/school/health
+├ ƒ /c/[childSlug]/school/minutiae
+├ ƒ /c/[childSlug]/settings
+├ ƒ /c/[childSlug]/settings/credentials
+├ ƒ /c/[childSlug]/settings/family
+├ ƒ /c/[childSlug]/settings/health
+├ ƒ /c/[childSlug]/settings/sharing
+├ ƒ /c/[childSlug]/settings/sync
+├ ƒ /c/[childSlug]/support
+├ ƒ /c/[childSlug]/support/chat
+├ ƒ /c/[childSlug]/support/faq
+├ ƒ /c/[childSlug]/support/faq/[slug]
+├ ƒ /c/[childSlug]/support/tickets
+├ ƒ /c/[childSlug]/support/tickets/[id]
+├ ƒ /c/[childSlug]/support/tickets/new
+├ ƒ /c/[childSlug]/today
+├ ƒ /c/[childSlug]/travel
+├ ƒ /c/[childSlug]/travel/events
+├ ƒ /c/[childSlug]/travel/flights
+├ ƒ /c/[childSlug]/travel/fuel
+├ ƒ /c/[childSlug]/travel/rentals
+├ ƒ /c/[childSlug]/travel/restaurants
+├ ƒ /c/[childSlug]/travel/trails
+├ ƒ /c/[childSlug]/travel/weather
+├ ƒ /family/claims
+├ ƒ /family/invite
+├ ƒ /family/invite/accept
+├ ƒ /household/babysitters
+├ ƒ /household/mail
+├ ƒ /household/shopping
+├ ƒ /household/spending
+├ ƒ /household/vault
+├ ƒ /login
+├ ƒ /me
+├ ƒ /onboarding
+├ ƒ /onboarding/connect
+├ ƒ /select-child
+└ ƒ /verify-invite
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
++ npx opennextjs-cloudflare build
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+App directory: /home/hatch/workspace/pookie-app
+Next.js version : 16.3.8
+@opennextjs/cloudflare version: 1.20.10
+@opennextjs/aws version: 4.1.9
+workerd compatibility_date: 2026-10-01
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└─────────────────────────────────┘
+
+
+> pookie-app@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 66ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.8s
+  Running TypeScript ...
+  Finished TypeScript in 7.8s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/58) ...
+  Generating static pages using 1 worker (14/58) 
+  Generating static pages using 1 worker (28/58) 
+  Generating static pages using 1 worker (43/58) 
+✓ Generating static pages using 1 worker (58/58) in 286ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /account-deleted
+├ ƒ /add-child
+├ ƒ /api/v1/ai/crisis-signal
+├ ƒ /api/v1/ai/direct-mode/eligibility
+├ ƒ /api/v1/children
+├ ƒ /api/v1/children/[childId]
+├ ƒ /api/v1/children/[childId]/college/deadlines
+├ ƒ /api/v1/children/[childId]/college/deadlines/[deadlineId]
+├ ƒ /api/v1/children/[childId]/college/essays
+├ ƒ /api/v1/children/[childId]/college/essays/[essayId]
+├ ƒ /api/v1/children/[childId]/college/essays/[essayId]/feedback
+├ ƒ /api/v1/children/[childId]/college/gpa
+├ ƒ /api/v1/children/[childId]/college/list
+├ ƒ /api/v1/children/[childId]/college/list/[entryId]
+├ ƒ /api/v1/children/[childId]/college/readiness
+├ ƒ /api/v1/children/[childId]/college/recommenders
+├ ƒ /api/v1/children/[childId]/college/recommenders/[recId]
+├ ƒ /api/v1/children/[childId]/college/test-scores
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]/report
+├ ƒ /api/v1/children/[childId]/college/test-scores/[scoreId]/verify
+├ ƒ /api/v1/children/[childId]/college/transcript-releases
+├ ƒ /api/v1/children/[childId]/college/transcript-releases/[releaseId]/authorize
+├ ƒ /api/v1/children/[childId]/college/transcript-releases/[releaseId]/mark-sent
+├ ƒ /api/v1/children/[childId]/coparenting/log
+├ ƒ /api/v1/children/[childId]/credit
+├ ƒ /api/v1/children/[childId]/portals
+├ ƒ /api/v1/children/[childId]/portals/[portalKey]
+├ ƒ /api/v1/children/[childId]/portals/test
+├ ƒ /api/v1/children/[childId]/school/accommodations
+├ ƒ /api/v1/children/[childId]/school/accommodations/[planId]/delivery-log
+├ ƒ /api/v1/children/[childId]/school/ai-practice-opt-in
+├ ƒ /api/v1/children/[childId]/school/assignments
+├ ƒ /api/v1/children/[childId]/school/calendar
+├ ƒ /api/v1/children/[childId]/school/calibration
+├ ƒ /api/v1/children/[childId]/school/calibration/estimates
+├ ƒ /api/v1/children/[childId]/school/checkin-settings
+├ ƒ /api/v1/children/[childId]/school/checkins
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]/class-details
+├ ƒ /api/v1/children/[childId]/school/checkins/[checkinId]/handouts
+├ ƒ /api/v1/children/[childId]/school/classes
+├ ƒ /api/v1/children/[childId]/school/classes/[classId]
+├ ƒ /api/v1/children/[childId]/school/classes/[classId]/uploads
+├ ƒ /api/v1/children/[childId]/school/counselor-messages
+├ ƒ /api/v1/children/[childId]/school/dashboard
+├ ƒ /api/v1/children/[childId]/school/due-next
+├ ƒ /api/v1/children/[childId]/school/flashcards
+├ ƒ /api/v1/children/[childId]/school/flashcards/[flashcardId]
+├ ƒ /api/v1/children/[childId]/school/forecast/compute
+├ ƒ /api/v1/children/[childId]/school/forecast/latest
+├ ƒ /api/v1/children/[childId]/school/graduation-audit
+├ ƒ /api/v1/children/[childId]/school/materials
+├ ƒ /api/v1/children/[childId]/school/minutiae
+├ ƒ /api/v1/children/[childId]/school/minutiae/[eventId]
+├ ƒ /api/v1/children/[childId]/school/minutiae/ingest
+├ ƒ /api/v1/children/[childId]/school/overview
+├ ƒ /api/v1/children/[childId]/school/peer-tips
+├ ƒ /api/v1/children/[childId]/school/plans
+├ ƒ /api/v1/children/[childId]/school/plans/[planId]
+├ ƒ /api/v1/children/[childId]/school/quiz-items
+├ ƒ /api/v1/children/[childId]/school/resource-library
+├ ƒ /api/v1/children/[childId]/school/resource-library/[resourceId]
+├ ƒ /api/v1/children/[childId]/school/resource-library/restore
+├ ƒ /api/v1/children/[childId]/school/sparks
+├ ƒ /api/v1/children/[childId]/school/study-resources
+├ ƒ /api/v1/children/[childId]/school/sync-health
+├ ƒ /api/v1/children/[childId]/school/teacher-messages
+├ ƒ /api/v1/children/[childId]/school/teacher-messages/[msgId]/approve
+├ ƒ /api/v1/children/[childId]/school/teacher-messages/[msgId]/send
+├ ƒ /api/v1/children/[childId]/school/weather
+├ ƒ /api/v1/children/[childId]/sync/heartbeats
+├ ƒ /api/v1/children/[childId]/sync/requests
+├ ƒ /api/v1/colleges
+├ ƒ /api/v1/family/claims
+├ ƒ /api/v1/family/claims/[claimId]/decide
+├ ƒ /api/v1/family/claims/incoming
+├ ƒ /api/v1/family/invites
+├ ƒ /api/v1/family/invites/[token]
+├ ƒ /api/v1/family/invites/[token]/accept
+├ ƒ /api/v1/formulas
+├ ƒ /api/v1/health/immunizations
+├ ƒ /api/v1/health/immunizations/[id]
+├ ƒ /api/v1/health/ingest
+├ ƒ /api/v1/health/meal-checkins
+├ ƒ /api/v1/health/reconsent
+├ ƒ /api/v1/health/records
+├ ƒ /api/v1/health/transition-summary
+├ ƒ /api/v1/health/wellbeing
+├ ƒ /api/v1/household/babysitters
+├ ƒ /api/v1/household/babysitters/[sitterId]
+├ ƒ /api/v1/household/babysitters/[sitterId]/grants
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/approve
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/close
+├ ƒ /api/v1/household/babysitters/grants/[grantId]/revoke
+├ ƒ /api/v1/household/bills
+├ ƒ /api/v1/household/bills/[billId]
+├ ƒ /api/v1/household/mail
+├ ƒ /api/v1/household/mail/[itemId]
+├ ƒ /api/v1/household/mail/[itemId]/ocr
+├ ƒ /api/v1/household/mail/[itemId]/photo-delete
+├ ƒ /api/v1/household/shopping/items
+├ ƒ /api/v1/household/shopping/items/[itemId]
+├ ƒ /api/v1/household/shopping/items/[itemId]/remove
+├ ƒ /api/v1/household/shopping/items/batch
+├ ƒ /api/v1/household/shopping/list
+├ ƒ /api/v1/household/shopping/preferences
+├ ƒ /api/v1/household/shopping/prices
+├ ƒ /api/v1/household/spending/csv-import
+├ ƒ /api/v1/household/spending/plaid/exchange
+├ ƒ /api/v1/household/spending/plaid/link-token
+├ ƒ /api/v1/household/spending/plaid/sync
+├ ƒ /api/v1/household/spending/plaid/webhook
+├ ƒ /api/v1/household/spending/summary
+├ ƒ /api/v1/household/spending/transactions
+├ ƒ /api/v1/household/tasks
+├ ƒ /api/v1/household/tasks/[taskId]
+├ ƒ /api/v1/household/vault/documents
+├ ƒ /api/v1/household/vault/documents/[docId]
+├ ƒ /api/v1/invites/consume
+├ ƒ /api/v1/marketplace/driving/log
+├ ƒ /api/v1/marketplace/driving/rules
+├ ƒ /api/v1/me
+├ ƒ /api/v1/me/notifications
+├ ƒ /api/v1/safety/explorer-setup
+├ ƒ /api/v1/support/chat
+├ ƒ /api/v1/support/credits
+├ ƒ /api/v1/support/credits/[id]/decide
+├ ƒ /api/v1/support/faq/articles/[slug]
+├ ƒ /api/v1/support/faq/feedback
+├ ƒ /api/v1/support/faq/search
+├ ƒ /api/v1/support/faq/tree
+├ ƒ /api/v1/support/grants
+├ ƒ /api/v1/support/grants/[id]/decide
+├ ƒ /api/v1/support/grants/[id]/decision
+├ ƒ /api/v1/support/tickets
+├ ƒ /api/v1/support/tickets/[id]
+├ ƒ /api/v1/support/tickets/[id]/claim
+├ ƒ /api/v1/support/tickets/[id]/confirm
+├ ƒ /api/v1/support/tickets/[id]/events
+├ ƒ /api/v1/support/tickets/[id]/reopen
+├ ƒ /api/v1/support/tickets/[id]/transition
+├ ƒ /api/v1/travel/chargers
+├ ƒ /api/v1/travel/events
+├ ƒ /api/v1/travel/fuel
+├ ƒ /api/v1/travel/modules/[module]/visibility
+├ ƒ /api/v1/travel/purchase/check
+├ ƒ /api/v1/travel/restaurants
+├ ƒ /api/v1/travel/trails
+├ ƒ /api/v1/travel/weather
+├ ƒ /api/v1/tutor/chat
+├ ƒ /auth/callback
+├ ƒ /c/[childSlug]
+├ ƒ /c/[childSlug]/coparenting
+├ ƒ /c/[childSlug]/credit
+├ ƒ /c/[childSlug]/health
+├ ƒ /c/[childSlug]/health/meals
+├ ƒ /c/[childSlug]/health/nutrition
+├ ƒ /c/[childSlug]/health/review-18
+├ ƒ /c/[childSlug]/health/wellbeing
+├ ƒ /c/[childSlug]/marketplace
+├ ƒ /c/[childSlug]/pookie
+├ ƒ /c/[childSlug]/school
+├ ƒ /c/[childSlug]/school/[classSlug]
+├ ƒ /c/[childSlug]/school/health
+├ ƒ /c/[childSlug]/school/minutiae
+├ ƒ /c/[childSlug]/settings
+├ ƒ /c/[childSlug]/settings/credentials
+├ ƒ /c/[childSlug]/settings/family
+├ ƒ /c/[childSlug]/settings/health
+├ ƒ /c/[childSlug]/settings/sharing
+├ ƒ /c/[childSlug]/settings/sync
+├ ƒ /c/[childSlug]/support
+├ ƒ /c/[childSlug]/support/chat
+├ ƒ /c/[childSlug]/support/faq
+├ ƒ /c/[childSlug]/support/faq/[slug]
+├ ƒ /c/[childSlug]/support/tickets
+├ ƒ /c/[childSlug]/support/tickets/[id]
+├ ƒ /c/[childSlug]/support/tickets/new
+├ ƒ /c/[childSlug]/today
+├ ƒ /c/[childSlug]/travel
+├ ƒ /c/[childSlug]/travel/events
+├ ƒ /c/[childSlug]/travel/flights
+├ ƒ /c/[childSlug]/travel/fuel
+├ ƒ /c/[childSlug]/travel/rentals
+├ ƒ /c/[childSlug]/travel/restaurants
+├ ƒ /c/[childSlug]/travel/trails
+├ ƒ /c/[childSlug]/travel/weather
+├ ƒ /family/claims
+├ ƒ /family/invite
+├ ƒ /family/invite/accept
+├ ƒ /household/babysitters
+├ ƒ /household/mail
+├ ƒ /household/shopping
+├ ƒ /household/spending
+├ ƒ /household/vault
+├ ƒ /login
+├ ƒ /me
+├ ƒ /onboarding
+├ ƒ /onboarding/connect
+├ ƒ /select-child
+└ ƒ /verify-invite
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+┌──────────────────────────────┐
+│ OpenNext — Generating bundle │
+└──────────────────────────────┘
+
+Bundling middleware function...
+Bundling static assets...
+Bundling cache assets...
+Building server function: default...
+Applying code patches: 5.571s
+# copyPackageTemplateFiles
+[35m⚙️ Bundling the OpenNext server...
+[0m
+[35mWorker saved in `.open-next/worker.js` 🚀
+[0m
+OpenNext build complete.
+Build output verified: no staleness markers.
++ /usr/bin/python3 /home/hatch/workspace/pookie-app/scripts/assemble-pages-deploy.py
+Assembled /home/hatch/workspace/pookie-app/.pages-deploy from fresh .open-next build.
++ npx wrangler pages deploy .pages-deploy --project-name pookie-staging --branch=main --commit-dirty=true
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+
+ ⛅️ wrangler 4.149.0
+────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mPages now has wrangler.jsonc support.[0m
+
+  We detected a configuration file at /home/hatch/workspace/pookie-app/wrangler.jsonc but it is missing the "pages_build_output_dir" field, required by Pages.
+  If you would like to use this configuration file to deploy your project, please use "pages_build_output_dir" to specify the directory of static files to upload.
+  Ignoring configuration file for now, and proceeding with project deploy.
+
+
+Uploading... (906/1141)
+Uploading... (984/1141)
+Uploading... (1062/1141)
+Uploading... (1141/1141)
+✨ Success! Uploaded 235 files (906 already uploaded) (15.26 sec)
+
+✨ Compiled Worker successfully
+✨ Uploading Worker bundle
+✨ Uploading _routes.json
+🌎 Deploying...
+✨ Deployment complete! Take a peek over at https://c449fc2d.pookie-staging.pages.dev
+
+--- Running post-deploy smoke test ---

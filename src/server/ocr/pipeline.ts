@@ -99,16 +99,19 @@ async function findDuplicateAction(
   return null;
 }
 
-const ACTIONABLE: MailClassification[] = ['bill', 'legal', 'insurance'];
+const ACTIONABLE: MailClassification[] = ['bill', 'legal', 'insurance', 'school'];
 
-function actionKindFor(c: MailClassification): 'pay' | 'review' {
-  return c === 'bill' ? 'pay' : 'review';
+function actionKindFor(c: MailClassification): 'pay' | 'review' | 'schedule' {
+  if (c === 'bill') return 'pay';
+  if (c === 'school') return 'schedule';
+  return 'review';
 }
 
 function actionTitleFor(c: MailClassification, sender: string | null): string {
   const who = sender ?? 'this document';
   if (c === 'bill') return `Pay ${who}`;
   if (c === 'legal') return `Review legal notice from ${who}`;
+  if (c === 'school') return `Follow up on school letter from ${who}`;
   return `Review insurance document from ${who}`;
 }
 
@@ -246,7 +249,9 @@ export async function runOcrPipeline(
     let detail: string | null =
       fields.classification === 'bill'
         ? 'Extracted from the scanned bill. Verify the amount against the photo before paying.'
-        : 'Extracted from the scanned document. Review the photo before acting.';
+        : fields.classification === 'school'
+          ? 'Extracted from the scanned school letter. Check the school portal for the full notice.'
+          : 'Extracted from the scanned document. Review the photo before acting.';
     if (fields.dueDate) {
       const { sevenDay, twoDay } = computeReminderTimes(fields.dueDate);
       reminderAt = sevenDay;

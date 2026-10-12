@@ -25,7 +25,7 @@ export default async function AddChildPage() {
   if (memberships.length > 0) redirect("/");
 
   return (
-    <main className="relative flex min-h-screen w-full overflow-hidden bg-nebula-950">
+    <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
       <NebulaBackground />
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-12">
         <AddChildForm />

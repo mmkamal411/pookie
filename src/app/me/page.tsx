@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships, signOut } from "@/lib/tenant/actions";
 import { NebulaBackground } from "@/components/nebula-background";
-import { PookieOrb } from "@/components/pookie-orb";
 import PageGlide from "@/components/page-glide";
 
 // Session-dependent — always block, never prerender.
@@ -46,12 +45,11 @@ export default async function MePage() {
 
   return (
     <>
-    <main className="relative flex min-h-screen w-full overflow-hidden bg-nebula-950">
+    <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
       <NebulaBackground />
       <PageGlide>
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-12">
         <div className="flex items-center gap-4">
-          <PookieOrb size={56} />
           <div>
             <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
               Your Pookie

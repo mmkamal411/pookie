@@ -34,7 +34,7 @@ export default async function AccountDeletedPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-nebula-950 px-6">
+    <main className="relative flex min-h-screen min-h-dvh items-center justify-center bg-nebula-950 px-6">
       <div className="card-living w-full max-w-md rounded-3xl p-8 text-center">
         <div className="mx-auto flex w-fit">
           <PookieOrb size={64} />

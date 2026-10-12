@@ -30,6 +30,8 @@ export type MailClassification =
   | 'legal'
   | 'insurance'
   | 'medical'
+  | 'school'
+  | 'personal'
   | 'other'
   | 'junk';
 
@@ -139,6 +141,105 @@ export async function getHouseholdMailAction(
     .maybeSingle();
   if (error) throw error;
   if (!data) failWith(ErrorCodes.NOT_FOUND);
+  return data as MailActionItem;
+}
+
+/** Load the open/actionable mail_action_items for one item (newest first). */
+export async function listMailActions(
+  supabase: SupabaseClient,
+  ownerUserId: string,
+  itemId: string,
+): Promise<MailActionItem[]> {
+  const { data, error } = await supabase
+    .from('mail_action_items')
+    .select(MAIL_ACTION_COLS)
+    .eq('owner_user_id', ownerUserId)
+    .eq('mail_item_id', itemId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MailActionItem[];
+}
+
+/** Open actions due within `daysAhead` days — the "Up next" feed. */
+export async function listDueActions(
+  supabase: SupabaseClient,
+  ownerUserId: string,
+  daysAhead: number,
+): Promise<(MailActionItem & { sender: string | null })[]> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + daysAhead);
+  const cutoffDay = cutoff.toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('mail_action_items')
+    .select(`${MAIL_ACTION_COLS}, mail_items!inner(sender)`)
+    .eq('owner_user_id', ownerUserId)
+    .in('status', ['open', 'snoozed'])
+    .not('due_date', 'is', null)
+    .lte('due_date', cutoffDay)
+    .order('due_date', { ascending: true });
+  if (error) throw error;
+  const rows = (data ?? []) as (MailActionItem & {
+    mail_items: { sender: string | null } | { sender: string | null }[];
+  })[];
+  return rows.map((r) => ({
+    ...r,
+    sender: Array.isArray(r.mail_items) ? r.mail_items[0]?.sender ?? null : r.mail_items?.sender ?? null,
+  }));
+}
+
+/** Open (or snoozed) actions across the household, due-date first. */
+export async function listOpenActions(
+  supabase: SupabaseClient,
+  ownerUserId: string,
+): Promise<(MailActionItem & { sender: string | null })[]> {
+  const { data, error } = await supabase
+    .from('mail_action_items')
+    .select(`${MAIL_ACTION_COLS}, mail_items!inner(sender)`)
+    .eq('owner_user_id', ownerUserId)
+    .in('status', ['open', 'snoozed'])
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  const rows = (data ?? []) as (MailActionItem & {
+    mail_items: { sender: string | null } | { sender: string | null }[];
+  })[];
+  return rows.map((r) => ({
+    ...r,
+    sender: Array.isArray(r.mail_items) ? r.mail_items[0]?.sender ?? null : r.mail_items?.sender ?? null,
+  }));
+}
+
+/** Patch an action. Resolving (done/cancelled) requires a resolution_note —
+ *  enforced by the route's zod refine ("the bill isn't done when the reminder
+ *  fires"). Snoozing sets reminder_at; status 'open' re-arms a reminder. */
+export async function updateMailAction(
+  supabase: SupabaseClient,
+  ownerUserId: string,
+  actionId: string,
+  input: {
+    status?: MailActionStatus;
+    reminderAt?: string | null;
+    resolutionNote?: string | null;
+  },
+): Promise<MailActionItem> {
+  const patch: Record<string, unknown> = {};
+  if (input.status) {
+    patch.status = input.status;
+    if (input.status === 'done' || input.status === 'cancelled') {
+      patch.resolved_at = new Date().toISOString();
+    }
+  }
+  if (input.reminderAt !== undefined) patch.reminder_at = input.reminderAt;
+  if (input.resolutionNote !== undefined) patch.resolution_note = input.resolutionNote;
+  const { data, error } = await supabase
+    .from('mail_action_items')
+    .update(patch)
+    .eq('id', actionId)
+    .eq('owner_user_id', ownerUserId)
+    .select(MAIL_ACTION_COLS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.NOT_FOUND);
   return data as MailActionItem;
 }
 

@@ -14,6 +14,8 @@ export type MailClassification =
   | 'legal'
   | 'insurance'
   | 'medical'
+  | 'school'
+  | 'personal'
   | 'other'
   | 'junk';
 
@@ -87,6 +89,30 @@ const KEYWORDS: Record<Exclude<MailClassification, 'other'>, string[]> = {
     'diagnosis',
     'referral',
     'appointment',
+  ],
+  school: [
+    'walton',
+    'cobb county',
+    'school district',
+    'report card',
+    'principal',
+    'teacher',
+    'attendance',
+    'school year',
+    'grade level',
+    'enrollment',
+    'school lunch',
+  ],
+  personal: [
+    'birthday',
+    'congratulations',
+    'thank you',
+    'with love',
+    'happy holidays',
+    'graduation',
+    'wedding',
+    'sympathy',
+    'greeting card',
   ],
   junk: [
     'presorted standard',

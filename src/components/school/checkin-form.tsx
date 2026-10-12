@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { orbCelebrate } from "@/lib/orb/orb-events";
 import type { CalibrationSummary, TodayCheckin } from "@/lib/school/types";
 import { ProvenanceLabel } from "./provenance-label";
@@ -71,7 +70,6 @@ export function CheckinForm({
     return (
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 px-5 py-4">
         <div className="flex items-center gap-3">
-          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">Check-ins are {childName}&apos;s private space</p>
             <p className="mt-0.5 text-xs leading-relaxed text-stardust-300">
@@ -168,7 +166,6 @@ export function CheckinForm({
     return (
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
         <div className="flex items-center gap-4">
-          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">Checked in for today 🌱</p>
             <p className="mt-0.5 text-xs text-stardust-300">
@@ -237,7 +234,6 @@ export function CheckinForm({
   return (
     <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center gap-3">
-        <ReactiveOrb size={40} />
         <div>
           <h3 className="font-medium text-star-100">Daily log</h3>
           <p className="text-xs text-stardust-300">

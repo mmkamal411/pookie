@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
 import { gapTo90, gradeBand, letterGrade } from "@/lib/grades";
 import type { ClassDetail } from "@/lib/school/types";
 import { bandStyles, deltaCopy, gapCopy } from "./styles";
@@ -101,7 +100,6 @@ export function ClassDetailView({
               </span>
             )}
           </div>
-          <PookieOrb size={64} />
         </div>
 
         <div className="mt-4">

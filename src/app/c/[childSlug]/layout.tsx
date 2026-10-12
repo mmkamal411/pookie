@@ -6,7 +6,6 @@ import { ChildSwitcher } from "@/components/child-switcher";
 import { ShipSettingsControl } from "@/components/ship-settings-control";
 import { GlassPane } from "@/components/glass-pane";
 import PageGlide from "@/components/page-glide";
-import { PookiePinball } from "@/components/pookie-pinball";
 import { WindowManagerProvider } from "@/components/window-manager";
 import { ModuleWindowFrame } from "@/components/module-window";
 import { MinimizedDock } from "@/components/minimized-dock";
@@ -104,7 +103,6 @@ export default async function ChildDashboard({
             The deck itself now lives in the root layout (Squad Deck 2026-10-12)
             — mounted once, never unmounts, never scrolls away. */}
         <div className="h-32 shrink-0" aria-hidden="true" />
-        <PookiePinball />
       </TenantProvider>
     </>
   );

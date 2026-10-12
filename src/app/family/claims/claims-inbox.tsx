@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { NebulaBackground } from "@/components/nebula-background";
-import { PookieOrb } from "@/components/pookie-orb";
 
 interface Claim {
   id: string;
@@ -82,11 +81,10 @@ export function ClaimsInbox() {
   }
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-nebula-950">
+    <main className="relative min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
       <NebulaBackground />
       <div className="relative z-10 mx-auto w-full max-w-2xl px-6 py-12">
         <div className="flex items-center gap-3">
-          <PookieOrb size={40} />
           <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             Family requests
           </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
 import type { SchoolOverview } from "@/lib/school/types";
 import {
   POOKIE_TUTOR_URL,
@@ -23,6 +22,7 @@ import {
   subscribePookieColor,
   resolvePookieNeon,
 } from "@/components/pookie/pookie-color";
+import { orbListen, orbThink, orbCelebrate, orbCalm } from "@/lib/orb/orb-events";
 import { MiniPookie, MiniMuse, moodForMessage, POOKIE_AVATAR_KEYFRAMES } from "@/components/pookie/pookie-avatars";
 
 const STORAGE_KEY = "pookie-chat-v1";
@@ -141,9 +141,9 @@ export function PookieChat({
   const [, setColorTick] = useState(0);
   const [museThinking, setMuseThinking] = useState(false);
   const [museSlow, setMuseSlow] = useState(false);
-  // Squad Oracle: the orb's conversation presence — it listens while you
-  // type, thinks while the answer brews, and flares warm when it lands.
-  const [orbMood, setOrbMood] = useState<"idle" | "listening" | "thinking" | "celebrating">("idle");
+  // Squad Singularity: the one orb lives in the toolbar — the chat speaks
+  // to her through the orb event bus. She listens while you type, thinks
+  // while the answer brews, and flares warm when it lands.
   const celebrateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const museSlowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -162,10 +162,11 @@ export function PookieChat({
 
   useEffect(() => subscribePookieColor(() => setColorTick((t) => t + 1)), []);
 
-  // Squad Oracle: while the user types, the orb leans in — listening.
+  // Squad Singularity: while the user types, the toolbar orb leans in — listening.
   useEffect(() => {
     if (isThinking) return; // thinking takes precedence
-    setOrbMood(draft.trim().length > 0 ? "listening" : "idle");
+    if (draft.trim().length > 0) orbListen("chat typing");
+    else orbCalm("chat idle");
   }, [draft, isThinking]);
 
   useEffect(() => {
@@ -349,8 +350,8 @@ export function PookieChat({
     const history = messagesRef.current;
     const thinking: ChatMessage = { role: "pookie", text: "", thinking: true, persona };
     setMessages((prev) => [...prev, userMsg, thinking].slice(-MAX_MESSAGES));
-    // Squad Oracle: the orb contemplates — deep inner swirl.
-    setOrbMood("thinking");
+    // Squad Singularity: the toolbar orb contemplates — deep inner swirl.
+    orbThink("chat answering");
 
     // Squad Value: Pookie Chat → Actions. Detect task intents and create
     // a real family task. The confirmation rides along with Pookie's reply.
@@ -364,10 +365,10 @@ export function PookieChat({
           : reply;
         const done: ChatMessage = { role: "pookie", text: finalReply, persona };
         setMessages((prev) => prev.map((m) => (m.thinking ? done : m)).slice(-MAX_MESSAGES));
-        // Squad Oracle: the answer lands — a warm flare, then back to rest.
+        // Squad Singularity: the answer lands — the toolbar orb flares warm,
+        // then drifts back to rest on its own.
         if (celebrateTimer.current) clearTimeout(celebrateTimer.current);
-        setOrbMood("celebrating");
-        celebrateTimer.current = setTimeout(() => setOrbMood("idle"), 2600);
+        orbCelebrate("chat reply landed", 2600);
         // Pookie shifts color to match the class being discussed.
         const neon = detectClassNeon(`${trimmed} ${reply}`);
         if (neon.id !== "pookie") setPookieColor(neon.neon);
@@ -385,7 +386,7 @@ export function PookieChat({
       () => {
         const fallback: ChatMessage = { role: "pookie", text: FALLBACK_MESSAGE, persona };
         setMessages((prev) => prev.map((m) => (m.thinking ? fallback : m)).slice(-MAX_MESSAGES));
-        setOrbMood("idle");
+        orbCalm("chat fallback");
       }
     );
   }
@@ -397,15 +398,10 @@ export function PookieChat({
       <div className="firefly" style={{ width: 6, height: 6, top: "30%", left: "92%", animationDelay: "1.8s" }} />
 
       <div className="animate-bloom flex items-center gap-4">
-        <div className="relative">
-          <PookieOrb size={52} mood={orbMood} />
-          {/* comm signal indicator — the channel is open */}
-          <span
-            aria-hidden="true"
-            className="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-nebula-950"
-          >
-            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-          </span>
+        {/* AI core link — the one orb watches from the toolbar; this is the open channel. */}
+        <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-nova-400/40 bg-nova-400/10" aria-hidden="true">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
+          <span className="absolute inset-0 rounded-full border border-nova-400/20" style={{ animation: "orb-beckon 4s ease-in-out infinite" }} />
         </div>
         <div>
           <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">

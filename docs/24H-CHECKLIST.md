@@ -33,6 +33,8 @@ Every item gets an expert squad. Every squad commits to `staging-build`. Every c
 - [ ] **Sound Design** — subtle ambient hum, soft chimes on actions, orb "voice" tones. Optional, off by default.
 - [ ] **Constellation Achievements** — wins become stars in a personal constellation. The journey visualized.
 - [ ] **Family Fleet** — each family member gets their own ship view, linked through the parent's command deck.
+- [ ] **Shared Shopping Lists** (Squad Village, approved 2026-10-12) — share live lists between families.
+- [ ] **The Village** (Squad Village, approved 2026-10-12) — mentors (siblings, uncles, aunts, tutors) get scoped views of children's school life with smart nudges.
 
 ---
 

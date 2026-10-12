@@ -34,6 +34,8 @@ export const ErrorCodes = {
   CANNOT_INVITE_SELF: 'CANNOT_INVITE_SELF',
   // AI track — Direct Mode 18+ gate (FR-AI-002).
   DIRECT_MODE_18_ONLY: 'DIRECT_MODE_18_ONLY',
+  // Safety track — W15 Screen Time co-set state-machine guard.
+  SCREEN_TIME_TRANSITION_INVALID: 'SCREEN_TIME_TRANSITION_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -74,6 +76,8 @@ const HUMAN_MESSAGES: Record<ErrorCode, string> = {
     'Self-serve linking is not available for this child. Please contact support.',
   CANNOT_INVITE_SELF: 'You cannot redeem your own invite.',
   DIRECT_MODE_18_ONLY: 'Direct Mode is only available to verified adults (18+).',
+  SCREEN_TIME_TRANSITION_INVALID:
+    'This screen time plan cannot change that way right now.',
 };
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -105,6 +109,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   LINKING_DISABLED: 403,
   CANNOT_INVITE_SELF: 400,
   DIRECT_MODE_18_ONLY: 403,
+  SCREEN_TIME_TRANSITION_INVALID: 409,
 };
 
 /**

@@ -674,26 +674,54 @@ body {
   width: 40px;
 }
 
-/* Orb cradle — the divine light rests directly on the console. No socket,
-   no jar, no darkness: pure light emanating into the toolbar, blending
-   seamlessly. The orb's own halo (screen blend) tints the console around
-   it. Squad Orb 2026-10-12 — Mehedi: "there should not be any darkness
-   around it." */
-.console-orb-socket {
-  border-radius: 9999px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+/* ==========================================================================
+   SQUAD SINGULARITY (2026-10-12) — the one orb.
+   Mehedi: "just one orb in the center toolbar — hovering, subtle glowing,
+   hypnotizing, addictive, eager to please." No socket, no plate, no
+   darkness: she floats on her own light, with a pool of light beneath
+   to sell the hover.
+   ========================================================================== */
+
+/* The descent — she arrives from the cosmos on every page change and
+   settles into her hover: a graceful fall, a soft overshoot, a landing
+   glow. Keyed on pathname in the toolbar so it replays per navigation.
+   The hover float (margin, not transform) starts after landing. */
+.orb-descend {
+  animation:
+    orb-descend 1.6s cubic-bezier(0.22, 0.9, 0.3, 1) both,
+    orb-hover 5s ease-in-out 1.7s infinite;
 }
-a:active .console-orb-socket {
-  transform: scale(0.92);
+@keyframes orb-descend {
+  0% {
+    transform: translateY(-170px) scale(0.65);
+    opacity: 0;
+    filter: brightness(2.4) saturate(1.6);
+  }
+  45% {
+    transform: translateY(4px) scale(1.03);
+    opacity: 1;
+    filter: brightness(1.5) saturate(1.3);
+  }
+  68% {
+    transform: translateY(-5px) scale(0.99);
+    filter: brightness(1.15);
+  }
+  84% {
+    transform: translateY(2px) scale(1);
+    filter: brightness(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
 }
-.console-orb-socket[data-active="true"] {
-  box-shadow: none;
+@keyframes orb-hover {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -5px; }
 }
-/* Divine light pooling beneath the orb — gold, not pink */
+
+/* Divine light pooling beneath the orb — the hover glow. Light, never dark. */
 .console-orb-pool {
   position: absolute;
   left: 50%;
@@ -707,12 +735,38 @@ a:active .console-orb-socket {
     transparent 72%);
   filter: blur(6px);
   pointer-events: none;
+  animation: orb-pool-breathe 5s ease-in-out 1.7s infinite;
+}
+@keyframes orb-pool-breathe {
+  0%, 100% { opacity: 0.75; transform: translateX(-50%) scaleX(1); }
+  50% { opacity: 1; transform: translateX(-50%) scaleX(1.12); }
+}
+.console-orb-pool-sm {
+  width: 56px;
+  height: 18px;
+  bottom: -4px;
+}
+
+/* The prism — Mehedi loves the color shifts. The halo and aura breathe
+   through a vibrant neon spectrum (cyan → violet → pink → gold) on a
+   slow 24s cycle: vivid but never jarring. Composes with the beckon. */
+#toolbar-pookie-orb .orb-halo,
+#standby-pookie-orb .orb-halo {
+  animation: orb-beckon 7s ease-in-out infinite, orb-prism 24s linear infinite;
+}
+#toolbar-pookie-orb .orb-aura,
+#standby-pookie-orb .orb-aura {
+  animation: orb-aura 4s ease-in-out infinite, orb-prism 24s linear infinite reverse;
+}
+@keyframes orb-prism {
+  0% { filter: hue-rotate(0deg) saturate(1.55); }
+  25% { filter: hue-rotate(90deg) saturate(1.7); }
+  50% { filter: hue-rotate(180deg) saturate(1.7); }
+  75% { filter: hue-rotate(270deg) saturate(1.7); }
+  100% { filter: hue-rotate(360deg) saturate(1.55); }
 }
 /* The toolbar orb beckons — a slow, reverent swell that says "I'm here,
    tap me." Hypnotic, eager to assist, never still. */
-#toolbar-pookie-orb .orb-halo {
-  animation: orb-beckon 7s ease-in-out infinite;
-}
 @keyframes orb-beckon {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   12% { transform: scale(1.18); opacity: 1; }
@@ -727,9 +781,101 @@ a:active .console-orb-socket {
   40% { filter: brightness(2.2); transform: scale(1.15); }
   100% { filter: brightness(1.2); transform: scale(1.05); }
 }
+
+/* --------------------------------------------------------------------------
+   Ship telemetry — the console's live readouts. 2150, not 1990s NASA.
+   Left: vitals (power breathes 96–100, shields hold, uplink pulses).
+   Right: sector, ticking mission clock, breathing signal bars.
+   -------------------------------------------------------------------------- */
+.console-status-strip {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+.console-telemetry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.console-telemetry strong {
+  color: rgb(255 240 200 / 0.95);
+  font-weight: 600;
+}
+.console-telemetry-sep {
+  opacity: 0.35;
+}
+.console-vital-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px rgb(110 231 183 / 0.9), 0 0 16px rgb(110 231 183 / 0.4);
+  animation: console-blink 3.2s ease-in-out infinite;
+  flex: none;
+}
+.console-powerbar {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 9px;
+}
+.console-powerbar i {
+  width: 3px;
+  height: 9px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.14);
+  transition: background-color 0.6s ease, box-shadow 0.6s ease;
+}
+.console-powerbar i[data-lit="true"] {
+  background: #6ee7b7;
+  box-shadow: 0 0 6px rgb(110 231 183 / 0.8);
+}
+.console-clock {
+  font-variant-numeric: tabular-nums;
+  color: rgb(190 220 255 / 0.95);
+}
+.console-clock-colon {
+  transition: opacity 0.3s ease;
+}
+.console-clock-colon.dim {
+  opacity: 0.2;
+}
+.console-signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+  flex: none;
+}
+.console-signal i {
+  width: 3px;
+  border-radius: 1px;
+  background: #67e8f9;
+  box-shadow: 0 0 6px rgb(103 232 249 / 0.7);
+  animation: signal-breathe 2.6s ease-in-out infinite;
+}
+.console-signal i:nth-child(1) { height: 4px; }
+.console-signal i:nth-child(2) { height: 7px; }
+.console-signal i:nth-child(3) { height: 10px; }
+@keyframes signal-breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  #toolbar-pookie-orb .orb-halo { animation: none; }
+  .orb-descend { animation: none; }
+  .console-orb-pool { animation: none; }
+  #toolbar-pookie-orb .orb-halo,
+  #standby-pookie-orb .orb-halo { animation: none; }
+  #toolbar-pookie-orb .orb-aura,
+  #standby-pookie-orb .orb-aura { animation: none; }
   #toolbar-pookie-orb:active .orb-core { animation: none; }
+  .console-signal i { animation: none; opacity: 0.8; }
+  .console-vital-dot { animation: none; }
 }
 
 /* Standby console — the deck at rest (pre-vessel pages) */
@@ -2141,5 +2287,56 @@ body {
   .orb[data-mood="listening"] .orb-halo,
   .orb[data-mood="listening"] .orb-core {
     animation: none;
+  }
+}
+
+/* ==========================================================================
+   SQUAD MOBILE 2026-10-12 — phone hardening (iOS + Android) + PWA shell.
+   ========================================================================== */
+
+html {
+  /* Stop iOS Safari from inflating text on rotation; keeps the design intact. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Horizontal overflow guard: inner carousels use overflow-x-auto on their
+     own containers; nothing should ever push the page wider than the phone. */
+  overflow-x: clip;
+}
+
+/* Interactive elements: kill the 300ms tap delay / double-tap-zoom on mobile. */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari auto-zooms any focused input under 16px. On coarse-pointer
+   devices (phones/tablets) keep form text at 16px so the viewport stays put.
+   Desktop unaffected. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Safe-area utilities for notches, Dynamic Island, and the home indicator. */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pl-safe { padding-left: env(safe-area-inset-left); }
+.pr-safe { padding-right: env(safe-area-inset-right); }
+.mt-safe { margin-top: env(safe-area-inset-top); }
+.mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+
+/* PWA standalone mode: the OS status bar area is ours — extend the cosmos
+   under it instead of letterboxing. */
+@media (display-mode: standalone) {
+  html {
+    background: var(--color-nebula-950);
   }
 }

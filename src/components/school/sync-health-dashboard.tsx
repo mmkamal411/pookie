@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PookieOrb } from "@/components/pookie-orb";
 import {
   ageLabel,
   freshnessLabel,
@@ -202,7 +201,6 @@ export function SyncHealthDashboard({
       </Link>
 
       <div className="animate-bloom mt-4 flex items-center gap-4">
-        <PookieOrb size={56} />
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-nova-400 capitalize">
             School · Mission Control

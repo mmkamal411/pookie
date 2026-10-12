@@ -5,6 +5,7 @@ import { SettingsTabs } from "@/components/settings/settings-ui";
 import { SharingHealthView } from "@/components/health/sharing-health-view";
 import { MedicalDisclaimerFooter } from "@/components/health/ui";
 import { VillageCrew } from "@/components/village/village-crew";
+import { ParentalConsentPanel } from "@/components/village/parental-consent-panel";
 
 // Tenant-scoped route — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -50,6 +51,14 @@ export default async function SharingPage({ params }: { params: Promise<{ childS
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.18s" }}>
         <VillageCrew childId={membership.child_id} isParent={membership.role === "parent"} />
       </div>
+      {ctxRes.data.band === "under13" && membership.role === "parent" && (
+        <div className="animate-bloom mt-6" style={{ animationDelay: "0.19s" }}>
+          <ParentalConsentPanel
+            childId={membership.child_id}
+            childName={membership.child.nickname ?? membership.child.first_name}
+          />
+        </div>
+      )}
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.2s" }}>
         <details className="card-living rounded-3xl px-5 py-4">
           <summary className="cursor-pointer list-none text-sm font-semibold text-star-100">

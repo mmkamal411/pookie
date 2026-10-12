@@ -29,7 +29,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body className="bg-nebula-950">
-        <main className="flex min-h-screen items-center justify-center px-6">
+        <main className="flex min-h-screen min-h-dvh items-center justify-center px-6">
           <div className="card-living w-full max-w-md rounded-3xl p-8 text-center">
             <p className="text-4xl" aria-hidden="true">
               🌿

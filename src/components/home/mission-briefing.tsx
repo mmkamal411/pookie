@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { orbReveal } from "@/lib/orb/orb-events";
 import { pickDailyQuote, type Quote } from "@/lib/daily/quotes";
 import { fetchLiveWeather, type WeatherDay } from "@/lib/daily/weather";
@@ -137,7 +136,6 @@ export function MissionBriefing({
   return (
     <header>
       <div className="animate-bloom flex items-center gap-4">
-        <ReactiveOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Home · mission briefing
         </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
 import { TRIVIA_FACTS, triviaForDate, type TriviaFact } from "@/lib/school/trivia";
 
 /** "Did You Know?" — deterministic daily fact, shuffleable for another one. */
@@ -22,7 +21,7 @@ export function DidYouKnow({ fact }: { fact?: TriviaFact }) {
       style={{ boxShadow: "0 0 18px rgb(251 191 36 / 0.10)" }}
     >
       <div className="flex items-start gap-3 px-5 py-4">
-        <PookieOrb size={40} />
+        <span aria-hidden="true" className="mt-0.5 text-lg text-aurum-300" style={{ textShadow: "0 0 10px rgb(251 191 36 / 0.6)" }}>✦</span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold tracking-[0.18em] text-aurum-300 capitalize">

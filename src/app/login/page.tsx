@@ -228,7 +228,7 @@ export default function LoginPage({
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+    <main className="relative flex min-h-screen min-h-dvh items-center justify-center overflow-hidden px-6">
       {/* The living cosmos is mounted globally in the root layout — the orb
           floats directly in it. No local starfield, no clutter. */}
       <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">

@@ -26,7 +26,7 @@ export default async function SelectChildPage() {
 
   return (
     <>
-    <main className="flex min-h-screen items-center justify-center bg-nebula-950 px-4">
+    <main className="flex min-h-screen min-h-dvh items-center justify-center bg-nebula-950 px-4">
       <PageGlide>
       <div className="w-full max-w-md">
         <p className="animate-bloom text-center text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">

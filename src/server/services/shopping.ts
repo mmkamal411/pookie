@@ -4,6 +4,11 @@
 // household scoping); no service_role here, ever.
 import { createClient } from '@/lib/supabase/server';
 import { ErrorCodes, failWith } from '@/server/errors';
+import {
+  CATEGORIES,
+  type ItemCategory,
+  suggestCategory,
+} from '@/lib/shopping/catalog';
 
 export type ItemStatus = 'needed' | 'claimed' | 'bought' | 'removed';
 export type ItemSource = 'manual' | 'meal-plan' | 'recurring' | 'ai-suggestion';
@@ -12,6 +17,7 @@ export interface ShoppingList {
   id: string;
   owner_user_id: string;
   name: string;
+  is_default: boolean;
   preferences: Record<string, unknown>;
   created_at: string;
 }
@@ -23,6 +29,7 @@ export interface ShoppingItem {
   quantity: number | null;
   unit: string | null;
   note: string | null;
+  category: ItemCategory;
   status: ItemStatus;
   added_by: string | null;
   added_by_name: string | null;
@@ -34,6 +41,19 @@ export interface ShoppingItem {
   source: ItemSource;
   source_ref: Record<string, unknown> | null;
   created_at: string;
+}
+
+/** Shared column selections — one place to keep every query in sync. */
+const ITEM_COLUMNS =
+  'id, list_id, name, quantity, unit, note, category, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at';
+const LIST_COLUMNS = 'id, owner_user_id, name, is_default, preferences, created_at';
+
+/** Coerce a stored/raw value to a known category; unknown → 'Other'. */
+export function asCategory(raw: unknown): ItemCategory {
+  return typeof raw === 'string' &&
+    (CATEGORIES as string[]).includes(raw)
+    ? (raw as ItemCategory)
+    : 'Other';
 }
 
 export interface PriceReport {
@@ -54,12 +74,13 @@ export function normalizeName(raw: string): string {
   return raw.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-/** Forward-only state machine + the two sanctioned exceptions. */
+/** Forward-only state machine + the sanctioned exceptions:
+ *  claimed → needed (unclaim), needed → bought (quick check-off). */
 const ALLOWED_TRANSITIONS: Record<ItemStatus, ItemStatus[]> = {
-  needed: ['claimed', 'removed'],
+  needed: ['claimed', 'bought', 'removed'],
   claimed: ['needed', 'bought', 'removed'], // claimed → needed is the sanctioned unclaim
   bought: ['removed'],
-  removed: [], // terminal
+  removed: [], // terminal — EXCEPT restoreBought(), the sanctioned "clear checked → undo"
 };
 
 export function assertTransitionAllowed(from: ItemStatus, to: ItemStatus): void {
@@ -67,6 +88,17 @@ export function assertTransitionAllowed(from: ItemStatus, to: ItemStatus): void 
 }
 
 type Db = Awaited<ReturnType<typeof createClient>>;
+
+function toShoppingList(row: Record<string, unknown>): ShoppingList {
+  return {
+    id: row.id as string,
+    owner_user_id: row.owner_user_id as string,
+    name: row.name as string,
+    is_default: row.is_default === true,
+    preferences: (row.preferences ?? {}) as Record<string, unknown>,
+    created_at: row.created_at as string,
+  };
+}
 
 function toShoppingItem(row: Record<string, unknown>): ShoppingItem {
   return {
@@ -76,6 +108,7 @@ function toShoppingItem(row: Record<string, unknown>): ShoppingItem {
     quantity: row.quantity == null ? null : Number(row.quantity),
     unit: (row.unit as string) ?? null,
     note: (row.note as string) ?? null,
+    category: asCategory(row.category),
     status: row.status as ItemStatus,
     added_by: (row.added_by as string) ?? null,
     added_by_name: null, // filled by withNames()
@@ -129,56 +162,238 @@ export async function resolveDisplayNames(
   return map;
 }
 
-/** Ensure the owner's list row exists (parent callers only — INSERT is owner-only in RLS). */
+/** Ensure the owner's DEFAULT list row exists (parent callers only — INSERT is
+ *  owner-only in RLS). The one-list-per-household UNIQUE is gone (071); the
+ *  default is the oldest is_default row, falling back to the oldest row. */
 export async function ensureHouseholdList(
   supabase: Db,
   ownerUserId: string,
 ): Promise<ShoppingList> {
-  const { error: upsertError } = await supabase
+  const { data: existing } = await supabase
     .from('shopping_lists')
-    .upsert({ owner_user_id: ownerUserId }, { onConflict: 'owner_user_id' });
-  if (upsertError) failWith(ErrorCodes.INTERNAL);
-  return getHouseholdList(supabase, ownerUserId);
+    .select(LIST_COLUMNS)
+    .eq('owner_user_id', ownerUserId)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (existing) return toShoppingList(existing as Record<string, unknown>);
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .insert({
+      owner_user_id: ownerUserId,
+      name: 'Family Shopping List',
+      is_default: true,
+    })
+    .select(LIST_COLUMNS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return toShoppingList(data as Record<string, unknown>);
 }
 
+/** The household's default list (NOT_FOUND until a parent has visited). */
 export async function getHouseholdList(
   supabase: Db,
   ownerUserId: string,
 ): Promise<ShoppingList> {
   const { data, error } = await supabase
     .from('shopping_lists')
-    .select('id, owner_user_id, name, preferences, created_at')
+    .select(LIST_COLUMNS)
     .eq('owner_user_id', ownerUserId)
-    .single();
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
   if (error || !data) failWith(ErrorCodes.NOT_FOUND);
-  const row = data as {
-    id: string;
-    owner_user_id: string;
-    name: string;
-    preferences: unknown;
-    created_at: string;
-  };
-  return {
-    id: row.id,
-    owner_user_id: row.owner_user_id,
-    name: row.name,
-    preferences: (row.preferences ?? {}) as Record<string, unknown>,
-    created_at: row.created_at,
-  };
+  return toShoppingList(data as Record<string, unknown>);
+}
+
+/** One list by id, scoped to the caller's household (404 otherwise). */
+export async function getListById(
+  supabase: Db,
+  ownerUserId: string,
+  listId: string,
+): Promise<ShoppingList> {
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .select(LIST_COLUMNS)
+    .eq('id', listId)
+    .eq('owner_user_id', ownerUserId)
+    .maybeSingle();
+  if (error || !data) failWith(ErrorCodes.NOT_FOUND);
+  return toShoppingList(data as Record<string, unknown>);
 }
 
 const STATUS_ORDER: ItemStatus[] = ['needed', 'claimed', 'bought'];
 
-/** Visible items: status != 'removed', open first, then oldest first. */
-/** Resolve the caller's household list. Parent callers auto-create the list row
- *  on first visit (INSERT is owner-only per RLS); child-role callers read the
- *  existing row (NOT_FOUND until a parent has visited). */
+/** Resolve the caller's household list. Parent callers auto-create the
+ *  default list row on first visit (INSERT is owner-only per RLS);
+ *  child-role callers read the existing row. Pass listId to target a
+ *  specific list (the switcher); it must belong to the household. */
 export async function resolveHouseholdList(
   supabase: Db,
   ctx: { ownerUserId: string; role: 'parent' | 'child' },
+  listId?: string,
 ): Promise<ShoppingList> {
+  if (listId) return getListById(supabase, ctx.ownerUserId, listId);
   if (ctx.role === 'parent') return ensureHouseholdList(supabase, ctx.ownerUserId);
   return getHouseholdList(supabase, ctx.ownerUserId);
+}
+
+export interface HouseholdListSummary {
+  id: string;
+  name: string;
+  is_default: boolean;
+  open_count: number;
+  bought_count: number;
+  created_at: string;
+}
+
+/** Every list in the household with live counts — the switcher's data. */
+export async function listHouseholdLists(
+  supabase: Db,
+  ownerUserId: string,
+): Promise<HouseholdListSummary[]> {
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .select('id, name, is_default, created_at')
+    .eq('owner_user_id', ownerUserId)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: true });
+  if (error) failWith(ErrorCodes.INTERNAL);
+  const lists = (data ?? []) as {
+    id: string;
+    name: string;
+    is_default: boolean;
+    created_at: string;
+  }[];
+  const counts = new Map<string, { open: number; bought: number }>();
+  if (lists.length > 0) {
+    const { data: items } = await supabase
+      .from('shopping_items')
+      .select('list_id, status')
+      .in(
+        'list_id',
+        lists.map((l) => l.id),
+      )
+      .neq('status', 'removed');
+    for (const row of (items ?? []) as { list_id: string; status: string }[]) {
+      const c = counts.get(row.list_id) ?? { open: 0, bought: 0 };
+      if (row.status === 'bought') c.bought += 1;
+      else c.open += 1;
+      counts.set(row.list_id, c);
+    }
+  }
+  return lists.map((l) => ({
+    id: l.id,
+    name: l.name,
+    is_default: l.is_default === true,
+    open_count: counts.get(l.id)?.open ?? 0,
+    bought_count: counts.get(l.id)?.bought ?? 0,
+    created_at: l.created_at,
+  }));
+}
+
+/** Create a new named list. The household's first list is always the default. */
+export async function createHouseholdList(
+  supabase: Db,
+  ownerUserId: string,
+  name: string,
+): Promise<ShoppingList> {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+  if (!trimmed || trimmed.length > 60) failWith(ErrorCodes.VALIDATION_FAILED);
+  const { count } = await supabase
+    .from('shopping_lists')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_user_id', ownerUserId);
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .insert({
+      owner_user_id: ownerUserId,
+      name: trimmed,
+      is_default: (count ?? 0) === 0,
+    })
+    .select(LIST_COLUMNS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return toShoppingList(data as Record<string, unknown>);
+}
+
+/** Rename a list (parent only — enforced at the route). */
+export async function renameHouseholdList(
+  supabase: Db,
+  ownerUserId: string,
+  listId: string,
+  name: string,
+): Promise<ShoppingList> {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+  if (!trimmed || trimmed.length > 60) failWith(ErrorCodes.VALIDATION_FAILED);
+  await getListById(supabase, ownerUserId, listId);
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .update({ name: trimmed })
+    .eq('id', listId)
+    .select(LIST_COLUMNS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return toShoppingList(data as Record<string, unknown>);
+}
+
+/** Make a list the household default (parent only — enforced at the route). */
+export async function setDefaultHouseholdList(
+  supabase: Db,
+  ownerUserId: string,
+  listId: string,
+): Promise<ShoppingList> {
+  await getListById(supabase, ownerUserId, listId);
+  // Sequential, not transactional: a torn write just means the default flag
+  // lands on the next read — the board always picks is_default first.
+  await supabase
+    .from('shopping_lists')
+    .update({ is_default: false })
+    .eq('owner_user_id', ownerUserId)
+    .eq('is_default', true);
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .update({ is_default: true })
+    .eq('id', listId)
+    .select(LIST_COLUMNS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return toShoppingList(data as Record<string, unknown>);
+}
+
+/**
+ * Delete a list (parent only — enforced at the route). Items, shares and
+ * price memories cascade. Deleting the default promotes the oldest
+ * remaining list so the household always has one.
+ */
+export async function deleteHouseholdList(
+  supabase: Db,
+  ownerUserId: string,
+  listId: string,
+): Promise<void> {
+  const list = await getListById(supabase, ownerUserId, listId);
+  const { error } = await supabase
+    .from('shopping_lists')
+    .delete()
+    .eq('id', listId);
+  if (error) failWith(ErrorCodes.INTERNAL);
+  if (list.is_default) {
+    const { data: next } = await supabase
+      .from('shopping_lists')
+      .select('id')
+      .eq('owner_user_id', ownerUserId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (next) {
+      await supabase
+        .from('shopping_lists')
+        .update({ is_default: true })
+        .eq('id', (next as { id: string }).id);
+    }
+  }
 }
 
 /** Visible items: status != 'removed', open first, then oldest first. */
@@ -188,9 +403,7 @@ export async function getVisibleItems(
 ): Promise<ShoppingItem[]> {
   const { data, error } = await supabase
     .from('shopping_items')
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .eq('list_id', listId)
     .neq('status', 'removed')
     .order('created_at', { ascending: true });
@@ -217,9 +430,7 @@ export async function getHouseholdItem(
 ): Promise<ShoppingItem> {
   const { data, error } = await supabase
     .from('shopping_items')
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .eq('id', itemId)
     .eq('list_id', listId)
     .neq('status', 'removed')
@@ -233,6 +444,8 @@ export interface AddItemInput {
   quantity?: number;
   unit?: string;
   note?: string;
+  /** Omit to auto-suggest from the item name. */
+  category?: string;
   source?: ItemSource;
   source_ref?: Record<string, unknown>;
 }
@@ -254,9 +467,7 @@ export async function addItem(
 
   const { data: existing } = await supabase
     .from('shopping_items')
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .eq('list_id', listId)
     .eq('name', name)
     .in('status', ['needed', 'claimed'])
@@ -271,7 +482,7 @@ export async function addItem(
       .update({ quantity: newQty })
       .eq('id', row.id)
       .select(
-        'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
+        ITEM_COLUMNS,
       )
       .single();
     if (error || !merged) failWith(ErrorCodes.INTERNAL);
@@ -286,13 +497,12 @@ export async function addItem(
       quantity: input.quantity ?? 1,
       unit: input.unit ?? null,
       note: input.note ?? null,
+      category: asCategory(input.category ?? suggestCategory(name)),
       added_by: userId, // RLS enforces added_by = auth.uid(); service_role bypasses for workers
       source: input.source ?? 'manual',
       source_ref: (input.source_ref ?? null) as never,
     })
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .single();
   if (error || !data) failWith(ErrorCodes.INTERNAL);
   return { item: toShoppingItem(data as Record<string, unknown>), merged: false };
@@ -360,9 +570,7 @@ export async function transitionItem(
     .from('shopping_items')
     .update(patch)
     .eq('id', itemId)
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .single();
   if (error || !data) failWith(ErrorCodes.INTERNAL);
   const updated = toShoppingItem(data as Record<string, unknown>);
@@ -395,12 +603,194 @@ export async function removeItem(
     .from('shopping_items')
     .update({ status: 'removed' })
     .eq('id', itemId)
-    .select(
-      'id, list_id, name, quantity, unit, note, status, added_by, claimed_by, bought_by, bought_at, store, price_paid, source, source_ref, created_at',
-    )
+    .select(ITEM_COLUMNS)
     .single();
   if (error || !data) failWith(ErrorCodes.INTERNAL);
   return toShoppingItem(data as Record<string, unknown>);
+}
+
+export interface UpdateItemFieldsInput {
+  name?: string;
+  quantity?: number;
+  unit?: string | null;
+  note?: string | null;
+  category?: string;
+}
+
+/**
+ * Edit an item's details (name/qty/unit/note/category). The adder or a
+ * parent may edit; everyone may re-categorize (fixing a suggestion is
+ * communal). Renaming onto an existing open row merges, per the add dedupe.
+ */
+export async function updateItemFields(
+  supabase: Db,
+  listId: string,
+  itemId: string,
+  userId: string,
+  role: 'parent' | 'child',
+  input: UpdateItemFieldsInput,
+): Promise<{ item: ShoppingItem; merged: boolean }> {
+  const item = await getHouseholdItem(supabase, listId, itemId);
+  if (item.added_by !== userId && role !== 'parent') {
+    failWith(ErrorCodes.SCOPE_FORBIDDEN);
+  }
+  const patch: Record<string, unknown> = {};
+  let newName: string | null = null;
+  if (input.name != null) {
+    newName = normalizeName(input.name);
+    if (!newName) failWith(ErrorCodes.VALIDATION_FAILED);
+    patch.name = newName;
+  }
+  if (input.quantity != null) {
+    if (!(input.quantity > 0) || input.quantity > 9999) {
+      failWith(ErrorCodes.VALIDATION_FAILED);
+    }
+    patch.quantity = input.quantity;
+  }
+  if (input.unit !== undefined) patch.unit = input.unit?.trim() || null;
+  if (input.note !== undefined) patch.note = input.note?.trim() || null;
+  if (input.category != null) patch.category = asCategory(input.category);
+  if (Object.keys(patch).length === 0) return { item, merged: false };
+
+  // Rename collision → merge into the surviving row (same rule as add).
+  if (newName && newName !== item.name) {
+    const { data: existing } = await supabase
+      .from('shopping_items')
+      .select(ITEM_COLUMNS)
+      .eq('list_id', listId)
+      .eq('name', newName)
+      .neq('id', itemId)
+      .in('status', ['needed', 'claimed'])
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      const target = toShoppingItem(existing as Record<string, unknown>);
+      const { data: merged, error } = await supabase
+        .from('shopping_items')
+        .update({
+          quantity: Number(target.quantity ?? 1) + Number(item.quantity ?? 1),
+        })
+        .eq('id', target.id)
+        .select(ITEM_COLUMNS)
+        .single();
+      if (error || !merged) failWith(ErrorCodes.INTERNAL);
+      await supabase
+        .from('shopping_items')
+        .update({ status: 'removed' })
+        .eq('id', itemId);
+      return {
+        item: toShoppingItem(merged as Record<string, unknown>),
+        merged: true,
+      };
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .update(patch)
+    .eq('id', itemId)
+    .select(ITEM_COLUMNS)
+    .single();
+  if (error || !data) failWith(ErrorCodes.INTERNAL);
+  return { item: toShoppingItem(data as Record<string, unknown>), merged: false };
+}
+
+/**
+ * "Clear checked" — archive every bought item (status → removed). Returns
+ * the cleared ids so the client can offer undo via restoreBought().
+ */
+export async function clearBought(
+  supabase: Db,
+  listId: string,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .select('id')
+    .eq('list_id', listId)
+    .eq('status', 'bought');
+  if (error) failWith(ErrorCodes.INTERNAL);
+  const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
+  if (ids.length === 0) return [];
+  const { error: updateError } = await supabase
+    .from('shopping_items')
+    .update({ status: 'removed' })
+    .in('id', ids);
+  if (updateError) failWith(ErrorCodes.INTERNAL);
+  return ids;
+}
+
+/**
+ * Undo for clearBought: removed → bought is the one sanctioned exception to
+ * removed's terminal state (the user just cleared these seconds ago).
+ */
+export async function restoreBought(
+  supabase: Db,
+  listId: string,
+  ids: string[],
+): Promise<number> {
+  const clean = [...new Set(ids.filter(Boolean))].slice(0, 100);
+  if (clean.length === 0) return 0;
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .update({ status: 'bought' })
+    .eq('list_id', listId)
+    .eq('status', 'removed')
+    .in('id', clean)
+    .select('id');
+  if (error) failWith(ErrorCodes.INTERNAL);
+  return (data ?? []).length;
+}
+
+export interface FrequentItem {
+  name: string;
+  category: ItemCategory;
+  times_bought: number;
+}
+
+/**
+ * One-tap re-add candidates: items bought before, ranked by buy count,
+ * excluding anything currently open on the list. Removed rows are
+ * deliberately excluded — the family rejected those.
+ */
+export async function getFrequentItems(
+  supabase: Db,
+  listId: string,
+  limit = 8,
+): Promise<FrequentItem[]> {
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .select('name, category, status')
+    .eq('list_id', listId)
+    .neq('status', 'removed');
+  if (error) failWith(ErrorCodes.INTERNAL);
+  const open = new Set<string>();
+  const counts = new Map<string, { category: ItemCategory; times: number }>();
+  for (const row of (data ?? []) as {
+    name: string;
+    category: string;
+    status: string;
+  }[]) {
+    if (row.status === 'needed' || row.status === 'claimed') {
+      open.add(row.name);
+    } else if (row.status === 'bought') {
+      const entry = counts.get(row.name) ?? {
+        category: asCategory(row.category),
+        times: 0,
+      };
+      entry.times += 1;
+      entry.category = asCategory(row.category);
+      counts.set(row.name, entry);
+    }
+  }
+  return [...counts.entries()]
+    .filter(([name]) => !open.has(name))
+    .map(([name, v]) => ({
+      name,
+      category: v.category,
+      times_bought: v.times,
+    }))
+    .sort((a, b) => b.times_bought - a.times_bought)
+    .slice(0, limit);
 }
 
 export async function getPriceReports(

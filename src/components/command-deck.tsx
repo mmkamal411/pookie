@@ -51,7 +51,7 @@ function standbyLabelFor(pathname: string): string {
   for (const [re, label] of STANDBY_LABELS) {
     if (re.test(pathname)) return label;
   }
-  return "Systems nominal";
+  return "Deep Space";
 }
 
 export function CommandDeck() {

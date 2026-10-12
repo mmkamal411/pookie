@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMemberships } from "@/lib/tenant/actions";
 import { SettingsTabs, ParentOnlyNotice } from "@/components/settings/settings-ui";
-import { WorkerHealthView } from "@/components/settings/worker-health";
+import { WorkersView } from "@/components/sync/workers-view";
 
 // Tenant-scoped route — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -16,13 +16,13 @@ export default async function HealthPage({ params }: { params: Promise<{ childSl
   if (membership.role !== "parent") return <ParentOnlyNotice />;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
+    <main className="mx-auto max-w-5xl px-4 pt-10 pb-8">
       <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Workers</h1>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
         <SettingsTabs childSlug={childSlug} role="parent" />
       </div>
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
-        <WorkerHealthView childId={membership.child.id} />
+        <WorkersView childId={membership.child.id} />
       </div>
     </main>
   );
