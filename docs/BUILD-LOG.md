@@ -3,6 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~09:20 EDT — Squad Anchor — Integration gate + deploy (9045ee1, 5 Squad Value features)
+
+**Integrated:** 6f07e20 (Family Task System), bd551c4 (Bill Tracker), 83de243 (Meal Plan → Shopping List), aa2e674 (Pookie Chat → Actions), 0bfa235 (Morning Briefing Digest).
+
+**Gate:** tsc clean (exit 0), `npm run build` green, `npx opennextjs-cloudflare build` exit 0, no NEXT_PUBLIC_DEMO_MODE in bundle. No cross-squad conflicts found (Deck/Atlas/Vista/Windows files all intact and coherent).
+
+**Deploy:** `python3 deploy-staging.py` — "Deployment complete!" First attempt hit transient Cloudflare "Unknown internal error" at Function publish (229 files uploaded fine); retry succeeded. NOT a 0-file no-op.
+
+**Smoke:** 11/11 unauthenticated checks green. Synthetic test-user check FAIL (vault 401) — known infra limitation, not a code issue. Bundle freshness confirmed (live /login HTML contains cosmic-black 010104 marker). Tasks API returns 403 for unauth (correct, not 500).
+
+**CRITICAL PENDING:** migrations 064 (family_tasks) + 065 (bill_tracker) NOT yet applied to Supabase — authenticated tasks/bills API calls will 500 until applied. Requires Supabase dashboard SQL editor (browser work; subagent cannot operate live browser). Escalated to parent for browser-task delegation.
+
+**Recorded:** docs/DEPLOY-LOG.md via scripts/record-deploy.py.
+
 ## 2026-10-12 ~09:10 EDT — Squad Vista — Cosmic viewport: rotating scenes, open home, brighter palette
 
 **Mission:** the cosmic viewport — Mehedi's "it's too dark hard to see" + "never a static same view" + open window after login.
