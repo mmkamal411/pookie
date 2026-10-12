@@ -238,6 +238,37 @@ export function extractSender(text: string): string | null {
   return null;
 }
 
+/**
+ * Extract-then-mask (NFR-PRIVACY-009, GIPA). OCR extracts FIRST; then every
+ * digit run of 8+ (card/account/SSN shapes, separators allowed) is replaced
+ * with **** + last-4 BEFORE the text is persisted to ocr_text. Masking is
+ * lossy by design — the raw number only ever lives in the photo.
+ * Mirrors public.mask_account_numbers() in migration 024.
+ */
+export function maskAccountNumbers(text: string): string {
+  if (!text) return text;
+  return text.replace(/(?<!\d)\d(?:[\s-]?\d){7,}(?!\d)/g, (run) => {
+    const digits = run.replace(/\D/g, '');
+    if (digits.length < 8) return run;
+    return `****${digits.slice(-4)}`;
+  });
+}
+
+/** All distinct amounts found on due-hint lines (for extracted_amounts[]). */
+export function extractAllAmounts(text: string): number[] {
+  const found = new Set<number>();
+  for (const line of text.split('\n')) {
+    if (!DUE_HINT_RE.test(line)) continue;
+    for (const m of line.matchAll(AMOUNT_RE)) {
+      const n = parseFloat(m[1].replace(/,/g, ''));
+      if (Number.isFinite(n) && n > 0 && n < 10_000_000) {
+        found.add(Math.round(n * 100) / 100);
+      }
+    }
+  }
+  return [...found].sort((a, b) => b - a);
+}
+
 /** Full deterministic extraction pass. Confidence 0 → skip (stub reading). */
 export function extractMailFields(
   text: string,

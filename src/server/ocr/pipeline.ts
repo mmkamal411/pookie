@@ -15,6 +15,8 @@ import { auditEvent } from '@/server/rest';
 import type { HouseholdContext } from '@/server/tenant';
 import {
   extractMailFields,
+  extractAllAmounts,
+  maskAccountNumbers,
   computeReminderTimes,
   type MailClassification,
 } from './extract';
@@ -174,8 +176,11 @@ export async function runOcrPipeline(
   }
 
   const nowIso = new Date().toISOString();
+  // Extract-then-mask (NFR-PRIVACY-009): the extractor sees the raw text;
+  // what PERSISTS to ocr_text is masked (digit runs ≥8 → ****last4).
+  const maskedText = maskAccountNumbers(result.text);
   const baseUpdate = {
-    ocr_text: result.text,
+    ocr_text: maskedText,
     ocr_confidence: Math.min(1, Math.max(0, result.confidence)),
     ocr_provider: row.provider_key,
     ocr_at: nowIso,
@@ -206,7 +211,11 @@ export async function runOcrPipeline(
   }
 
   // Step 3: deterministic extraction (skipped for confidence-0 stub readings).
+  // Extraction runs on the RAW text (the extractor needs the real digits);
+  // only the persisted ocr_text is masked.
   const fields = extractMailFields(result.text, result.confidence);
+  const allAmounts = extractAllAmounts(result.text);
+  const allDueDates = fields.dueDate ? [fields.dueDate] : [];
   const { error: upError } = await supabase
     .from('mail_items')
     .update({
@@ -218,6 +227,8 @@ export async function runOcrPipeline(
       amount: fields.amount,
       account_last4: fields.accountLast4,
       due_date: fields.dueDate,
+      extracted_amounts: allAmounts,
+      extracted_due_dates: allDueDates,
       // Never overwrite a parent-provided sender with the heuristic.
       ...(item.sender ? {} : { sender: fields.sender }),
     })
@@ -286,6 +297,24 @@ export async function runOcrPipeline(
     .eq('owner_user_id', ctx.ownerUserId)
     .single();
   if (selError) throw selError;
+
+  // Persist the action-item extraction array (ids only in the array payload —
+  // no amounts, fragments, or OCR text beyond what the columns already hold).
+  const extractedActionItems = ACTIONABLE.includes(fields.classification)
+    ? [
+        {
+          kind: actionKindFor(fields.classification),
+          title: actionTitleFor(fields.classification, sender),
+          created: actionsCreated === 1,
+          escalated: actionsEscalated === 1,
+        },
+      ]
+    : [];
+  await supabase
+    .from('mail_items')
+    .update({ extracted_action_items: extractedActionItems })
+    .eq('id', item.id)
+    .eq('owner_user_id', ctx.ownerUserId);
 
   // Step 7: audit (ids only — never amounts, fragments, or OCR text).
   await auditEvent(ctx.anchorChildId, 'mail_item.ocr_completed', {
