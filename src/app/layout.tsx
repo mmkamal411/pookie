@@ -5,6 +5,10 @@ import { NebulaBackground } from "@/components/nebula-background";
 import { CosmicSceneDirector } from "@/components/cosmic-scene-director";
 import { CommandDeck } from "@/components/command-deck";
 import { ServiceWorkerRegistrar } from "@/components/pwa/sw-registrar";
+// Squad Cookie 2026-10-12 — consent banner, preference center, footer.
+import { CookieBanner } from "@/components/cookies/cookie-banner";
+import { PreferenceCenter } from "@/components/cookies/preference-center";
+import { CookieFooter } from "@/components/cookies/cookie-footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -110,9 +114,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NebulaBackground />
         <CosmicSceneDirector />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
+        {/* Squad Cookie 2026-10-12 — global footer: Cookies Policy, Privacy
+            Statement, and the Cookie Settings re-entry point. */}
+        <CookieFooter />
         {/* Command Deck — mounted once at root. Never unmounts on route
             changes, never scrolls away. Hidden by design on entry pages. */}
         <CommandDeck />
+        {/* Squad Cookie 2026-10-12 — consent surfaces, mounted once. */}
+        <CookieBanner />
+        <PreferenceCenter />
       </body>
     </html>
   );
