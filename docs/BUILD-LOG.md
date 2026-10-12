@@ -3,6 +3,16 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:45 EDT — Platform Team 1 Coordinator (staging-build): PHASE 0 KICKOFF
+
+**Platform Team 1 — Foundation & Access** (Managing Director directive). Four experts dispatched on `staging-build`:
+- **Backend Developer** → migrations 017–023 (profiles, granted_by, link_codes, access_requests, access_events, emergency_access_grants, expires_at) + grant/revoke/link-code/request/independent RPCs
+- **Security Engineer** → RLS 024 + under-13 technical bans 025 + RPC security review + Fractional Team 2 audit handoff
+- **Full-stack Developer** → /onboarding (3-step, skippable, guardian attestation, DOB gate) + profiles server actions
+- **DevOps Engineer** → migration ordering/idempotency audit, APPLY_ORDER.md, check.sh, BUILD-LOG stewardship
+
+**Known blocker:** live DB apply needs Mehedi's dashboard (sandbox can't run DDL) — files only. No deploy until Managing Director says so.
+
 ## 2026-10-11 ~17:00 EDT — Senior Full-Stack Developer (staging-build): FRONTEND DONE
 
 **All 53 requirements built. Branch `staging-build` committed (b9621c0) and pushed to `mmkamal411/pookie`. `npm run build` green, tsc exit 0, eslint 0 errors/0 warnings on frontend paths.**
