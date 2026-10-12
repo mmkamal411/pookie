@@ -741,7 +741,7 @@ export function MailBoard() {
   if (forbidden) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <PageHeader eyebrow="🏠 Home" icon="✉️" title="Mail" subtitle="What landed at your door." />
+        <PageHeader eyebrow="🏠 Home" icon="✉️" title="Mail" subtitle="What landed at your door." back />
         <div className="mt-6 rounded-2xl border border-nebula-700 bg-nebula-900/70 p-6 text-center">
           <p className="text-sm text-stardust-300">
             Mail is a parent space — physical mail carries the whole household&apos;s

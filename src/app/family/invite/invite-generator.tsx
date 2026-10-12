@@ -3,6 +3,7 @@
 import { useState } from "react";
 import QRCode from "qrcode";
 import { NebulaBackground } from "@/components/nebula-background";
+import { BackButton } from "@/components/ui";
 
 /**
  * Invite-from-inside: Parent A picks a child → gets a deep link + QR for
@@ -80,13 +81,16 @@ export function InviteGenerator({
     <main className="relative min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
       <NebulaBackground />
       <div className="relative z-10 mx-auto w-full max-w-lg px-6 py-12">
+        <div className="mb-4">
+          <BackButton />
+        </div>
         <div className="flex items-center gap-3">
           <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
             Invite a co-parent
           </p>
         </div>
         <h1 className="text-sunlit mt-4 text-3xl font-semibold tracking-tight">
-          Bring the other parent in
+          Bring the Other Parent In
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-stardust-300">
           Generate a private invite link for {children.length > 1 ? "one of your children" : childName}.

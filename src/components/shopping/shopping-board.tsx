@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BackButton } from "@/components/ui";
 import type {
   PriceReport,
   ShoppingItem,
@@ -856,6 +857,9 @@ export function ShoppingBoard() {
     <main className="mx-auto max-w-3xl px-4 py-8 pb-16">
       {/* header */}
       <header className="animate-rise">
+        <div className="mb-3">
+          <BackButton />
+        </div>
         <p className="text-xs font-semibold tracking-widest text-aurum-300 capitalize">
           🏠 Household
         </p>

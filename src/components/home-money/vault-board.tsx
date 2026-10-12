@@ -273,7 +273,7 @@ export function VaultBoard() {
   if (forbidden) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <PageHeader eyebrow="🏠 Home" icon="🔐" title="Money & Documents" subtitle="The family vault." />
+        <PageHeader eyebrow="🏠 Home" icon="🔐" title="Money & Documents" subtitle="The family vault." back />
         <div className="mt-6 rounded-2xl border border-nebula-700 bg-nebula-900/70 p-6 text-center">
           <p className="text-sm text-stardust-300">
             The vault is a parent space — it holds the household&apos;s sensitive documents.
@@ -306,6 +306,7 @@ export function VaultBoard() {
             icon="🔐"
             title="Money & Documents"
             subtitle="Encrypted, masked, and honest about how long things live."
+            back
           />
           <div className="mt-4">
             <TrustChip>

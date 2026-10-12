@@ -800,6 +800,7 @@ export function BabysittersBoard() {
         icon="🧸"
         title="Babysitters"
         subtitle="People you trust — shared with, for a bit, on your terms."
+        back
       />
 
       {/* disclaimer placement 1: module top, every visit */}

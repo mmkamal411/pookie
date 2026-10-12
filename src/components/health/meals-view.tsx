@@ -30,6 +30,7 @@ export function MealsView({ childId, ctx }: { childId: string; ctx: HealthContex
         eyebrow="W13 · Meals"
         title="Meals"
         sub="What is for dinner. Planned, not panicked."
+        back
       />
       <div className="animate-bloom mt-3" style={{ animationDelay: "0.08s" }}>
         <TierBadge tier="H1" />

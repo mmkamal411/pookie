@@ -1,45 +1,44 @@
-# Pookie 24-Hour Continuous Improvement Checklist
-**Managing Director:** Muse | **Started:** Mon 2026-10-12 10:15 EDT | **Ends:** Tue 2026-10-12 10:15 EDT
+# Pookie 24-Hour Build Checklist
+**Managing Director:** Muse | **Started:** Mon 2026-10-12 10:15 EDT | **Ends:** Tue 2026-10-13 10:15 EDT
 
-Every item gets an expert squad. Every squad commits to `staging-build`. Every commit gets deployed to staging + smoke tested + visually validated. Mehedi gets build notifications as they land.
+## ✅ Done — Built, Committed & Pushed
+- [x] **Living Cosmos** — breathing nebulas, shooting stars, satellites, aurora, great planet
+- [x] **Divine Orb** — hypnotic, realistic, interactive orb with soul
+- [x] **Magical Login** — orb greeting, tap-to-reveal auth, Google + sticky sessions
+- [x] **Orb Personality** — orb reacts app-wide: celebrates wins, morning briefing ritual, chat elevation
+- [x] **One-Orb Toolbar** — flying descent on page load, no black plate, vibrant prism colors, ship-console telemetry
+- [x] **Sync Command Center** — WIN/MAC fleet status, live sync console, school login management
+- [x] **School Data Automation** — ParentVUE, StudentVUE, CTLS, email matcher, calendar feeds, WIN+MAC workers
+- [x] **The Village** — shared family shopping lists + uncle/mentor system with audit trail
+- [x] **Add-a-Child + Eli Test** — under-13 parental consent flow, Eli's account, Rolan as parent, Mehedi as uncle
+- [x] **Mobile + PWA** — iOS/Android compatibility, installable app
+- [x] **Phase 1 Modules** — Weather, Shopping, Meals, Mail, Activity, Insurance
+- [x] **Phase 2 Modules** — Dining, Trails, Events, Fuel, School Calendar
+- [x] **Phase 4+5** — Support center, FAQ, AI chat, Tickets, Wellbeing, Health, Screen Time
+- [x] **Phase 6+8** — Babysitters, Driving School, Co-parenting, Fuel/Charging, Flights, Rental Cars
+- [x] **CD Pipeline** — every green commit auto-deploys to staging with smoke tests
 
----
+## 🔄 In Progress
+- [ ] **Staging Deploy** (Squad Harbor) — Village migrations + all new work going live
+- [ ] **MacBook SSH Key** — RustDesk session hit a password issue; needs retry or Mehedi's help
+- [ ] **Eli's Dashboard** — needs WIN StudentVUE pull + account creation after deploy
 
-## Wave 1 — In Motion Now
-- [x] **Living Cosmos** (Squad Nova) — breathing nebulas, shooting stars, satellites, aurora, great planet. Built, deploying.
-- [ ] **Divine Orb** (Squad Orb) — hypnotic, realistic, interactive, soulful movement, unpredictable welcomes. In progress.
-- [ ] **Magical Login** (Squad Orb) — orb greeting, tap-to-reveal auth, seamless Google, sticky sessions. In progress.
-- [ ] **School Data Automation** (Squad Telemetry, 5 engineers) — research best pull methods, automate ParentVUE/CTLS/StudentVUE/emails/calendar, Windows + Mac, organized system. 24h mission.
-- [ ] **School Pages** (Squad Telemetry) — Overview + per-class pages, better than d-dash. In progress.
-- [ ] **Astronaut Debriefing Check-in** (Squad Telemetry) — glass pane, neon borders, holographic debriefing chamber. Spec'd.
-- [ ] **Resource Library** (Squad Telemetry) — colorful interactive per-platform resource cards, manual adds. Spec'd.
+## 📋 Queued — Next Waves
+- [ ] **Copy & Voice Polish** — classy, fun copy pass over every surface
+- [ ] **Onboarding Journey** — 30-second magical first-run guided by the orb
+- [ ] **Performance Pass** — load times, animation FPS, bundle size
+- [ ] **Orb Moods System** — orb shifts with context: dawn gold, midnight blue, celebration radiance
+- [ ] **Constellation Achievements** — wins become stars in a personal constellation
+- [ ] **Family Fleet** — each family member's ship view, linked through the command deck
+- [ ] **Sound Design** — subtle ambient hum, soft chimes (optional, off by default)
 
-## Wave 2 — Deploying Next (MD assembling squads)
-- [ ] **Continuous Deployment Pipeline** — every green commit auto-deploys to staging, smoke tests, posts build notes. No more manual deploy gates.
-- [ ] **Visual Validation Squad** — screenshots every deploy, compares against design intent, flags regressions before Mehedi sees them.
-- [ ] **Orb Personality Expansion** — orb reacts across the whole app: celebrates wins, glows during AI thinking, guides to next actions, mourns setbacks gently.
-- [ ] **Morning Briefing Ritual** — the addictive daily open: orb-delivered briefing, today's mission, overnight changes. The reason to open the app every morning.
-- [ ] **Pookie Chat Elevation** — the AI companion experience with the divine orb present, sci-fi lingo, contextual awareness.
-
-## Wave 3 — Polish & Depth
-- [ ] **Copy & Voice Polish** — Ivy League pass over every surface: buttons, errors, empty states, notifications. Classy, fun, rolls off the tongue.
-- [ ] **Mobile-First Touch** — every interaction tuned for thumbs: swipe, haptics-feel animations, responsive at every size.
-- [ ] **Onboarding Journey** — first-run experience guided by the orb: 30 seconds, magical, sets up the ship.
-- [ ] **Performance Pass** — load times, animation FPS, bundle size. The cosmos must never stutter.
-- [ ] **Accessibility** — reduced-motion fallbacks, contrast, screen readers, keyboard nav. Divine light for everyone.
-
-## Wave 4 — New Ideas (MD's creative backlog)
-- [ ] **Orb Moods System** — the orb's appearance shifts with context: dawn gold, midnight blue, celebration radiance, focus calm.
-- [ ] **Sound Design** — subtle ambient hum, soft chimes on actions, orb "voice" tones. Optional, off by default.
-- [ ] **Constellation Achievements** — wins become stars in a personal constellation. The journey visualized.
-- [ ] **Family Fleet** — each family member gets their own ship view, linked through the parent's command deck.
-- [ ] **Shared Shopping Lists** (Squad Village, approved 2026-10-12) — share live lists between families.
-- [ ] **The Village** (Squad Village, approved 2026-10-12) — mentors (siblings, uncles, aunts, tutors) get scoped views of children's school life with smart nudges.
-
----
+## ⏸️ Deferred — Legal Review Needed
+- [ ] **Credit Freeze Management** — needs FCRA counsel sign-off
+- [ ] **Break-Glass Disclosure** — needs counsel sign-off (emergency UI built, disclosure waits)
+- [ ] **COPPA/Terms Attorney Review** — gating item before production launch
+- [ ] **Production Under-13 Logins** — test consent flow works; real verifiable-consent flow needs compliance review
 
 ## Operating Cadence
 - **Builds:** continuous — squads commit as features complete, pipeline deploys to staging
-- **Validation:** smoke test + visual check on every deploy
-- **Briefings:** every 5 minutes (standing), plus build notifications as they land
-- **Mehedi's role:** approve direction, react, enjoy. Everything else is handled.
+- **Validation:** smoke test on every deploy
+- **Briefings:** hourly

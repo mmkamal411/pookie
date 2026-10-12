@@ -137,6 +137,7 @@ export function HealthHub({ childId, ctx }: { childId: string; ctx: HealthContex
         eyebrow="W2 · Health"
         title="Health"
         sub="Vitals, trends, and gentle glanceables. The body you live in."
+        back
       />
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.08s" }}>
         <MedicalDisclaimerHeader />

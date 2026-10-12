@@ -531,6 +531,7 @@ export function SpendingBoard() {
         icon="💸"
         title={role === "teen" ? "Your spending" : "Household spending"}
         subtitle={role === "teen" ? "Your money, your detail." : "Patterns, not judgment."}
+        back
       />
       <div className="flex items-center gap-2">
         <button

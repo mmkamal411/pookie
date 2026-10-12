@@ -15,7 +15,7 @@ import type {
   ConditionKind,
   HouseholdWeather,
 } from "@/server/services/weather";
-import { Card, Badge, Button, EmptyState } from "@/components/ui";
+import { Card, Badge, Button, EmptyState, BackButton } from "@/components/ui";
 
 const ZIP_KEY = "pookie.travel.zip"; // shared home ZIP with the travel module
 
@@ -323,6 +323,9 @@ export function WeatherHub() {
       />
 
       {/* Header */}
+      <div className="mb-2 flex justify-start">
+        <BackButton />
+      </div>
       <div className="text-center">
         <p className="text-xs font-medium uppercase tracking-[0.3em] text-stardust-400">
           The Sky Over Your Day

@@ -63,7 +63,7 @@ export function ClassFiles({
 
   return (
     <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
-      <h3 className="font-medium text-star-100">Files &amp; handouts</h3>
+      <h3 className="font-medium text-star-100">Files &amp; Handouts</h3>
       <p className="text-xs text-stardust-300">
         Study guides, screenshots, and notes for {className} — kept in the private class folder.
       </p>
@@ -89,11 +89,19 @@ export function ClassFiles({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-stardust-300">Nothing here yet — the folder is ready when you are.</p>
+        <div className="mt-3 rounded-2xl border border-dashed border-nova-400/25 px-4 py-6 text-center">
+          <p aria-hidden="true" className="text-2xl">📂</p>
+          <p className="mt-2 text-sm text-stardust-300">
+            Nothing here yet — the folder is ready when you are.
+          </p>
+          <p className="mt-1 text-xs text-stardust-500">
+            Upload a study guide below and it lands right here.
+          </p>
+        </div>
       )}
 
       <label className="btn-dapple mt-4 inline-block cursor-pointer rounded-2xl px-5 py-2 text-sm font-semibold text-nebula-950">
-        {uploading ? "Uploading…" : "Upload a file"}
+        {uploading ? "Uploading…" : "Upload a File"}
         <input
           type="file"
           className="hidden"

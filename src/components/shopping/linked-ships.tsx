@@ -206,7 +206,10 @@ function SharedListCard({ share }: { share: ShareIn }) {
             </div>
           ))}
           {view && view.items.length === 0 && (
-            <p className="text-sm text-stardust-400">Manifest is empty — add the first item.</p>
+            <p className="text-sm text-stardust-400">
+              <span aria-hidden="true" className="mr-1.5">📦</span>
+              Manifest is empty — add the first item below and it sets sail.
+            </p>
           )}
           <div className="flex gap-2 pt-1">
             <input

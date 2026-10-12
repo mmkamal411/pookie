@@ -247,7 +247,7 @@ export function Review18View({
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-10 pb-8">
-      <HealthPageHeader eyebrow="A fresh start" title={COPY.review18Header} sub={COPY.review18Sub} />
+      <HealthPageHeader eyebrow="A fresh start" title={COPY.review18Header} sub={COPY.review18Sub} back />
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.08s" }}>
         <StepDots step={step} total={totalSteps} />
       </div>

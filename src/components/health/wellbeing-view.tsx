@@ -162,6 +162,7 @@ export function WellbeingView({ childId, ctx }: { childId: string; ctx: HealthCo
           eyebrow="W8 · Wellbeing"
           title="Wellbeing"
           sub="The mood pulse. How the day actually felt."
+          back
         />
         <button
           type="button"

@@ -85,9 +85,9 @@ export const GROVES: Grove[] = [
     subtitle: "the insurance drawer, and the boundaries that hold",
     sigil: "🛡️",
     modules: [
-      { id: "W3", name: "Safety", watchOver: "Policies and coverage — peace of mind, organized.", seedAction: "Add your first policy", status: "seedling", route: null },
+      { id: "W3", name: "Safety", watchOver: "Policies and coverage — peace of mind, organized.", seedAction: "Add your first policy", status: "live", route: "/household/insurance" },
       { id: "W19", name: "Emergency", watchOver: "When seconds count — the plan, the numbers, the vault.", seedAction: "Build the emergency plan", status: "seedling", route: null },
-      { id: "W15", name: "Screen Time", watchOver: "Screens with sanity — limits that actually stick.", seedAction: "Set the first boundary", status: "live", route: "safety/screen-time" },
+      { id: "W15", name: "Screen Time", watchOver: "Screens with sanity — limits that actually stick.", seedAction: "Set the first boundary", status: "live", route: "/safety/screen-time" },
     ],
   },
   {

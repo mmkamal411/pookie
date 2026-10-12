@@ -5,6 +5,7 @@
 // Copy: <= 8th grade, plain tier names (never H1/H2/H3 codes), no em dashes.
 
 import { useState } from "react";
+import { BackButton } from "@/components/ui";
 import type { HealthTier } from "@/lib/health/types";
 import { TIER_NAMES, COPY, CRISIS_RESOURCES } from "@/lib/health/types";
 
@@ -288,13 +289,21 @@ export function HealthPageHeader({
   eyebrow,
   title,
   sub,
+  back = false,
 }: {
   eyebrow: string;
   title: string;
   sub: string;
+  /** Show the shared BackButton above the eyebrow (sub-pages only). */
+  back?: boolean;
 }) {
   return (
     <header className="animate-bloom">
+      {back && (
+        <div className="mb-3">
+          <BackButton />
+        </div>
+      )}
       <p className="text-xs font-medium tracking-[0.2em] text-nova-400 capitalize">{eyebrow}</p>
       <h1 className="text-sunlit mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-1 max-w-xl text-sm text-stardust-300">{sub}</p>

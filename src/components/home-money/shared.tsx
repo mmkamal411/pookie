@@ -5,6 +5,7 @@
 
 import { useState, type ReactNode } from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { BackButton } from "@/components/ui/back-button";
 
 /* ------------------------------------------------------------------ */
 /* api — canonical envelope { ok: true, data } / { ok: false, error }  */
@@ -398,14 +399,22 @@ export function PageHeader({
   icon,
   title,
   subtitle,
+  back = false,
 }: {
   eyebrow: string;
   icon: string;
   title: string;
   subtitle: string;
+  /** Show the shared BackButton above the eyebrow (sub-pages only). */
+  back?: boolean;
 }) {
   return (
     <header className="animate-rise">
+      {back && (
+        <div className="mb-3">
+          <BackButton />
+        </div>
+      )}
       <p className="text-xs font-semibold tracking-widest text-aurum-300 capitalize">
         {eyebrow}
       </p>

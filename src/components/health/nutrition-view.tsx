@@ -381,6 +381,7 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
             ? "Did you eat regularly today? How was your energy?"
             : "Your food diary. Private to you."
         }
+        back
       />
       <div className="animate-bloom mt-3" style={{ animationDelay: "0.08s" }}>
         <TierBadge tier="H2" />

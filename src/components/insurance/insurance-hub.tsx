@@ -306,6 +306,7 @@ export function InsuranceHub() {
           icon="🛡️"
           title="Insurance"
           subtitle="Your Ship's Shield Status — Every Policy, Renewal, And Agent In One Place."
+          back
         />
         <button
           onClick={openAdd}
