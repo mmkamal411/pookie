@@ -173,6 +173,9 @@ def step_demo_scan():
 
 
 def step_clean():
+    """Remove stale build outputs. Runs BEFORE tsc: Next.js 16 leaves
+    .next/types/validator.ts referencing ./routes.js, and a stale .next
+    makes `tsc --noEmit` fail on phantom modules."""
     for d in (".next", ".open-next", ".pages-deploy"):
         p = os.path.join(APP_DIR, d)
         if os.path.isdir(p):
@@ -250,9 +253,9 @@ def main():
         prev_sha, _ = last_deployed()
         if step_idempotent(head, force):
             return 0
+        step_clean()  # before tsc: stale .next/types artifacts break typecheck
         step_tsc()
         step_demo_scan()
-        step_clean()
         step_deploy(head, prev_sha)
         step_notify_success(head, prev_sha)
         log("PIPELINE COMPLETE — staging is live")
