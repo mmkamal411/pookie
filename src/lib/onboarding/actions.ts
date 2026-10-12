@@ -11,7 +11,7 @@ import { sendChildInvite } from "@/lib/tenant/actions";
  * machine-readable error codes, plain-English mapping left to the UI.
  * No client-derived roles anywhere — the caller's identity comes from the
  * session JWT, and child provisioning goes through the SECURITY DEFINER
- * RPC provision_onboarding_child (migration 021), which re-checks the
+ * RPC provision_onboarding_child (migration 052), which re-checks the
  * guardian attestation and the first-child-only rule server-side.
  */
 

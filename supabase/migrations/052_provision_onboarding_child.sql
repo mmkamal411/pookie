@@ -1,14 +1,17 @@
--- PENDING: apply after the MD migrations freeze lifts (2026-10-12).
+-- Migration 052: onboarding first-child provisioning RPC
+--
+-- Promotes the standalone draft (src/lib/onboarding/provision_onboarding_child.sql,
+-- referenced as "migration 021" in app comments) into the migration chain.
+-- The standalone file is removed; this file is the single source of truth.
 --
 -- This SECURITY DEFINER RPC is the server-side half of the onboarding
 -- add-child flow (src/lib/onboarding/actions.ts -> createChildProfile).
--- The action calls public.provision_onboarding_child(...) and currently
--- fails closed with "create_failed" until this lands. Column names it
--- touches are from the locked briefs: children(date_of_birth),
--- child_access(granted_by, granted_by_user_id).
+-- The action calls public.provision_onboarding_child(...) and failed closed
+-- with "create_failed" until this lands. Column names it touches are from
+-- the locked briefs: children(date_of_birth), child_access(granted_by,
+-- granted_by_user_id).
 --
--- When the freeze lifts, the DBA should place this under
--- supabase/migrations/ with the next free number (it was drafted as 021).
+-- REQUIRES: 001 (children, child_access, ensure_user), 004 (audit_event).
 
 -- Migration: onboarding first-child provisioning RPC
 --

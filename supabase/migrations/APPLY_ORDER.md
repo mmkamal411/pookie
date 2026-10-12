@@ -47,6 +47,8 @@ a file that already applied; always check that table first.
 | 036 | `036_w7_vault.sql` + `036_safety_extensions.sql` | W7 vault + Squad 1: emergency_requests (break-glass Paths A+B, counsel-gated schema only) + court_orders (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 048 | `048_safety_trusted_adults.sql` | Squad 1: trusted_adults + Vault-backed contacts + link-code verification + is_teen_of() + log_access_event 8-arg overload (repairs 018's call shape). NOTE: 030–036 were written apply-order-independent of this file (inlined teen checks; FKs backfilled in 049) | ❌ Pending — Mehedi dashboard apply |
 | 049 | `049_second_parent_claim.sql` + `049_safety_trusted_adult_fks.sql` | Second-parent claim + Squad 1: FK backfill trusted_adults → crisis_events/crisis_alerts/outing_plans/emergency_requests (multiple files share the number; `049_safety_*` sorts first, both after 048) | ❌ Pending — Mehedi dashboard apply |
+| 052 | `052_provision_onboarding_child.sql` | Squad 1 (auth ignition): onboarding first-child RPC — atomic children row (with date_of_birth) + caller parent access row for zero-membership users; guardian attestation gate; promoted from standalone `src/lib/onboarding/provision_onboarding_child.sql` (deleted) | ❌ Pending — Mehedi dashboard apply |
+| 053 | `053_create_child_dob.sql` | Squad 1 (auth ignition): create_child() gains optional trailing `p_date_of_birth` (drops + recreates the 7-arg overload so old callers resolve to the new signature); feeds 018 age tiering for post-onboarding adds | ❌ Pending — Mehedi dashboard apply |
 
 ### Status notes
 - **2026-10-12 (Squad 2 reconciliation):** health rows 022–024, 028, 029 updated to the
