@@ -75,11 +75,19 @@ export function NebulaBackground() {
     let h = 0;
     let raf = 0;
     let stars: { x: number; y: number; r: number; tw: number; ts: number; hue: number; depth: number }[] = [];
-    let nebulas: { x: number; y: number; r: number; hue: number; dx: number; dy: number }[] = [];
-    let meteors: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }[] = [];
-    let satellites: { x: number; y: number; vx: number; vy: number; size: number }[] = [];
+    let nebulas: { x: number; y: number; r: number; hue: number; dx: number; dy: number; ph: number; bs: number }[] = [];
+    let meteors: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hue: number }[] = [];
+    let satellites: { x: number; y: number; vx: number; vy: number; size: number; bph: number }[] = [];
     let planets: { x: number; y: number; r: number; colors: string[]; ring: boolean; dx: number }[] = [];
     let moon = { x: 0, y: 0, r: 28 };
+    // Squad Nova (2026-10-12): the cosmos breathes. Breathing nebulas
+    // (4–6s cycles), neon shooting stars, blinking satellites, aurora
+    // pulses, supernova glints, and a great planet on the horizon.
+    // All GPU-cheap: transforms and opacity only, no shadowBlur.
+    let aurora = { band: 0, next: 600 + Math.random() * 600 };
+    let glints: { x: number; y: number; life: number; maxLife: number; hue: number }[] = [];
+    let nextGlint = 400 + Math.random() * 500;
+    let horizon = { x: 0, y: 0, r: 0, rot: 0 };
     const pointer = { x: -9999, y: -9999 };
     // Course-change state (Aurora, 2026-10-12): the ship banks into a turn on
     // every navigation. Current values ease toward targets (~800ms settle);
@@ -117,10 +125,10 @@ export function NebulaBackground() {
         });
       }
       nebulas = [
-        { x: w * 0.18, y: h * 0.14, r: Math.max(w, h) * 0.36, hue: 275, dx: 0.08, dy: 0.05 },
-        { x: w * 0.85, y: h * 0.58, r: Math.max(w, h) * 0.3, hue: 200, dx: -0.06, dy: 0.04 },
-        { x: w * 0.5, y: h * 0.92, r: Math.max(w, h) * 0.28, hue: 320, dx: 0.05, dy: -0.07 },
-        { x: w * 0.7, y: h * 0.25, r: Math.max(w, h) * 0.22, hue: 250, dx: -0.04, dy: -0.03 },
+        { x: w * 0.18, y: h * 0.14, r: Math.max(w, h) * 0.36, hue: 275, dx: 0.08, dy: 0.05, ph: Math.random() * 6.28, bs: 0.016 + Math.random() * 0.008 },
+        { x: w * 0.85, y: h * 0.58, r: Math.max(w, h) * 0.3, hue: 200, dx: -0.06, dy: 0.04, ph: Math.random() * 6.28, bs: 0.013 + Math.random() * 0.008 },
+        { x: w * 0.5, y: h * 0.92, r: Math.max(w, h) * 0.28, hue: 320, dx: 0.05, dy: -0.07, ph: Math.random() * 6.28, bs: 0.019 + Math.random() * 0.008 },
+        { x: w * 0.7, y: h * 0.25, r: Math.max(w, h) * 0.22, hue: 250, dx: -0.04, dy: -0.03, ph: Math.random() * 6.28, bs: 0.015 + Math.random() * 0.008 },
       ];
       planets = [
         { x: w * 0.08, y: h * 0.25, r: 22, colors: ["#f472b6", "#a855f7"], ring: true, dx: 0.03 },
@@ -144,19 +152,25 @@ export function NebulaBackground() {
         });
       }
       satellites = [];
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         satellites.push({
           x: Math.random() * w,
           y: Math.random() * h * 0.5,
           vx: 0.3 + Math.random() * 0.4,
           vy: 0.05,
           size: 1.5,
+          bph: Math.random() * 6.28, // beacon blink phase — each satellite blinks on its own rhythm
         });
       }
+      // The great planet on the horizon — a massive world cresting the
+      // bottom edge, with an atmospheric rim glow and a slow rotation
+      // (a terminator band sweeping across, ~90s per revolution).
+      horizon = { x: w * 0.72, y: h + Math.min(w, h) * 0.32, r: Math.min(w, h) * 0.5, rot: Math.random() * 6.28 };
     }
 
     function spawnMeteor() {
       const fromLeft = Math.random() > 0.5;
+      const hues = [0, 0, 190, 280, 210]; // white, cyan, violet — neon streaks
       meteors.push({
         x: fromLeft ? -50 : Math.random() * w,
         y: Math.random() * h * 0.4,
@@ -164,6 +178,18 @@ export function NebulaBackground() {
         vy: 2 + Math.random() * 2,
         life: 0,
         maxLife: 60 + Math.random() * 40,
+        hue: hues[Math.floor(Math.random() * hues.length)],
+      });
+    }
+
+    // Squad Nova: supernova glints — a distant star flares and fades.
+    function spawnGlint() {
+      glints.push({
+        x: Math.random() * w,
+        y: Math.random() * h * 0.7,
+        life: 0,
+        maxLife: 90 + Math.random() * 60,
+        hue: [190, 280, 320, 0][Math.floor(Math.random() * 4)],
       });
     }
 
@@ -198,12 +224,31 @@ export function NebulaBackground() {
         if (n.x > w + n.r) n.x = -n.r;
         if (n.y < -n.r) n.y = h + n.r;
         if (n.y > h + n.r) n.y = -n.r;
+        // Squad Nova: the nebula breathes — 4–6s cycles, never uniform.
+        const breath = 0.78 + 0.22 * Math.sin(frame * n.bs + n.ph);
         const grad = g.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
-        grad.addColorStop(0, `hsla(${n.hue + H}, 65%, 30%, 0.14)`);
-        grad.addColorStop(0.5, `hsla(${n.hue + H}, 55%, 22%, 0.07)`);
+        grad.addColorStop(0, `hsla(${n.hue + H}, 65%, 30%, ${0.14 * breath})`);
+        grad.addColorStop(0.5, `hsla(${n.hue + H}, 55%, 22%, ${0.07 * breath})`);
         grad.addColorStop(1, "transparent");
         g.fillStyle = grad;
         g.fillRect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
+      }
+
+      // Squad Nova: the aurora band — a shimmering neon phenomenon along
+      // the upper sky that periodically swells into life (~every 12–20s).
+      if (frame > aurora.next) aurora.band = 1;
+      if (aurora.band > 0) {
+        aurora.band = Math.max(0, aurora.band - 0.004);
+        const sw = Math.sin(frame * 0.03) * 0.3 + 0.7;
+        const aA = Math.sin(aurora.band * Math.PI) * 0.10 * sw;
+        const ag = g.createLinearGradient(0, 0, 0, h * 0.32);
+        ag.addColorStop(0, "transparent");
+        ag.addColorStop(0.55, `hsla(170, 85%, 55%, ${aA})`);
+        ag.addColorStop(0.8, `hsla(190, 90%, 62%, ${aA * 1.4})`);
+        ag.addColorStop(1, "transparent");
+        g.fillStyle = ag;
+        g.fillRect(0, 0, w, h * 0.32);
+        if (aurora.band === 0) aurora.next = frame + 700 + Math.random() * 600;
       }
 
       // Banking wash — a whisper of violet while the ship turns.
@@ -218,7 +263,9 @@ export function NebulaBackground() {
         g.fillRect(0, 0, w, h);
       }
 
-      // Stars — twinkling, drifting in parallax layers, brightening near the pointer
+      // Stars — twinkling on organic rhythms, drifting in parallax layers,
+      // brightening near the pointer. The brightest near stars occasionally
+      // throw a cross-flare — real starlight does this.
       for (const s of stars) {
         // Near stars slide faster along the course vector — the window moves.
         const sp = LAYER_SPEED[s.depth];
@@ -242,9 +289,43 @@ export function NebulaBackground() {
         g.beginPath();
         g.arc(s.x, s.y, rad, 0, Math.PI * 2);
         g.fill();
+        // Cross-flare on bright near stars at the peak of their twinkle.
+        if (s.depth === 2 && s.r > 1.3 && Math.sin(s.tw) > 0.96) {
+          const fa = (Math.sin(s.tw) - 0.96) / 0.04;
+          const fl = rad * 6 * fa;
+          g.strokeStyle = `rgba(220, 235, 255, ${0.35 * fa})`;
+          g.lineWidth = 1;
+          g.beginPath();
+          g.moveTo(s.x - fl, s.y);
+          g.lineTo(s.x + fl, s.y);
+          g.moveTo(s.x, s.y - fl * 0.7);
+          g.lineTo(s.x, s.y + fl * 0.7);
+          g.stroke();
+        }
       }
 
-      if (frame % 200 === 0 && meteors.length < 3 && Math.random() > 0.3) spawnMeteor();
+      // Squad Nova: supernova glints — distant stars that flare and fade.
+      if (frame > nextGlint) {
+        spawnGlint();
+        nextGlint = frame + 500 + Math.random() * 900;
+      }
+      glints = glints.filter((gl) => gl.life < gl.maxLife);
+      for (const gl of glints) {
+        gl.life++;
+        const p = gl.life / gl.maxLife;
+        const ga = Math.sin(p * Math.PI);
+        const gr = 3 + p * 26;
+        const gg = g.createRadialGradient(gl.x, gl.y, 0, gl.x, gl.y, gr);
+        const col = gl.hue === 0 ? "255, 255, 255" : `${gl.hue}, 90%, 75%`;
+        gg.addColorStop(0, gl.hue === 0 ? `rgba(255,255,255,${0.9 * ga})` : `hsla(${col}, ${0.9 * ga})`);
+        gg.addColorStop(1, "transparent");
+        g.fillStyle = gg;
+        g.beginPath();
+        g.arc(gl.x, gl.y, gr, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      if (frame % 110 === 0 && meteors.length < 4 && Math.random() > 0.25) spawnMeteor();
       meteors = meteors.filter((m) => m.life < m.maxLife);
 
       // Firefly sparks — slow embers rising with a sine wobble, soft glow
@@ -276,16 +357,38 @@ export function NebulaBackground() {
         m.y += m.vy;
         m.life++;
         const progress = m.life / m.maxLife;
-        const alpha = Math.sin(progress * Math.PI) * 0.9;
-        const tailLen = 80 * (1 - progress * 0.5);
-        const grad = g.createLinearGradient(m.x, m.y, m.x - (m.vx * tailLen) / 8, m.y - (m.vy * tailLen) / 8);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        grad.addColorStop(1, "transparent");
-        g.strokeStyle = grad;
+        const alpha = Math.sin(progress * Math.PI) * 0.95;
+        const tailLen = 110 * (1 - progress * 0.5);
+        const tx = m.x - (m.vx * tailLen) / 8;
+        const ty = m.y - (m.vy * tailLen) / 8;
+        // Glow pass — wide, faint, neon.
+        const glow = g.createLinearGradient(m.x, m.y, tx, ty);
+        if (m.hue === 0) {
+          glow.addColorStop(0, `rgba(200, 230, 255, ${alpha * 0.45})`);
+        } else {
+          glow.addColorStop(0, `hsla(${m.hue}, 100%, 70%, ${alpha * 0.5})`);
+        }
+        glow.addColorStop(1, "transparent");
+        g.strokeStyle = glow;
+        g.lineWidth = 5;
+        g.lineCap = "round";
+        g.beginPath();
+        g.moveTo(m.x, m.y);
+        g.lineTo(tx, ty);
+        g.stroke();
+        // Core pass — thin, brilliant.
+        const core = g.createLinearGradient(m.x, m.y, tx, ty);
+        if (m.hue === 0) {
+          core.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+        } else {
+          core.addColorStop(0, `hsla(${m.hue}, 100%, 85%, ${alpha})`);
+        }
+        core.addColorStop(1, "transparent");
+        g.strokeStyle = core;
         g.lineWidth = 1.5;
         g.beginPath();
         g.moveTo(m.x, m.y);
-        g.lineTo(m.x - (m.vx * tailLen) / 8, m.y - (m.vy * tailLen) / 8);
+        g.lineTo(tx, ty);
         g.stroke();
       }
 
@@ -335,6 +438,8 @@ export function NebulaBackground() {
         }
       }
 
+      // Squad Nova: satellites with blinking beacons — tiny craft with
+      // a strobing white light, red/green nav lights, and solar glint.
       for (const s of satellites) {
         s.x += s.vx;
         s.y += s.vy;
@@ -342,10 +447,104 @@ export function NebulaBackground() {
           s.x = -10;
           s.y = Math.random() * h * 0.5;
         }
-        const blink = 0.4 + 0.6 * Math.abs(Math.sin(frame * 0.05 + s.x * 0.01));
-        g.fillStyle = `rgba(255,255,255,${blink * 0.7})`;
+        const drift = 0.4 + 0.6 * Math.abs(Math.sin(frame * 0.05 + s.x * 0.01));
+        // Body — small silver glint.
+        g.fillStyle = `rgba(220, 230, 245, ${drift * 0.75})`;
         g.beginPath();
         g.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        g.fill();
+        // Solar panels — faint crossbar.
+        g.strokeStyle = `rgba(160, 180, 210, ${drift * 0.4})`;
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(s.x - s.size * 3.2, s.y);
+        g.lineTo(s.x + s.size * 3.2, s.y);
+        g.stroke();
+        // Strobe — sharp white blink on its own rhythm.
+        const strobe = Math.pow(Math.max(0, Math.sin(frame * 0.09 + s.bph)), 24);
+        if (strobe > 0.02) {
+          const sg = g.createRadialGradient(s.x, s.y, 0, s.x, s.y, 9);
+          sg.addColorStop(0, `rgba(255,255,255,${strobe})`);
+          sg.addColorStop(1, "transparent");
+          g.fillStyle = sg;
+          g.beginPath();
+          g.arc(s.x, s.y, 9, 0, Math.PI * 2);
+          g.fill();
+        }
+        // Nav lights — red port / green starboard, gently pulsing.
+        const nav = 0.5 + 0.5 * Math.sin(frame * 0.05 + s.bph * 2);
+        g.fillStyle = `rgba(255, 90, 90, ${0.25 + nav * 0.5})`;
+        g.beginPath();
+        g.arc(s.x - s.size * 2.4, s.y, 1, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = `rgba(90, 255, 140, ${0.25 + nav * 0.5})`;
+        g.beginPath();
+        g.arc(s.x + s.size * 2.4, s.y, 1, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // Squad Nova: the great planet cresting the horizon. Massive, slow,
+      // with an atmospheric rim glow and a terminator band that rotates
+      // (~90s per revolution) — the "planetary" anchor of the window.
+      {
+        const hr = horizon.r;
+        horizon.rot += 0.0011;
+        // Atmosphere rim — cyan glow hugging the limb.
+        const atmo = g.createRadialGradient(horizon.x, horizon.y, hr * 0.92, horizon.x, horizon.y, hr * 1.12);
+        atmo.addColorStop(0, "transparent");
+        atmo.addColorStop(0.78, "rgba(103, 232, 249, 0.10)");
+        atmo.addColorStop(0.92, "rgba(103, 232, 249, 0.28)");
+        atmo.addColorStop(1, "transparent");
+        g.fillStyle = atmo;
+        g.beginPath();
+        g.arc(horizon.x, horizon.y, hr * 1.12, 0, Math.PI * 2);
+        g.fill();
+        // The body — deep indigo with banding.
+        const body = g.createRadialGradient(
+          horizon.x - hr * 0.25, horizon.y - hr * 0.45, hr * 0.1,
+          horizon.x, horizon.y, hr
+        );
+        body.addColorStop(0, "#3b4a8f");
+        body.addColorStop(0.45, "#232c63");
+        body.addColorStop(0.8, "#141a44");
+        body.addColorStop(1, "#0b0e2a");
+        g.fillStyle = body;
+        g.beginPath();
+        g.arc(horizon.x, horizon.y, hr, 0, Math.PI * 2);
+        g.fill();
+        // Cloud bands — slow drift.
+        g.save();
+        g.beginPath();
+        g.arc(horizon.x, horizon.y, hr, 0, Math.PI * 2);
+        g.clip();
+        g.globalAlpha = 0.10;
+        for (let b = 0; b < 4; b++) {
+          const by = horizon.y - hr * 0.6 + b * hr * 0.32 + Math.sin(frame * 0.002 + b) * hr * 0.03;
+          g.strokeStyle = b % 2 ? "#8ea2e8" : "#5b6fc4";
+          g.lineWidth = hr * 0.05;
+          g.beginPath();
+          g.ellipse(horizon.x, by, hr * 1.2, hr * 0.10, 0, 0, Math.PI * 2);
+          g.stroke();
+        }
+        g.restore();
+        // Terminator — the day/night shadow sweeping with rotation.
+        const tx = horizon.x + Math.cos(horizon.rot) * hr * 1.6;
+        const tg = g.createRadialGradient(tx, horizon.y, hr * 0.2, tx, horizon.y, hr * 2.2);
+        tg.addColorStop(0, "rgba(2, 3, 10, 0.85)");
+        tg.addColorStop(0.6, "rgba(2, 3, 10, 0.35)");
+        tg.addColorStop(1, "transparent");
+        g.fillStyle = tg;
+        g.beginPath();
+        g.arc(horizon.x, horizon.y, hr, 0, Math.PI * 2);
+        g.fill();
+        // Limb light — the sunlit crescent edge opposite the terminator.
+        const lx = horizon.x - Math.cos(horizon.rot) * hr * 0.9;
+        const lg = g.createRadialGradient(lx, horizon.y - hr * 0.4, 0, lx, horizon.y - hr * 0.4, hr * 0.55);
+        lg.addColorStop(0, "rgba(186, 230, 253, 0.35)");
+        lg.addColorStop(1, "transparent");
+        g.fillStyle = lg;
+        g.beginPath();
+        g.arc(horizon.x, horizon.y, hr, 0, Math.PI * 2);
         g.fill();
       }
 

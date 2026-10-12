@@ -45,7 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col">
         <NebulaBackground />
         <CosmicSceneDirector />
-        <div aria-hidden="true" className="bridge-ambient" />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
         {/* Command Deck — mounted once at root. Never unmounts on route
             changes, never scrolls away. Hidden by design on entry pages. */}

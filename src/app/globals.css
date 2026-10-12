@@ -105,8 +105,8 @@
     50% { opacity: 1; transform: scale(1.1); }
   }
   @keyframes orb-glow {
-    0%, 100% { box-shadow: 0 0 16px rgb(244 114 182 / 0.3), 0 0 44px rgb(244 114 182 / 0.1); }
-    50% { box-shadow: 0 0 26px rgb(244 114 182 / 0.5), 0 0 68px rgb(244 114 182 / 0.18); }
+    0%, 100% { box-shadow: 0 0 16px rgb(255 224 150 / 0.4), 0 0 44px rgb(255 200 110 / 0.16); }
+    50% { box-shadow: 0 0 26px rgb(255 228 160 / 0.6), 0 0 68px rgb(255 205 115 / 0.24); }
   }
 }
 
@@ -261,14 +261,13 @@ body {
    desaturated, dissolving into transparency. Every glow here is a whisper.
    ========================================================================== */
 
-/* The toolbar orb specifically: override the nova-pink pulse with a soft
-   moonlit breathe so it blends into the console instead of shouting. */
+/* The toolbar orb specifically: the divine pulse — sacred light, never shouting. */
 #toolbar-pookie-orb .orb-breathe {
   animation: orb-glow-aurora 6s ease-in-out infinite;
 }
 @keyframes orb-glow-aurora {
-  0%, 100% { box-shadow: 0 0 10px rgb(200 218 180 / 0.18), 0 0 30px rgb(170 195 155 / 0.08); }
-  50% { box-shadow: 0 0 16px rgb(200 218 180 / 0.3), 0 0 46px rgb(170 195 155 / 0.14); }
+  0%, 100% { box-shadow: 0 0 12px rgb(255 226 155 / 0.28), 0 0 34px rgb(255 205 115 / 0.12); }
+  50% { box-shadow: 0 0 20px rgb(255 230 165 / 0.42), 0 0 52px rgb(255 208 120 / 0.18); }
 }
 
 /* Luminous divider — a hairline of starlight between sections */
@@ -1523,51 +1522,18 @@ body {
 }
 
 /* ==========================================================================
-   SQUAD HORIZON — 2026-10-12. The bridge lights come UP.
-   Mehedi's north star: 4 reference images of modern cool spaceships.
-   The bold direction is the BRIGHT WHITE BRIDGE — SpaceX Dragon capsule:
-   clean bright interior, panoramic Earth through the window, holographic
-   cyan displays, cool LED strip architecture. Bright, clean, futuristic,
-   optimistic. A cockpit you'd want to spend your morning in.
-
-   Design thesis — "Luminous Bridge":
-   The WINDOW (cosmic scenes) becomes sunlit and luminous. Panels stay
-   dark-translucent but read as holographic DISPLAYS mounted on a bright
-   bridge — exactly like the reference images, where dark screens float
-   against white walls. Light text stays readable; the ENVIRONMENT gets
-   bright. Bright ambient washes suggest daylight flooding through the
-   viewport. LED strips define the architecture in ice-blue.
-
-   All additive: later-cascade rules, no rewrites of other squads' selectors.
-   Cool temperature only — blues, cyans, ice-whites. Zero warmth.
+   SQUAD HORIZON — 2026-10-12. Dark holographic displays.
+   (Squad Nova, 2026-10-12: Mehedi overruled the bright-white-bridge
+   direction — the dark cosmic background stays. Horizon's daylight
+   brightening overrides (body lit interior, bridge-ambient wash, brightened
+   glass-pane/console/cards, viewport frame, light-bleed) were REVERTED.
+   What survives: the holographic display utilities — dark screens with
+   cyan instrument light — which belong on a dark cosmos.)
    ========================================================================== */
 
-/* --- 1. Lit interior base: daylight, not void ---
-   The body behind everything feels like a sunlit bridge interior. */
-body {
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgb(120 150 220 / 0.28) 0%, transparent 60%),
-    radial-gradient(ellipse 100% 70% at 50% 115%, rgb(80 110 190 / 0.20) 0%, transparent 60%),
-    linear-gradient(180deg, #2a3568 0%, #1a2148 45%, #11162e 100%);
-  background-attachment: fixed;
-}
-
-/* --- 2. Bridge ambient: daylight flooding through the viewport ---
-   A fixed luminous wash that sits above the cosmic scenes (z-1) and below
-   content — like sunlight streaming through the panoramic window. */
-.bridge-ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 90% 55% at 50% 0%, rgb(186 230 253 / 0.16) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 45% at 50% 100%, rgb(125 211 252 / 0.08) 0%, transparent 65%);
-}
-
-/* --- 3. Holographic display panels ---
-   Dark screens floating on the bright bridge. Crisp cyan edges, subtle
-   scanlines, inner holographic depth — like the displays in the reference. */
+/* --- Holographic display panels ---
+   Dark screens floating in the cosmos. Crisp cyan edges, subtle
+   scanlines, inner holographic depth — ship instruments, not bright walls. */
 .holo-panel {
   position: relative;
   background: linear-gradient(165deg, rgb(18 28 58 / 0.78), rgb(10 16 38 / 0.85));
@@ -1614,7 +1580,7 @@ body {
   z-index: 1;
 }
 
-/* --- 4. Holographic text: crisp cyan instrument readouts --- */
+/* --- Holographic text: crisp cyan instrument readouts --- */
 .holo-text {
   color: rgb(165 243 252 / 0.95);
   text-shadow:
@@ -1629,88 +1595,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- 5. Frosted daylight glass: brightened panes ---
-   Glass panes lift toward frosted ice — bright but still dark enough
-   for light text. Like looking through a sunlit viewscreen. */
-.glass-pane {
-  background: linear-gradient(180deg,
-    rgb(52 66 120 / 0.55),
-    rgb(30 38 84 / 0.62));
-  border: 1px solid rgb(186 230 253 / 0.38);
-  box-shadow:
-    0 0 80px rgb(56 189 248 / 0.20),
-    0 24px 70px rgb(8 14 36 / 0.45),
-    inset 0 1px 0 rgb(255 255 255 / 0.20),
-    inset 0 0 100px rgb(80 120 200 / 0.18);
-}
-
-/* --- 6. Command Deck: the lit console ---
-   The console is the hero instrument — bright, crisp, unmistakably powered.
-   Like the glowing consoles in the reference images. */
-.console-housing {
-  background:
-    linear-gradient(180deg, rgb(40 54 104 / 0.92), rgb(18 26 62 / 0.96));
-  border-top: 2px solid rgb(103 232 249 / 0.5);
-  box-shadow:
-    0 -2px 0 rgb(186 230 253 / 0.25),
-    0 -20px 60px rgb(8 14 36 / 0.65),
-    0 -8px 40px rgb(56 189 248 / 0.22),
-    inset 0 2px 0 rgb(255 255 255 / 0.14),
-    inset 0 -20px 50px rgb(30 60 120 / 0.20);
-}
-.console-housing::before {
-  background: linear-gradient(90deg,
-    transparent,
-    rgb(103 232 249 / 0.95) 18%,
-    rgb(240 253 255 / 0.9) 50%,
-    rgb(103 232 249 / 0.95) 82%,
-    transparent);
-  height: 2px;
-  box-shadow: 0 0 20px rgb(103 232 249 / 0.9), 0 0 50px rgb(56 189 248 / 0.5);
-}
-
-/* --- 7. LED architecture: brighter strips, more presence ---
-   The ice-blue strips defining the bridge architecture — more luminous. */
-.led-strip::before {
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    rgb(103 232 249 / 1) 20%,
-    rgb(240 253 255 / 0.95) 50%,
-    rgb(103 232 249 / 1) 80%,
-    transparent);
-  box-shadow: 0 0 18px rgb(103 232 249 / 0.9), 0 0 44px rgb(56 189 248 / 0.45);
-}
-
-/* --- 8. Light-bleed: sunlit window glow on hero surfaces ---
-   A soft bright bloom suggesting sunlight through the viewport. */
-.light-bleed {
-  position: relative;
-}
-.light-bleed::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%,
-    rgb(224 242 254 / 0.14) 0%,
-    transparent 70%);
-}
-
-/* --- 9. Brightened cards: daylight frost ---
-   Cards lift toward bright frosted glass — the white-bridge feeling —
-   while keeping dark interiors for readability. */
-.card-living {
-  background: linear-gradient(165deg, rgb(48 62 116 / 0.68), rgb(26 34 76 / 0.75));
-  border: 1px solid rgb(186 230 253 / 0.35);
-  box-shadow:
-    0 16px 48px rgb(8 14 36 / 0.5),
-    0 0 32px rgb(56 189 248 / 0.16),
-    inset 0 1px 0 rgb(255 255 255 / 0.18);
-}
-
-/* --- 10. Holographic data readout: for stats, grades, KPIs ---
+/* --- Holographic data readout: for stats, grades, KPIs ---
    Numbers that look like they're projected in light. */
 .holo-readout {
   font-variant-numeric: tabular-nums;
@@ -1721,27 +1606,112 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* --- 11. Bright focus: visibility in daylight ---
-   Focus rings pop against the brighter bridge. */
-.focus-glow:focus-visible {
-  outline: 2px solid rgb(186 230 253 / 0.95);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgb(56 189 248 / 0.3), 0 0 28px rgb(56 189 248 / 0.5);
+@media (prefers-reduced-motion: reduce) {
+  .holo-panel::after { display: none; }
 }
 
-/* --- 12. Window frame: the viewport gets architecture ---
-   A subtle bright frame around the cosmic window on the home hero —
-   like the physical window frame of the bridge. */
-.viewport-frame {
-  border: 1px solid rgb(186 230 253 / 0.4);
-  border-radius: 24px;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 0 60px rgb(56 189 248 / 0.25),
-    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+/* ==========================================================================
+   SQUAD NOVA — 2026-10-12. The cosmos breathes; the orb is divine.
+   Mehedi's orders: (1) the dark cosmic background STAYS (Horizon's
+   white-bridge brightening reverted); (2) make it ALIVE — shooting stars,
+   blinking satellites, breathing nebulas, aurora pulses, supernova
+   glints, a great planet on the horizon; (3) the Pookie orb becomes a
+   DIVINE orb — angelic, spiritual light with divine powers.
+   The cosmos layer itself lives in nebula-background.tsx (canvas, GPU-cheap
+   transforms/opacity only). This section holds the divine orb's light.
+   ========================================================================== */
+
+/* --- The divine orb: Pookie and Mookie as sacred light ---
+   Layered radiance: a far-reaching halo, a close aura, a breathing
+   celestial body with slowly rotating inner light and a divine core. */
+
+/* The halo — divine radiance, breathing on a 6s cycle */
+.orb-halo {
+  background: radial-gradient(
+    circle,
+    rgb(255 246 218 / 0.20) 0%,
+    rgb(255 228 160 / 0.09) 42%,
+    rgb(255 210 120 / 0.04) 58%,
+    transparent 72%
+  );
+  animation: orb-halo 6s ease-in-out infinite;
+}
+@keyframes orb-halo {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.09); opacity: 1; }
+}
+
+/* The aura — celestial glow hugging the orb, counter-breathing the halo */
+.orb-aura {
+  background: radial-gradient(
+    circle,
+    rgb(255 242 205 / 0.32) 0%,
+    rgb(255 222 140 / 0.14) 55%,
+    transparent 72%
+  );
+  animation: orb-aura 6s ease-in-out infinite;
+}
+@keyframes orb-aura {
+  0%, 100% { transform: scale(1.06); opacity: 1; }
+  50% { transform: scale(0.98); opacity: 0.88; }
+}
+
+/* The celestial body — radiant, breathing, sacred */
+.orb-body {
   overflow: hidden;
+  background: radial-gradient(
+    circle at 42% 36%,
+    rgb(255 255 248 / 1) 0%,
+    rgb(255 246 216 / 0.95) 32%,
+    rgb(255 216 132 / 0.55) 62%,
+    rgb(255 192 100 / 0.20) 82%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 24px rgb(255 222 145 / 0.55),
+    0 0 70px rgb(255 200 110 / 0.28),
+    0 0 140px rgb(255 190 90 / 0.12);
+  animation: orb-breathe 5s ease-in-out infinite;
+}
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+
+/* The wheel within the wheel — inner light rotating slowly (24s) */
+.orb-swirls {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(255 255 255 / 0.38) 40deg,
+    transparent 95deg,
+    rgb(255 242 200 / 0.28) 165deg,
+    transparent 225deg,
+    rgb(255 255 255 / 0.32) 305deg,
+    transparent 360deg
+  );
+  filter: blur(6px);
+  animation: orb-spin 24s linear infinite;
+}
+@keyframes orb-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* The divine core — the brightest heart of light */
+.orb-core {
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgb(255 255 255 / 0.98) 0%,
+    rgb(255 252 240 / 0.65) 30%,
+    transparent 62%
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .holo-panel::after { display: none; }
+  .orb-halo,
+  .orb-aura,
+  .orb-body,
+  .orb-swirls {
+    animation: none;
+  }
 }

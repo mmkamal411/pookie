@@ -58,7 +58,7 @@ export function OverviewDashboard({
           scroll below. Space is the hero, not a wall of cards.
           Squad Horizon: the hero gets a viewport frame — the physical window
           frame of the bridge. */}
-      <div className="vista-hero viewport-frame light-bleed">
+      <div className="vista-hero">
         <MissionBriefing
           childName={childName}
           schoolName={schoolName}

@@ -8,10 +8,8 @@ import { usePathname } from "next/navigation";
  * The window the ship flies through is never static. A rotation of luminous
  * cosmic scenes (violet nebula, teal drift, rose nursery, indigo expanse,
  * emerald aurora) crossfades on a slow timer AND on every navigation
- * (course-change). Luminous sunlit vistas — Mehedi's bar: bright modern
- * spaceship bridge, like daylight through a panoramic viewport. Squad
- * Horizon (2026-10-12): scenes brightened dramatically toward the
- * white-bridge reference — luminous, optimistic, easy on the eyes.
+ * (course-change). Luminous vistas, never near-black voids — Mehedi's bar:
+ * "well-lit cockpit", easy on the eyes.
  *
  * Two stacked fixed layers (z-index 1: above the starfield canvas at z-0,
  * below content at z-10+). Crossfade is opacity-only — GPU-cheap.
@@ -22,53 +20,48 @@ type Scene = { name: string; sky: string; wash: string };
 const SCENES: Scene[] = [
   {
     name: "violet-nebula",
-    sky: "linear-gradient(180deg, hsl(252 62% 34%) 0%, hsl(246 66% 42%) 55%, hsl(254 62% 32%) 100%)",
+    sky: "linear-gradient(180deg, hsl(252 48% 11%) 0%, hsl(246 52% 15%) 55%, hsl(254 48% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 60% 48% at 14% 6%, rgb(167 139 250 / 0.55) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 88% 92%, rgb(139 92 246 / 0.48) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 38% 30% at 82% 12%, rgb(232 121 249 / 0.38) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 42% 34% at 8% 88%, rgb(129 140 248 / 0.42) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 90% 60% at 50% 50%, rgb(196 181 253 / 0.22) 0%, transparent 70%)",
+      "radial-gradient(ellipse 60% 48% at 14% 6%, rgb(139 92 246 / 0.30) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 88% 92%, rgb(109 40 217 / 0.26) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 38% 30% at 82% 12%, rgb(217 70 239 / 0.16) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 42% 34% at 8% 88%, rgb(99 102 241 / 0.18) 0%, transparent 70%)",
   },
   {
     name: "teal-drift",
-    sky: "linear-gradient(180deg, hsl(200 68% 32%) 0%, hsl(190 72% 40%) 55%, hsl(205 68% 30%) 100%)",
+    sky: "linear-gradient(180deg, hsl(200 50% 10%) 0%, hsl(190 55% 14%) 55%, hsl(205 50% 9%) 100%)",
     wash:
-      "radial-gradient(ellipse 62% 50% at 85% 10%, rgb(103 232 249 / 0.52) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 10% 90%, rgb(94 234 212 / 0.46) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 40% 32% at 20% 15%, rgb(147 197 253 / 0.40) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 44% 36% at 90% 80%, rgb(103 232 249 / 0.38) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 90% 60% at 50% 50%, rgb(165 243 252 / 0.20) 0%, transparent 70%)",
+      "radial-gradient(ellipse 62% 50% at 85% 10%, rgb(34 211 238 / 0.26) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 10% 90%, rgb(45 212 191 / 0.22) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 40% 32% at 20% 15%, rgb(59 130 246 / 0.18) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 44% 36% at 90% 80%, rgb(14 165 183 / 0.16) 0%, transparent 70%)",
   },
   {
     name: "rose-nursery",
-    sky: "linear-gradient(180deg, hsl(320 62% 36%) 0%, hsl(330 66% 44%) 55%, hsl(315 62% 34%) 100%)",
+    sky: "linear-gradient(180deg, hsl(320 45% 11%) 0%, hsl(330 50% 14%) 55%, hsl(315 45% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 60% 48% at 12% 90%, rgb(249 168 212 / 0.52) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 88% 8%, rgb(253 164 175 / 0.46) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 38% 30% at 75% 85%, rgb(253 224 71 / 0.30) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 42% 34% at 15% 12%, rgb(232 121 249 / 0.40) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 90% 60% at 50% 50%, rgb(251 207 232 / 0.20) 0%, transparent 70%)",
+      "radial-gradient(ellipse 60% 48% at 12% 90%, rgb(244 114 182 / 0.28) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 88% 8%, rgb(251 113 133 / 0.22) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 38% 30% at 75% 85%, rgb(251 191 36 / 0.12) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 42% 34% at 15% 12%, rgb(192 38 211 / 0.18) 0%, transparent 70%)",
   },
   {
     name: "indigo-expanse",
-    sky: "linear-gradient(180deg, hsl(232 66% 34%) 0%, hsl(228 70% 42%) 55%, hsl(236 66% 32%) 100%)",
+    sky: "linear-gradient(180deg, hsl(232 52% 11%) 0%, hsl(228 55% 15%) 55%, hsl(236 52% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 62% 50% at 50% 4%, rgb(129 140 248 / 0.55) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 8% 70%, rgb(165 180 252 / 0.44) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 40% 32% at 92% 65%, rgb(196 181 253 / 0.36) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 44% 36% at 45% 100%, rgb(129 140 248 / 0.42) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 90% 60% at 50% 50%, rgb(199 210 254 / 0.22) 0%, transparent 70%)",
+      "radial-gradient(ellipse 62% 50% at 50% 4%, rgb(99 102 241 / 0.30) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 8% 70%, rgb(129 140 248 / 0.20) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 40% 32% at 92% 65%, rgb(165 180 252 / 0.14) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 44% 36% at 45% 100%, rgb(76 60 220 / 0.20) 0%, transparent 70%)",
   },
   {
     name: "aurora-verdant",
-    sky: "linear-gradient(180deg, hsl(165 62% 30%) 0%, hsl(175 66% 38%) 55%, hsl(160 62% 28%) 100%)",
+    sky: "linear-gradient(180deg, hsl(165 45% 10%) 0%, hsl(175 50% 13%) 55%, hsl(160 45% 9%) 100%)",
     wash:
-      "radial-gradient(ellipse 65% 40% at 50% 0%, rgb(110 231 183 / 0.50) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 12% 85%, rgb(94 234 212 / 0.46) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 40% 32% at 88% 75%, rgb(253 224 71 / 0.28) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 42% 34% at 80% 15%, rgb(134 239 172 / 0.36) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 90% 60% at 50% 50%, rgb(167 243 208 / 0.20) 0%, transparent 70%)",
+      "radial-gradient(ellipse 65% 40% at 50% 0%, rgb(52 211 153 / 0.24) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 12% 85%, rgb(45 212 191 / 0.22) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 40% 32% at 88% 75%, rgb(251 191 36 / 0.12) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 42% 34% at 80% 15%, rgb(34 197 94 / 0.14) 0%, transparent 70%)",
   },
 ];
 
