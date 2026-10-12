@@ -4,6 +4,7 @@ Newest first. Each row: when, where, what commit, what changed, who/what trigger
 
 | Timestamp (EDT) | Env | Git SHA | Commits | Trigger | Smoke |
 |-----------------|-----|---------|---------|---------|-------|
+| 2026-10-12 10:36 | staging | 9bdc5b4 | 9bdc5b4 docs(telemetry-e5): final build report — school pages + mission control complete; 9931d1d feat(telemetry-e5): remove unused classSlug prop (dead code cleanup); a239174 fix(pipeline): clean .next before tsc — stale .next/types breaks typecheck; c4d99cd feat(oracle): the orb as a living presen | cd-pipeline.py (Squad Pipeline first run) | fail |
 | 2026-10-12 10:07 | staging | 33fd890 | 33fd890 docs: Squad Nova build log entry; 602e51e feat(spaceship-nova): living breathing cosmos + divine orb; 713bda4 docs: Squad Horizon build log entry; 61fc24f feat(spaceship-horizon): luminous bridge — brightened scenes, holographic panels, lit console | deploy-staging.py (local) | fail |
 | 2026-10-12 09:40 | staging | a635df8 | a635df8 feat(spaceship-lumina): cool hi-tech design polish — Title Case, LED details, crisp copy; 857a05a docs: Squad Anchor integration + deploy record (9045ee1) | deploy-staging.py (local) | fail |
 | 2026-10-12 09:25 | staging | 9045ee1 | 9045ee1 docs: Squad Value progress log (5 builds); 0bfa235 feat(spaceship-value): Morning Briefing Digest — day at a glance; aa2e674 feat(spaceship-value): Pookie Chat → Actions (task creation from chat); 83de243 feat(spaceship-value): Meal Plan → Shopping List pipeline; bd551c4 feat(spaceship-value | deploy-staging.py (local) | fail |

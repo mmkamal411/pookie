@@ -1,5 +1,22 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:36 EDT — Squad Pipeline — ✅ First pipeline deploy: 9bdc5b4 live on staging
+
+**The continuous deployment pipeline is operational.** `cd-pipeline.py` took HEAD `9bdc5b4` through the full gate sequence and deployed it to https://pookie-staging.pages.dev:
+
+- Preflight: branch `staging-build`, tree clean, `git pull --ff-only` (already up to date)
+- Idempotency: `9bdc5b4` not previously deployed — proceeded
+- Clean rebuild: `.next`/`.open-next`/`.pages-deploy` removed (fixes the Next.js 16 stale `.next/types` tsc break)
+- `npx tsc --noEmit` clean, demo-code source scan clean
+- Wrangler: **uploaded 235 new files** (906 deduped) — non-zero, `--branch=main` canonical URL
+- Smoke: **11/11 unauthenticated checks green** (routes, bundle freshness, no staleness markers, API envelopes, static assets)
+
+**Known issue (pre-existing, not the deploy):** the smoke test's authenticated section fails — Supabase Auth Admin API returns 401 for the `custom.supabase-service-role` vault surrogate. The vault entry exists but the key is rejected. All real route/bundle checks pass; the deploy is healthy. Flagged for Managing Director: the vault service_role key needs verification/rotation.
+
+**Pipeline fixes landed during this test:** (1) `.next` cleaned before `tsc` (stale `.next/types/validator.ts` phantom-module break); (2) `docs/BUILD-LOG.md` + `docs/DEPLOY-LOG.md` filtered from the dirty-tree gate (the pipeline's own notifications no longer block the next run).
+
+**Shipped in 9bdc5b4:** Squad Telemetry E5 school pages + mission control, Squad Oracle orb work, pipeline fixes.
+
 ## 2026-10-12 ~14:35 EDT — Squad Telemetry E5 — BUILD COMPLETE (API + Pages)
 
 **Delivered on staging-build (pushed to origin):**
