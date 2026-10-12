@@ -27,11 +27,13 @@
 **Rationale:** "Everyday" coverage with 2 humans requires rotation math, not heroics. In-ticket resolution is better UX than triage-and-wait; bounds prevent abuse.
 **Unblocks:** FR-SUPPORT-003/006 (SLA engine, empowerment scope).
 
-## D5. Second-Parent Launch → INVITE-ONLY v1, Claim Path in v2
-**Decision:** Ship invite-from-inside (deep link/QR) for v1. Defer the corroborated claim fallback to v2, after the court-order workflow + 14-day human review process are operational.
+## D5. Second-Parent Onboarding → OPEN SIGNUP (Mehedi override 2026-10-12)
+**Decision (revised):** Second parents sign up straight from the main page. No invite required. The "Connect to my family" first-run card is fully functional at launch.
+**Flow:** Sign up → "Connect to my family" → identify child (corroborated claim: verified sign-in + name/DOB + creating-parent email + perjury-style + custody attestations) → approval request to Parent A (if child <13) or teen (if 13+) → connected on approval. Invite-from-inside (deep link/QR) remains as the fastest path but is NOT the only path.
+**Safeguards (non-negotiable, from Panel Round 2):** no enumeration oracle (rate-limited, uniform responses — can't probe for children's existence); no auto-grant (Parent A or teen must approve); 14-day unresponsive escalation to human review; 30-day re-request lockout after rejection.
 **Custody posture:** STAY OUT for v1. Pookie does not adjudicate custody. The `court_order_restriction` flag exists for verified presented orders; disputes go to human review case-by-case.
-**Rationale (panel):** The claim path has more abuse surface (false claims, custody weaponization). The invite flow covers ~90% of real families. Ship safe, add the hard path when the review infrastructure exists.
-**Unblocks:** FR-AUTH-011 (Squad 3 can build invite flow now).
+**Rationale:** Consistent with Mehedi's locked user-first direction (fully automated signup for any user). An invite-only gate recreates the "no-invite dead end" we eliminated.
+**Unblocks:** FR-AUTH-011 (Squad 3 builds the full claim flow now, not just invite).
 
 ## D6. Time-Boxed Grants → Tiered Caps + Smart Co-Approval
 **Decision:**
