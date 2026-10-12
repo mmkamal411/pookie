@@ -1,3 +1,11 @@
+## 2026-10-12 ~11:55 EDT — Prism E3 — App-Wide Subtle Neon Highlight System
+
+- `src/styles/neon-system.css` (new): single source of truth for glows. Tailwind v4 `@theme` tokens `--color-neon-green/teal/blue/pink` (full `text-`/`bg-`/`border-` utilities generated) + RGB triplet tokens for alpha dialing. Color selectors `.neon-green/.neon-teal/.neon-blue/.neon-pink` (default teal) compose with behavior classes: `.neon-hover`, `.neon-focus` (`:focus-visible` ring), `.neon-active` (pressed), `.neon-current` (nav/selected indicator), `.neon-divider` (gradient hairline), `.neon-card` (2px lift + glow), `.neon-cta` (primary button glow — one per surface), `.neon-shine` (single shine sweep).
+- Design contract: opacity 0.25–0.5, blur 12–24px, 200ms ease transitions; `prefers-reduced-motion` disables all neon transitions/sweeps/transforms; `[data-theme="light"]` softens card/hover glows. Matches existing `--shadow-glow-sm/md` conventions in globals.css.
+- Wired app-wide: imported from `src/app/globals.css` (new `src/styles/` dir; E4's home for system extensions — do not hand-roll box-shadows in globals.css).
+- `docs/PRISM-NEON-SYSTEM.md`: token tables + usage contract + code examples for E4/other squads. E4 owns page restyling using this system.
+- Verification: `npx tsc --noEmit` clean; `npm run build` green (exit 0). Commit `934d7b8` pushed to `origin/staging-build`.
+
 ## 2026-10-12 ~11:45 EDT — Squad Phase2 — Lifestyle Modules Aesthetic Elevation (W23/W28/W29/W27/W16)
 
 ## 2026-10-12 ~11:27 EDT — Squad Pipeline — ❌ Staging deploy blocked
