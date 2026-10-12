@@ -15,7 +15,7 @@
 //   EXCLUDED — parent-only, never rendered here:
 //     • Children add/edit/remove (family management)
 //     • DangerZone (account/child data deletion)
-//     • School logins (credentials), Sync console, Worker health
+//     • School Logins (credentials), Sync console, Worker health
 //     • Family invites, sharing grants, other children's data
 //   Age tiers: under-13 has no child login by design (N/A); 13–17 get this
 //   panel; 18+ graduates via the independence flow → parent role → full panel.

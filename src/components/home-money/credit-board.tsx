@@ -184,7 +184,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
   if (forbidden) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <PageHeader eyebrow="🏠 Home" icon="🧊" title="Credit freezes" subtitle="Freeze management for minors." />
+        <PageHeader eyebrow="🏠 Home" icon="🧊" title="Credit Freezes" subtitle="Freeze management for minors." />
         <div className="mt-6 rounded-2xl border border-nebula-700 bg-nebula-900/70 p-6 text-center">
           <p className="text-sm text-stardust-300">
             Credit freeze management is a parent/guardian space — only a parent can place or track freezes.
@@ -214,7 +214,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
       <PageHeader
         eyebrow="🏠 Home"
         icon="🧊"
-        title="Credit freezes"
+        title="Credit Freezes"
         subtitle={`${childName} — freeze the file, track it here.`}
       />
 

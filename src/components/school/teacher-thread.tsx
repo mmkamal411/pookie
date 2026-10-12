@@ -210,7 +210,7 @@ export function TeacherThread({
     <div className="space-y-4">
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-star-100">Teacher messages</h3>
+          <h3 className="font-medium text-star-100">Teacher Messages</h3>
           <ProvenanceLabel kind="school-of-record" />
         </div>
         <p className="text-xs text-stardust-300">
@@ -280,11 +280,11 @@ export function TeacherThread({
       {counselorMsgs.length > 0 && (
         <div className="animate-rise rounded-3xl border border-stardust-500/25 bg-nebula-900/40 p-5">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-stardust-100">Counselor conversations</h3>
+            <h3 className="font-medium text-stardust-100">Counselor Conversations</h3>
             <ProvenanceLabel kind="school-of-record" />
           </div>
           <p className="mt-1 text-xs leading-relaxed text-stardust-300">
-            Counselor conversations are confidential to the student (ASCA B.2) — kept
+            Counselor Conversations are confidential to the student (ASCA B.2) — kept
             separate from teacher mail on purpose.
           </p>
           <div className="mt-4 space-y-3">

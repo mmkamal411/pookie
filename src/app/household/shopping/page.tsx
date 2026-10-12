@@ -6,7 +6,7 @@ import { LinkedShipsPanel } from "@/components/shopping/linked-ships";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Family shopping list · Pookie",
+  title: "Family Shopping List · Pookie",
 };
 
 export default async function ShoppingPage() {

@@ -36,7 +36,7 @@ export default async function FaqPage({ params }: { params: Promise<{ childSlug:
         </Link>{" "}
         ·{" "}
         <Link href={`/c/${childSlug}/support/tickets/new`} className="text-nova-300 underline">
-          Open a ticket
+          Open a Ticket
         </Link>
       </p>
     </main>

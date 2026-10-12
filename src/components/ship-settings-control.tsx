@@ -12,7 +12,7 @@ export function ShipSettingsControl({ childSlug }: { childSlug: string }) {
   return (
     <Link
       href={`/c/${childSlug}/settings`}
-      aria-label="Ship systems — settings"
+      aria-label="Ship Systems — settings"
       className="console-tab-btn flex h-11 w-11 items-center justify-center rounded-full text-nova-300"
       style={{ "--tab-glow": "#f472b6", "--tab-glow-soft": "rgb(244 114 182 / 0.55)" } as CSSProperties}
     >

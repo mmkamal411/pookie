@@ -171,7 +171,7 @@ function MinorCheckinForm({ childId, onSaved }: { childId: string; onSaved: () =
       <p className="text-[10px] font-bold tracking-[0.2em] text-teal-200/70 uppercase">
         Fuel Log
       </p>
-      <h2 className="mt-1 text-base font-bold text-star-100">Did you eat regularly today?</h2>
+      <h2 className="mt-1 text-base font-bold text-star-100">Did You Eat Regularly Today?</h2>
       <p className="mt-1 text-xs text-stardust-300">
         This is about rhythm and energy. Not numbers. There are no wrong answers here.
       </p>
@@ -288,7 +288,7 @@ function AdultDiaryForm({ childId, onSaved }: { childId: string; onSaved: () => 
 
   return (
     <section className="card-living rounded-3xl p-5">
-      <h2 className="text-base font-semibold text-star-100">Food diary</h2>
+      <h2 className="text-base font-semibold text-star-100">Food Diary</h2>
       <p className="mt-1 text-xs text-stardust-300">
         Calorie ranges, not exact numbers. Labels are estimates, so Pookie keeps the honest range.
       </p>
@@ -378,7 +378,7 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
         title={minor ? "Food and fuel" : "Nutrition"}
         sub={
           minor
-            ? "Did you eat regularly today? How was your energy?"
+            ? "Did You Eat Regularly Today? How was your energy?"
             : "Your food diary. Private to you."
         }
         back
@@ -397,7 +397,7 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {state?.view === "engagement" && (
             <section className="card-living rounded-3xl p-5">
-              <h2 className="text-base font-semibold text-star-100">Meal logging activity</h2>
+              <h2 className="text-base font-semibold text-star-100">Meal Logging Activity</h2>
               <p className="mt-1 text-xs leading-relaxed text-stardust-300">
                 For teens, Pookie shares how often meals get logged. Never what was eaten, never
                 calories. That part stays private.
@@ -438,7 +438,7 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {isOwnerView && state && state.checkins.length > 0 && (
             <section className="card-living rounded-3xl p-5">
-              <h2 className="text-base font-bold text-star-100">Recent check-ins</h2>
+              <h2 className="text-base font-bold text-star-100">Recent Check-Ins</h2>
               <ul className="mt-3 space-y-2.5">
                 {state.checkins.slice(0, 10).map((c) => (
                   <li
@@ -479,7 +479,7 @@ export function NutritionView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {isOwnerView && state && state.diary.length > 0 && (
             <section className="card-living rounded-3xl p-5">
-              <h2 className="text-base font-semibold text-star-100">Recent diary entries</h2>
+              <h2 className="text-base font-semibold text-star-100">Recent Diary Entries</h2>
               <ul className="mt-3 divide-y divide-nova-400/10">
                 {state.diary.slice(0, 10).map((d) => (
                   <li key={d.id} className="flex items-baseline justify-between gap-3 py-2.5">

@@ -28,7 +28,7 @@ import {
 
 const SCOPE_LABELS: Record<RevokeScope, string> = {
   performance: "Grades and what's due",
-  communications: "Teacher messages",
+  communications: "Teacher Messages",
   reflection: "Check-ins and journal",
   wellness: "Wellness and mood",
 };

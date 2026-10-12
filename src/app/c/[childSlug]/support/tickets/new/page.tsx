@@ -21,7 +21,7 @@ export default async function NewTicketPage({ params }: { params: Promise<{ chil
       </Link>
       <div className="mt-3 flex items-center gap-3">
         <span aria-hidden="true" className="text-3xl">🎫</span>
-        <h1 className="text-xl font-semibold text-star-100">Open a ticket</h1>
+        <h1 className="text-xl font-semibold text-star-100">Open a Ticket</h1>
       </div>
       <div className="mt-5">
         <Suspense>

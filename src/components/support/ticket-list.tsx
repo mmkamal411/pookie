@@ -1,5 +1,5 @@
 // S3 ticket list (§6.0) — real rows from GET /api/v1/support/tickets.
-// Sorted by most-recent activity; empty state + persistent "Open a ticket".
+// Sorted by most-recent activity; empty state + persistent "Open a Ticket".
 
 "use client";
 
@@ -62,7 +62,7 @@ export function TicketList({ childSlug }: { childSlug: string }) {
               href={`/c/${childSlug}/support/tickets/new`}
               className="rounded-2xl border border-nova-300/40 bg-nova-500/15 px-5 py-2.5 text-sm font-semibold text-star-100"
             >
-              Open a ticket
+              Open a Ticket
             </Link>
             <Link
               href={`/c/${childSlug}/support/chat`}
@@ -101,7 +101,7 @@ export function TicketList({ childSlug }: { childSlug: string }) {
             href={`/c/${childSlug}/support/tickets/new`}
             className="block rounded-2xl border border-nova-300/40 bg-nova-500/20 px-5 py-3 text-center text-sm font-semibold text-star-100 backdrop-blur-md"
           >
-            Open a ticket
+            Open a Ticket
           </Link>
         </div>
       )}

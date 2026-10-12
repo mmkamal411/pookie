@@ -529,7 +529,7 @@ function CheckInCard() {
   const [time, setTime] = useState("16:00");
   return (
     <div>
-      <h2 className="text-xl font-semibold text-star-100">Check in</h2>
+      <h2 className="text-xl font-semibold text-star-100">Check In</h2>
       <p className="mt-2 text-[15px] leading-relaxed text-stardust-200">
         Set a check-in timer. If you miss it, Pookie nudges <em>you</em> first, then your trusted
         adult if you don&apos;t respond. You control the timer.
@@ -555,7 +555,7 @@ function CheckInCard() {
 function IfWrongCard() {
   return (
     <div>
-      <h2 className="text-xl font-semibold text-star-100">If something feels wrong</h2>
+      <h2 className="text-xl font-semibold text-star-100">If Something Feels Wrong</h2>
       <p className="mt-2 text-[15px] leading-relaxed text-stardust-200">
         Call 911 first, then your trusted adult. Your live plan is on your phone even with no
         signal.

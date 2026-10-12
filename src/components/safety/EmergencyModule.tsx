@@ -235,7 +235,7 @@ function MedicalCard({
 
   return (
     <section aria-label="Emergency medical info">
-      <h2 className="text-lg font-semibold text-star-100">Emergency info</h2>
+      <h2 className="text-lg font-semibold text-star-100">Emergency Info</h2>
       {error ? (
         <div className="mt-3">
           <FormError message={error} onRetry={refreshMedical} />
@@ -585,7 +585,7 @@ function BreakGlassGenerator({
         <div className="mt-5 rounded-2xl border-2 border-slate-900 p-5">
           <div className="flex flex-col items-center gap-4 sm:flex-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrUrl} alt="Emergency info QR code" width={192} height={192} className="rounded-xl border border-slate-200" />
+            <img src={qrUrl} alt="Emergency Info QR code" width={192} height={192} className="rounded-xl border border-slate-200" />
             <div className="text-center sm:text-left">
               <p className="text-sm text-slate-600">Code (works without a camera):</p>
               <p className="mt-1 text-4xl font-bold tracking-widest">{grant.code}</p>
@@ -789,7 +789,7 @@ function ActionPlans({
 
   return (
     <section aria-label="Action plans">
-      <h2 className="text-lg font-semibold text-star-100">My action plans</h2>
+      <h2 className="text-lg font-semibold text-star-100">My Action Plans</h2>
       <p className="mt-1 text-sm leading-relaxed text-stardust-300">
         Fill in what to do for your own conditions. These are reminders, not medical advice.
       </p>

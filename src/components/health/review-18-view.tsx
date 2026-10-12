@@ -407,7 +407,7 @@ export function Review18View({
         {step === 3 && (
           <section className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-star-100">Take it to your new doctor</h2>
+              <h2 className="text-lg font-semibold text-star-100">Take It to Your New Doctor</h2>
               <p className="mt-1 text-sm text-stardust-300">
                 A one-page summary: conditions, medications, allergies, shots, recent trends,
                 emergency contacts. Your most personal records stay out unless you check them in
@@ -459,7 +459,7 @@ export function Review18View({
         {step === 4 && (
           <section className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-star-100">Who should be called in an emergency?</h2>
+              <h2 className="text-lg font-semibold text-star-100">Who Should Be Called in an Emergency?</h2>
               <p className="mt-2 rounded-xl border border-nova-400/15 bg-nebula-900/60 px-4 py-3 text-xs leading-relaxed text-stardust-300">
                 {COPY.emergencyDecoupled}
               </p>
@@ -548,7 +548,7 @@ export function Review18View({
 
         {step === 5 && (
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-star-100">Save your choices</h2>
+            <h2 className="text-lg font-semibold text-star-100">Save Your Choices</h2>
             <div className="card-living rounded-3xl p-5">
               <ul className="space-y-2 text-sm text-stardust-300">
                 {parents.map((p) => (

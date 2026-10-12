@@ -19,7 +19,7 @@ export default async function CredentialsPage({ params }: { params: Promise<{ ch
 
   return (
     <main className="mx-auto max-w-5xl px-4 pt-10 pb-8">
-      <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">School logins</h1>
+      <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">School Logins</h1>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
         <SettingsTabs childSlug={childSlug} role="parent" />
       </div>

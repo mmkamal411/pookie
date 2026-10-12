@@ -47,7 +47,7 @@ const CARDS = [
   {
     Icon: TicketGlyph,
     title: "Support Tickets",
-    sub: "Open a ticket, track it, talk to a human.",
+    sub: "Open a Ticket, track it, talk to a human.",
     route: "tickets",
   },
 ];

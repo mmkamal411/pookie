@@ -27,7 +27,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ child
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
       {isParent ? (
         <>
-          <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Ship systems</h1>
+          <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Ship Systems</h1>
           <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
             <SettingsTabs childSlug={childSlug} role="parent" />
           </div>
@@ -37,9 +37,9 @@ export default async function SettingsPage({ params }: { params: Promise<{ child
         </>
       ) : (
         <>
-          <p className="instrument-label animate-bloom">Ship systems // personal console</p>
+          <p className="instrument-label animate-bloom">Ship Systems // personal console</p>
           <h1 className="text-sunlit animate-bloom mt-2 text-3xl font-semibold tracking-tight">
-            My controls
+            My Controls
           </h1>
           <p className="animate-bloom mt-1 text-sm text-stardust-300" style={{ animationDelay: "0.05s" }}>
             Your profile, your look, your Pookie.

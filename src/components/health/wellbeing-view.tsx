@@ -196,7 +196,7 @@ export function WellbeingView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {/* Mood pulse */}
           <section className="card-living rounded-3xl p-5">
-            <h2 className="text-base font-semibold text-star-100">How is today feeling?</h2>
+            <h2 className="text-base font-semibold text-star-100">How Is Today Feeling?</h2>
             <div className="mt-3 grid grid-cols-5 gap-2" role="radiogroup" aria-label="Mood">
               {[1, 2, 3, 4, 5].map((m) => (
                 <button
@@ -257,7 +257,7 @@ export function WellbeingView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {/* Past entries — the teen's own trends only */}
           <section className="card-living rounded-3xl p-5">
-            <h2 className="text-base font-semibold text-star-100">Your past check-ins</h2>
+            <h2 className="text-base font-semibold text-star-100">Your Past Check-Ins</h2>
             {loading && <p className="mt-2 text-xs text-stardust-500">Loading.</p>}
             {!loading && state && state.entries.length === 0 && (
               <p className="mt-2 text-xs text-stardust-500">
@@ -303,7 +303,7 @@ export function WellbeingView({ childId, ctx }: { childId: string; ctx: HealthCo
 
           {/* Retention + NEDA */}
           <section className="card-living rounded-3xl p-5">
-            <h2 className="text-base font-semibold text-star-100">How long to keep my words</h2>
+            <h2 className="text-base font-semibold text-star-100">How Long to Keep My Words</h2>
             <p className="mt-1 text-xs leading-relaxed text-stardust-300">
               Your journal words auto-delete after the time you pick. Your mood scores stay as your
               private trends. Nothing here is kept forever.

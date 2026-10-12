@@ -7,7 +7,7 @@ import { CreditBoard } from "@/components/home-money/credit-board";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Credit freezes · Pookie",
+  title: "Credit Freezes · Pookie",
 };
 
 export default async function CreditPage({

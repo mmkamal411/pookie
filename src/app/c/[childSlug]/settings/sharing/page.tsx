@@ -36,7 +36,7 @@ export default async function SharingPage({ params }: { params: Promise<{ childS
   return (
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
       <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">
-        Who can see my stuff?
+        Who Can See My Stuff?
       </h1>
       <p className="animate-bloom mt-1 max-w-xl text-sm text-stardust-300" style={{ animationDelay: "0.06s" }}>
         You decide. Change anything, anytime. Pookie never tells anyone when you change a setting

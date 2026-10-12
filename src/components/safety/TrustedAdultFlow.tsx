@@ -287,7 +287,7 @@ function NominateScreen({
       >
         ← Back
       </button>
-      <h1 className="text-2xl font-semibold text-star-100">Name your adult</h1>
+      <h1 className="text-2xl font-semibold text-star-100">Name Your Adult</h1>
       <p className="mt-2 text-sm leading-relaxed text-stardust-300">
         Pick someone you trust. They only get safety alerts, never your private stuff.
       </p>

@@ -157,7 +157,7 @@ export function ArticleView({ article, childSlug }: { article: Article; childSlu
             href={`/c/${childSlug}/support/tickets/new?category=support.faq&subject=${encodeURIComponent(article.title)}`}
             className="rounded-xl border border-nova-400/20 px-4 py-2 text-sm font-medium text-stardust-200"
           >
-            Open a ticket
+            Open a Ticket
           </Link>
         </div>
       </Card>
@@ -243,7 +243,7 @@ export function ArticleView({ article, childSlug }: { article: Article; childSlu
                 href={`/c/${childSlug}/support/tickets/new`}
                 className="rounded-xl border border-nova-400/20 px-4 py-2 text-sm font-medium text-stardust-200"
               >
-                Open a ticket
+                Open a Ticket
               </Link>
             </div>
           </div>

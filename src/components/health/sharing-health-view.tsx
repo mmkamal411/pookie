@@ -97,7 +97,7 @@ export function SharingHealthView({ childId, ctx }: { childId: string; ctx: Heal
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-star-100">Who can see my health stuff?</h2>
+        <h2 className="text-lg font-semibold text-star-100">Who Can See My Health Stuff?</h2>
         <p className="mt-1 text-sm text-stardust-300">
           You decide. Change anything, anytime. Pookie never tells anyone when you change a setting
           here.
@@ -164,7 +164,7 @@ export function SharingHealthView({ childId, ctx }: { childId: string; ctx: Heal
 
           {canHidePast && (
             <div className="card-living rounded-3xl p-5">
-              <h3 className="text-sm font-semibold text-star-100">Hide my past health data too</h3>
+              <h3 className="text-sm font-semibold text-star-100">Hide My Past Health Data Too</h3>
               {!confirmHide ? (
                 <>
                   <p className="mt-1 text-xs leading-relaxed text-stardust-300">
@@ -176,7 +176,7 @@ export function SharingHealthView({ childId, ctx }: { childId: string; ctx: Heal
                     onClick={() => setConfirmHide(true)}
                     className="mt-3 rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm font-medium text-stardust-300 hover:text-star-100"
                   >
-                    Hide my past health data too
+                    Hide My Past Health Data Too
                   </button>
                 </>
               ) : (
@@ -223,7 +223,7 @@ export function SharingHealthView({ childId, ctx }: { childId: string; ctx: Heal
 
           {ctx.isSubject && (
             <div className="card-living rounded-3xl p-5">
-              <h3 className="text-sm font-semibold text-star-100">Delete my health data</h3>
+              <h3 className="text-sm font-semibold text-star-100">Delete My Health Data</h3>
               {!confirmDelete ? (
                 <>
                   <p className="mt-1 text-xs leading-relaxed text-stardust-300">
@@ -235,7 +235,7 @@ export function SharingHealthView({ childId, ctx }: { childId: string; ctx: Heal
                     onClick={() => setConfirmDelete(true)}
                     className="mt-3 rounded-xl border border-red-400/40 px-4 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-400/10"
                   >
-                    Delete my health data
+                    Delete My Health Data
                   </button>
                 </>
               ) : (

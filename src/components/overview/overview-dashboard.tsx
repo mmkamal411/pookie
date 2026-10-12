@@ -102,11 +102,11 @@ export function OverviewDashboard({
           </Link>
         </OverviewSection>
 
-        <OverviewSection title="Course corrections" badge={attentionCount || null} delay={0.24}>
+        <OverviewSection title="Course Corrections" badge={attentionCount || null} delay={0.24}>
           <AttentionItems classes={classes} dueNext={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 
-        <OverviewSection title="On the horizon" badge={overview.due_next.length || null} delay={0.28}>
+        <OverviewSection title="On the Horizon" badge={overview.due_next.length || null} delay={0.28}>
           <UpcomingList items={overview.due_next} childSlug={childSlug} />
         </OverviewSection>
 
@@ -133,7 +133,7 @@ export function OverviewDashboard({
         )}
 
         {!overview.checkin_today && (
-          <OverviewSection title="Daily log" badge="!" delay={0.36}>
+          <OverviewSection title="Daily Log" badge="!" delay={0.36}>
             <Link
               href={`/c/${childSlug}/school#checkin`}
               className="card-white block rounded-2xl px-5 py-4"

@@ -13,7 +13,7 @@ export function SettingsTabs({ childSlug, role }: { childSlug: string; role?: "p
     { label: "Sharing", href: `${base}/sharing`, roles: ["parent", "child"] as const },
     { label: "Sync", href: `${base}/sync`, roles: ["parent"] as const },
     { label: "Workers", href: `${base}/health`, roles: ["parent"] as const },
-    { label: "School logins", href: `${base}/credentials`, roles: ["parent"] as const },
+    { label: "School Logins", href: `${base}/credentials`, roles: ["parent"] as const },
   ].filter((t) => !role || (t.roles as readonly string[]).includes(role));
   return (
     <nav aria-label="Settings sections" className="flex gap-2 overflow-x-auto pb-1">
@@ -43,7 +43,7 @@ export function ParentOnlyNotice() {
   return (
     <main className="mx-auto max-w-2xl px-4 pt-16 pb-8 text-center">
       <p className="text-4xl" aria-hidden="true">🔒</p>
-      <h1 className="text-sunlit mt-4 text-2xl font-semibold">Parents only</h1>
+      <h1 className="text-sunlit mt-4 text-2xl font-semibold">Parents Only</h1>
       <p className="mt-2 text-sm leading-relaxed text-stardust-300">
         This area is for the parent account — sync, workers, and school logins live here.
       </p>

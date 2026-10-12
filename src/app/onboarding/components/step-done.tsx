@@ -32,10 +32,10 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
       }
       sub={
         variant.kind === "justMe"
-          ? "Your cockpit is all yours. You can bring crew aboard anytime from Ship systems → Family."
+          ? "Your cockpit is all yours. You can bring crew aboard anytime from Ship Systems → Family."
           : variant.kind === "child"
             ? "Pookie grows with your child — from full command, to shared flight, to their own independent ship."
-            : "Your cockpit is ready. You can bring crew aboard anytime from Ship systems → Family."
+            : "Your cockpit is ready. You can bring crew aboard anytime from Ship Systems → Family."
       }
     >
       {variant.kind === "child" && variant.result.ageTier === "under13" && (
@@ -63,7 +63,7 @@ export function StepDone({ variant }: { variant: DoneVariant }) {
           <InfoLine>
             No email was added, so this is parent-managed for now. You can
             invite {variant.result.childName} to their own login later from
-            Ship systems → Family.
+            Ship Systems → Family.
           </InfoLine>
         )}
       {variant.kind === "child" && variant.result.emailIgnored && (

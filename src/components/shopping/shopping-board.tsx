@@ -863,7 +863,7 @@ export function ShoppingBoard() {
         <p className="text-xs font-semibold tracking-widest text-aurum-300 capitalize">
           🏠 Household
         </p>
-        <h1 className="text-sunlit mt-1 text-3xl font-bold">Family shopping list</h1>
+        <h1 className="text-sunlit mt-1 text-3xl font-bold">Family Shopping List</h1>
         <p className="mt-1 text-sm text-stardust-300">
           One list, the whole family — everyone adds, every item tagged with who added it.
         </p>
@@ -964,7 +964,7 @@ export function ShoppingBoard() {
               className="flex w-full items-center justify-between rounded-xl border border-nebula-700 bg-nebula-950/60 px-3 py-2 text-left"
             >
               <span className="text-xs font-medium tracking-wide text-stardust-300 capitalize">
-                🧺 This week&apos;s haul
+                🧺 This Week&apos;s Haul
                 <span className="ml-2 rounded-full bg-nebula-800 px-2 py-0.5 text-xs text-stardust-300">
                   {grouped.boughtWeek.length}
                 </span>

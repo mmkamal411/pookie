@@ -76,7 +76,7 @@ export function AddChildForm() {
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="child-name" className={labelClass}>
-            Child&apos;s name
+            Child&apos;s Name
           </label>
           <input
             id="child-name"
@@ -116,7 +116,7 @@ export function AddChildForm() {
         </div>
         <div>
           <label htmlFor="child-email" className={labelClass}>
-            Child&apos;s email <span className="text-stardust-500">(optional)</span>
+            Child&apos;s Email <span className="text-stardust-500">(optional)</span>
           </label>
           <input
             id="child-email"

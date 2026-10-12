@@ -340,7 +340,7 @@ export function SafetyHowItWorks({
       aria-label="How safety works"
       className="rounded-2xl border border-nova-400/20 bg-nebula-900/80 p-5"
     >
-      <h2 className="text-base font-semibold text-star-100">How safety works here</h2>
+      <h2 className="text-base font-semibold text-star-100">How Safety Works Here</h2>
       <div className="mt-2 space-y-2 text-[15px] leading-relaxed text-stardust-200">
         <p>
           <strong className="text-star-100">Your private spaces are yours.</strong> Your moods,

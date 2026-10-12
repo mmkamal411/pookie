@@ -235,7 +235,7 @@ export function CheckinForm({
     <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center gap-3">
         <div>
-          <h3 className="font-medium text-star-100">Daily log</h3>
+          <h3 className="font-medium text-star-100">Daily Log</h3>
           <p className="text-xs text-stardust-300">
             Your space. Honest answers grow the best plans — and only you see them.
           </p>

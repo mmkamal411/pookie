@@ -123,7 +123,7 @@ export function ScreenTimeCoSet({
   return (
     <FullPageFlow wide>
       <p className="text-sm font-medium text-nova-300">Screen Time</p>
-      <h1 className="mt-2 text-2xl font-semibold text-star-100">A deal you both can see</h1>
+      <h1 className="mt-2 text-2xl font-semibold text-star-100">A Deal You Both Can See</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-stardust-200">
         Screen Time in Pookie is a deal you both can see. {teenName} proposes, {parentName}{" "}
         approves, and everyone sees the same rules. Pookie never watches secretly: if it&apos;s
@@ -193,7 +193,7 @@ export function ScreenTimeCoSet({
 
       {viewerRole === "teen" && state.status === "active" && mode !== "appeal" ? (
         <div className="mt-6">
-          <QuietButton onClick={() => setMode("appeal")}>Ask for a change</QuietButton>
+          <QuietButton onClick={() => setMode("appeal")}>Ask for a Change</QuietButton>
         </div>
       ) : null}
 
@@ -567,7 +567,7 @@ function AppealForm({
 
   return (
     <div className="rounded-2xl border border-nova-400/20 bg-nebula-900/80 p-5">
-      <h2 className="text-base font-semibold text-star-100">Ask for a change</h2>
+      <h2 className="text-base font-semibold text-star-100">Ask for a Change</h2>
       <p className="mt-1 text-sm text-stardust-300">Say what you want different, and why.</p>
       <div className="mt-3">
         <Field label="Your reason">
@@ -677,7 +677,7 @@ function AppealHistory({
 
   return (
     <section aria-label="Appeal history">
-      <h2 className="text-base font-semibold text-star-100">Change requests</h2>
+      <h2 className="text-base font-semibold text-star-100">Change Requests</h2>
       <ul className="mt-3 space-y-3">
         {appeals.map((ap) => (
           <li key={ap.id} className="rounded-2xl border border-nova-400/15 bg-nebula-800/60 p-4">

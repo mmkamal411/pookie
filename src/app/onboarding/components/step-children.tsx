@@ -187,12 +187,12 @@ export function StepChildren({
     <StepShell
       eyebrow="Crew manifest"
       title="Tell us about your young astronaut"
-      sub="Birthdate sets the right shields for their age. You can add more crew later from Ship systems → Family."
+      sub="Birthdate sets the right shields for their age. You can add more crew later from Ship Systems → Family."
     >
       <form onSubmit={submitChild} className="flex flex-col gap-4">
         <div>
           <label htmlFor="child-name" className={labelClass}>
-            Child&apos;s name
+            Child&apos;s Name
           </label>
           <input
             id="child-name"
@@ -232,7 +232,7 @@ export function StepChildren({
         </div>
         <div>
           <label htmlFor="child-email" className={labelClass}>
-            Child&apos;s email <span className="text-stardust-500">(optional)</span>
+            Child&apos;s Email <span className="text-stardust-500">(optional)</span>
           </label>
           <input
             id="child-email"

@@ -341,8 +341,8 @@ export function MinutiaeCalendar({
         </section>
       )}
 
-      <section aria-label="This week" className="mt-8">
-        <h2 className="text-lg font-semibold text-star-100">This week</h2>
+      <section aria-label="This Week" className="mt-8">
+        <h2 className="text-lg font-semibold text-star-100">This Week</h2>
         {weekSorted.length === 0 ? (
           <p className="mt-2 text-sm text-stardust-500">
             Nothing on the school calendar this week.
@@ -357,8 +357,8 @@ export function MinutiaeCalendar({
       </section>
 
       {comingUp.length > 0 && (
-        <section aria-label="Coming up" className="mt-8">
-          <h2 className="text-lg font-semibold text-star-100">Coming up</h2>
+        <section aria-label="Coming Up" className="mt-8">
+          <h2 className="text-lg font-semibold text-star-100">Coming Up</h2>
           <div className="mt-3 space-y-3">
             {comingUp.map((e) => (
               <EventCard key={e.id} event={e} {...cardProps} />
