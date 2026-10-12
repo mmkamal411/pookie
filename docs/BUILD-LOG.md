@@ -2584,3 +2584,11 @@ check.sh clean. Live E2E (account creation, portal login, worker sync) requires
 browser/dashboard/WIN laptop — test plan documents every step for the parent.
 
 **Committed:** 186b4e3, pushed to origin/staging-build. NOT deployed.
+
+## 2026-10-12 — Squad Telemetry E5: Sync Command Center DELIVERED (Mehedi urgent directive)
+- Replaced the "taking root" placeholders on Ship Systems → Sync / Workers / School Logins with a real mission-control console (NASA meets sci-fi: dark terminal panels, neon edges, animated gears, status lights, monospace telemetry, live ship clock).
+- Workers tab: WIN + MAC fleet cards — online/stale/offline/never status, last heartbeat + age, last successful sync, responsibilities (WIN: StudentVUE/CTLS Learn/Outlook via Cobb network — the only box passing Conditional Access; MAC: 3:05 AM auto-sync, zero-guard noted), gears spin while a run is active. Silent workers show "Awaiting First Contact" — no mock data.
+- Sync tab: live console from school_sync_runs — timestamp, source, machine, rows pulled, success/failure, duration; expandable per-run detail (per-table rows, error text); filter by source; per-source Sync Now buttons (enqueue via sync_request_job RPC, labeled honestly as queued full pulls); live sync_jobs queue strip. Auto-refresh 20s.
+- School Logins tab: portal cards (StudentVUE, ParentVUE, CTLS Learn, Microsoft 365) with connected/needs-attention/not-configured status, masked usernames, Test Connection per portal, add/update form with write-only passwords (never displayed), remove. Reuses the vault-backed portals API.
+- New API: GET .../school/sync-runs (paginated, filterable, + known sources), GET .../school/workers (fleet status), POST .../school/sync-now. New service: src/server/services/sync-command.ts. New components: src/components/sync/ (gear, command-shell, workers-view, console-view, logins-view).
+- Verified: npx tsc --noEmit clean; npm run build green (isolated copy, all new routes in manifest). Pushed to origin/staging-build. No deploy (coordinator owns deploys).
