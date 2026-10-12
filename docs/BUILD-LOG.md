@@ -2637,3 +2637,28 @@ screenshot dir for the baseline pass.
 
 ## 2026-10-12 ~12:05 EDT — Prism E1: audited 30 pages, 17 issues (0 P0 / 5 P1 / 12 P2)
 Surfaces A (a–m): account-deleted, add-child, c/ home, coparenting, credit, health + 5 subpages, marketplace, pookie, safety/screen-time, school + class/health/minutiae, settings + 5 tabs, support + chat/faq/article/tickets. Full audit: `docs/PRISM-AUDIT-E1.md`. Headline: no broken flows, no harsh colors; P1s = Title Case violations (~25 headings), account-deleted missing sign-out button, HealthHub has no links to its subpages, review-18 parent view is a dead end, SettingsTabs active-glow unverified. P2s = neon gaps (ScreenTimeCoSet, review-18 buttons, onboarding atoms, MorePopup/faq rows). Noted deploy-window pause — no builds run.
+
+## 2026-10-12 ~12:15 EDT — Prism E5 — Navigation flow: P0 fixes + nav map
+
+**Mission:** map all 60 page.tsx routes, fix critical flow breaks. Builds paused (Squad Harbor deploy window) — code + commits only; `npx tsc --noEmit` clean.
+
+**docs/PRISM-NAVMAP.md** — full route graph: 5-tab IA, More-menu registry, tap-depth table for all 60 routes, back affordance per page, dead ends, deep-link-only pages, known gaps.
+
+**P0 — the entire More menu 404'd:** Squad 4 (91b3238) keyed absolute-vs-tenant off the leading slash, but every registry route carries one — More links rendered as bare `/health`, `/travel/fuel`, etc. New shared `resolveModuleHref(childSlug, route)` in `lib/modules.ts` (`/household/*` absolute, rest under `/c/[childSlug]`); applied to More popup (rows + recent), travel hub (W26 Weather card 404'd), minimized-dock restore. Registry comment corrected.
+
+**P0 — W15 Screen Time route** `"safety/screen-time"` → `"/safety/screen-time"` (was `/c/<slug>safety/screen-time`).
+
+**P1 back-navigation gaps (E1/E2 audit priorities):**
+- 10 account-level pages had no in-page back-to-app path (standby console is tab-less): `HouseholdNav` strip ("← Home" + 7 lateral chips) in household layout; `AccountBackNav` ("← Back to Ship") on `/village`, `/family/claims`, `/family/invite`; `/village/[childId]` → "← Who You're Helping" roster link.
+- W3 Safety seedling → live with `/household/insurance` (Insurance hub was deep-link-only; 31-module shell intact).
+- review-18 parent view: "← Back to Health" (was a visual dead end).
+- account-deleted: Sign Out button added (copy said "just sign out", no control).
+- HealthHub: new `HealthModuleNav` strip (Health/Wellbeing/Meals/Activity/Nutrition) via health section layout; hidden on review-18 interstitial.
+- family/invite/accept invalid state: "Go to my Pookie" CTA.
+- Toolbar: More tab glows on module pages; settings dial glows on `/settings/*` (E2: no active-glow for settings).
+- `/school/minutiae` was deep-link-only: "School Minutiae" card on school overview + "← School Overview" back link.
+- PageGlide layouts added for `/family/*` and `/village/*` (course-change transitions); `/me` grid completed with Weather/Insurance/Babysitters.
+
+**Verification:** `npx tsc --noEmit` clean. No `next build` (deploy window). Commits: ae91067, e911896, 117cd3b, d24abff, 754c835, 545aecc — all pushed to `origin/staging-build`.
+
+**Flags for other squads:** `/family/invite` + `/family/claims` have no in-app inbound links (confirm deep-link-only or wire entry); `/household/babysitters` vs tenant `/marketplace` duplication undecided; SettingsTabs active glow needs a browser visual check; travel hub lacks "← Back" (E2 P2).
