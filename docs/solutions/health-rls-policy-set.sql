@@ -1,0 +1,288 @@
+-- =============================================================================
+-- HEALTH TRACK — RLS POLICY SET (standalone review document)
+-- Squad 2 — Health Track | Implements sol-health.md §§1–10
+-- =============================================================================
+-- This is a REVIEW DOCUMENT, not a migration. It is the canonical,
+-- human-readable statement of every RLS policy on the health surface so
+-- Fractional Team 1 (compliance) and Team 2 (RLS audit) can review the
+-- complete policy set in one place. The enforceable definitions live in the
+-- health migrations (022–028, pending MD renumbering); this file mirrors
+-- them for audit. Keep the two in sync.
+--
+-- Legal gate: counsel sign-off on H0–H3 required before production data
+-- flows (NFR-LEGAL); schema itself is complete and tested.
+-- =============================================================================
+--
+-- PRINCIPLES
+--   P1. child_access is the single source of truth. Every policy funnels
+--       through public.current_child_ids() and/or an explicit child_access
+--       role check. owner_user_id grants nothing.
+--   P2. The tier predicate public.health_tier_visible(subject_id, metric_key,
+--       tier) is the enforcement point for reads. Tiers are stamped at write
+--       from metric_defs — never re-derived at read.
+--   P3. Deny by default: the predicate's final RETURN is false; every arm
+--       must affirmatively grant. Policies add conjuncts (deleted_at IS NULL)
+--       but never widen.
+--   P4. H3 has NO grant arm, NO override arm, NO break-glass arm, NO
+--       aggregate endpoint. This is structural (the predicate has no such
+--       arm; the schema CHECKs grants to <> 'H3'), not policy text.
+--   P5. Tombstoned rows (deleted_at NOT NULL) are invisible at the POLICY
+--       level — reads exclude them instantly, before the nightly hard delete.
+--   P6. Grace reads are historical-only and enforced in the PREDICATE
+--       (grace_expires_at > now()), not by the sweep job — a missed job
+--       fails closed.
+--   P7. No anon grants anywhere on health content. No agent_reader grants
+--       (security review M1 carried forward).
+--
+-- =============================================================================
+-- §1. THE PRIVACY PREDICATE (022) — normative logic, arm by arm
+-- =============================================================================
+-- health_tier_visible(p_subject_id uuid, p_metric_key text, p_tier health_tier)
+--   SECURITY DEFINER, search_path=public pinned, STABLE.
+--
+--   1. v_child_id NULL or p_tier NULL            → false
+--   2. v_child_id NOT IN current_child_ids()     → false
+--   3. Grace arm (H1/H2 only, never H3):
+--        EXISTS health_grace(child_id, viewer=auth.uid(), tier=p_tier,
+--                             grace_expires_at > now()) → true
+--      (Historical-only is enforced by callers: graced reads are permitted
+--       only for rows with recorded_at < revoke timestamp; the UI labels the
+--       state. No export endpoint honors graced reads.)
+--   4. Band from health_subject_age_band(); 'unknown' → 'teen_13_15'.
+--   5. Band under13:
+--        H1/H2 → true (stewardship). H3 → false. H0 → false.
+--   6. Band teen_13_15 / teen_16_17:
+--        H3 → (caller is teen). NOTHING ELSE. Ever.
+--        H0 → false.
+--        H1 → teen, OR parent with active unexpired H1 grant.
+--        H2 → teen, OR parent with active unexpired H2 grant,
+--             OR parent with active unexpired unappealed H2 safety override
+--             (tier='H2' enforced, expires_at ≤ created_at + 30d).
+--   7. Band adult:
+--        caller-is-subject → true (own-data read always true).
+--        else → active unexpired post-18 grant for (child, tier, grantee).
+--        H3: teen (the adult subject) only; H0: subject only.
+--   8. Final → false. (Deny by default.)
+--
+-- =============================================================================
+-- §2. PER-TABLE POLICIES
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- health_metrics (readings; tier stamped at write from metric_defs)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, metric_key, health_tier)
+-- INSERT: tenant member (subject's child in current_child_ids())
+-- UPDATE: tenant member (USING + WITH CHECK both tenant-scoped)
+-- DELETE: none (corrections are UPDATEs; deletion is tombstone via RPC)
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No DELETE. No anon.
+-- NOTES: H3 INSERT additionally requires child-role (policy WITH CHECK calls
+--   health_tier_insert_allowed: H3 → caller is teen; H0 → adult band only).
+--   The anomaly_flag column is never parent-visible: parent reads go through
+--   the same predicate, and the flag is stripped at the route layer (§4.3).
+
+-- ---------------------------------------------------------------------------
+-- food_logs (18+ diary w/ uncertainty ranges; <18 calorie refusal by trigger)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, 'food_log', health_tier)
+-- INSERT: tenant member; trigger enforce_no_calories_minor() refuses any
+--   non-NULL calorie/macro value for minor bands ('nutrition_minor_calorie_refusal')
+-- UPDATE: tenant member; same trigger on UPDATE OF calorie/macro columns
+-- DELETE: tenant member (teen-deletable; RPC path tombstones instead)
+-- GRANTS: SELECT, INSERT, UPDATE, DELETE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- meal_checkins (the <18 experience; no numeric columns exist)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, 'meal_checkin', health_tier)
+-- INSERT/UPDATE: tenant member. DELETE: none (tombstone via RPC).
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- nutrition_targets (targets; clinician gate enforced by trigger)
+-- ---------------------------------------------------------------------------
+-- SELECT: tenant member.
+-- INSERT/UPDATE: parent-role on the subject's child (targets are set by
+--   parents/clinicians). Trigger enforce_nutrition_target_gate():
+--     * 'clinician_supervised' for a minor band → 'nutrition_minor_deficit_refusal'
+--     * gate FK must exist and be unexpired → 'nutrition_gate_not_found' / 'nutrition_gate_expired'
+-- DELETE: none (supersede via active=false).
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- wellbeing_entries (W8; H2 minimum, H3 for care categories)
+-- ---------------------------------------------------------------------------
+-- SELECT/INSERT/UPDATE/DELETE: teen ONLY —
+--   child_id in current_child_ids() AND EXISTS child_access(role='child').
+--   No parent arm. No override arm. No grant arm. No break-glass arm.
+--   INSERT additionally: entered_by = auth.uid(); a parent INSERT of an H3
+--   row about the teen is refused ('h3_parent_write_refusal').
+--   Trigger enforce_wellbeing_tier(): care_category IN
+--   (mental_health_care, self_harm, disordered_eating) → health_tier := 'H3'
+--   (server applies; teen cannot downgrade).
+-- GRANTS: SELECT, INSERT, UPDATE, DELETE to authenticated. No anon.
+-- NOTES: there is NO parent aggregate endpoint for wellbeing (enforced by
+--   absence). Server-side pattern detection runs in SECURITY DEFINER
+--   functions returning metadata only.
+
+-- ---------------------------------------------------------------------------
+-- wellbeing_events (metadata ONLY: child_id, event_type, severity, created_at)
+-- ---------------------------------------------------------------------------
+-- SELECT: teen only (child-role). NEVER parent-readable (C4 firewall).
+-- INSERT/UPDATE/DELETE: none for clients — server-side emission via
+--   emit_wellbeing_event() only (SECURITY DEFINER; pg_notify to the safety
+--   pipeline with type+severity+identity, never content).
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- immunizations (H1 while <18; 3231 PDFs inherit the row tier)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, 'immunization', health_tier)
+-- INSERT/UPDATE: tenant member. DELETE: none (tombstone via route/RPC).
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- allergy_list (H2; explicit entry only — no inference)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, 'allergy', health_tier)
+-- INSERT: tenant member. UPDATE: parent or child role on the child.
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_medications (H2; descriptive only — never dosing advice)
+-- ---------------------------------------------------------------------------
+-- SELECT: deleted_at IS NULL AND health_tier_visible(subject_id, 'medication', health_tier)
+-- INSERT/UPDATE: tenant member. DELETE: none (tombstone via RPC).
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_consent_grants (per-tier grants; H3/H0 unrepresentable by CHECK)
+-- ---------------------------------------------------------------------------
+-- SELECT: granter_user_id = auth.uid() OR grantee_user_id = auth.uid().
+-- INSERT/UPDATE/DELETE: none for clients — RPC only (grant rows are the
+--   audit trail). Cutover expiry is service_role.
+-- CONSTRAINTS: tier <> 'H3' AND tier <> 'H0' (structural).
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_grace (30-day historical-only visibility)
+-- ---------------------------------------------------------------------------
+-- SELECT: viewer_user_id = auth.uid() OR child_id in current_child_ids().
+-- INSERT/UPDATE/DELETE: none for clients — written only by the access-ending
+--   event functions / RPCs (cutover, revoke, hide-past deletes).
+-- CONSTRAINTS: tier IN ('H1','H2') — H3 never graced.
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_corrections (append-only correction history)
+-- ---------------------------------------------------------------------------
+-- SELECT: child_id in current_child_ids().
+-- INSERT/UPDATE/DELETE: none for clients — RPC only (rpc_health_record_correct).
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_device_tokens (lifecycle state only; token VALUES in the Vault)
+-- ---------------------------------------------------------------------------
+-- SELECT: child_id in current_child_ids().
+-- INSERT/UPDATE/DELETE: none for clients — service_role / RPC only.
+--   Clients never read vault_ref.
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_retention_policies (per-child overrides over tier defaults)
+-- ---------------------------------------------------------------------------
+-- SELECT: child_id in current_child_ids().
+-- INSERT/UPDATE/DELETE: parent or child role on the child.
+-- GRANTS: SELECT, INSERT, UPDATE, DELETE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- health_safety_overrides (amended 011: H2-only, ≤30d, teen-appealable)
+-- ---------------------------------------------------------------------------
+-- SELECT: parent-role on the subject's child (route-audited).
+-- INSERT: parent_user_id = auth.uid() AND parent-role on the subject's child.
+--   Columns: tier='H2' (CHECK), expires_at ≤ created_at + 30d (CHECK),
+--   teen_notified_at NOT NULL (teen notified in-transaction), teen_appealed_at
+--   (16–17 early revoke).
+-- UPDATE: creating parent only (revocation via revoked_at; append-only).
+-- DELETE: none.
+-- GRANTS: SELECT, INSERT, UPDATE to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- sud_records (Part 2 separation; app-layer encrypted, separate key)
+-- ---------------------------------------------------------------------------
+-- SELECT/INSERT/UPDATE/DELETE: teen ONLY (child-role on the child).
+--   No parent arm. No override arm. No grant arm. No break-glass.
+--   content_ciphertext + content_nonce only — the DB never sees plaintext.
+--   health_tier = 'H3' (CHECK).
+-- GRANTS: SELECT, INSERT, UPDATE, DELETE to authenticated. No anon.
+-- NOTES: cross-reference assertion (028) fails the apply if any function,
+--   view, or policy joins sud_records with any other health table.
+
+-- ---------------------------------------------------------------------------
+-- sud_disclosure_consents (explicit per-disclosure consent)
+-- ---------------------------------------------------------------------------
+-- SELECT: teen only (child-role).
+-- INSERT/UPDATE/DELETE: none for clients — rpc_sud_disclosure_consent /
+--   rpc_sud_disclosure_revoke only.
+-- GRANTS: SELECT to authenticated. No anon.
+
+-- ---------------------------------------------------------------------------
+-- Storage: nutrition-photos, health-documents (private buckets)
+-- ---------------------------------------------------------------------------
+-- SELECT (nutrition-photos): bucket match + subject's child in tenant set.
+-- INSERT (nutrition-photos): bucket match + path segment 1 = subject whose
+--   child is in the tenant set.
+-- SELECT (health-documents): bucket match + the 3231 row's tier visible via
+--   health_tier_visible() (PDF inherits the row's tier).
+-- INSERT (health-documents): bucket match + path segment 1 = subject whose
+--   child is in the tenant set.
+-- Signed URLs minted server-side with short TTL; never public.
+
+-- =============================================================================
+-- §3. DENY-BY-DEFAULT PROOF APPROACH (staging test matrix — Team 2 owns)
+-- =============================================================================
+-- Fixture: for each (tier × band) ∈ {H0,H1,H2,H3} ×
+--   {under13, teen_13_15, teen_16_17, adult, unknown-DOB},
+-- insert rows as the teen via service_role.
+--
+-- For each caller ∈ {teen, parent-with-grant, parent-without-grant,
+-- parent-with-override, stranger-tenant-member, anon}:
+--   1. SELECT the fixture rows; assert visibility == the §1.3 matrix cell.
+--   2. Assert: unknown DOB behaves as teen_13_15.
+--   3. Assert: H3 row never visible to parent even WITH an H2 grant AND an
+--      active safety override AND during a grace window.
+--   4. Assert: tombstoned rows invisible to ALL callers incl. the teen.
+--   5. Assert: grace arm only fires while grace_expires_at > now() —
+--      backdate a grace row and assert invisibility (predicate, not job).
+--   6. Assert: expired override (expires_at < now()) grants nothing;
+--      appealed override (teen_appealed_at NOT NULL) grants nothing.
+--   7. Assert: grant for tier H1 does not expose H2 rows (per-tier isolation).
+--   8. Assert: nutrition_weekly_patterns() returns NULL calories/macros for
+--      minor subjects regardless of caller role.
+--   9. Assert: wellbeing_entries has zero parent-visible paths (policy
+--      inspection: no policy on the table references role='parent').
+--  10. Assert: sud_records has zero non-teen paths (same inspection).
+--
+-- Harness location: supabase/tests/health_tier_matrix.sql (Team 2 owns).
+-- Gate: matrix green on staging before any health module holds real teen data.
+--
+-- =============================================================================
+-- §4. REVIEW CHECKPOINTS
+-- =============================================================================
+-- RC-RLS-1 (Team 2): predicate arm-by-arm audit — every arm traced to a
+--           sol-health §1.3 matrix cell; final RETURN false confirmed.
+-- RC-RLS-2 (Team 2): no policy grants anon; no policy grants agent_reader;
+--           explicit GRANT audit per table matches §2.
+-- RC-RLS-3 (Team 1): H3 absolute confirmed structurally (no grant arm, no
+--           override arm, grant CHECK excludes H3/H0).
+-- RC-RLS-4 (Team 1): grace historical-only; tombstone invisibility at policy
+--           level; 30-day deletion pipeline wired.
+-- RC-RLS-5 (Team 2): storage policies deny by default; 3231 PDF inherits row
+--           tier; signed URLs short-TTL server-side.
+--
+-- | Checkpoint | Reviewer | Date | Result |
+-- | RC-RLS-1   | (Team 2 RLS audit) | | |
+-- | RC-RLS-2   | (Team 2 RLS audit) | | |
+-- | RC-RLS-3   | (Fractional Team 1) | | |
+-- | RC-RLS-4   | (Fractional Team 1) | | |
+-- | RC-RLS-5   | (Team 2 RLS audit) | | |
