@@ -3,6 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~09:10 EDT — Squad Vista — Cosmic viewport: rotating scenes, open home, brighter palette
+
+**Mission:** the cosmic viewport — Mehedi's "it's too dark hard to see" + "never a static same view" + open window after login.
+
+**What shipped** (files committed under `deb1988`'s tree sweep; all Vista work intact and verified):
+- `src/components/cosmic-scene-director.tsx` (new) — 5 luminous cosmic scenes (violet-nebula, teal-drift, rose-nursery, indigo-expanse, aurora-verdant). Two stacked fixed layers (z-1: above starfield canvas z-0, below content z-10+) crossfade via 2.8s opacity transition. Rotates on 75s timer AND on every navigation (course-change; skips initial mount). `document.body.dataset.cosmicScene` exposes the active scene. prefers-reduced-motion → single static scene, no timer. GPU-cheap (opacity only).
+- `src/app/globals.css` — appended VISTA section: (1) palette lift via later-cascade `:root` redefinition (nebula-950 #050510→#0d0d26, 900→#171739, 800→#212154, 700→#2e2e68; stardust text tokens brightened a full step); (2) body gets an explicit luminous deep-space base (old `--color-canopy-950` token was never defined — dangling); (3) brighter glass-pane/card-living/input-rooted; (4) `.cosmic-scene-layer` styles; (5) `.vista-hero` + `.vista-scroll-cue` (animated bob) styles.
+- `src/app/layout.tsx` — mounted `<CosmicSceneDirector />` beside `<NebulaBackground />`.
+- `src/components/overview/overview-dashboard.tsx` — home is now an open window: MissionBriefing wrapped in `.vista-hero` (44vh mobile / 50vh desktop of open cosmos), animated "your mission board" scroll cue, board content below with `#mission-board` anchor + scroll-margin. First impression is space, not a wall of cards.
+
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — integration squad owns deploys.
+
+**Note for integration:** my uncommitted work was swept into Squad Deck's `deb1988` commit (shared working tree). No separate Vista commit needed; nothing lost.
+
 ## 2026-10-12 ~09:05 EDT — Squad Windows — window/applet paradigm (COMPLETE)
 
 **Built:** `src/components/window-manager.tsx` (context + 11-module registry + self-contained CSS), `src/components/module-window.tsx` (title bar + minimize/close frame), `src/components/minimized-dock.tsx` (floating restore chips). Surgical edit to `src/app/c/[childSlug]/layout.tsx` (provider wraps GlassPane; frame wraps page content; dock after GlassPane). Note: files were swept into Squad Deck's commit deb1988 (parallel commit race) — all Squad Windows code verified intact in the tree.
