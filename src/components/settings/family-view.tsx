@@ -21,6 +21,7 @@ import {
   inputClass,
   PrimaryButton,
 } from "./settings-ui";
+import { RemoveChildSection } from "@/components/account/remove-child-section";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -516,6 +517,9 @@ export function FamilyView() {
           {notice.text}
         </p>
       )}
+
+      {/* Self-service child removal */}
+      <RemoveChildSection members={members} onChanged={refresh} />
     </div>
   );
 }

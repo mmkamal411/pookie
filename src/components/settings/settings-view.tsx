@@ -33,6 +33,7 @@ import {
   PrimaryButton,
   DangerButton,
 } from "./settings-ui";
+import { DangerZone } from "@/components/account/danger-zone";
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -499,6 +500,9 @@ export function SettingsView() {
       <SettingsCard title="Session">
         <DangerButton onClick={handleSignOut}>Sign out</DangerButton>
       </SettingsCard>
+
+      {/* Self-service account deletion */}
+      <DangerZone childCount={children.length} />
     </div>
   );
 }

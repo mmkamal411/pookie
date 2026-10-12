@@ -27,13 +27,19 @@ export async function getMemberships(): Promise<TenantMembership[]> {
   const { data, error } = await supabase
     .from("child_access")
     .select(
-      "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level)",
+      "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level, deletion_requested_at)",
     )
     .eq("user_id", user.id);
 
   if (error || !data) return [];
 
-  return data.map((row) => {
+  // Soft-deleted children are hidden from the UI immediately (grace period).
+  const visible = data.filter((row) => {
+    const child = Array.isArray(row.children) ? row.children[0] : row.children;
+    return !child?.deletion_requested_at;
+  });
+
+  return visible.map((row) => {
     // Supabase types the !inner join as an array; the inner join guarantees one row.
     const child = Array.isArray(row.children) ? row.children[0] : row.children;
     return {

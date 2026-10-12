@@ -23,6 +23,8 @@ export default function LoginPage({
     token?: string;
     error?: string;
     next?: string;
+    fresh?: string;
+    purgeDate?: string;
   }>;
 }) {
   const [email, setEmail] = useState("");
@@ -45,6 +47,16 @@ export default function LoginPage({
     auth_pkce:
       "Your browser blocked part of the sign-in. Enable cookies and try again — or use a magic link below.",
   };
+
+  // Fresh start after self-service deletion: confirm what happened.
+  const freshStart = params.fresh === "1";
+  const purgeDate = params.purgeDate
+    ? new Date(params.purgeDate).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
 
   // Post-auth destination. Legacy ?token=… invites keep their /?invite=
   // handoff; ?next=… is honored only when it is a same-origin path
@@ -200,6 +212,26 @@ export default function LoginPage({
               Sign in with Google or your email — we&apos;ll send a magic
               link. No passwords, ever.
             </p>
+
+            {freshStart && (
+              <div className="animate-bloom mt-6 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
+                <p className="text-sm font-medium text-star-100">
+                  Done. Your old account will be permanently erased
+                  {purgeDate ? (
+                    <>
+                      {" "}on <strong>{purgeDate}</strong>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  .
+                </p>
+                <p className="mt-1 text-sm text-stardust-300">
+                  Sign in below anytime before then to cancel and restore
+                  everything — or start fresh right now.
+                </p>
+              </div>
+            )}
 
             {sent ? (
               <div className="animate-bloom mt-6 space-y-4 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
