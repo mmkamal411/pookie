@@ -1,22 +1,25 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PookieOrb } from "@/components/pookie-orb";
+import { PookieOrb, type OrbMood } from "@/components/pookie-orb";
+import { nextGreeting } from "@/components/login-greetings";
 
 /**
- * Landing + auth. The void of space — boarding the ship.
- * Cosmic black, a field of distant stars, and the Pookie orb as a guiding
- * light on the horizon. Magic-link sign-in (no passwords anywhere). Invite
- * links land here with ?token=… and are consumed after sign-in. ?next=…
- * carries a post-auth return URL (e.g. /verify-invite?token=…) for both flows.
+ * Landing + auth. Squad Orb (2026-10-12) — Mehedi's directive: the login
+ * page is EXTREMELY simple. Just the divine orb, floating in the living
+ * cosmos, greeting the traveler: "Good morning/afternoon/evening, Captain."
+ * Nothing else. Tapping the orb magically materializes the sign-in options
+ * like holographic controls. All auth logic (Supabase magic link + Google
+ * OAuth) is unchanged — only the presentation is new.
  *
- * Rate-limit UX: Supabase throttles magic-link sends (429 / "rate limit"
- * messages — the founder hit a project-wide throttle on launch night).
- * Those errors get plain-English copy pointing at the Google button
- * instead of raw API text, and the sent state carries a resend path so
- * a missing email is never a dead end.
+ * Flow: greeting → (tap orb, burst of light) → clearance (choose Google or
+ * email boarding pass) → email entry → transmitted. Sci-fi lingo throughout.
+ * ?token=… invites and ?next=… return URLs are honored by both flows.
  */
+type Phase = "greeting" | "clearance" | "email" | "transmitted";
+
 export default function LoginPage({
   searchParams,
 }: {
@@ -28,28 +31,77 @@ export default function LoginPage({
     purgeDate?: string;
   }>;
 }) {
+  const [phase, setPhase] = useState<Phase>("greeting");
+  const [bursting, setBursting] = useState(false);
+  const [orbMood, setOrbMood] = useState<OrbMood>("idle");
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
   const [resent, setResent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // searchParams unwrapped with use(): available on server and client, no hydration risk.
   const params = use(searchParams);
+  const router = useRouter();
 
-  // Surface auth failures redirected back from /auth/callback, with a
-  // recovery hint matched to the failure kind.
+  // Seamless login: if a session already exists (or silently refreshes via
+  // the stored refresh token), sail straight past — the orb greeting is
+  // for logged-OUT travelers only.
+  const [checkingSession, setCheckingSession] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data.session) {
+          const next = postAuthNext(params);
+          router.replace(next ?? "/");
+          return;
+        }
+      } catch {
+        // Fall through to the greeting — a failed check must never
+        // strand anyone on a blank page.
+      }
+      if (!cancelled) setCheckingSession(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rotating greetings — a delightful surprise, never the same twice.
+  // Rotates every 9s while idle on the greeting phase.
+  const greetState = useRef<{ last: string | null; seenRare: Set<string> }>({
+    last: null,
+    seenRare: new Set(),
+  });
+  const [greeting, setGreeting] = useState(() => {
+    const g = nextGreeting(greetState.current);
+    greetState.current = g.state;
+    return g.text;
+  });
+  const [greetKey, setGreetKey] = useState(0);
+  useEffect(() => {
+    if (phase !== "greeting") return;
+    const t = window.setInterval(() => {
+      const g = nextGreeting(greetState.current);
+      greetState.current = g.state;
+      setGreeting(g.text);
+      setGreetKey((k) => k + 1);
+    }, 9000);
+    return () => window.clearInterval(t);
+  }, [phase]);
+
   const authError = params.error ?? null;
   const authErrorCopy: Record<string, string> = {
-    auth: "Boarding didn't complete — try again, astronaut.",
-    auth_expired:
-      "That boarding pass expired — request a fresh one below.",
+    auth: "Boarding didn't complete — try again, Captain.",
+    auth_expired: "That boarding pass expired — request a fresh one.",
     auth_pkce:
-      "Your browser blocked part of boarding. Enable cookies and try again — or take the magic-link airlock below.",
+      "Your browser blocked part of boarding. Enable cookies and try again — or take the email airlock.",
   };
 
-  // Fresh start after self-service deletion: confirm what happened.
   const freshStart = params.fresh === "1";
   const purgeDate = params.purgeDate
     ? new Date(params.purgeDate).toLocaleDateString(undefined, {
@@ -59,14 +111,7 @@ export default function LoginPage({
       })
     : null;
 
-  // Post-auth destination. Legacy ?token=… invites keep their /?invite=
-  // handoff; ?next=… is honored only when it is a same-origin path
-  // (never protocol-relative), so an attacker can't bounce users
-  // off-site through our login.
-  function postAuthNext(sp: {
-    token?: string;
-    next?: string;
-  }): string | null {
+  function postAuthNext(sp: { token?: string; next?: string }): string | null {
     if (sp.token) return `/?invite=${sp.token}`;
     if (sp.next && sp.next.startsWith("/") && !sp.next.startsWith("//")) {
       return sp.next;
@@ -74,7 +119,6 @@ export default function LoginPage({
     return null;
   }
 
-  /** True when the Supabase error is a send-rate throttle. */
   function isRateLimitError(err: unknown): boolean {
     const status = (err as { status?: number } | null)?.status;
     if (status === 429) return true;
@@ -83,7 +127,7 @@ export default function LoginPage({
   }
 
   const RATE_LIMIT_COPY =
-    "Too many boarding attempts right now — hold position for a minute, or continue with Google above.";
+    "Too many boarding attempts right now — hold position for a minute, or continue with Google.";
 
   async function signInWithGoogle() {
     setOauthBusy(true);
@@ -101,7 +145,6 @@ export default function LoginPage({
         },
       });
       if (error) throw error;
-      // On success the browser leaves for Google's consent screen.
     } catch (err) {
       setError(
         isRateLimitError(err)
@@ -114,7 +157,6 @@ export default function LoginPage({
     }
   }
 
-  /** One magic-link send. Throws on failure; the caller maps the error. */
   async function requestLink() {
     const sp = await searchParams;
     const next = postAuthNext(sp);
@@ -132,7 +174,9 @@ export default function LoginPage({
 
   function mapSendError(err: unknown): string {
     if (isRateLimitError(err)) return RATE_LIMIT_COPY;
-    return err instanceof Error ? err.message : "Hold position — request incomplete. Try again in a moment.";
+    return err instanceof Error
+      ? err.message
+      : "Hold position — request incomplete. Try again in a moment.";
   }
 
   async function sendLink(e: React.FormEvent) {
@@ -141,7 +185,7 @@ export default function LoginPage({
     setError(null);
     try {
       await requestLink();
-      setSent(true);
+      setPhase("transmitted");
     } catch (err) {
       setError(mapSendError(err));
     } finally {
@@ -163,60 +207,79 @@ export default function LoginPage({
     }
   }
 
+  /** The magical tap — the orb bursts with light, then reveals clearance. */
+  function tapOrb() {
+    if (phase !== "greeting" || bursting) return;
+    setBursting(true);
+    setOrbMood("celebrating");
+    window.setTimeout(() => {
+      setPhase("clearance");
+      setBursting(false);
+      setOrbMood("excited");
+    }, 680);
+  }
+
+  const orbSize = phase === "greeting" ? 132 : phase === "clearance" ? 96 : 72;
+
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-[#010104]">
-      <Starfield />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      {/* The living cosmos is mounted globally in the root layout — the orb
+          floats directly in it. No local starfield, no clutter. */}
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+        {checkingSession ? (
+          <>
+            <PookieOrb size={96} mood="thinking" interactive={false} />
+            <p className="animate-bloom mt-8 text-sm tracking-[0.22em] text-stardust-400 uppercase">
+              Establishing uplink…
+            </p>
+          </>
+        ) : (
+          <>
+        {/* The orb — the entire login page. */}
+        <button
+          type="button"
+          onClick={tapOrb}
+          aria-label={
+            phase === "greeting"
+              ? "Request boarding clearance"
+              : "Pookie, your guiding light"
+          }
+          className={`relative rounded-full outline-none transition-transform duration-500 ${
+            bursting ? "orb-burst" : ""
+          } ${phase === "greeting" ? "cursor-pointer" : "cursor-default"}`}
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          {phase === "greeting" && !bursting && (
+            <span aria-hidden="true" className="tap-hint absolute inset-0 rounded-full" />
+          )}
+          <PookieOrb size={orbSize} mood={orbMood} interactive />
+        </button>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-6 py-16 lg:grid-cols-2">
-        {/* Hero — the promise */}
-        <section className="animate-bloom">
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-            Pookie · mission control
-          </p>
-          <h1 className="text-sunlit mt-4 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
-            Your whole life, flown from one cockpit.
-          </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-stardust-300">
-            Time, tasks, school, family, health, money — every system on a
-            single console, with a warm AI co-pilot who believes in you.
-          </p>
-          <ul className="mt-8 space-y-3 text-stardust-300">
-            {[
-              "Today's flight plan, briefed every morning",
-              "School, health, and family — all systems monitored",
-              "Course corrections, gently suggested",
-              "A co-pilot that never stops believing in you",
-            ].map((line, i) => (
-              <li
-                key={line}
-                className="animate-rise flex items-center gap-3"
-                style={{ animationDelay: `${0.15 + i * 0.1}s` }}
-              >
-                <NavDot />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {phase === "greeting" && (
+          <div className="animate-bloom mt-8">
+            <h1
+              key={greetKey}
+              className="greeting-glow greeting-transmission text-3xl font-semibold tracking-tight text-star-100 sm:text-4xl"
+            >
+              {greeting}
+            </h1>
+            <p className="mt-3 text-sm tracking-[0.22em] text-stardust-400 uppercase">
+              Touch the light to request boarding clearance
+            </p>
+          </div>
+        )}
 
-        {/* Auth card — the airlock */}
-        <section className="animate-bloom" style={{ animationDelay: "0.2s" }}>
-          <div className="card-living mx-auto w-full max-w-sm rounded-3xl p-8">
-            <div className="mx-auto flex w-fit flex-col items-center">
-              <PookieOrb size={72} />
-              <p className="mt-2 text-[11px] tracking-[0.18em] text-stardust-500 capitalize">
-                Your guiding light
-              </p>
-            </div>
-            <h2 className="mt-5 text-center text-xl font-semibold text-star-100">
-              Step aboard
-            </h2>
-            <p className="mt-1 text-center text-sm text-stardust-300">
-              Sign in with Google or a magic link — no passwords, ever.
+        {phase === "clearance" && (
+          <div className="mt-8 w-full">
+            <h1 className="animate-bloom text-2xl font-semibold tracking-tight text-star-100">
+              Verify your identity, Captain
+            </h1>
+            <p className="animate-bloom mt-2 text-sm text-stardust-400" style={{ animationDelay: "0.1s" }}>
+              Choose your boarding method
             </p>
 
             {freshStart && (
-              <div className="animate-bloom mt-6 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
+              <div className="animate-bloom mt-5 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4">
                 <p className="text-sm font-medium text-star-100">
                   Done. Your old ship will be decommissioned
                   {purgeDate ? (
@@ -235,89 +298,108 @@ export default function LoginPage({
               </div>
             )}
 
-            {sent ? (
-              <div className="animate-bloom mt-6 space-y-4 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
-                <p className="text-sm text-stardust-200">
-                  Your boarding pass is on its way — check your inbox (and
-                  the spam folder, just in case).
-                </p>
-                {resent && (
-                  <p className="text-xs text-nova-300">
-                    Sent again — give it a minute to arrive.
-                  </p>
-                )}
-                {error && <p className="text-sm text-red-400">{error}</p>}
-                <button
-                  type="button"
-                  onClick={resendLink}
-                  disabled={busy}
-                  className="text-sm font-medium text-nova-300 underline-offset-4 transition hover:text-nova-200 hover:underline disabled:opacity-50"
-                >
-                  {busy ? "Sending…" : "Didn't get it? Resend the link"}
-                </button>
-                <p className="text-xs text-stardust-400">
-                  Or{" "}
-                  <button
-                    type="button"
-                    onClick={signInWithGoogle}
-                    disabled={oauthBusy}
-                    className="font-medium text-nova-300 underline-offset-4 hover:underline disabled:opacity-50"
-                  >
-                    {oauthBusy ? "Connecting…" : "continue with Google"}
-                  </button>{" "}
-                  instead.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-6 space-y-4">
-                {authError && authErrorCopy[authError] && (
-                  <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-3 text-center">
-                    <p className="text-sm text-red-300">
-                      {authErrorCopy[authError]}
-                    </p>
-                    <p className="mt-1 text-xs text-stardust-400">
-                      Boarding passes expire after a while — and private-mode
-                      tabs sometimes drop the handoff. A fresh link usually
-                      fixes it.
-                    </p>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={signInWithGoogle}
-                  disabled={oauthBusy}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-3 text-sm font-semibold text-nebula-950 shadow-glow-sm transition hover:bg-stardust-200 disabled:opacity-50"
-                >
-                  <GoogleGlyph />
-                  {oauthBusy ? "Connecting…" : "Continue with Google"}
-                </button>
-                <div className="flex items-center gap-3" aria-hidden="true">
-                  <span className="h-px flex-1 bg-star-100/15" />
-                  <span className="text-xs text-stardust-400">or</span>
-                  <span className="h-px flex-1 bg-star-100/15" />
-                </div>
-                <form onSubmit={sendLink} className="space-y-4">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="input-rooted w-full rounded-2xl px-4 py-3 text-sm"
-                  />
-                  {error && <p className="text-sm text-red-400">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950 disabled:opacity-50"
-                  >
-                    {busy ? "Sending…" : "Send magic link"}
-                  </button>
-                </form>
+            {authError && authErrorCopy[authError] && (
+              <div className="animate-bloom mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 p-3">
+                <p className="text-sm text-red-300">{authErrorCopy[authError]}</p>
               </div>
             )}
+
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                disabled={oauthBusy}
+                className="holo-panel login-materialize flex w-full items-center justify-center gap-3 px-6 py-4 text-[15px] font-semibold text-star-100 transition hover:brightness-125 disabled:opacity-50"
+                style={{ animationDelay: "0.15s" }}
+              >
+                <GoogleGlyph />
+                {oauthBusy ? "Establishing secure uplink…" : "Continue with Google"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhase("email")}
+                className="holo-panel login-materialize flex w-full items-center justify-center gap-3 px-6 py-4 text-[15px] font-semibold text-star-100 transition hover:brightness-125"
+                style={{ animationDelay: "0.28s" }}
+              >
+                <TicketGlyph />
+                Email boarding pass
+              </button>
+            </div>
+            {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
           </div>
-        </section>
+        )}
+
+        {phase === "email" && (
+          <div className="animate-bloom mt-8 w-full">
+            <h1 className="text-2xl font-semibold tracking-tight text-star-100">
+              Where shall we transmit your boarding pass?
+            </h1>
+            <form onSubmit={sendLink} className="mt-6 space-y-3">
+              <input
+                type="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="holo-panel input-rooted w-full px-5 py-4 text-center text-[15px] text-star-100 placeholder:text-stardust-500"
+              />
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                className="holo-panel flex w-full items-center justify-center gap-3 px-6 py-4 text-[15px] font-semibold text-star-100 transition hover:brightness-125 disabled:opacity-50"
+              >
+                <TicketGlyph />
+                {busy ? "Transmitting boarding pass…" : "Transmit boarding pass"}
+              </button>
+            </form>
+            <button
+              type="button"
+              onClick={() => setPhase("clearance")}
+              className="mt-4 text-sm text-stardust-400 underline-offset-4 transition hover:text-stardust-200 hover:underline"
+            >
+              Choose another way
+            </button>
+          </div>
+        )}
+
+        {phase === "transmitted" && (
+          <div className="animate-bloom mt-8 w-full">
+            <h1 className="text-2xl font-semibold tracking-tight text-star-100">
+              Boarding pass transmitted
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-stardust-300">
+              Check your inbox, Captain — and the spam folder, just in case.
+            </p>
+            {resent && (
+              <p className="mt-2 text-sm text-nova-300">
+                Transmitted again — give it a minute to arrive.
+              </p>
+            )}
+            {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={resendLink}
+                disabled={busy}
+                className="holo-panel flex w-full items-center justify-center px-6 py-4 text-[15px] font-semibold text-star-100 transition hover:brightness-125 disabled:opacity-50"
+              >
+                {busy ? "Transmitting…" : "Didn't arrive? Re-transmit"}
+              </button>
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                disabled={oauthBusy}
+                className="w-full py-2 text-sm font-medium text-nova-300 underline-offset-4 transition hover:text-nova-200 hover:underline disabled:opacity-50"
+              >
+                {oauthBusy ? "Establishing secure uplink…" : "Or continue with Google instead"}
+              </button>
+            </div>
+          </div>
+        )}
+          </>
+        )}
       </div>
     </main>
   );
@@ -346,64 +428,12 @@ function GoogleGlyph() {
   );
 }
 
-/** Nav beacon — the ship's position light, replacing the garden leaf dot. */
-function NavDot() {
+/** Boarding-pass ticket glyph for the email magic-link option. */
+function TicketGlyph() {
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nova-500/15 shadow-glow-sm">
-      <span className="h-2 w-2 rounded-full bg-nova-400" />
-    </span>
-  );
-}
-
-/**
- * Starfield — the void. Tiny distant stars with a slow twinkle, a few soft
- * drifting motes, and a whisper of nebula color far below so the black
- * stays cosmic, not flat.
- */
-function Starfield() {
-  const stars = [
-    { left: "6%", top: "14%", size: 2, delay: "0s", dur: "3.2s" },
-    { left: "12%", top: "68%", size: 3, delay: "1.1s", dur: "4s" },
-    { left: "19%", top: "32%", size: 2, delay: "2.2s", dur: "3.6s" },
-    { left: "27%", top: "82%", size: 3, delay: "0.6s", dur: "4.4s" },
-    { left: "35%", top: "8%", size: 2, delay: "1.8s", dur: "3s" },
-    { left: "44%", top: "48%", size: 2, delay: "0.3s", dur: "3.8s" },
-    { left: "52%", top: "22%", size: 3, delay: "2.6s", dur: "4.2s" },
-    { left: "61%", top: "74%", size: 2, delay: "1.4s", dur: "3.4s" },
-    { left: "68%", top: "12%", size: 3, delay: "0.9s", dur: "4.6s" },
-    { left: "74%", top: "58%", size: 2, delay: "2s", dur: "3.1s" },
-    { left: "81%", top: "30%", size: 3, delay: "1.6s", dur: "3.9s" },
-    { left: "88%", top: "80%", size: 2, delay: "0.2s", dur: "4.1s" },
-    { left: "94%", top: "44%", size: 2, delay: "2.9s", dur: "3.5s" },
-    { left: "23%", top: "55%", size: 2, delay: "1.2s", dur: "3.7s" },
-    { left: "57%", top: "90%", size: 2, delay: "2.4s", dur: "4.3s" },
-    { left: "47%", top: "66%", size: 3, delay: "0.7s", dur: "3.3s" },
-  ];
-  return (
-    <div className="absolute inset-0" aria-hidden="true">
-      {stars.map((s, i) => (
-        <span
-          key={i}
-          className="absolute rounded-full bg-white"
-          style={{
-            left: s.left,
-            top: s.top,
-            width: s.size,
-            height: s.size,
-            opacity: 0.55,
-            animation: `twinkle ${s.dur} ease-in-out ${s.delay} infinite`,
-            boxShadow: "0 0 6px rgb(255 255 255 / 0.5)",
-          }}
-        />
-      ))}
-      {/* whisper of nebula far below — depth without light pollution */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 45% at 50% 115%, rgb(76 29 149 / 0.14), transparent 65%), radial-gradient(ellipse 50% 35% at 85% -5%, rgb(244 114 182 / 0.05), transparent 60%)",
-        }}
-      />
-    </div>
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z" />
+      <path d="M13 5v2m0 4v2m0 4v2" strokeDasharray="2 2" />
+    </svg>
   );
 }

@@ -2017,3 +2017,34 @@ Child-scoped via `child_id = ANY (public.current_child_ids())` (001 pattern). Sy
 Day level (`checkins`, existing): `mood`, `energy`, `stress` (1–5), `text`. Per-class (`checkin_class_details`, UNIQUE (checkin_id, class_id)): **`covered`** (what was covered), **`clicked`** (what clicked), **`fuzzy`** (still fuzzy), **`due_next`** (what's due next), **`confidence`** (1–5). Linked uploads via `checkin_uploads.checkin_id + class_id`. (Renamed in 067 from worked_on/confusing — nothing read the old names.)
 
 Remaining from E4: backfill run → `telemetry/health.py` done (unit-tested) → `docs/SCHOOL-SCHEMA.md` (data flow, retention, idempotency).
+
+## 2026-10-12 ~10:30 EDT — Squad Telemetry E3 — kickoff + calendar method research
+
+**Mission:** teacher-email intelligence + district calendar feed, fully hands-off.
+
+**RESEARCH WIN — official CCSD iCal feed found and verified working:**
+- cobbk12.org runs SchoolPointe ciCalendar. The page's own JS builds the subscription URL as `webcal://{host}/_ci/calendar/subscription/{sqids.encode(cats)}` with cats=[0] = all categories.
+- Extracted the site's bundled Sqids lib, computed `encode([0]) = "bM"` (verified round-trip in node).
+- **LIVE FEED: `https://www.cobbk12.org/_ci/calendar/subscription/bM`** → HTTP 200, `text/calendar`, valid VCALENDAR, 23 VEVENTs covering 2026-2027 (Board Meetings, Digital Learning Days 10/12 + 12/1 + 3/1, Fall/Winter/Spring breaks, Early Release 12/17 + 5/17, Election Day, MLK, Memorial Day, Last Day 5/19/27). `X-PUBLISHED-TTL:PT15M`.
+- Method ranking: **(1) iCal feed** — official, machine-readable, no JS; (2) JSON API `cicmsapi.azurewebsites.net/cobb/_ci/15/ci/vsb/webservice.ashx` (fallback, needs payload reverse-engineering); (3) HTML scrape (Angular-rendered, brittle, last resort); (4) static PDF year-at-a-glance.
+- Teacher comms: no per-class public email subscription exists. CTLS Parent per-course notification emails + direct teacher @cobbk12.org mail both land in Gmail `Family/Dawson` (Label_75) — that label is the primary source; snapshot tables are fallback.
+
+**Schema coordination (E4's 066 migrations — using as-is):**
+- pookie `school_calendar` EXISTS (cols: id, child_id, event_date, end_date, title, event_type[CHECK], description, source, source_ref, ...). E4's event_type enum: holiday|no_school|early_release|late_start|testing|event|deadline.
+- pookie `teacher_messages` EXISTS (+066 cols external_id, received_at, summary; dedupe on (child_id, external_id)).
+- pookie `school_sync_health` EXISTS (per child_id+source_name+machine; source_name 'gmail-teacher' / 'ccsd-calendar'; machine 'sandbox').
+- pookie `children`/`classes` tables exist but are EMPTY — no Dawson child row yet, so scripts resolve child by slug at runtime and degrade gracefully (file fallbacks) until seeded.
+- Writes need service_role (Secure Vault) — anon writes correctly 401/42501. Scripts attempt service_role from env, else log + fall back. **Blocker for parent/MD: wire POOKIE_SERVICE_ROLE_KEY into the cron worker env.**
+
+**Seeding `~/workspace/dawson-grades/telemetry/`** (E2: please adopt/own — internals replaceable, keep module names): config.py, http.py, logging_setup.py, health.py, sqids.py, schedule.yaml.
+
+## 2026-10-12 ~10:25 EDT — Squad Telemetry E4 — MISSION COMPLETE (schema + backfill live)
+
+**All E4 deliverables shipped:**
+1. ✅ Migrations **066** (school telemetry: school_attendance, school_calendar, checkin_class_details, school_sync_health, school_sync_runs + extensions) and **067** (class_resources, checkin_uploads, check-in field renames) — **applied live** via mgmt API, verified. **068** (class-handouts bucket+policies) written — needs dashboard SQL editor (storage 42501 via API).
+2. ✅ **Backfill run**: 6 classes (period/room/teacher/display_order/color), 6 GP2 grades, 6 grade_snapshots with category_averages, 58 assignments (32 graded/1 missing/25 upcoming), health row studentvue/laptop = `stale` (honest — dump is 7 days old). Script: `telemetry/backfill_school_066.py` (idempotent, re-runnable).
+3. ✅ **`telemetry/health.py`** — shared writer library for E1/E2/E3 (unit-tested; stdlib only). Contract: `reporter.track(source, machine="laptop"|"macbook"|"sandbox"|"cloud")` context manager; key from Secure Vault via env, never committed.
+4. ✅ **`docs/SCHOOL-SCHEMA.md`** — ER, table purposes, RLS model, health contract, data-flow diagram, retention table, idempotency strategy, E1/E2/E3 notes.
+5. ✅ APPLY_ORDER.md rows for 066/067/068.
+
+**E1/E2/E3/E5 unblocked.** Open items for coordinator: (a) apply 068 in dashboard; (b) Lit+Geometry grade_weights still `{}` — E2 detail pull should fill; (c) E2 sets next_scheduled_run for laptop worker; (d) check-in retention awaits Mehedi.

@@ -4,6 +4,7 @@ Newest first. Each row: when, where, what commit, what changed, who/what trigger
 
 | Timestamp (EDT) | Env | Git SHA | Commits | Trigger | Smoke |
 |-----------------|-----|---------|---------|---------|-------|
+| 2026-10-12 10:07 | staging | 33fd890 | 33fd890 docs: Squad Nova build log entry; 602e51e feat(spaceship-nova): living breathing cosmos + divine orb; 713bda4 docs: Squad Horizon build log entry; 61fc24f feat(spaceship-horizon): luminous bridge — brightened scenes, holographic panels, lit console | deploy-staging.py (local) | fail |
 | 2026-10-12 09:40 | staging | a635df8 | a635df8 feat(spaceship-lumina): cool hi-tech design polish — Title Case, LED details, crisp copy; 857a05a docs: Squad Anchor integration + deploy record (9045ee1) | deploy-staging.py (local) | fail |
 | 2026-10-12 09:25 | staging | 9045ee1 | 9045ee1 docs: Squad Value progress log (5 builds); 0bfa235 feat(spaceship-value): Morning Briefing Digest — day at a glance; aa2e674 feat(spaceship-value): Pookie Chat → Actions (task creation from chat); 83de243 feat(spaceship-value): Meal Plan → Shopping List pipeline; bd551c4 feat(spaceship-value | deploy-staging.py (local) | fail |
 | 2026-10-12 09:00 | staging | 95b30f5 | 95b30f5 fix(spaceship-bugfix): replace invalid LayoutProps type in root layout; 299b791 docs: Squad Bugfix build-log entry (23a934b); 23a934b fix(spaceship-bugfix): 4 glitches — Mookie poll stranding, sign-out hang, overlay z-index, settings placeholder flash | deploy-staging.py (local) | fail |
