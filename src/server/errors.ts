@@ -128,6 +128,17 @@ export function mapDbError(err: unknown, requestId: string): ErrorCode {
   // Log raw detail server-side with request correlation (never to client).
   console.error(`[${requestId}] db error:`, message);
   if (message.includes('invite_not_found_or_expired')) return ErrorCodes.INVITE_NOT_FOUND;
+  if (message.includes('cannot_invite_self')) return ErrorCodes.CANNOT_INVITE_SELF;
+  // Second-parent claim RPC exceptions (049) — raw strings never reach clients.
+  if (message.includes('linking_disabled_court_order')) return ErrorCodes.LINKING_DISABLED;
+  if (message.includes('rate_limited')) return ErrorCodes.RATE_LIMITED;
+  if (message.includes('claim_attestation_required')) return ErrorCodes.VALIDATION_FAILED;
+  // claim_not_your_decision / claim_not_found collapse to NOT_FOUND — a prober
+  // cannot distinguish "no such claim" from "not yours" (no enumeration oracle).
+  if (message.includes('claim_not_your_decision') || message.includes('claim_not_found')) {
+    return ErrorCodes.NOT_FOUND;
+  }
+  if (message.includes('study_plan_checkboxes_teen_only')) return ErrorCodes.CHILD_ROLE_REQUIRED;
   // SEC-002 (2026-10-12): invite_not_found vs invite_email_mismatch was an
   // enumeration oracle on POST /api/v1/invites/consume. Both collapse to the
   // single INVITE_NOT_FOUND code/message — a prober cannot distinguish
