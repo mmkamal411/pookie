@@ -3,6 +3,22 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:45 EDT — Squad 4 Coordinator (staging-build): SQUAD 4 KICKOFF (Home & Money Track)
+
+**Squad 4 — Home & Money** (Managing Director directive). Five experts dispatched on `staging-build`:
+- **Product Manager (PMP)** → squad backlog, WBS, dependency map, W24/W14 legal-gate plan, risk list
+- **Tech Lead / Senior Backend** → migrations 024+ (mail_items, transactions, vault_documents, credit_freezes, coparenting_log, babysitters), RLS, API contracts
+- **Senior Frontend Engineer** → UI for all 7 modules (dispatches after Tech Lead's BACKEND-CONTRACTS.md lands)
+- **QA Engineer** → test plans per Mehedi's protocol, teen-privacy RLS tests, security tests
+- **UX Designer** → flows for all 7 modules, parallel-parenting UX (hardest), legal-constraint communication
+
+**Modules:** W21 Mail (GIPA) · W20 Shopping (live, harden) · W11 Spending (teen-private) · W7 Vault (NFR-SEC-006) · W24 Credit (RE-SCOPED to freeze mgmt, FCRA gate) · W14 Co-parenting (parallel mode, family-law gate) · W12 Babysitters (time-boxed grants)
+
+**Cross-squad dependency:** W12 needs `expires_at` (migration 023) from Platform Team 1 — PM tracking; fallback is manual revoke.
+**Legal gates:** W24 (FCRA counsel) and W14 (family-law review) ship as "pending review" not "ready for users."
+**Rule:** No deploy until Managing Director says so.
+
+
 ## 2026-10-12 ~03:50 EDT — Squad 2 Coordinator (Health Track 💚): SQUAD KICKOFF
 
 **Squad 2 — Health Track** (Managing Director directive). Five experts dispatched on `staging-build`:
