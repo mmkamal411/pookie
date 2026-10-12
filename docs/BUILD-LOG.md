@@ -3,6 +3,26 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:50 EDT — Fractional Team 2 Compliance Reviewer (staging-build): COMPLIANCE-SECURITY REVIEW (no deploy)
+
+**Report:** `docs/security/COMPLIANCE-SECURITY-REVIEW.md` (new, full §1–§7). COPPA technical guarantees, audit-trail completeness, retention/deletion, consent integrity, health-tier readiness, NFR-LEGAL attorney-gate list. Tree re-verified at latest state (post-`306c8e5` renumber); static analysis only, no live DB. Not legal advice.
+
+**🔴 Novel — not previously in this log:**
+- **F2/F3 — phantom `children.user_id` breaks three in-tree objects AND the sibling's staging:** `access_events_teen_select` (021:132–139), `access_scopes_select` (026:185–196), and 027 Ban-3 trigger (`SELECT c.user_id FROM children`) all reference a column **no migration ever creates** (repo-wide grep: zero hits). Teen can't see access history (021 likely fails at apply); Ban-3 raises the wrong error and blocks legitimate adult access-requests on under-13 children. **The sibling's staged `rls_foundation.sql` has the same dependency** (lines 475, 479, 534, 553) with no `ADD COLUMN` — the sol-access "assumed identity link" was never materialized. Folding must either add the column (+ set it in link/claim flows) or rewrite all sites to resolve the teen via `child_access(role='child')`. **Cross-team reconciliation required.**
+- **F5 — guardian attestation UI-only:** `create_child()` takes no attestation param, no `attestation_at` column — direct RPC bypasses the panel-1.1.2 attestation (onboarding checkbox is client-side).
+- **F6 — in-tree 025 truncated:** `025_rls_foundation.sql` is 283 lines with a literal `[truncated 16210 chars]` marker — will fail on apply. Until the staged replacement folds in, in-tree `current_child_ids()` is 001's version **without the status filter** → the revoked-parent data-access hole is **open in-tree** (`status='revoked'` keeps full tenant reads). Fix exists only in staging.
+- **H4 — `consents.created_at` forgeable:** INSERT grant + no immutable-timestamp trigger → backdatable legal ledger.
+- **H6 — 90-day no re-prompt (NFR-PRIVACY-007) unenforced:** no `consent_declines` record, no server check in any consent path.
+- **H7 — mail 30-day purge policy-only:** `purge_expired_mail_photos()` (040) has no scheduler wiring; OCR pipeline never calls `mask_account_numbers()` (NFR-PRIVACY-009 unenforced).
+- **H8 — audit/erasure conflicts:** `audit_log.child_id ON DELETE CASCADE` wipes the trail on child delete (vs FR-SAFETY-015 7-year hold); no account-deletion flow exists; `parent_user_id` FK blocks parent erasure (NFR-LEGAL-005).
+- **H5/H9 — consent unbundling not built; tutor chat has no age-tier gate** (relies on 027 Ban 1's no-under-13-session invariant; parent-as-conduit typing = counsel question). Retention gaps: school emails, W7 raw images, backups have no schedules; `manual_delete_only` check-in retention selectable for <13 = counsel question.
+
+**Already logged — referenced, not duplicated:** `log_access_event` arity (sibling ~04:20 staging fix planned, not in-tree); `/verify-invite` pre-auth child PII (line 156 🔴, still present); tutor scope filtering (SEC-004); 027 bans / sibling RPC review (~04:20 entry).
+
+**🟢 verified enforced in-tree:** 027 under-13 bans (trigger-level, no bypass); teen health tiers (`health_tier_visible()` H2/H3, teen-only food diary, unknown-DOB fail-closed); link-code crypto/TTL/lockout; audit_log append-only + secret-key guard; check-in teen-delete RLS (042); support-grant RBAC with health scopes non-grantable (034).
+
+**Blocked on:** MD-freeze folding of `~/workspace/pookie-security-staging/` into the migration sequence (do not edit `supabase/migrations/` directly); `children.user_id` contract decision; licensed-attorney gates (§7 of the report — incl. H0–H3 clearance, retention schedule, vendor DPAs, both-parents COPPA rights).
+
 ## 2026-10-12 ~04:01 EDT — Squad 2 Senior Frontend (staging-build): HEALTH UI SURFACES COMPLETE (commit bc08c26)
 
 **All 5 deliverables built as full working implementations — no mocks, no stubs, no TODOs** (MD no-placeholders directive). Contracts: `docs/solutions/sol-health.md` App A/B + `docs/squads/squad2-health/UX-SPECS.md`.
