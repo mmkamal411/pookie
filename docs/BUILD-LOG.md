@@ -1,5 +1,35 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:15 EDT — Squad Telemetry E1 — Parent-side pulls built (ParentVUE + ParentSquare)
+
+**Mission:** automate Mehedi's parent-side school data pulls — zero manual intervention — on the shared `telemetry/` package (no third copy).
+
+**Research findings (verified live from the sandbox 2026-10-12):**
+- **ParentVUE transport ranking:** (1) mobile REST JSON API `POST parentvue.cobbk12.org/api/v1/mobile/PXPWebServices/<Method>` — AttemptLogin returns a real JSON envelope (verified); reuses E2's `telemetry/studentvue_api.py` client; (2) SOAP `POST /Service/PXPCommunication.asmx` — verified live, proper `RT_ERROR` on bad creds (Cobb still serves it; E2's "retired Aug 2026" note does not hold for this host); (3) web scraping (existing browser cron stays as deep-verify); (4) ParentVUE email alert subscriptions — supplementary only, needs Mehedi to enable. No RSS exists.
+- **Edge quirk:** Cobb's edge silently drops POSTs with the `StudentVUE/8.0.26` app UA (empty reply) — browser UA required. Both clients use it.
+- **No 53003 on parent paths:** both APIs use Synergy-native credential auth, not Microsoft SSO — sandbox works, no laptop routing needed.
+- **CTLS Parent is now ParentSquare:** `ctlsparent.cobbk12.org` → `/signin` titled "Sign In | ParentSquare". Pull via form login (`POST /sessions`) + `/api/v2/*` JSON (endpoint map from MIT-licensed thehesiod/psquare-mcp). Open: does Cobb's tenant accept email/password or force SSO? Is MFA on? — one live login answers both.
+- **Auth-failure policy:** never retry bad credentials (Cobb logs every failed AttemptLogin; lockout risk). Fail fast by design.
+
+**Built (additive, in `~/workspace/dawson-grades/telemetry/`):**
+- `parentvue_pull.py` — parent-mode client: REST primary → SOAP fallback (stdlib-only), `GetChildListData` child resolution, per-section graceful degradation, normalized output.
+- `parentsquare_pull.py` — cookie-session client: CSRF form login, `gon.user_id` session validation, feeds/notices/student dashboard/sections/directory pulls, MFA raises `ParentSquareMFARequired` (human step documented).
+- `pookie_health.py` — E4-contract reporter: `school_sync_health` upsert + `school_sync_runs` insert via service_role; degrades gracefully (local log) without key/child row; never raises.
+- `sink.py` — immutable staging JSON (`staging/<source>/<date>/<run_id>.json`) + idempotent Supabase upserts (classes/grade_snapshots/assignments/school_attendance/school_calendar); change-driven snapshots (writes only when the grade vector changed).
+- `run_parent_pull.py` — orchestrator CLI (cron entry point): exit 0 ok / 1 partial / 2 config; writes legacy `sync_logs` (source=parent-scrape, works today) AND the E4 contract; updates `state.json` (last_run/last_success/next_run).
+- `tests/test_parent_pulls.py` — 19 unit tests, no network/creds; fixtures in `telemetry/fixtures/`. Full suite: 39/39 green (20 E2 + 19 E1).
+- `parent_pull_config.json.example`, `.env.telemetry.template`, `README-TELEMETRY-E1.md` (full docs: research, setup, schedule, failure modes, monitoring).
+- `schedule.yaml`: filled the `parent-portal-vm` placeholder with the real script.
+- Crons created (owner goal:dawson-school-email-watch): `telemetry-parent-pull-am` 07:00 EDT + `telemetry-parent-pull-pm` 15:00 EDT daily. Enabled; each run checks for `.env.telemetry` first and reports a one-line blocker if unprovisioned.
+
+**Still needs a human (one time):** (1) provision `telemetry/.env.telemetry` from the Secure Vault (ParentVUE + ParentSquare creds, pookie service_role key, old-project anon key) — README section 4 has the exact steps; (2) create Dawson's `children` row in the pookie project (table is empty — Supabase writes stay skipped until then); (3) one live ParentSquare login to answer SSO/MFA. Until then: staging-only mode (snapshots + local health), which is fully working.
+
+**Notes for the squad:**
+- E2: your REST client is reused verbatim for parent mode. Heads-up — `watchdog.py` has a latent `sys.path` stdlib-shadowing bug (running `python telemetry/watchdog.py` directly puts `telemetry/` at `sys.path[0]`, so `import http.client` inside urllib resolves to your `http.py` and crashes). Fixed the same bug in `run_parent_pull.py`; recommend the same guard or `python -m` invocation.
+- E4: `pookie_health.py` targets your `school_sync_health`/`school_sync_runs` contract (`source_name` = `parentvue` | `ctls-parent`, `machine` = `sandbox`).
+- E5: `rows_by_table` carries per-table counts; `data_freshness_status` is worker-set.
+- E3: ParentVUE `GetPXPMessages` output is staged to JSON only — `teacher_messages` ingestion is yours.
+
 ## 2026-10-12 ~10:05 EDT — Squad Orb — Hypnotic, realistic, alive divine orb
 
 **Mission:** Mehedi's words — "realistic characteristics of an orb with hypnotizing effects when someone looks at it and alive interactive… the orb is live and interactive whenever possible."
