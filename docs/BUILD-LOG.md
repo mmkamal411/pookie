@@ -2679,3 +2679,38 @@ Surfaces A (a–m): account-deleted, add-child, c/ home, coparenting, credit, he
 **Bugfix (cross-squad):** E5's commit 754c835 introduced a JSX syntax error in `travel-hub.tsx` (adjacent JSX nodes: comment + `<Link>` inside `return (`) — `npx tsc --noEmit` failed on it. Wrapped in a fragment; tsc clean again.
 
 **Verification:** `npx tsc --noEmit` clean (builds still paused per deploy window). Commits `93b6d34` pushed to `origin/staging-build`. Note: parallel agents' uncommitted files got swept into adjacent commits twice (E5's health-module-nav into 0f1df9c; my travel-hub//me edits into E5's commits) — tree is clean, attribution noted here.
+
+## 2026-10-12 ~12:45 EDT — Squad Triage (P0 emergency fix)
+
+**Root cause:** R&D Team 2 changed the `Theme` type in `src/components/use-theme.ts` (uncommitted) from `"dark" | "light"` to `"space-black" | "bright-bridge"`, but the settings views still referenced the old values. The deploy script builds from the working tree, so the broken TypeScript shipped to staging.
+
+**Fix (minimal, surgical):** Updated the theme toggle arrays in:
+- `src/components/settings/settings-view.tsx`: `["light", "dark"]` → `["space-black", "bright-bridge"]`, updated description and labels
+- `src/components/settings/child-settings-view.tsx`: same change
+
+**Verification:** `npm run build` now succeeds (was failing with TS2345/TS2367). Committed and pushed to `origin/staging-build`. Deploying to staging now.
+
+**Note for Team 2:** Your theme work is intact. I only updated the two settings views to match your new type. The labels now read "Space Black" / "Bright Bridge".
+
+## 2026-10-12 ~12:50 EDT — R&D Team 2 (Coordinator): two-theme system + Command Center
+
+**Theme infrastructure (priority 1):**
+- `src/components/use-theme.ts`: `Theme = "space-black" | "bright-bridge"` (was `"dark" | "light"`), default `space-black`. Migrates stored values: `dark` → `space-black`, `light` → `bright-bridge`, re-saves normalized. Initial state reads the pre-paint `<html>` attribute — no first-render flash.
+- `src/app/layout.tsx`: pre-paint script sets `data-theme="bright-bridge"` for `bright-bridge`/`light`; space-black = no attribute (default).
+- `src/app/globals.css` + `src/styles/neon-system.css`: all `[data-theme="light"]` selectors → `[data-theme="bright-bridge"]`. Bright-bridge token block cooled per zero-lavender rule: nebula `#f4f2fb`→icy `#f2f6fa` family, pink nova `#db2777`→cyan `#00b8d4`, purple shadow glows → cyan, warm halo ambers → icy blues. Neon pipes pink glow → cyan.
+- `src/styles/neon-system.css`: teal is now genuine `#00FFC8` (was a cyan alias). Appended "SPACE BLACK COMMAND DECK" block: exact `--space-*` RGB tokens from DESIGN-DIRECTION.md + animated glow utility library (`.glow-breathe`, `.glow-dot`, `.glow-edge-shimmer`, `.glow-text`, `.glow-hover`, `.glow-static`, keyframes, reduced-motion guards).
+
+**Space Black completion (priority 2):**
+- Top toolbar REMOVED ENTIRELY from `src/app/c/[childSlug]/layout.tsx` (no slimming — gone).
+- New `src/components/command-center.tsx`: `CommandCenterButton` — 40px floating top-right, saucer SVG helm mark, pulsing neon ring (3s breathe) + blinking beacon dot (2.4s) so it's instantly findable. Opens `CommandCenterMenu`: holographic panel, 240ms unfold from top-right, corner brackets, "COMMAND ACCESS // CLASSIFIED" header, pilot readout (logged-in user), crew roster, Bridge Theme switcher with preview swatches, mission-parameter rows (User Profile / Child Management / Account Settings — role-aware), Sign Out (confirm + 15s dead-man's switch, same as settings). Theme-aware: space-black panel / bright-bridge panel.
+- `src/components/child-switcher.tsx`: refactored to `ChildRosterPanel` (theme-aware, used by the menu); old `ChildSwitcher` trigger removed. `src/components/ship-settings-control.tsx` deleted — superseded by the menu (its settings link + dial live on as menu rows).
+- `src/components/pookie/pookie-chat.tsx`: theme-aware via `useTheme()` — one markup, two skins. Space Black renders the Hull dark instrument system (`hull-panel/msg/btn/input`, neon tokens, soft breathing glow on the header); Bright Bridge keeps the bridge light system. All Hull structural improvements kept (StatusFrame, TypingDots, BotText collapse, readouts, AI disclosure, Direct toggle, quick replies, task intents, Muse queue).
+
+**Settings → Profile (priority 4):**
+- New shared `BridgeThemeSelector` in `src/components/settings/settings-ui.tsx`: "Bridge Theme" card with two preview-swatch options ("Space Black" — black swatch + cyan glow; "Bright Bridge" — white swatch + cyan accent), Title Case labels, instant switch, persists. Used in Settings → Profile (`settings-view.tsx`) and child settings (`child-settings-view.tsx`). Old pink `nova-400/50` selected styles → cyan.
+
+**Research docs:** `docs/research/spacecraft-hud-patterns.md` (7 techniques), `docs/research/mobile-dark-dashboard-patterns.md` (corner controls, deck, cards, contrast), `docs/research/animated-glow-library.md` (usage guide for the CSS library).
+
+**Verification:** `npx tsc --noEmit` clean.
+
+**Attribution:** Squad Triage's 12:45 entry above documents their emergency settings-view fix for my uncommitted Theme change — that minimal fix is now superseded by `BridgeThemeSelector` (same labels, richer UI). Their entry kept for the record.

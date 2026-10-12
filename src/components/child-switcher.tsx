@@ -1,16 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/components/tenant-provider";
 import { setActiveChild } from "@/lib/tenant/actions";
+import { useTheme } from "@/components/use-theme";
 import type { TenantMembership } from "@/lib/tenant/types";
 
 function initials(name: string): string {
   return (name.trim().slice(0, 1) || "?").toUpperCase();
 }
 
-function ChildAvatar({ child, size = 32, pulse = false }: { child: TenantMembership["child"]; size?: number; pulse?: boolean }) {
+function ChildAvatar({
+  child,
+  size = 32,
+  dark,
+}: {
+  child: TenantMembership["child"];
+  size?: number;
+  dark: boolean;
+}) {
   if (child.avatar_url) {
     // User-provided external avatar — next/image would need remote config.
     return (
@@ -20,7 +29,7 @@ function ChildAvatar({ child, size = 32, pulse = false }: { child: TenantMembers
         alt=""
         width={size}
         height={size}
-        className={`rounded-full object-cover ${pulse ? "avatar-pulse" : ""}`}
+        className="rounded-full object-cover"
         style={{ width: size, height: size }}
       />
     );
@@ -28,8 +37,15 @@ function ChildAvatar({ child, size = 32, pulse = false }: { child: TenantMembers
   return (
     <span
       aria-hidden="true"
-      className={`flex items-center justify-center rounded-full border border-nova-400/30 bg-nebula-700 text-nova-300 ${pulse ? "avatar-pulse" : ""}`}
-      style={{ width: size, height: size, fontSize: size * 0.42 }}
+      className="flex items-center justify-center rounded-full border font-semibold"
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.42,
+        borderColor: dark ? "rgb(0 229 255 / 0.35)" : "rgb(0 184 212 / 0.4)",
+        background: dark ? "rgb(17 24 50 / 0.9)" : "rgb(234 242 246)",
+        color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)",
+      }}
     >
       {initials(child.nickname ?? child.first_name ?? "?")}
     </span>
@@ -37,48 +53,34 @@ function ChildAvatar({ child, size = 32, pulse = false }: { child: TenantMembers
 }
 
 /**
- * Crew cluster trigger — the header's crew + ship-controls instrument.
+ * ChildRosterPanel — the crew-roster menu content: pick which child to
+ * view, plus Add Child for parents. Rendered inside the Command Center
+ * menu. Theme-aware (space black / bright bridge).
  *
- * Identity model (Mehedi 2026-10-12): the header shows the LOGGED-IN USER
- * (the parent), never the child. The trigger is the parent's pilot readout;
- * tapping it docks the crew-roster module to pick which child to view.
- * Selecting a child persists via setActiveChild and navigates to /c/[slug].
+ * Identity model (Mehedi 2026-10-12): the menu shows the LOGGED-IN USER
+ * (the parent) in the pilot readout; this roster picks which child is
+ * viewed. The child name never sits in top chrome.
  */
-export function ChildSwitcher({
-  parentName,
+export function ChildRosterPanel({
   role = "parent",
+  onDone,
 }: {
-  parentName: string;
-  /** Tenant role of the logged-in user on the active child — children never see "Add child". */
+  /** Tenant role of the logged-in user — children never see "Add Child". */
   role?: "parent" | "child";
+  /** Called after a selection so the hosting menu can close. */
+  onDone?: () => void;
 }) {
+  const { theme } = useTheme();
+  const dark = theme !== "bright-bridge";
   const { memberships, activeChildId } = useTenant();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const active = memberships.find((m) => m.child_id === activeChildId) ?? memberships[0];
 
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   async function select(m: TenantMembership) {
     if (m.child_id === activeChildId || switching) {
-      setOpen(false);
+      onDone?.();
       return;
     }
     setSwitching(true);
@@ -89,7 +91,7 @@ export function ChildSwitcher({
       } catch {
         /* persistence is best-effort — the cookie is the source of truth */
       }
-      setOpen(false);
+      onDone?.();
       router.push(`/c/${m.child.slug}`);
     } finally {
       setSwitching(false);
@@ -97,118 +99,102 @@ export function ChildSwitcher({
   }
 
   function goToAddChild() {
-    setOpen(false);
+    onDone?.();
     if (active) router.push(`/c/${active.child.slug}/settings`);
   }
 
-  return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={`${parentName} — select child to view`}
-        className="console-tab-btn flex min-h-[44px] items-center gap-2.5 rounded-full py-1.5 pr-2 pl-1.5"
-      >
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-nova-400/40 bg-nebula-700 text-sm font-semibold text-nova-200"
-          style={{ boxShadow: "0 0 12px rgb(244 114 182 / 0.3), inset 0 0 8px rgb(244 114 182 / 0.12)" }}
-        >
-          {initials(parentName)}
-        </span>
-        <span className="flex flex-col items-start leading-none">
-          <span className="callsign-name max-w-28 truncate text-sm font-semibold">{parentName}</span>
-          <span className="mt-1 flex items-center gap-1.5 text-[9px] font-medium tracking-[0.2em] text-stardust-500 capitalize">
-            <span
-              aria-hidden="true"
-              className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300"
-              style={{ boxShadow: "0 0 6px rgb(110 231 183 / 0.9)" }}
-            />
-            Aboard
-          </span>
-        </span>
-        {memberships.length > 1 && (
-          <span
-            aria-hidden="true"
-            className={`text-xs text-nova-300 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          >
-            ▾
-          </span>
-        )}
-      </button>
+  const line = dark ? "rgb(0 229 255 / 0.14)" : "rgb(0 184 212 / 0.2)";
+  const label = dark ? "rgb(138 155 184)" : "rgb(74 96 112)";
+  const text = dark ? "rgb(232 240 254)" : "rgb(14 27 36)";
+  const sub = dark ? "rgb(138 155 184)" : "rgb(74 96 112)";
+  const hover = dark ? "rgb(0 229 255 / 0.07)" : "rgb(0 184 212 / 0.07)";
 
-      {open && (
-        <div
-          role="dialog"
-          aria-label="Select child to view"
-          className="module-dock-panel animate-rise absolute top-full right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl bg-nebula-900/95 backdrop-blur"
+  return (
+    <section aria-label="Crew roster">
+      <div className="px-4 pt-3 pb-1">
+        <p
+          className="font-mono text-[10px] font-semibold tracking-[0.22em] uppercase"
+          style={{ color: dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212)" }}
         >
-          <div className="border-b border-nova-400/10 px-4 pt-3 pb-2.5">
-            <p className="module-dock-eyebrow">
-              <span className="module-dock-dot" aria-hidden="true" />
-              Crew roster
-            </p>
-            <p className="mt-1 text-xs text-stardust-400">Select whose dashboard to view.</p>
-          </div>
-          <div className="max-h-72 overflow-y-auto py-1.5">
-            {memberships.map((m) => {
-              const name = m.child.nickname ?? m.child.first_name;
-              const sub = [m.child.grade_level ? `Grade ${m.child.grade_level}` : null, m.child.school_name]
-                .filter(Boolean)
-                .join(" · ");
-              const isActive = m.child_id === activeChildId;
-              return (
-                <button
-                  key={m.child_id}
-                  type="button"
-                  onClick={() => void select(m)}
-                  disabled={switching}
-                  aria-current={isActive || undefined}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-nebula-800/60 disabled:opacity-60"
-                >
-                  <ChildAvatar child={m.child} size={36} pulse={isActive} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-star-100">{name}</span>
-                    {sub && <span className="block truncate text-xs text-stardust-400">{sub}</span>}
+          Crew Roster
+        </p>
+        <p className="mt-1 text-xs" style={{ color: label }}>
+          Select whose dashboard to view.
+        </p>
+      </div>
+      <div className="max-h-64 overflow-y-auto py-1">
+        {memberships.map((m) => {
+          const name = m.child.nickname ?? m.child.first_name;
+          const detail = [m.child.grade_level ? `Grade ${m.child.grade_level}` : null, m.child.school_name]
+            .filter(Boolean)
+            .join(" · ");
+          const isActive = m.child_id === activeChildId;
+          return (
+            <button
+              key={m.child_id}
+              type="button"
+              onClick={() => void select(m)}
+              disabled={switching}
+              aria-current={isActive || undefined}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors disabled:opacity-60"
+              style={{ color: text }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <ChildAvatar child={m.child} size={34} dark={dark} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{name}</span>
+                {detail && (
+                  <span className="block truncate text-xs" style={{ color: sub }}>
+                    {detail}
                   </span>
-                  {isActive ? (
-                    <span
-                      aria-hidden="true"
-                      className="text-sm font-bold text-nova-400"
-                      style={{ textShadow: "0 0 10px rgb(244 114 182 / 0.6)" }}
-                    >
-                      ✓
-                    </span>
-                  ) : (
-                    <span aria-hidden="true" className="text-[10px] font-medium tracking-[0.18em] text-stardust-500 capitalize">
-                      View
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          {role === "parent" && (
-            <div className="border-t border-nova-400/10">
-              <button
-                type="button"
-                onClick={goToAddChild}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-nebula-800/60"
-              >
+                )}
+              </span>
+              {isActive ? (
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-nova-400/40 text-lg text-nova-300"
+                  className="text-sm font-bold"
+                  style={{ color: "#00FF88", textShadow: "0 0 10px rgb(0 255 136 / 0.6)" }}
                 >
-                  +
+                  ✓
                 </span>
-                <span className="text-sm font-medium text-nova-300">Add child</span>
-              </button>
-            </div>
-          )}
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="font-mono text-[10px] font-medium tracking-[0.18em] uppercase"
+                  style={{ color: label }}
+                >
+                  View
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {role === "parent" && (
+        <div style={{ borderTop: `1px solid ${line}` }}>
+          <button
+            type="button"
+            onClick={goToAddChild}
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors"
+            style={{ color: text }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed text-base"
+              style={{
+                borderColor: dark ? "rgb(0 229 255 / 0.4)" : "rgb(0 184 212 / 0.45)",
+                color: dark ? "rgb(0 229 255)" : "rgb(0 184 212)",
+              }}
+            >
+              +
+            </span>
+            <span className="text-sm font-medium">Add Child</span>
+          </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }

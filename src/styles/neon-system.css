@@ -1,8 +1,8 @@
 /* ==========================================================================
    HULL NEON SYSTEM — app-wide spacecraft neon system.
    Owner: Squad Hull. This file is the single source of truth for every
-   glow in the app. See docs/DESIGN-DIRECTION.md ("Mission Critical
-   Spacecraft") for the full direction.
+   glow in the app. See docs/DESIGN-DIRECTION.md ("Space Black Command Deck")
+   for the full direction.
 
    Design rules (Mehedi, non-negotiable):
    - Mission Critical Spacecraft: deep space blacks, HUD panels, phosphor
@@ -32,7 +32,7 @@
   --color-neon-green: #00FF88;
   --color-neon-red: #FF4D5A;
   /* Legacy aliases — do not use in new code. */
-  --color-neon-teal: #00E5FF;
+  --color-neon-teal: #00FFC8;
   --color-neon-blue: #00E5FF;
   --color-neon-pink: #f472b6;
   /* Hull surfaces */
@@ -52,8 +52,9 @@
   --neon-amber-rgb: 255 179 0;
   --neon-green-rgb: 0 255 136;
   --neon-red-rgb: 255 77 90;
-  /* Legacy RGB aliases */
-  --neon-teal-rgb: 0 229 255;
+  /* Space Black Command Deck neon — teal is a genuine palette color
+     (Mehedi 2026-10-12), not a cyan alias. */
+  --neon-teal-rgb: 0 255 200;
   --neon-blue-rgb: 0 229 255;
   --neon-pink-rgb: 244 114 182;
   /* Hull surface RGB (dark-mode option — see docs/DESIGN-DIRECTION.md) */
@@ -208,9 +209,9 @@
   transition: transform 600ms ease;
 }
 
-/* -- Light theme: glows soften so they stay luminous, never washed out. -- */
-[data-theme="light"] .neon-hover:hover,
-[data-theme="light"] .neon-card:hover {
+/* -- Bright Bridge theme: glows soften so they stay luminous, never washed out. -- */
+[data-theme="bright-bridge"] .neon-hover:hover,
+[data-theme="bright-bridge"] .neon-card:hover {
   box-shadow:
     0 8px 22px rgb(30 27 75 / 0.12),
     0 0 16px rgb(var(--nx) / 0.3);
@@ -487,4 +488,143 @@
 }
 .hull-input::placeholder {
   color: rgb(var(--hull-text-faint-rgb, 90 107 125));
+}
+
+/* ==========================================================================
+   SPACE BLACK COMMAND DECK — the signature theme (Mehedi 2026-10-12).
+   Deep space black backgrounds, subtle animated neon glows everywhere.
+   Palette: cyan / teal / green / amber. Zero purple, zero lavender,
+   zero pink, zero warm tones.
+
+   Canonical tokens (docs/DESIGN-DIRECTION.md). The .hull-* component
+   classes above are the dark-surface implementation and pair with these.
+   ========================================================================== */
+
+:root {
+  /* Space-separated RGB triplets so utilities can dial alpha. */
+  --space-black-rgb: 5 5 16;
+  --space-panel-rgb: 11 16 32;
+  --space-elevated-rgb: 17 24 50;
+  --space-line-rgb: 30 42 74;
+  --space-text-rgb: 232 240 254;
+  --space-text-dim-rgb: 138 155 184;
+  --space-text-faint-rgb: 74 90 120;
+}
+
+/* ==========================================================================
+   ANIMATED GLOW LIBRARY — subtle micro-interactions, app-wide.
+   Research: docs/research/animated-glow-library.md.
+   Rules: animate only box-shadow / opacity / transform / background-position.
+   Slow cycles (2.4s+), low alpha (0.1–0.25 ambient). Accent override via
+   --gx (default neon cyan).
+   ========================================================================== */
+
+@keyframes glow-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.18),
+      0 0 28px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.32),
+      0 0 44px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.14);
+  }
+}
+@keyframes glow-breathe-soft {
+  0%, 100% { box-shadow: 0 0 8px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.12); }
+  50% { box-shadow: 0 0 14px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.24); }
+}
+@keyframes glow-dot-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+@keyframes edge-shimmer {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(130%); }
+}
+@keyframes glow-text-soft {
+  0%, 100% { text-shadow: 0 0 6px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.35); }
+  50% { text-shadow: 0 0 12px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.55); }
+}
+
+/* Slow breathing halo — menu button, orb ring, hero panels. */
+.glow-breathe { animation: glow-breathe 3.6s ease-in-out infinite; }
+.glow-breathe-fast { animation: glow-breathe 2.2s ease-in-out infinite; }
+.glow-breathe-soft { animation: glow-breathe-soft 4s ease-in-out infinite; }
+
+/* Status light: 8px dot with a pulsing halo ring. Pair with a text label. */
+.glow-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(var(--gx, var(--neon-cyan-rgb)));
+  box-shadow: 0 0 8px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.8);
+}
+.glow-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--gx, var(--neon-cyan-rgb)) / 0.5);
+  animation: glow-dot-pulse 2.4s ease-in-out infinite;
+}
+
+/* 1px top-edge gradient sweep — panel accent edges, deck LED strip. */
+.glow-edge-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.glow-edge-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgb(var(--gx, var(--neon-cyan-rgb)) / 0.9) 50%,
+    transparent 70%
+  );
+  animation: edge-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Soft animated text glow — short neon labels only, never paragraphs. */
+.glow-text { animation: glow-text-soft 3s ease-in-out infinite; }
+
+/* Lift + glow on hover, 200ms. */
+.glow-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.glow-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.25);
+}
+
+/* Static glow, no animation — the calm default for large surfaces. */
+.glow-static {
+  box-shadow:
+    0 0 12px rgb(var(--gx, var(--neon-cyan-rgb)) / 0.14),
+    inset 0 1px 0 rgb(var(--gx, var(--neon-cyan-rgb)) / 0.12);
+}
+
+/* Reduced motion: static glows only, shimmer and pulses stop. */
+@media (prefers-reduced-motion: reduce) {
+  .glow-breathe,
+  .glow-breathe-fast,
+  .glow-breathe-soft,
+  .glow-text {
+    animation: none;
+  }
+  .glow-dot::after,
+  .glow-edge-shimmer::after {
+    display: none;
+  }
+  .glow-hover:hover {
+    transform: none;
+  }
 }

@@ -20,6 +20,7 @@ import { detectClassNeon } from "@/components/pookie/class-neons";
 import { setPookieColor } from "@/components/pookie/pookie-color";
 import { orbListen, orbThink, orbCelebrate, orbCalm } from "@/lib/orb/orb-events";
 import { MiniPookie, MiniMuse, moodForMessage, POOKIE_AVATAR_KEYFRAMES } from "@/components/pookie/pookie-avatars";
+import { useTheme } from "@/components/use-theme";
 
 const STORAGE_KEY = "pookie-chat-v1";
 const QUEUE_KEY = "pookie-muse-queue";
@@ -29,8 +30,8 @@ const LONG_MESSAGE = 300;
 const QUICK_REPLIES = ["What are my priorities today?"];
 
 /** Local chat keyframes — blinking status dots for the transmitting indicator. */
-const BRIDGE_CHAT_KEYFRAMES = `
-  @keyframes bridge-blink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+const CHAT_KEYFRAMES = `
+  @keyframes chat-blink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 `;
 
 /** Explicit depth requests escalate to the async Mookie queue.
@@ -84,15 +85,48 @@ function loadHistory(childName: string): ChatMessage[] {
   }
 }
 
-/** Square status-light frame around chat avatars (4px radius per bridge spec). */
-function StatusFrame({ children }: { children: ReactNode }) {
+/**
+ * Theme class + token maps. Space Black (default) renders the Hull dark
+ * instrument system; Bright Bridge renders the bridge light system.
+ * One markup, two themes — switched instantly via useTheme().
+ */
+function useChatTheme() {
+  const { theme } = useTheme();
+  const dark = theme !== "bright-bridge";
+  const cx = {
+    panel: dark ? "hull-panel hull-panel-accent hull-cyan" : "bridge-panel bridge-panel-accent bridge-cyan",
+    title: dark ? "hull-title" : "bridge-title",
+    readout: dark ? "hull-readout" : "bridge-readout",
+    readoutLabel: dark ? "hull-readout-label" : "bridge-readout-label",
+    msg: dark ? "hull-msg" : "bridge-msg",
+    msgUser: dark ? "hull-msg-user" : "bridge-msg-user",
+    msgAi: dark ? "hull-msg-ai" : "bridge-msg-ai",
+    amber: dark ? "hull-amber" : "bridge-amber",
+    btn: dark ? "hull-btn" : "bridge-btn",
+    input: dark ? "hull-input" : "bridge-input",
+  };
+  const tok = {
+    text: dark ? "var(--hull-text-rgb)" : "var(--bridge-text-rgb)",
+    textDim: dark ? "var(--hull-text-dim-rgb)" : "var(--bridge-text-dim-rgb)",
+    textFaint: dark ? "var(--hull-text-faint-rgb)" : "var(--bridge-text-faint-rgb)",
+    cyan: dark ? "var(--neon-cyan-rgb)" : "var(--bridge-cyan-rgb)",
+    green: dark ? "var(--neon-green-rgb)" : "var(--bridge-green-rgb)",
+    amber: dark ? "var(--neon-amber-rgb)" : "var(--bridge-amber-rgb)",
+    line: dark ? "var(--hull-line-rgb)" : "var(--bridge-line-rgb)",
+    glass: dark ? "var(--hull-bulkhead-rgb)" : "var(--bridge-glass-rgb)",
+  };
+  return { dark, cx, tok };
+}
+
+/** Square status-light frame around chat avatars (4px radius). */
+function StatusFrame({ children, dark }: { children: ReactNode; dark: boolean }) {
   return (
     <div
       aria-hidden="true"
       className="shrink-0 border p-0.5"
       style={{
-        borderColor: "rgb(var(--bridge-line-rgb))",
-        background: "rgb(var(--bridge-glass-rgb))",
+        borderColor: dark ? "rgb(var(--hull-line-rgb))" : "rgb(var(--bridge-line-rgb))",
+        background: dark ? "rgb(var(--hull-bulkhead-rgb))" : "rgb(var(--bridge-glass-rgb))",
         borderRadius: 4,
       }}
     >
@@ -102,8 +136,15 @@ function StatusFrame({ children }: { children: ReactNode }) {
 }
 
 /** Three blinking status dots — the mission-control typing indicator. */
-function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
-  const rgb = tone === "amber" ? "var(--bridge-amber-rgb)" : "var(--bridge-green-rgb)";
+function TypingDots({ tone = "green", dark }: { tone?: "green" | "amber"; dark: boolean }) {
+  const rgb =
+    tone === "amber"
+      ? dark
+        ? "var(--neon-amber-rgb)"
+        : "var(--bridge-amber-rgb)"
+      : dark
+        ? "var(--neon-green-rgb)"
+        : "var(--bridge-green-rgb)";
   return (
     <span className="flex items-center gap-1.5" aria-hidden="true">
       {[0, 1, 2].map((d) => (
@@ -112,7 +153,7 @@ function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
           className="h-1.5 w-1.5 rounded-full"
           style={{
             background: `rgb(${rgb})`,
-            animation: `bridge-blink 1.2s ease-in-out ${d * 0.2}s infinite`,
+            animation: `chat-blink 1.2s ease-in-out ${d * 0.2}s infinite`,
           }}
         />
       ))}
@@ -120,15 +161,15 @@ function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
   );
 }
 
-function BotText({ text }: { text: string }) {
+function BotText({ text, tok }: { text: string; tok: { text: string; cyan: string } }) {
   const [expanded, setExpanded] = useState(false);
-  const cyan = { color: "rgb(var(--bridge-cyan-rgb))" } as const;
+  const cyan = { color: `rgb(${tok.cyan})` } as const;
   if (text.length <= LONG_MESSAGE || expanded) {
     return (
       <div>
         <p
           className="text-[15px] leading-[1.65] whitespace-pre-wrap"
-          style={{ color: "rgb(var(--bridge-text-rgb))" }}
+          style={{ color: `rgb(${tok.text})` }}
         >
           {text}
         </p>
@@ -149,7 +190,7 @@ function BotText({ text }: { text: string }) {
     <div>
       <p
         className="line-clamp-4 text-[15px] leading-[1.65] whitespace-pre-wrap"
-        style={{ color: "rgb(var(--bridge-text-rgb))" }}
+        style={{ color: `rgb(${tok.text})` }}
       >
         {text}
       </p>
@@ -185,6 +226,7 @@ export function PookieChat({
   /** The viewer's age in years, computed server-side. Null = unknown = gated. */
   viewerAge?: number | null;
 }) {
+  const { dark, cx, tok } = useChatTheme();
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory(childName));
   const [draft, setDraft] = useState("");
   const [directMode, setDirectMode] = useState(false);
@@ -440,42 +482,47 @@ export function PookieChat({
   return (
     <main
       className="relative mx-auto flex w-full max-w-2xl flex-col px-4 pt-6"
-      style={{ background: "rgb(var(--bridge-white-rgb) / 0.86)" }}
+      style={{
+        background: dark
+          ? "rgb(var(--hull-void-rgb) / 0.55)"
+          : "rgb(var(--bridge-white-rgb) / 0.86)",
+      }}
     >
-      <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${BRIDGE_CHAT_KEYFRAMES}`}</style>
+      <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${CHAT_KEYFRAMES}`}</style>
 
-      {/* Header — bright instrument panel with cyan LED strip and corner brackets */}
-      <header className="bridge-panel bridge-panel-accent bridge-cyan animate-bloom px-4 py-3">
+      {/* Header — instrument panel with cyan LED strip and corner brackets.
+          Space Black gets a soft breathing glow; Bright Bridge stays crisp. */}
+      <header className={`${cx.panel} ${dark ? "glow-breathe-soft" : ""} animate-bloom px-4 py-3`}>
         <div className="flex items-center gap-4">
           {/* AI core link — ambient instrument light; the one orb watches from the toolbar. */}
           <div
             className="relative flex h-8 w-8 items-center justify-center rounded-full"
             style={{
-              border: "1px solid rgb(var(--bridge-cyan-rgb) / 0.35)",
-              background: "rgb(var(--bridge-cyan-rgb) / 0.06)",
+              border: `1px solid rgb(${tok.cyan} / 0.35)`,
+              background: `rgb(${tok.cyan} / 0.06)`,
             }}
             aria-hidden="true"
           >
             <span
               className="h-1.5 w-1.5 animate-pulse rounded-full"
               style={{
-                background: "rgb(var(--bridge-green-rgb))",
-                boxShadow: "0 0 8px rgb(var(--bridge-green-rgb) / 0.55)",
+                background: `rgb(${tok.green})`,
+                boxShadow: `0 0 8px rgb(${tok.green} / 0.55)`,
               }}
             />
             <span
               className="absolute inset-0 rounded-full"
               style={{
-                border: "1px solid rgb(var(--bridge-cyan-rgb) / 0.12)",
+                border: `1px solid rgb(${tok.cyan} / 0.12)`,
                 animation: "orb-beckon 4s ease-in-out infinite",
               }}
             />
           </div>
           <div>
-            <p className="bridge-title">Ship Comms · Pookie</p>
+            <p className={cx.title}>Ship Comms · Pookie</p>
             <h1
               className="mt-1 text-2xl font-semibold tracking-tight"
-              style={{ color: "rgb(var(--bridge-text-rgb))" }}
+              style={{ color: `rgb(${tok.text})` }}
             >
               Hailing Your Co-Pilot
             </h1>
@@ -485,25 +532,25 @@ export function PookieChat({
         {/* Technical readouts — link state, mode, message count */}
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1" role="status">
           <span>
-            <span className="bridge-readout-label">Link </span>
-            <span className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-green-rgb))" }}>
+            <span className={cx.readoutLabel}>Link </span>
+            <span className={`${cx.readout} text-[11px]`} style={{ color: `rgb(${tok.green})` }}>
               Secure
             </span>
           </span>
           <span>
-            <span className="bridge-readout-label">Mode </span>
-            <span className="bridge-readout text-[11px]">{effectiveDirect ? "Direct" : "Pookie"}</span>
+            <span className={cx.readoutLabel}>Mode </span>
+            <span className={`${cx.readout} text-[11px]`}>{effectiveDirect ? "Direct" : "Pookie"}</span>
           </span>
           <span>
-            <span className="bridge-readout-label">Msgs </span>
-            <span className="bridge-readout text-[11px]">{messages.length}</span>
+            <span className={cx.readoutLabel}>Msgs </span>
+            <span className={`${cx.readout} text-[11px]`}>{messages.length}</span>
           </span>
         </div>
 
         {/* Squad Gavel 2026-10-12 — persistent AI disclosure: subtle, always visible during chat. */}
         <p
           className="mt-2 text-[11px]"
-          style={{ color: "rgb(var(--bridge-text-faint-rgb))" }}
+          style={{ color: `rgb(${tok.textFaint})` }}
           role="note"
         >
           You&apos;re chatting with Pookie, an AI assistant. Responses are generated automatically and may be inaccurate — verify important details.
@@ -517,16 +564,16 @@ export function PookieChat({
               aria-checked={directMode}
               aria-label="Direct mode"
               onClick={() => setDirectMode((v) => !v)}
-              className="bridge-btn px-3 py-1.5 text-[11px]"
+              className={`${cx.btn} px-3 py-1.5 text-[11px]`}
             >
               Direct · {directMode ? "On" : "Off"}
             </button>
-            <p className="text-xs" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
+            <p className="text-xs" style={{ color: `rgb(${tok.textDim})` }}>
               Blunter answers when it&apos;s on. Safety rules don&apos;t change.
             </p>
           </div>
         ) : (
-          <p className="mt-2 text-xs" style={{ color: "rgb(var(--bridge-text-faint-rgb))" }}>
+          <p className="mt-2 text-xs" style={{ color: `rgb(${tok.textFaint})` }}>
             Your devoted co-pilot for the whole mission — school, plans, tasks, life. Direct mode is for adults (18+) — same safety, same smarts.
           </p>
         )}
@@ -541,27 +588,27 @@ export function PookieChat({
           m.role === "user" ? (
             <div key={i} className="flex justify-end">
               <p
-                className="bridge-msg bridge-msg-user max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed"
-                style={{ color: "rgb(var(--bridge-text-rgb))" }}
+                className={`${cx.msg} ${cx.msgUser} max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed`}
+                style={{ color: `rgb(${tok.text})` }}
               >
                 {m.text}
               </p>
             </div>
           ) : m.thinking ? (
             <div key={i} className="flex gap-2.5">
-              <StatusFrame>
+              <StatusFrame dark={dark}>
                 <MiniPookie size={24} speaking />
               </StatusFrame>
-              <div className="bridge-msg bridge-msg-ai flex items-center gap-3 px-4 py-3">
-                <TypingDots />
-                <p className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
+              <div className={`${cx.msg} ${cx.msgAi} flex items-center gap-3 px-4 py-3`}>
+                <TypingDots dark={dark} />
+                <p className={`${cx.readout} text-[11px]`} style={{ color: `rgb(${tok.textDim})` }}>
                   {m.persona === "muse" ? "Analyzing…" : "Transmitting…"}
                 </p>
               </div>
             </div>
           ) : (
             <div key={i} className="flex gap-2.5">
-              <StatusFrame>
+              <StatusFrame dark={dark}>
                 {m.persona === "muse" || m.museDeep ? (
                   <MiniMuse size={24} />
                 ) : (
@@ -569,31 +616,31 @@ export function PookieChat({
                 )}
               </StatusFrame>
               <div
-                className={`bridge-msg min-w-0 flex-1 px-4 py-3 ${
-                  m.persona === "muse" || m.museDeep ? "bridge-amber" : "bridge-msg-ai"
+                className={`${cx.msg} min-w-0 flex-1 px-4 py-3 ${
+                  m.persona === "muse" || m.museDeep ? cx.amber : cx.msgAi
                 }`}
               >
                 {(m.persona === "muse" || m.museDeep) && (
                   <p
                     className="mb-1 text-[10px] font-bold tracking-[0.22em] uppercase"
-                    style={{ color: "rgb(var(--bridge-amber-rgb))" }}
+                    style={{ color: `rgb(${tok.amber})` }}
                   >
                     {m.museDeep ? "Mookie · Deeper Take" : "Muse · Straight Talk"}
                   </p>
                 )}
-                <BotText text={m.text} />
+                <BotText text={m.text} tok={tok} />
               </div>
             </div>
           )
         )}
         {museThinking && (
           <div className="flex gap-2.5">
-            <StatusFrame>
+            <StatusFrame dark={dark}>
               <MiniMuse size={24} />
             </StatusFrame>
-            <div className="bridge-msg bridge-amber flex items-center gap-3 px-4 py-3">
-              <TypingDots tone="amber" />
-              <p className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
+            <div className={`${cx.msg} ${cx.amber} flex items-center gap-3 px-4 py-3`}>
+              <TypingDots tone="amber" dark={dark} />
+              <p className={`${cx.readout} text-[11px]`} style={{ color: `rgb(${tok.textDim})` }}>
                 {museSlow ? "Deep Scan Delayed — Still On It…" : "Deep Scan In Progress…"}
               </p>
             </div>
@@ -608,13 +655,13 @@ export function PookieChat({
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="bridge-btn px-3 py-1.5 text-[11px]"
+              className={`${cx.btn} px-3 py-1.5 text-[11px]`}
             >
               {q}
             </button>
           ))}
         </div>
-        <div className="bridge-panel bridge-panel-accent bridge-cyan p-2">
+        <div className={`${cx.panel} p-2`}>
           <form
             className="flex items-center gap-2"
             onSubmit={(e) => {
@@ -628,13 +675,13 @@ export function PookieChat({
               onChange={(e) => setDraft(e.target.value)}
               placeholder={isThinking ? "Holding the channel…" : "Hail Pookie — what's on your mind, Captain?"}
               aria-label="Message Pookie"
-              className="bridge-input min-w-0 flex-1 px-4 py-3 text-[15px]"
+              className={`${cx.input} min-w-0 flex-1 px-4 py-3 text-[15px]`}
             />
             <button
               type="submit"
               aria-label="Send message"
               disabled={!draft.trim() || isThinking}
-              className="bridge-btn flex h-12 w-12 shrink-0 items-center justify-center text-lg disabled:opacity-40"
+              className={`${cx.btn} flex h-12 w-12 shrink-0 items-center justify-center text-lg disabled:opacity-40`}
             >
               <span aria-hidden="true">↑</span>
             </button>

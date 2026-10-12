@@ -2,8 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
-import { ChildSwitcher } from "@/components/child-switcher";
-import { ShipSettingsControl } from "@/components/ship-settings-control";
+import { CommandCenterButton } from "@/components/command-center";
 import { GlassPane } from "@/components/glass-pane";
 import PageGlide from "@/components/page-glide";
 import { WindowManagerProvider } from "@/components/window-manager";
@@ -18,10 +17,12 @@ export const dynamic = "force-dynamic";
  * Verifies the slug belongs to the caller's membership set; anything
  * else 404s (RLS would deny the data regardless).
  *
- * Header identity model (Mehedi 2026-10-12): the top-right crew cluster
- * shows the LOGGED-IN USER (parent) as a pilot readout, grouped with the
- * ship-systems control. Tapping the name docks the crew-roster module to
- * switch which child is viewed. The child name never sits in the header.
+ * Header identity model (Mehedi 2026-10-12): NO top toolbar — it takes
+ * too much space. The only top chrome is the floating Command Center
+ * button (top-right, pulsing neon ring + beacon): it opens the
+ * mission-critical menu with the pilot readout (the LOGGED-IN USER, never
+ * the child), the crew roster for switching children, the bridge theme
+ * switcher, and the settings / sign-out parameters.
  *
  * Every page renders inside <GlassPane> — one consistent digital-glass
  * viewscreen (same max-width site-wide).
@@ -47,7 +48,7 @@ export default async function ChildDashboard({
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
-  // Parent display name for the crew cluster. profiles (017) may not be
+  // Pilot readout for the Command Center menu. profiles (017) may not be
   // applied yet — degrade to the email handle, never crash.
   const { data: profile } = await supabase
     .from("profiles")
@@ -70,26 +71,13 @@ export default async function ChildDashboard({
         memberships={memberships}
         activeChildId={membership.child_id}
       >
-        <header
-          className="sticky top-0 z-40 border-b border-nova-400/10"
-          style={{
-            background: "linear-gradient(180deg, rgb(20 20 50 / 0.6), rgb(5 5 16 / 0.75))",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-          }}
-        >
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2">
-            <p className="instrument-label" aria-hidden="true">
-              Pookie
-            </p>
-            {/* Crew + ship-controls cluster: parent readout + systems dial */}
-            <div className="console-cluster flex items-center gap-0.5 rounded-full py-1 pr-1.5 pl-1">
-              <ChildSwitcher parentName={parentName} role={membership.role} />
-              <span className="console-cluster-divider" aria-hidden="true" />
-              <ShipSettingsControl childSlug={childSlug} />
-            </div>
-          </div>
-        </header>
+        {/* The only top chrome: the Command Center button floats top-right.
+            No toolbar — it opens the mission-critical menu on tap. */}
+        <CommandCenterButton
+          parentName={parentName}
+          role={membership.role}
+          childSlug={childSlug}
+        />
         <WindowManagerProvider>
           <GlassPane>
             <PageGlide>

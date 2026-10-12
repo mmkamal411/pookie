@@ -7,7 +7,8 @@
    Deep Space by default: an animated starfield canvas with drifting nebula
    clouds (violet/cyan/magenta), glassy glowing cards, starlight text.
    Pookie's comet-green is the signature accent in the dark.
-   Nebula Dawn ([data-theme="light"]): the same sky at sunrise.
+   Bright Bridge ([data-theme="bright-bridge"]): the same ship with the lights
+   fully on — icy blues, cyans, clean whites. Zero lavender, zero pink.
    Tokens defined once here, reused on every surface. No exceptions.
    ========================================================================== */
 
@@ -125,43 +126,44 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* Nebula Dawn — the same sky at sunrise. The canvas hides; tokens go light. */
-[data-theme="light"] {
-  --color-nebula-950: #f4f2fb;
-  --color-nebula-900: #e9e6f7;
-  --color-nebula-800: #dcd7f2;
-  --color-nebula-700: #c6bde6;
+/* Bright Bridge — icy, well-lit surfaces. Cool color temperature:
+   icy blues, cyans, clean whites. Zero lavender, zero pink, zero warmth. */
+[data-theme="bright-bridge"] {
+  --color-nebula-950: #f2f6fa;
+  --color-nebula-900: #e8eef5;
+  --color-nebula-800: #dbe4ee;
+  --color-nebula-700: #c3d2e4;
   --color-comet-300: #166534;
   --color-comet-400: #16a34a;
   --color-comet-500: #22c55e;
   --color-comet-600: #4ade80;
-  --color-nova-200: #fbcfe8;
-  --color-nova-300: #db2777;
-  --color-nova-400: #db2777;
-  --color-nova-500: #ec4899;
-  --color-nova-600: #f472b6;
-  --color-star-100: #191938;
-  --color-star-200: #2b2b54;
-  --color-star-300: #3d3d6e;
-  --color-stardust-100: #2a2a4e;
-  --color-stardust-200: #3f3f66;
-  --color-stardust-300: #55557e;
-  --color-stardust-500: #7a7a9e;
-  --color-aurum-200: #92400e;
-  --color-aurum-300: #b45309;
-  --color-aurum-400: #d97706;
-  --color-halo-100: #fffbeb;
-  --color-halo-200: #fef9c3;
-  --color-halo-300: #fde68a;
-  --shadow-glow-sm: 0 0 10px rgb(124 93 211 / 0.16);
-  --shadow-glow-md: 0 0 20px rgb(124 93 211 / 0.22), 0 0 48px rgb(124 93 211 / 0.1);
-  --shadow-sun-warm: 0 0 18px rgb(217 119 6 / 0.18);
-  --shadow-halo-sm: 0 0 16px rgb(217 119 6 / 0.2), 0 0 44px rgb(217 119 6 / 0.1);
-  --shadow-halo-md: 0 0 24px rgb(217 119 6 / 0.3), 0 0 72px rgb(217 119 6 / 0.15);
+  --color-nova-200: #d6e9f8;
+  --color-nova-300: #00b8d4;
+  --color-nova-400: #00b8d4;
+  --color-nova-500: #0ea5c4;
+  --color-nova-600: #7dd3fc;
+  --color-star-100: #16202e;
+  --color-star-200: #26374c;
+  --color-star-300: #3a4f68;
+  --color-stardust-100: #1e2a3a;
+  --color-stardust-200: #3a4a5e;
+  --color-stardust-300: #55677e;
+  --color-stardust-500: #7a8aa0;
+  --color-aurum-200: #0369a1;
+  --color-aurum-300: #0284c7;
+  --color-aurum-400: #0ea5e9;
+  --color-halo-100: #f0f9ff;
+  --color-halo-200: #e0f2fe;
+  --color-halo-300: #bae6fd;
+  --shadow-glow-sm: 0 0 10px rgb(0 184 212 / 0.16);
+  --shadow-glow-md: 0 0 20px rgb(0 184 212 / 0.22), 0 0 48px rgb(0 184 212 / 0.1);
+  --shadow-sun-warm: 0 0 18px rgb(0 184 212 / 0.18);
+  --shadow-halo-sm: 0 0 16px rgb(0 184 212 / 0.2), 0 0 44px rgb(0 184 212 / 0.1);
+  --shadow-halo-md: 0 0 24px rgb(0 184 212 / 0.3), 0 0 72px rgb(0 184 212 / 0.15);
 }
 
 /* The starfield canvas rests in daylight — the tokens carry the sky. */
-[data-theme="light"] .nebula-canvas {
+[data-theme="bright-bridge"] .nebula-canvas {
   display: none;
 }
 
@@ -208,7 +210,7 @@ body {
   border-color: rgb(167 139 250 / 0.45);
   transform: translateY(-2px);
 }
-[data-theme="light"] .card-living {
+[data-theme="bright-bridge"] .card-living {
   background: linear-gradient(165deg, rgb(255 255 255 / 0.7), rgb(233 230 247 / 0.6));
 }
 
@@ -1150,12 +1152,12 @@ a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
   filter: brightness(1.12) saturate(1.1);
 }
 
-/* Light theme: pipes stay visible but whisper-quiet on pale glass. */
-[data-theme="light"] .neon-pipe,
-[data-theme="light"] .neon-pipe-teal,
-[data-theme="light"] .neon-pipe-violet {
+/* Bright Bridge theme: pipes stay visible but whisper-quiet on pale glass. */
+[data-theme="bright-bridge"] .neon-pipe,
+[data-theme="bright-bridge"] .neon-pipe-teal,
+[data-theme="bright-bridge"] .neon-pipe-violet {
   box-shadow:
-    0 0 14px rgb(244 114 182 / 0.1),
+    0 0 14px rgb(0 184 212 / 0.12),
     inset 0 1px 0 rgb(255 255 255 / 0.6);
 }
 
@@ -1320,10 +1322,10 @@ body::before {
 }
 
 /* Light theme: the cosmic layer whispers instead of glows. */
-[data-theme="light"] body::after {
+[data-theme="bright-bridge"] body::after {
   opacity: 0.35;
 }
-[data-theme="light"] body::before {
+[data-theme="bright-bridge"] body::before {
   opacity: 0.5;
 }
 
@@ -1999,13 +2001,13 @@ body {
   50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* Light theme (Nebula Dawn) — screen blend would wash the orb out on
-   bright surfaces; let it read as a golden orb of light instead. */
-[data-theme="light"] .orb {
+/* Bright Bridge theme — screen blend would wash the orb out on
+   bright surfaces; let it read as an orb of light instead. */
+[data-theme="bright-bridge"] .orb {
   mix-blend-mode: normal;
 }
-[data-theme="light"] .orb-halo,
-[data-theme="light"] .orb-aura {
+[data-theme="bright-bridge"] .orb-halo,
+[data-theme="bright-bridge"] .orb-aura {
   opacity: 0.55;
 }
 

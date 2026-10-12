@@ -58,10 +58,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Apply the saved theme before first paint (no flash). Default: night forest. */}
+        {/* Apply the saved theme before first paint (no flash). Default: space black. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("pookie-theme");if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("pookie-theme");if(t==="bright-bridge"||t==="light"){document.documentElement.setAttribute("data-theme","bright-bridge");}}catch(e){}})();`,
           }}
         />
         {/* Squad Mobile 2026-10-12 — iOS splash screens for Add to Home Screen.
