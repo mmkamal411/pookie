@@ -3,6 +3,23 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:55 EDT — Squad 3 School Track 🌿 PM (staging-build): BACKLOG.md DELIVERED + D5 REVISED + NO PLACEHOLDERS applied
+
+**File:** `docs/squad3/BACKLOG.md` (31 work packages, 3-sprint plan, risk watch, decision log — PM deliverables complete).
+
+**Scope:** FR-SCHOOL-001–019 · FR-AI-001–005 · FR-AUTH-011. Dependency-ordered: provenance+migrations(030–039) → inbox → check-in → sparks/quizzes → Path-to-90 → college → W4/W18/W16 → second-parent → AI gates. Every WP carries FR ref, owner role, acceptance criteria, dependencies, and named integration contracts.
+
+**Directives applied:**
+- **D5 REVISED — OPEN SIGNUP** (Mehedi override): corroborated claim path RESTORED **v2 → v1** as WP-S3-25 (claim RPCs, attestations, Parent A<13 / teen 13+ approval routing, 14-day escalation queue, 30-day lockout, `court_order_restriction` flag, STAY OUT custody posture, enumeration-oracle CI test). Invite-from-inside stays as optional fast path (WP-S3-24). Reversal noted in backlog so the team doesn't get whiplash. Human-review staffing = **MD-owned external dependency** (gates only the 14-day escalation leg).
+- **NO PLACEHOLDERS** (Mehedi): all 31 WPs scoped as FULL implementations — real tables/APIs/UI/RLS, no mock data, no stubs, no TODOs in shipped code. Flashcards-only (WP-S3-10 Phase A) is a complete feature, not a stub; AI quiz pipeline fully built but config-gated on pilot bars (safety gate). College simulator seeds REAL IPEDS/CDS data. Cross-team gaps built against BUILD-SPECIFICATION.md contracts with seams flagged in code + backlog.
+- **⚠️ Follow-up flagged:** `docs/squad3/UX-SPECS.md` §3 was written for the superseded invite-only D5 — UX designer must re-scope to open signup.
+
+**Escalations to MD:** (1) migration-number collision — Squad 1 claims 022–029, Squad 4 claims 024+, Platform owns 018–023 (Squad 3 takes 030–039); (2) human-review staffing timeline for claim escalation; (3) counsel ToS/CFAA memo timing for first portal; (4) 90d vs 30d check-in default for under-16; (5) formula-verifier build-vs-buy.
+
+**Risks:** top 5 mapped to RISK-016/008/017/011/006; 5 squad-raised (numbering collision, claim-path weaponization, counsel-memo timeline, formula-bank expert bandwidth, review staffing).
+
+**Next:** squad engineers pick up Sprint 1 (WP-S3-01→08, 31). **No deploy.**
+
 ## 2026-10-12 ~03:52 EDT — Squad 1 Safety Track Coordinator (staging-build): UX DELIVERED (3/5)
 
 **UX specs delivered** (`docs/squad1/ux-specs.md`, 750 lines, commit 4f69681): 15 sections — trusted-adult A/B/C + decline (anti-dark-pattern), crisis card (4 placements, L3/L4 dismiss rules), cooling-off Steps 0–6-safe (visually-boring safe-exit trio), celebration-vs-rupture contrast table, Screen Time co-set, Explorer Setup, W19 (verbatim 911 banner, break-glass QR, lock-screen preview), full copy deck with [DV] review flags.
