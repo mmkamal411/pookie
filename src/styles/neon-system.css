@@ -34,7 +34,8 @@
   /* Legacy aliases — do not use in new code. */
   --color-neon-teal: #00FFC8;
   --color-neon-blue: #00E5FF;
-  --color-neon-pink: #f472b6;
+  /* Legacy alias — maps to cyan (zero pink, zero purple). */
+  --color-neon-pink: #00E5FF;
   /* Hull surfaces */
   --color-hull-void: #05080C;
   --color-hull-deck: #0A0F16;
@@ -56,7 +57,8 @@
      (Mehedi 2026-10-12), not a cyan alias. */
   --neon-teal-rgb: 0 255 200;
   --neon-blue-rgb: 0 229 255;
-  --neon-pink-rgb: 244 114 182;
+  /* Legacy alias — maps to cyan (zero pink, zero purple). */
+  --neon-pink-rgb: 0 229 255;
   /* Hull surface RGB (dark-mode option — see docs/DESIGN-DIRECTION.md) */
   --hull-void-rgb: 5 8 12;
   --hull-deck-rgb: 10 15 22;

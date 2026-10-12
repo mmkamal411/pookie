@@ -31,7 +31,7 @@ export function HouseholdNav() {
       <Link
         href="/"
         className="rounded-full border border-nova-400/25 bg-nebula-900/60 px-3 py-1.5 text-xs font-medium text-nova-200 transition-colors hover:border-nova-400/60 hover:text-nova-100"
-        style={{ boxShadow: "0 0 10px rgb(167 139 250 / 0.12)" }}
+        style={{ boxShadow: "0 0 10px rgb(0 229 255 / 0.12)" }}
       >
         ← Home
       </Link>

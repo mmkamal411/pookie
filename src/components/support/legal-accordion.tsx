@@ -72,7 +72,7 @@ export function LegalAccordion({
             </p>
           )}
           {basis === "our_choice" && (
-            <p className="rounded-lg border border-violet-400/25 bg-violet-500/10 px-3 py-2 text-[13px]">
+            <p className="rounded-lg border border-teal-400/25 bg-teal-500/10 px-3 py-2 text-[13px]">
               The law doesn&apos;t require this — we do it because it&apos;s the right way to
               treat the people who trust us.
             </p>

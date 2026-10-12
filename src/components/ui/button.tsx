@@ -1,6 +1,6 @@
-// Button — Nebula buttons in the divine-light language.
-// primary:   dappled starlight sweep across nova pink (the hero action)
-// secondary: soft violet fill — the clear runner-up, never mistaken for primary
+// Button — spacecraft command-deck buttons.
+// primary:   dappled starlight sweep across cyan (the hero action)
+// secondary: soft teal fill — the clear runner-up, never mistaken for primary
 // ghost:     quiet outline for tertiary moves
 // danger:    soft red for destructive moves (still gentle, never harsh)
 //
@@ -24,7 +24,7 @@ const VARIANTS: Record<string, string> = {
   primary:
     "neon-cta neon-pink btn-dapple border border-nova-300/40 text-nebula-950 font-semibold hover:shadow-glow-md",
   secondary:
-    "neon-hover neon-teal neon-active border border-violet-300/45 bg-violet-500/15 text-violet-100 shadow-glow-sm hover:bg-violet-500/25 hover:shadow-glow-md hover:border-violet-300/70",
+    "neon-hover neon-teal neon-active border border-teal-300/45 bg-teal-500/15 text-teal-100 shadow-glow-sm hover:bg-teal-500/25 hover:shadow-glow-md hover:border-teal-300/70",
   ghost:
     "neon-hover neon-teal neon-active border border-nova-400/30 text-star-100 bg-nebula-900/50 hover:border-nova-400/60 hover:bg-nebula-900/80 hover:shadow-glow-sm",
   danger:

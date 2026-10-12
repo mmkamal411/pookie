@@ -11,7 +11,7 @@ import { TIER_NAMES, COPY, CRISIS_RESOURCES } from "@/lib/health/types";
 
 const TIER_STYLES: Record<HealthTier, { chip: string; dot: string }> = {
   H1: { chip: "border-sky-400/30 bg-sky-400/10 text-sky-200", dot: "bg-sky-300" },
-  H2: { chip: "border-violet-400/30 bg-violet-400/10 text-violet-200", dot: "bg-violet-300" },
+  H2: { chip: "border-teal-400/30 bg-teal-400/10 text-teal-200", dot: "bg-teal-300" },
   H3: { chip: "border-nova-400/40 bg-nova-400/10 text-nova-200", dot: "bg-nova-300" },
   H0: { chip: "border-stardust-500/30 bg-nebula-800/60 text-stardust-300", dot: "bg-stardust-500" },
 };

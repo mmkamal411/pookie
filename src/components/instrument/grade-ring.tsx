@@ -32,7 +32,7 @@ export function GradeRing({
     red: { main: "#f87171", soft: "rgb(248 113 113 / 0.35)" },
   };
   const h = numeric == null ? { main: "#a8a8c8", soft: "rgb(168 168 200 / 0.25)" } : hues[band];
-  const track = tone === "white" ? "rgb(35 35 77 / 0.12)" : "rgb(167 139 250 / 0.14)";
+  const track = tone === "white" ? "rgb(35 35 77 / 0.12)" : "rgb(0 229 255 / 0.14)";
 
   const ringId = `gr-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 

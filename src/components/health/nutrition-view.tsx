@@ -78,7 +78,7 @@ function PlateBalance({ groups }: { groups: string[] }) {
       )}
       {/* Balance ring — fills as groups are added */}
       <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="48" fill="none" stroke="rgb(167 139 250 / 0.12)" strokeWidth="3" />
+        <circle cx="50" cy="50" r="48" fill="none" stroke="rgb(0 229 255 / 0.12)" strokeWidth="3" />
         <circle
           cx="50"
           cy="50"

@@ -62,11 +62,11 @@ export function BottomSheet({
         className={`animate-rise module-dock-panel absolute inset-x-0 bottom-0 mx-auto w-full ${maxWidth} overflow-hidden rounded-t-[28px]`}
         style={{
           maxHeight: "88dvh",
-          background: "linear-gradient(180deg, rgb(28 28 64 / 0.98), rgb(8 8 22 / 0.99))",
+          background: "linear-gradient(180deg, rgb(17 24 50 / 0.98), rgb(11 16 32 / 0.99))",
         }}
       >
         <div className="flex justify-center pt-3" aria-hidden="true">
-          <span className="h-1.5 w-12 rounded-full bg-nova-400/50 shadow-[0_0_12px_rgb(244_114_182/0.6)]" />
+          <span className="h-1.5 w-12 rounded-full bg-nova-400/50 shadow-[0_0_12px_rgb(0_229_255/0.6)]" />
         </div>
         {/* Docking-module eyebrow — the sheet is a module docked with the console. */}
         <div className="flex items-center gap-2 px-5 pt-3" aria-hidden="true">

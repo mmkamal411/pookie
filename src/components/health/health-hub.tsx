@@ -178,7 +178,7 @@ export function HealthHub({ childId, ctx }: { childId: string; ctx: HealthContex
                   >
                     <p className="text-xs leading-relaxed text-stardust-300">{TIER_DESCRIPTIONS[tier]}</p>
                     {section.access === "locked" && (
-                      <p className="mt-3 rounded-xl border border-violet-400/20 bg-nebula-900/60 px-4 py-3 text-xs leading-relaxed text-stardust-300">
+                      <p className="mt-3 rounded-xl border border-teal-400/20 bg-nebula-900/60 px-4 py-3 text-xs leading-relaxed text-stardust-300">
                         This group stays private. It opens only if {ctx.displayName} chooses to share
                         it in Sharing.
                       </p>

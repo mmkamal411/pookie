@@ -63,7 +63,7 @@ export function AttentionItems({
           <article
             key={cls.class_id}
             className="card-white animate-bloom rounded-2xl border p-5"
-            style={{ animationDelay: `${0.05 + i * 0.06}s`, borderColor: "rgb(244 114 182 / 0.25)" }}
+            style={{ animationDelay: `${0.05 + i * 0.06}s`, borderColor: "rgb(0 229 255 / 0.25)" }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
