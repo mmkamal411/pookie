@@ -17,15 +17,20 @@ export const CRISIS_PATTERNS = [
   "wanna die",
   "end my life",
   "ending my life",
+  "feel like ending it",
   "suicide",
   "suicidal",
   "self harm",
   "self-harm",
   "cutting myself",
+  "cut myself",
   "hurt myself",
   "hurting myself",
   "no reason to live",
   "better off dead",
+  "nobody would care if i died",
+  "would care if i died",
+  "nobody cares if i die",
 ];
 
 export function isCrisisMessage(text: string): boolean {

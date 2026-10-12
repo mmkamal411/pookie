@@ -27,6 +27,21 @@ export const GET = apiHandler({}, async (ctx) => {
 
 export const POST = apiHandler({}, async (ctx, req) => {
   const body = openTicketSchema.parse(await req.json());
+  // P0-2 FIX (fail-closed): if the caller is a teen and didn't explicitly set
+  // teenPrivacy, default to TRUE. A teen's ticket must never be parent-visible
+  // by accident. Adults (non-teens) default to false as before.
+  let teenPrivacy = body.teenPrivacy;
+  if (teenPrivacy === undefined) {
+    const supabase = await createClient();
+    const { data: teenRow } = await supabase
+      .from('child_access')
+      .select('id')
+      .eq('user_id', ctx.userId)
+      .eq('role', 'child')
+      .limit(1)
+      .maybeSingle();
+    teenPrivacy = !!teenRow;
+  }
   const ticket = await openTicket(supabaseAdmin, {
     userId: ctx.userId,
     childId: body.childId ?? null,
@@ -34,7 +49,7 @@ export const POST = apiHandler({}, async (ctx, req) => {
     subject: body.subject,
     body: body.body,
     source: body.source,
-    teenPrivacy: body.teenPrivacy,
+    teenPrivacy,
     priority: body.priority,
   });
   return ticket;

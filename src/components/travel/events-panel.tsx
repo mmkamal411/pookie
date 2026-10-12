@@ -54,10 +54,18 @@ export function EventsPanel({ isTeen }: { isTeen: boolean }) {
   const [error, setError] = useState("");
   const [nonce, setNonce] = useState(0);
   const [planFor, setPlanFor] = useState<EventItem | null>(null);
+  // FR-SAFETY-007: Explorer Setup gate for 13-15 year olds
+  const [gateStatus, setGateStatus] = useState<{ gateRequired: boolean; gateCompleted: boolean } | null>(null);
 
   useEffect(() => {
     setZip(readStoredZip());
-  }, []);
+    // Check Explorer Setup gate for teens
+    if (isTeen) {
+      api<{ gateRequired: boolean; gateCompleted: boolean }>("/api/v1/safety/explorer-setup")
+        .then(setGateStatus)
+        .catch(() => setGateStatus({ gateRequired: false, gateCompleted: true }));
+    }
+  }, [isTeen]);
 
   useEffect(() => {
     if (!zip) {
@@ -208,9 +216,18 @@ export function EventsPanel({ isTeen }: { isTeen: boolean }) {
                   </a>
                 )}
                 <span className="flex-1" />
-                <Button size="sm" variant="ghost" onClick={() => setPlanFor(e)}>
-                  Share my plan →
-                </Button>
+                {/* FR-SAFETY-007: 13-15 year olds must complete Explorer Setup before sharing plans independently */}
+                {isTeen && gateStatus?.gateRequired && !gateStatus.gateCompleted ? (
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    window.location.href = "/safety/explorer-setup";
+                  }}>
+                    Complete Safety Setup →
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="ghost" onClick={() => setPlanFor(e)}>
+                    Share my plan →
+                  </Button>
+                )}
               </div>
             </Card>
           ))}
