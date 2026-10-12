@@ -1,11 +1,12 @@
 "use client";
 
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
+import { useGradeCelebration } from "@/lib/orb/use-grade-celebration";
 import type { CalibrationSummary, SchoolOverview, TodayCheckin } from "@/lib/school/types";
 import type { AttendanceSummary, GpaBlock, SemesterCard as SemesterCardData } from "@/server/services/school-enrich";
 import type { TriviaFact } from "@/lib/school/trivia";
 import type { CobbEvent } from "@/lib/school/cobb-calendar";
-import type { Freshness } from "@/server/services/school-sync-health";
+import type { Freshness } from "@/lib/school-sync-health-types";
 import { ClassesList } from "./classes-list";
 import { CheckinForm } from "./checkin-form";
 import { ProvenanceLabel, ProvenanceLine } from "./provenance-label";
@@ -54,6 +55,8 @@ export function SchoolOverview({
   enrich: OverviewEnrich;
 }) {
   const needsAttention = overview.classes.filter((c) => c.numeric != null && c.numeric < 80).length;
+  // Squad Oracle: the orb celebrates whenever a grade climbs.
+  useGradeCelebration(overview.classes);
 
   return (
     <main className="relative mx-auto max-w-5xl overflow-hidden px-4 py-10">
@@ -65,7 +68,7 @@ export function SchoolOverview({
       <DidYouKnow fact={enrich.trivia} />
 
       <div className="animate-bloom mt-6 flex items-center gap-4">
-        <PookieOrb size={56} />
+        <ReactiveOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           School · Mission Status
         </p>

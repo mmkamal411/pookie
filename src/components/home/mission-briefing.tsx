@@ -1,9 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
+import { orbReveal } from "@/lib/orb/orb-events";
 import { pickDailyQuote, type Quote } from "@/lib/daily/quotes";
 import { fetchLiveWeather, type WeatherDay } from "@/lib/daily/weather";
+
+const BRIEFING_DATE_KEY = "pookie-briefing-date-v1";
+
+/** The Morning Briefing Ritual — first open of the day, morning hours. */
+function isBriefingRitual(now: Date, lastSeenDate: string | null): boolean {
+  const h = now.getHours();
+  if (h < 5 || h >= 11) return false; // the ritual belongs to the morning
+  const today = now.toISOString().slice(0, 10);
+  return lastSeenDate !== today;
+}
 
 function greetingForHour(h: number): string {
   if (h < 5) return "Good night";
@@ -72,6 +83,7 @@ export function MissionBriefing({
   const [quote, setQuote] = useState<Quote | null>(null);
   const [weather, setWeather] = useState<WeatherDay[]>([]);
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [isRitual, setIsRitual] = useState(false);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -85,6 +97,23 @@ export function MissionBriefing({
         }).format(now)
       );
       setQuote(pickDailyQuote());
+      // Squad Oracle: the Morning Briefing Ritual. First morning open of
+      // the day gets the full ceremony — the orb delivers the day.
+      let lastSeen: string | null = null;
+      try {
+        lastSeen = window.localStorage.getItem(BRIEFING_DATE_KEY);
+      } catch {
+        /* best-effort */
+      }
+      if (isBriefingRitual(now, lastSeen)) {
+        setIsRitual(true);
+        try {
+          window.localStorage.setItem(BRIEFING_DATE_KEY, now.toISOString().slice(0, 10));
+        } catch {
+          /* best-effort */
+        }
+        orbReveal("morning briefing ritual");
+      }
     });
     return () => cancelAnimationFrame(id);
   }, []);
@@ -108,7 +137,7 @@ export function MissionBriefing({
   return (
     <header>
       <div className="animate-bloom flex items-center gap-4">
-        <PookieOrb size={56} />
+        <ReactiveOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Home · mission briefing
         </p>

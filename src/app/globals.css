@@ -2105,3 +2105,24 @@ body {
     animation: none;
   }
 }
+
+/* --- Listening: the orb is all ears — receptive, attentive, leaning in --- */
+.orb[data-mood="listening"] .orb-body { animation-duration: 3.2s; }
+.orb[data-mood="listening"] .orb-halo { animation: orb-listen-halo 3.2s ease-in-out infinite; }
+.orb[data-mood="listening"] .orb-gaze { animation-duration: 7s; }
+.orb[data-mood="listening"] .orb-core { animation: orb-listen-core 3.2s ease-in-out infinite; }
+@keyframes orb-listen-halo {
+  0%, 100% { transform: scale(1.04); opacity: 0.92; }
+  50% { transform: scale(1.14); opacity: 1; }
+}
+@keyframes orb-listen-core {
+  0%, 100% { opacity: 0.95; transform: scale(1.02); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb[data-mood="listening"] .orb-halo,
+  .orb[data-mood="listening"] .orb-core {
+    animation: none;
+  }
+}

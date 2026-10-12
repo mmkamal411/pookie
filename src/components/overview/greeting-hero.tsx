@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 
 function greetingForHour(h: number): string {
   if (h < 5) return "Good night";
@@ -57,7 +57,7 @@ export function GreetingHero({
   return (
     <header>
       <div className="animate-bloom flex items-center gap-4">
-        <PookieOrb size={56} />
+        <ReactiveOrb size={56} />
         <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
           Home · today&apos;s glance
         </p>

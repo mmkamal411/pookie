@@ -31,7 +31,7 @@ import { useEffect, useRef } from "react";
  * luminous, unmistakable. The core holds strata of light (infinite
  * knowledge); a slow-drifting gaze gives it all-seeing presence.
  */
-export type OrbMood = "idle" | "thinking" | "excited" | "celebrating" | "revelation";
+export type OrbMood = "idle" | "listening" | "thinking" | "excited" | "celebrating" | "revelation";
 
 /* One shared pointer tracker for every mounted orb. */
 const mountedOrbs = new Set<HTMLElement>();

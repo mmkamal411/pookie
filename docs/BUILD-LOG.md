@@ -1,5 +1,17 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:17 EDT — Squad Pipeline — ❌ Staging deploy blocked
+
+**The pipeline stopped before anything reached staging.**
+
+**Reason:** refusing: working tree is dirty (uncommitted changes) — commit or stash first; the pipeline never ships partial work.
+M docs/BUILD-LOG.md
+ M src/app/globals.css
+ M src/components/pookie-orb.tsx
+ M src/components/school/school-overview.tsx
+?? src/lib/orb/use-grade-celebration.ts
+
+
 ## 2026-10-12 ~10:15 EDT — Squad Telemetry E1 — Parent-side pulls built (ParentVUE + ParentSquare)
 
 **Mission:** automate Mehedi's parent-side school data pulls — zero manual intervention — on the shared `telemetry/` package (no third copy).
@@ -2078,3 +2090,31 @@ Remaining from E4: backfill run → `telemetry/health.py` done (unit-tested) →
 5. ✅ APPLY_ORDER.md rows for 066/067/068.
 
 **E1/E2/E3/E5 unblocked.** Open items for coordinator: (a) apply 068 in dashboard; (b) Lit+Geometry grade_weights still `{}` — E2 detail pull should fill; (c) E2 sets next_scheduled_run for laptop worker; (d) check-in retention awaits Mehedi.
+
+## 2026-10-12 ~10:45 EDT — Squad Telemetry E2 — worker hardened, scheduler designed, deploy package ready
+
+**Mission:** harden/expand the student-side pull (StudentVUE + CTLS Learn via the Windows laptop), own the unified scheduler design.
+
+### Research first (method rankings documented in `dawson-grades/README-TELEMETRY-E2.md`)
+- **StudentVUE:** (1) **mobile JSON API** `POST <host>/api/v1/mobile/PXPWebServices/<Method>` — `AttemptLogin` (Basic → Bearer), double-encoded JSON envelope; same interface the official apps use (verified live 2026-09-13 by a third-party client; Edupoint retired SOAP Aug 2026). (2) Playwright browser sweep (proven fallback). (3) SOAP — dead. **E1's live sandbox verification added the critical auth policy: Cobb logs every failed AttemptLogin — invalid credentials are NEVER retried** (lockout risk).
+- **CTLS Learn:** (1) Playwright DOM sweep, now extended to announcements + upcoming per course (no public API exists). (2-next) Internal XHR API capture with the Playwright session cookies — needs one instrumented laptop run to record endpoints.
+- **School Outlook:** (1) Playwright Outlook Web sweep (current). (2-next) OWA internal REST API with session cookies. (3-future) Microsoft Graph — needs Azure app registration + Mehedi approval.
+
+### What shipped
+1. **`telemetry/` shared package** (stdlib only; ONE package for E1/E2/E3 — E1 already builds on it: `parentvue_pull.py` reuses `studentvue_api.py` verbatim): `http.py` (retry/backoff), `logging_setup.py` (console + rotating file + JSON-lines, run_id), `config.py` (JSON + `TELEMETRY_*` env overrides), `health.py` (**+ `track(source, machine=...)` context manager per E4's contract** — dual-writes old-project `SyncHealth` rows AND E4 `school_sync_runs`/`school_sync_health` via `PookieHealthReporter` when a service key exists; accepts `next_scheduled_run`), `studentvue_api.py` (+ `StudentVueAuthError`, never-retry-auth, 401→single token refresh only), `watchdog.py` (`--queue` + `--health`), `schedule.yaml` (unified scheduler — see below), `migrations/001_sync_health.sql` + `002_studentvue_syncs_v2.sql`, `tests/test_telemetry.py` — **41 tests passing**.
+2. **Hardened `windows-sync/dawson-windows-sync.py`** (backup `.WORKING-20261012`): category-weights extraction (was always `{}` — **E4 open item (b): Lit+Geometry weights now fill when teachers publish them**), new `sweep_attendance()` (summary + per-class + dated entries; per-class rides in `class_details[].attendance`), Synergy mail sender/date, CTLS Learn expanded to announcements + upcoming (re-enabled behind `ctls_learn_enabled`/`ctls_features`), API-first StudentVUE (`studentvue_method: auto` → API, browser fallback, `pull_method` recorded per row, auth circuit breaker), run-health rows on every run, **zero-guard on push** (flag-never-drop), structured JSON-lines logging, new modes `--daemon` / `--ctls-only` / `--outlook-only`. Idempotent (INSERT-only) — safe on a schedule.
+3. **Unified scheduler `telemetry/schedule.yaml`** (E2-owned, E1 appended parent-side jobs): 9 jobs across windows-laptop / macbook (quarantined trust) / vm-sandbox with cadence, timeout, staleness alert thresholds.
+4. **Watchdog** `telemetry/watchdog.py --health` (VM, hourly): stale-data per schedule.yaml, zero-grade anomaly scan (latest-vs-previous per device), schema-drift probe → `sync_logs` alerts (dashboard sync console contract intact). `--queue` keeps the existing stale-`sync_requests` auto-fail contract; `post-sync-reviewer`'s `completed_at` contract untouched.
+5. **Laptop deploy package** `windows-sync/deploy/`: 4 Task Scheduler XMLs (6H full / 15m poller / 12H CTLS / 6H Outlook), one-shot `refresh-laptop.ps1` (backup → copy → register tasks → smoke test), `INSTALL-RUNBOOK.md` (install, verify, rollback, API-path verification steps).
+6. **`dawson-grades/README-TELEMETRY-E2.md`** — architecture, method research, scheduler, monitoring, failure-modes table, manual run, deploy package, automated-vs-human split.
+
+### E4 open items — status
+- (b) Lit+Geometry grade_weights `{}` → **addressed**: worker now extracts per-class weights into `class_details[].categories`; E4 sink maps them to `grade_snapshots.category_averages`. (If a teacher doesn't publish weights in StudentVUE, the field stays `{}` — that gap is upstream, not the pull.)
+- (c) `next_scheduled_run` for laptop worker → **supported**: `health.track(..., next_scheduled_run=<iso>)` writes it on the E4 upsert path. **Blocked** on the same item E3 flagged: POOKIE_SERVICE_ROLE_KEY is not yet in cron worker env, and the laptop only holds the anon key (E4 tables are service_role-write-only).
+
+### Needs a human (parent/coordinator)
+1. **Laptop deploy**: copy `windows-sync/` to the laptop via RustDesk, run `deploy/refresh-laptop.ps1` as Administrator, `--sync-now` smoke test (I can't operate RustDesk).
+2. **API-path verification** on the laptop (runbook has the 3 steps) — or set `studentvue_method: browser`.
+3. **Migrations 001 + 002** in the Supabase SQL editor (old project) — optional, graceful degradation without them.
+4. **GitHub**: `mmkamal411/dawson-sync-workers` — no usable key on this VM (SSH denied for both keys); commits ready locally, push commands in the E2 handoff.
+5. **POOKIE_SERVICE_ROLE_KEY** into cron worker env (E3's blocker — unblocks E4 health writes from automation).
