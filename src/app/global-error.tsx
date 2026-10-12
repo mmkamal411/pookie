@@ -22,8 +22,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Intentionally not console.log'd (code cleanliness rule) — the
-    // digest is shown to the user for support reference.
+    // TEMPORARY DEBUG — remove after cookie crash fix
+    console.error("[GLOBAL-ERROR]", error.message, error.stack);
   }, [error]);
 
   return (
