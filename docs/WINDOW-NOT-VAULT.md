@@ -102,9 +102,15 @@ stores bank transactions. The code paths to violate this do not exist.
 **Plaid connection:**
 - Plaid Link (client-side) → `public_token` → server exchanges for `access_token`.
 - Bank username/password never touch our servers (Plaid guarantees this).
-- We store ONLY the `access_token`, encrypted with AES-256 and a dedicated
-  encryption key (`PLAID_TOKEN_ENCRYPTION_KEY`). It is an opaque string — not an
-  account number, not a balance, not a transaction.
+- **The `access_token` lives on the user's phone** (iOS Keychain / Android Keystore —
+  OS secure enclave). The server NEVER persists it. Exchange returns the token to
+  the phone; the phone sends it back per-request; the backend attaches the Plaid
+  `client_id`/`secret`, calls Plaid, returns data, and discards the token from
+  memory. Honest caveat: the server sees the token transiently per request (it
+  must, to attach the secret) — the guarantee is "never stored," not "never seen."
+  A database breach yields zero bank access.
+- We store ONLY connection metadata: institution name, masked account refs,
+  connected_at. No token column is written.
 
 **Transaction/balance display:**
 - Fetch-on-view. Every time the user opens Spending, the server decrypts the token
@@ -118,8 +124,11 @@ stores bank transactions. The code paths to violate this do not exist.
   Linked to Plaid's `transaction_id` (an opaque reference, not financial data).
 - CSV imports and manual entries: user-provided, stored with consent.
 
-**Disconnect = cryptographic erasure:**
-- Deleting the encrypted `access_token` makes the connection unrecoverable.
+**Disconnect = true revocation:**
+- The phone sends the token one final time; the server calls Plaid `/item/remove`
+  to kill it at the source, deletes the metadata row, and discards the token.
+- The phone deletes its Keychain entry. Since we never stored the token, there
+  is nothing to erase server-side — the token dies at Plaid.
 - No orphaned transactions, no residual balances, no financial profile.
 
 ### 3.3 Schema changes

@@ -1,19 +1,22 @@
-// W11 Plaid integration — real bank sync (official plaid-node SDK).
-// NOT a stub: every path below calls the live Plaid API. What is NOT here is
-// credentials — PLAID_CLIENT_ID / PLAID_SECRET / PLAID_ENV come from the
-// environment (sandbox by default). With sandbox keys configured, the full
-// flow works end to end: link token → public_token exchange → access token
-// (encrypted at rest) → transactions/sync cursor loop → webhook updates.
+// W11 Plaid integration — real bank data via the official plaid-node SDK.
+//
+// WINDOW-NOT-VAULT (2026-10-12): The Plaid access token lives on the user's
+// phone (OS secure enclave), NEVER on our servers. The backend is a blind
+// proxy: the phone sends the token per-request, we attach the Plaid
+// client_id/secret (server-only, never exposed to clients), call Plaid, return
+// the data, and discard the token from memory. Nothing is persisted.
+//
+// Flow: link token → public_token exchange (token returned to phone, metadata
+// stored) → fetch-on-view per request → disconnect revokes at Plaid.
 //
 // Security posture:
-//   - The plaintext access_token exists only in memory during exchange and
-//     sync; it is encrypted (pgp_sym_encrypt via vault_doc_encrypt) before it
-//     touches plaid_items. The app key is server-only (Supabase Vault / env),
-//     never logged, never returned to clients.
+//   - access_token: phone-held (Keychain/Keystore). Server sees it transiently
+//     per request (must, to attach the secret). Never logged, never persisted.
+//     A database breach yields zero bank access.
+//   - PLAID_CLIENT_ID / PLAID_SECRET: server-only env vars, never in responses.
 //   - Plaid only ever exposes masked account numbers; we store the mask.
-//   - Webhook endpoint verifies the request comes from Plaid's documented
-//     IP behavior via HTTPS + shared verification; it only triggers a sync.
-//   - Sync is idempotent: plaid_transaction_id is UNIQUE; replays upsert.
+//   - Webhooks retired (non-functional without stored tokens).
+//   - Bank usernames/passwords never touch our servers (Plaid Link handles auth).
 import {
   Configuration,
   PlaidApi,
@@ -52,30 +55,6 @@ function getPlaidClient(): PlaidApi {
   return new PlaidApi(configuration);
 }
 
-function appKey(): string {
-  const key = process.env.PLAID_TOKEN_ENCRYPTION_KEY;
-  if (!key) failWith(ErrorCodes.UPSTREAM_UNAVAILABLE);
-  return key;
-}
-
-async function encryptAccessToken(plaintext: string): Promise<string> {
-  // vault_doc_encrypt is SECURITY DEFINER / service_role-only; returns bytea.
-  const { data, error } = await supabaseAdmin.rpc('vault_doc_encrypt', {
-    p_plaintext: plaintext,
-    p_key: appKey(),
-  });
-  if (error || !data) failWith(ErrorCodes.INTERNAL);
-  return data as string; // bytea serialized; stored as-is
-}
-
-async function decryptAccessToken(ciphertext: string): Promise<string> {
-  const { data, error } = await supabaseAdmin.rpc('vault_doc_decrypt', {
-    p_ciphertext: ciphertext,
-    p_key: appKey(),
-  });
-  if (error || !data) failWith(ErrorCodes.INTERNAL);
-  return data as string;
-}
 
 export interface LinkTokenResult {
   link_token: string;
@@ -95,15 +74,28 @@ export async function createLinkToken(ownerUserId: string): Promise<LinkTokenRes
   return { link_token: res.data.link_token, expiration: res.data.expiration };
 }
 
+/**
+ * Exchange a Link public_token for an access token; encrypt and store it.
+ * Also upserts the masked spending_accounts rows for the item.
+ */
 export interface ExchangeResult {
   plaid_item_id: string;
   institution_name: string;
   accounts: { name: string; account_ref: string }[];
+  /**
+   * WINDOW-NOT-VAULT (2026-10-12): The access token is returned to the phone,
+   * which stores it in the OS secure enclave (iOS Keychain / Android Keystore).
+   * The server NEVER persists it — it exists in server memory only during this
+   * exchange call, then is discarded. The phone sends it back per-request for
+   * live fetches (blind-proxy pattern).
+   */
+  access_token: string;
 }
 
 /**
- * Exchange a Link public_token for an access token; encrypt and store it.
- * Also upserts the masked spending_accounts rows for the item.
+ * Exchange a Plaid Link public_token. The access token is returned to the
+ * caller (the phone) for secure-enclave storage — it is NEVER written to the
+ * database. Only connection metadata (institution, masked accounts) is stored.
  */
 export async function exchangePublicToken(
   ownerUserId: string,
@@ -129,7 +121,7 @@ export async function exchangePublicToken(
     }
   }
 
-  const ciphertext = await encryptAccessToken(accessToken);
+  // Metadata only — NO access token stored. The token goes back to the phone.
   const { data: row, error } = await supabaseAdmin
     .from('plaid_items')
     .upsert(
@@ -137,7 +129,7 @@ export async function exchangePublicToken(
         owner_user_id: ownerUserId,
         plaid_item_id: plaidItemId,
         institution_name: institutionName,
-        access_token_ciphertext: ciphertext,
+        access_token_ciphertext: null,
         status: 'active',
         last_error: null,
         updated_at: new Date().toISOString(),
@@ -172,158 +164,11 @@ export async function exchangePublicToken(
     );
     accounts.push({ name: acct.name, account_ref: accountRef });
   }
-  return { plaid_item_id: plaidItemId, institution_name: institutionName, accounts };
+  // accessToken is returned to the phone here and discarded from server memory
+  // after this function returns. It is never logged, never persisted.
+  return { plaid_item_id: plaidItemId, institution_name: institutionName, accounts, access_token: accessToken };
 }
 
-export interface SyncResult {
-  added: number;
-  modified: number;
-  removed: number;
-  has_more: boolean;
-}
-
-/**
- * Run transactions/sync for one plaid_items row. Pages until has_more is
- * false, upserts transactions (idempotent on plaid_transaction_id), and saves
- * the new cursor. Positive amounts are outflows; Plaid reports outflows as
- * positive already, so we store as-is.
- */
-export async function syncPlaidItem(plaidItemRowId: string): Promise<SyncResult> {
-  const client = getPlaidClient();
-  const { data: item, error: itemError } = await supabaseAdmin
-    .from('plaid_items')
-    .select('id, owner_user_id, access_token_ciphertext, sync_cursor')
-    .eq('id', plaidItemRowId)
-    .single();
-  if (itemError || !item) failWith(ErrorCodes.NOT_FOUND);
-  const itemRow = item as {
-    id: string;
-    owner_user_id: string;
-    access_token_ciphertext: string;
-    sync_cursor: string | null;
-  };
-  const accessToken = await decryptAccessToken(itemRow.access_token_ciphertext);
-
-  let cursor: string | undefined = itemRow.sync_cursor ?? undefined;
-  let hasMore = true;
-  let added = 0;
-  let modified = 0;
-  let removed = 0;
-
-  // Account map: plaid account_id -> masked account_ref (built once).
-  const { data: acctRows } = await supabaseAdmin
-    .from('spending_accounts')
-    .select('plaid_account_id, account_ref')
-    .eq('plaid_item_id', itemRow.id);
-  const accountRef = new Map<string, string>();
-  for (const a of (acctRows ?? []) as { plaid_account_id: string | null; account_ref: string }[]) {
-    if (a.plaid_account_id) accountRef.set(a.plaid_account_id, a.account_ref);
-  }
-
-  while (hasMore) {
-    const req: TransactionsSyncRequest = { access_token: accessToken };
-    if (cursor) req.cursor = cursor;
-    const res = await client.transactionsSync(req);
-    const body = res.data;
-
-    for (const tx of body.added) {
-      const category =
-        tx.personal_finance_category?.primary ??
-        tx.personal_finance_category?.detailed ??
-        null;
-      const { error } = await supabaseAdmin.from('transactions').upsert(
-        {
-          owner_user_id: itemRow.owner_user_id,
-          account_ref: accountRef.get(tx.account_id) ?? 'Bank account',
-          amount: tx.amount,
-          merchant: tx.merchant_name ?? tx.name,
-          category: categorizeTransaction(tx.merchant_name ?? tx.name, category),
-          category_detailed: tx.personal_finance_category?.detailed ?? null,
-          purchased_by: itemRow.owner_user_id,
-          is_teen_private: false,
-          source: 'plaid',
-          plaid_transaction_id: tx.transaction_id,
-          posted_date: tx.date,
-          pending: tx.pending,
-        },
-        { onConflict: 'plaid_transaction_id' },
-      );
-      if (!error) added += 1;
-    }
-    for (const tx of body.modified) {
-      const { error } = await supabaseAdmin
-        .from('transactions')
-        .update({
-          merchant: tx.merchant_name ?? tx.name,
-          pending: tx.pending,
-        })
-        .eq('plaid_transaction_id', tx.transaction_id);
-      if (!error) modified += 1;
-    }
-    for (const tx of body.removed) {
-      const { error } = await supabaseAdmin
-        .from('transactions')
-        .delete()
-        .eq('plaid_transaction_id', tx.transaction_id);
-      if (!error) removed += 1;
-    }
-
-    cursor = (body as unknown as { cursor?: string }).cursor;
-    hasMore = body.has_more;
-  }
-
-  await supabaseAdmin
-    .from('plaid_items')
-    .update({ sync_cursor: cursor, last_sync_at: new Date().toISOString(), status: 'active' })
-    .eq('id', itemRow.id);
-
-  return { added, modified, removed, has_more: false };
-}
-
-/** Sync every active plaid_items row for an owner (webhook + manual refresh path). */
-export async function syncAllPlaidItems(ownerUserId: string): Promise<SyncResult[]> {
-  const { data, error } = await supabaseAdmin
-    .from('plaid_items')
-    .select('id')
-    .eq('owner_user_id', ownerUserId)
-    .eq('status', 'active');
-  if (error) failWith(ErrorCodes.INTERNAL);
-  const results: SyncResult[] = [];
-  for (const row of (data ?? []) as { id: string }[]) {
-    try {
-      results.push(await syncPlaidItem(row.id));
-    } catch {
-      await supabaseAdmin
-        .from('plaid_items')
-        .update({ status: 'error', last_error: 'sync failed' })
-        .eq('id', row.id);
-    }
-  }
-  return results;
-}
-
-/**
- * Handle a Plaid webhook event. Only triggers a sync — the webhook body is
- * never trusted for data. Returns the item rows that were synced.
- */
-export async function handlePlaidWebhook(body: Record<string, unknown>): Promise<{ synced: number }> {
-  const webhookType = body.webhook_type as string;
-  const webhookCode = body.webhook_code as string;
-  if (webhookType !== 'TRANSACTIONS') return { synced: 0 };
-  if (!['SYNC_UPDATES_AVAILABLE', 'INITIAL_UPDATE', 'HISTORICAL_UPDATE'].includes(webhookCode)) {
-    return { synced: 0 };
-  }
-  const plaidItemId = body.item_id as string;
-  if (!plaidItemId) return { synced: 0 };
-  const { data } = await supabaseAdmin
-    .from('plaid_items')
-    .select('id')
-    .eq('plaid_item_id', plaidItemId)
-    .maybeSingle();
-  if (!data) return { synced: 0 };
-  await syncPlaidItem((data as { id: string }).id);
-  return { synced: 1 };
-}
 
 /** List an owner's Plaid connections (metadata only — never tokens). */
 export async function listPlaidItems(
@@ -343,8 +188,24 @@ export async function listPlaidItems(
   }[];
 }
 
-/** Revoke a connection: delete the encrypted token row (cryptographic erasure) and deactivate accounts. */
-export async function disconnectPlaidItem(ownerUserId: string, plaidItemRowId: string): Promise<void> {
+/**
+ * Revoke a connection. The phone provides the access token one final time;
+ * we call Plaid /item/remove to kill it at the source, then delete our
+ * metadata row. Since we never stored the token, there is nothing to
+ * cryptographically erase server-side — the token dies at Plaid and the
+ * phone deletes its Keychain entry.
+ */
+export async function disconnectPlaidItem(
+  ownerUserId: string,
+  plaidItemRowId: string,
+  accessToken: string,
+): Promise<void> {
+  const client = getPlaidClient();
+  try {
+    await client.itemRemove({ access_token: accessToken });
+  } catch {
+    // Token may already be revoked — proceed to clean up metadata anyway.
+  }
   const { error } = await supabaseAdmin
     .from('plaid_items')
     .delete()
@@ -355,9 +216,14 @@ export async function disconnectPlaidItem(ownerUserId: string, plaidItemRowId: s
 
 /**
  * WINDOW-NOT-VAULT (2026-10-12): Fetch transactions live from Plaid WITHOUT
- * storing them. This is the fetch-on-view path — the server decrypts the
- * access token in memory, calls Plaid, returns the data in the response, and
- * discards it. Nothing is written to the transactions table.
+ * storing them. The access token comes from the phone per-request (it lives
+ * in the OS secure enclave, never on our servers). This is the fetch-on-view
+ * path — the server uses the token in memory, calls Plaid, returns the data
+ * in the response, and discards it. Nothing is written to the transactions table.
+ *
+ * The backend is a blind proxy: it attaches the Plaid client_id/secret (which
+ * cannot live on the phone) and forwards. The token is never logged, never
+ * persisted — it exists in server memory only for the duration of this call.
  *
  * User annotations (custom categories, notes) are merged from transaction_notes
  * — that IS the user's own data, stored with consent.
@@ -378,66 +244,57 @@ export interface LiveTransaction {
 
 export async function fetchTransactionsLive(
   ownerUserId: string,
+  accessToken: string,
   opts?: { count?: number; offset?: number },
 ): Promise<{ transactions: LiveTransaction[]; has_more: boolean }> {
   const client = getPlaidClient();
-  const items = await listPlaidItems(ownerUserId);
-  if (items.length === 0) return { transactions: [], has_more: false };
 
   const allTx: LiveTransaction[] = [];
   let hasMore = false;
 
-  for (const item of items) {
-    const { data: itemRow } = await supabaseAdmin
-      .from('plaid_items')
-      .select('access_token_ciphertext')
-      .eq('id', item.id)
-      .single();
-    if (!itemRow) continue;
-    const accessToken = await decryptAccessToken(
-      (itemRow as { access_token_ciphertext: string }).access_token_ciphertext,
-    );
+  // Use transactions/sync for the latest data, but do NOT persist.
+  // Each view fetches fresh — no cursor persistence, no storage.
+  const req: TransactionsSyncRequest = { access_token: accessToken };
+  const res = await client.transactionsSync(req);
+  const body = res.data;
 
-    // Use transactions/sync for incremental updates, but do NOT persist.
-    // We fetch the latest page only — no cursor persistence, no storage.
-    const req: TransactionsSyncRequest = { access_token: accessToken };
-    // Note: we intentionally do NOT pass a stored cursor. Each view fetches
-    // fresh. For pagination, Plaid's sync returns added/modified; we take
-    // the current snapshot.
-    const res = await client.transactionsSync(req);
-    const body = res.data;
-
-    // Build account ref map (from spending_accounts metadata, not balances)
+  // Build account ref map from spending_accounts metadata (not balances)
+  const { data: items } = await supabaseAdmin
+    .from('plaid_items')
+    .select('id')
+    .eq('owner_user_id', ownerUserId);
+  const itemIds = ((items ?? []) as { id: string }[]).map((i) => i.id);
+  const accountRef = new Map<string, string>();
+  if (itemIds.length > 0) {
     const { data: acctRows } = await supabaseAdmin
       .from('spending_accounts')
       .select('plaid_account_id, account_ref')
-      .eq('plaid_item_id', item.id);
-    const accountRef = new Map<string, string>();
+      .in('plaid_item_id', itemIds);
     for (const a of (acctRows ?? []) as { plaid_account_id: string | null; account_ref: string }[]) {
       if (a.plaid_account_id) accountRef.set(a.plaid_account_id, a.account_ref);
     }
-
-    const txs = [...body.added, ...body.modified];
-    for (const tx of txs) {
-      const category =
-        tx.personal_finance_category?.primary ??
-        tx.personal_finance_category?.detailed ??
-        'Other';
-      allTx.push({
-        plaid_transaction_id: tx.transaction_id,
-        merchant: tx.merchant_name ?? tx.name,
-        amount: tx.amount,
-        category: categorizeTransaction(tx.merchant_name ?? tx.name, category),
-        category_detailed: tx.personal_finance_category?.detailed ?? null,
-        posted_date: tx.date,
-        pending: tx.pending,
-        account_ref: accountRef.get(tx.account_id) ?? 'Bank account',
-        custom_category: null, // merged below
-        note: null, // merged below
-      });
-    }
-    if (body.has_more) hasMore = true;
   }
+
+  const txs = [...body.added, ...body.modified];
+  for (const tx of txs) {
+    const category =
+      tx.personal_finance_category?.primary ??
+      tx.personal_finance_category?.detailed ??
+      'Other';
+    allTx.push({
+      plaid_transaction_id: tx.transaction_id,
+      merchant: tx.merchant_name ?? tx.name,
+      amount: tx.amount,
+      category: categorizeTransaction(tx.merchant_name ?? tx.name, category),
+      category_detailed: tx.personal_finance_category?.detailed ?? null,
+      posted_date: tx.date,
+      pending: tx.pending,
+      account_ref: accountRef.get(tx.account_id) ?? 'Bank account',
+      custom_category: null, // merged below
+      note: null, // merged below
+    });
+  }
+  if (body.has_more) hasMore = true;
 
   // Merge user annotations (their data, stored with consent)
   if (allTx.length > 0) {

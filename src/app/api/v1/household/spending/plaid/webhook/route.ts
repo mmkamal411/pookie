@@ -1,23 +1,24 @@
-// POST /api/v1/household/spending/plaid/webhook — Plaid webhook receiver.
-// Plaid cannot authenticate as a Pookie user, so this route deliberately does
-// NOT use handleRoute (which requires a session). It only triggers a sync for
-// the item named in the webhook body — the body is never trusted for data.
-// Served over HTTPS; Plaid signs nothing, so the sync path re-verifies via
-// the stored encrypted access token.
-import { NextRequest, NextResponse } from 'next/server';
-import { handlePlaidWebhook } from '@/server/services/plaid';
+// POST /api/v1/household/spending/plaid/webhook — RETIRED.
+//
+// WINDOW-NOT-VAULT (2026-10-12): Plaid webhooks are non-functional without
+// server-stored access tokens. Since the token lives on the phone (secure
+// enclave) and the server only fetches on explicit user view, there is nothing
+// for a webhook to trigger. This endpoint returns 410 Gone.
+//
+// If Plaid sends webhooks, they are safely ignored.
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  const requestId = crypto.randomUUID();
-  try {
-    const body = (await req.json()) as Record<string, unknown>;
-    const result = await handlePlaidWebhook(body);
-    return NextResponse.json({ ok: true, data: result });
-  } catch (err) {
-    console.error(`[${requestId}] plaid webhook error:`, err);
-    return NextResponse.json(
-      { ok: false, error: { code: 'INTERNAL', message: 'Something went wrong.', requestId } },
-      { status: 500 },
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: 'GONE',
+        message:
+          'Plaid webhooks are retired. Bank data is fetched live on view — ' +
+          'the access token lives on your phone, not our servers.',
+      },
+    },
+    { status: 410 },
+  );
 }

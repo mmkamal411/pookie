@@ -241,23 +241,29 @@ export async function recategorizeTransaction(
  * including teen-private amounts, but NEVER merchant line items (FR-MOD-W11).
  *
  * WINDOW-NOT-VAULT (2026-10-12): Computes from LIVE Plaid data via
- * fetchTransactionsLive() — bank transactions are never persisted. Aggregates
- * are computed in memory per request and discarded. Manual/CSV entries (the
- * user's own data) are still read from the transactions table.
+ * fetchTransactionsLive() — bank transactions are never persisted. The access
+ * token comes from the phone per-request (secure enclave); without it, only
+ * manual/CSV entries are aggregated. Aggregates are computed in memory per
+ * request and discarded. Manual/CSV entries (the user's own data) are still
+ * read from the transactions table.
  */
 export async function getSpendingSummary(
   supabase: Db,
   ownerUserId: string,
   from?: string,
   to?: string,
+  accessToken?: string,
 ): Promise<Record<string, unknown>> {
   // Fetch live bank data (not stored) + manual entries (stored, user's own data)
   const { fetchTransactionsLive } = await import('./plaid');
+  const liveTxPromise = accessToken
+    ? fetchTransactionsLive(ownerUserId, accessToken, { count: 500 }).catch(() => ({
+        transactions: [],
+        has_more: false,
+      }))
+    : Promise.resolve({ transactions: [], has_more: false });
   const [{ transactions: liveTx }, { data: manualTx }] = await Promise.all([
-    fetchTransactionsLive(ownerUserId, { count: 500 }).catch(() => ({
-      transactions: [],
-      has_more: false,
-    })),
+    liveTxPromise,
     supabase
       .from('transactions')
       .select('amount, category, posted_date')
