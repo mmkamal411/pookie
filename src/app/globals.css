@@ -216,7 +216,7 @@ body {
   background: linear-gradient(165deg, rgb(255 255 255 / 0.7), rgb(233 230 247 / 0.6));
 }
 
-/* White glass card — the Home tab. Dark ink on white glass, pink glow edge. */
+/* White glass card — the Home tab. Dark ink on white glass, cyan glow edge. */
 .card-white {
   background: linear-gradient(165deg, rgb(255 255 255 / 0.97), rgb(238 236 250 / 0.94));
   -webkit-backdrop-filter: blur(14px);
@@ -224,17 +224,17 @@ body {
   border: 1px solid rgb(255 255 255 / 0.85);
   box-shadow:
     0 10px 36px rgb(10 10 40 / 0.25),
-    0 0 28px rgb(244 114 182 / 0.13),
+    0 0 28px rgb(0 229 255 / 0.13),
     inset 0 1px 0 rgb(255 255 255 / 0.9);
   color: #23234d;
   transition: box-shadow 0.35s ease, transform 0.25s ease, border-color 0.35s ease;
 }
 .card-white:hover {
   transform: translateY(-2px);
-  border-color: rgb(244 114 182 / 0.4);
+  border-color: rgb(0 229 255 / 0.4);
   box-shadow:
     0 14px 44px rgb(10 10 40 / 0.3),
-    0 0 44px rgb(244 114 182 / 0.22),
+    0 0 44px rgb(0 229 255 / 0.22),
     inset 0 1px 0 rgb(255 255 255 / 0.9);
 }
 
@@ -276,74 +276,12 @@ body {
   50% { box-shadow: 0 0 20px rgb(255 230 165 / 0.42), 0 0 52px rgb(255 208 120 / 0.18); }
 }
 
-/* Luminous divider — a hairline of starlight between sections */
-.divider-neon {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(167 139 250 / 0.35) 20%, rgb(244 114 182 / 0.3) 50%, rgb(167 139 250 / 0.35) 80%, transparent);
-  box-shadow: 0 0 8px rgb(167 139 250 / 0.25);
-  border: 0;
-}
-
-/* Active child avatar — a gentle nova ring that breathes, never blinks */
-.avatar-pulse {
-  position: relative;
-  border-radius: 9999px;
-}
-.avatar-pulse::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 9999px;
-  border: 1px solid rgb(244 114 182 / 0.4);
-  box-shadow: 0 0 10px rgb(244 114 182 / 0.25), inset 0 0 6px rgb(244 114 182 / 0.12);
-  animation: pulse-ring-soft 4s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes pulse-ring-soft {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.04); }
-}
-
-/* Underglow — soft light pooling beneath a card, like console backlight */
-.underglow {
-  position: relative;
-}
-.underglow::before {
-  content: "";
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  bottom: -10px;
-  height: 22px;
-  background: radial-gradient(ellipse at center, rgb(167 139 250 / 0.22), transparent 70%);
-  filter: blur(8px);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Active tab — soft nova glow pooling under the icon */
-.tab-active-glow {
-  position: relative;
-}
-.tab-active-glow::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -4px;
-  width: 36px;
-  height: 12px;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgb(244 114 182 / 0.55), transparent 70%);
-  filter: blur(5px);
-  pointer-events: none;
-}
-
 /* Glassy input — frosted, calm */
 .input-rooted {
-  background: rgb(20 20 50 / 0.6);
+  background: rgb(17 24 50 / 0.6);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  border: 1px solid rgb(167 139 250 / 0.25);
+  border: 1px solid rgb(0 229 255 / 0.25);
   color: var(--color-star-100);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -352,7 +290,7 @@ body {
 }
 .input-rooted:focus {
   outline: none;
-  border-color: rgb(167 139 250 / 0.6);
+  border-color: rgb(0 229 255 / 0.6);
   box-shadow: var(--shadow-glow-sm);
 }
 
@@ -360,7 +298,7 @@ body {
 .firefly {
   position: absolute;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgb(255 255 255 / 0.95), rgb(196 181 253 / 0.4) 60%, transparent 70%);
+  background: radial-gradient(circle, rgb(255 255 255 / 0.95), rgb(165 243 252 / 0.4) 60%, transparent 70%);
   animation: twinkle 3s ease-in-out infinite;
   pointer-events: none;
 }
@@ -376,10 +314,10 @@ body {
    (older devices, strict privacy modes). No JS, no broken layout. */
 .nebula-static {
   background:
-    radial-gradient(ellipse 45% 35% at 20% 15%, rgb(88 60 180 / 0.4), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 20% 15%, rgb(20 150 160 / 0.4), transparent 70%),
     radial-gradient(ellipse 40% 32% at 85% 60%, rgb(34 150 200 / 0.32), transparent 70%),
-    radial-gradient(ellipse 38% 30% at 50% 90%, rgb(180 60 140 / 0.32), transparent 70%),
-    radial-gradient(ellipse 30% 25% at 70% 25%, rgb(120 80 200 / 0.25), transparent 70%),
+    radial-gradient(ellipse 38% 30% at 50% 90%, rgb(200 150 20 / 0.32), transparent 70%),
+    radial-gradient(ellipse 30% 25% at 70% 25%, rgb(60 120 200 / 0.25), transparent 70%),
     linear-gradient(180deg, #050510 0%, #0a0a1e 50%, #050510 100%);
 }
 
@@ -462,19 +400,19 @@ body {
    digits remain crisp and readable. */
 .readout {
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 10px rgb(244 114 182 / 0.35), 0 0 2px rgb(255 255 255 / 0.25);
+  text-shadow: 0 0 10px rgb(0 229 255 / 0.35), 0 0 2px rgb(255 255 255 / 0.25);
 }
 .readout-cool {
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 10px rgb(167 139 250 / 0.35), 0 0 2px rgb(255 255 255 / 0.2);
+  text-shadow: 0 0 10px rgb(0 229 255 / 0.35), 0 0 2px rgb(255 255 255 / 0.2);
 }
 
 /* Instrument divider — hairline with a soft neon core. */
 .instrument-divider {
   height: 1px;
   border: 0;
-  background: linear-gradient(90deg, transparent, rgb(244 114 182 / 0.35) 30%, rgb(167 139 250 / 0.4) 50%, rgb(244 114 182 / 0.35) 70%, transparent);
-  box-shadow: 0 0 8px rgb(244 114 182 / 0.18);
+  background: linear-gradient(90deg, transparent, rgb(0 229 255 / 0.35) 30%, rgb(0 229 255 / 0.4) 50%, rgb(0 229 255 / 0.35) 70%, transparent);
+  box-shadow: 0 0 8px rgb(0 229 255 / 0.18);
 }
 
 /* Instrument awaiting data — an empty readout bay. Gentle breathing glow
@@ -490,11 +428,11 @@ body {
 
 /* Primary CTA glow — soft invitation light on links that move the mission. */
 .cta-glow {
-  text-shadow: 0 0 12px rgb(244 114 182 / 0.45);
+  text-shadow: 0 0 12px rgb(0 229 255 / 0.45);
   transition: text-shadow 0.3s ease;
 }
 .cta-glow:hover {
-  text-shadow: 0 0 18px rgb(244 114 182 / 0.7);
+  text-shadow: 0 0 18px rgb(0 229 255 / 0.7);
 }
 
 /* Needs-love banner halo — warm golden light pooling around the notice. */
@@ -511,8 +449,8 @@ body {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: capitalize;
-  color: rgb(244 114 182 / 0.85);
-  text-shadow: 0 0 10px rgb(244 114 182 / 0.3);
+  color: rgb(0 229 255 / 0.85);
+  text-shadow: 0 0 10px rgb(0 229 255 / 0.3);
 }
 
 /* ==========================================================================
@@ -529,14 +467,14 @@ body {
    ::before/::after use position:absolute, which anchors to fixed just fine. */
 .console-housing {
   background:
-    linear-gradient(180deg, rgb(30 30 62 / 0.88), rgb(12 12 30 / 0.94));
+    linear-gradient(180deg, rgb(17 24 50 / 0.88), rgb(11 16 32 / 0.94));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgb(244 114 182 / 0.3);
+  border-top: 1px solid rgb(0 229 255 / 0.3);
   box-shadow:
-    0 -1px 0 rgb(244 114 182 / 0.16),
+    0 -1px 0 rgb(0 229 255 / 0.16),
     0 -14px 44px rgb(5 5 16 / 0.6),
-    0 -6px 28px rgb(244 114 182 / 0.07),
+    0 -6px 28px rgb(0 229 255 / 0.07),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
   /* Squad Deck 2026-10-12 — iOS Safari hardening: force GPU compositing so
      the fixed deck doesn't flicker or drop during momentum scrolling, and
@@ -557,20 +495,20 @@ body {
   height: 1px;
   background: linear-gradient(90deg,
     transparent,
-    rgb(244 114 182 / 0.75) 22%,
-    rgb(253 230 138 / 0.55) 50%,
-    rgb(244 114 182 / 0.75) 78%,
+    rgb(0 229 255 / 0.75) 22%,
+    rgb(165 243 252 / 0.55) 50%,
+    rgb(0 229 255 / 0.75) 78%,
     transparent);
   filter: blur(0.5px);
   pointer-events: none;
 }
-/* Warm ambient wash breathing almost imperceptibly across the deck */
+/* Cool ambient wash breathing almost imperceptibly across the deck */
 .console-housing::after {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 70% 120% at 50% 120%,
-    rgb(244 114 182 / 0.08),
+    rgb(0 229 255 / 0.08),
     transparent 70%);
   pointer-events: none;
   animation: console-ambient 9s ease-in-out infinite;
@@ -618,8 +556,8 @@ body {
 
 /* Tab controls — instrument switches on the deck */
 .console-tab {
-  --tab-glow: #a78bfa;
-  --tab-glow-soft: rgb(167 139 250 / 0.55);
+  --tab-glow: #00E5FF;
+  --tab-glow-soft: rgb(0 229 255 / 0.55);
 }
 .console-tab-btn {
   transition:
@@ -888,12 +826,12 @@ body {
 .console-standby {
   /* Squad Deck 2026-10-12: brightened for the "well-lit cockpit" direction. */
   background:
-    linear-gradient(180deg, rgb(30 30 62 / 0.78), rgb(12 12 30 / 0.9));
+    linear-gradient(180deg, rgb(17 24 50 / 0.78), rgb(11 16 32 / 0.9));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgb(244 114 182 / 0.22);
+  border-top: 1px solid rgb(0 229 255 / 0.22);
   box-shadow:
-    0 -1px 0 rgb(244 114 182 / 0.12),
+    0 -1px 0 rgb(0 229 255 / 0.12),
     0 -12px 36px rgb(5 5 16 / 0.55),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
   /* iOS Safari hardening — same as .console-housing: stable compositing
@@ -904,33 +842,33 @@ body {
 
 /* Crew cluster — the header's crew + ship-controls instrument */
 .console-cluster {
-  background: linear-gradient(180deg, rgb(20 20 50 / 0.66), rgb(8 8 22 / 0.78));
+  background: linear-gradient(180deg, rgb(17 24 50 / 0.66), rgb(11 16 32 / 0.78));
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid rgb(244 114 182 / 0.22);
+  border: 1px solid rgb(0 229 255 / 0.22);
   box-shadow:
-    0 0 16px rgb(244 114 182 / 0.1),
+    0 0 16px rgb(0 229 255 / 0.1),
     inset 0 1px 0 rgb(255 255 255 / 0.07);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .console-cluster:hover {
-  border-color: rgb(244 114 182 / 0.38);
+  border-color: rgb(0 229 255 / 0.38);
   box-shadow:
-    0 0 22px rgb(244 114 182 / 0.16),
+    0 0 22px rgb(0 229 255 / 0.16),
     inset 0 1px 0 rgb(255 255 255 / 0.09);
 }
 /* Pilot callsign readout — the logged-in user's name, letterspaced like a
    cockpit crew placard. Warm neon whisper, never harsh. */
 .callsign-name {
   color: var(--color-star-100);
-  text-shadow: 0 0 12px rgb(244 114 182 / 0.35);
+  text-shadow: 0 0 12px rgb(0 229 255 / 0.35);
   letter-spacing: 0.045em;
 }
 .console-cluster-divider {
   width: 1px;
   align-self: stretch;
   margin: 8px 0;
-  background: linear-gradient(180deg, transparent, rgb(244 114 182 / 0.3), transparent);
+  background: linear-gradient(180deg, transparent, rgb(0 229 255 / 0.3), transparent);
 }
 
 /* Docking-module chrome — popups as external modules linked to the console */
@@ -942,8 +880,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: capitalize;
-  color: rgb(249 168 212 / 0.9);
-  text-shadow: 0 0 10px rgb(244 114 182 / 0.35);
+  color: rgb(103 232 249 / 0.9);
+  text-shadow: 0 0 10px rgb(0 229 255 / 0.35);
 }
 .module-dock-dot {
   width: 6px;
@@ -954,10 +892,10 @@ body {
   animation: console-blink 3.2s ease-in-out infinite;
 }
 .module-dock-panel {
-  border: 1px solid rgb(244 114 182 / 0.28) !important;
+  border: 1px solid rgb(0 229 255 / 0.28) !important;
   box-shadow:
     0 -12px 48px rgb(5 5 16 / 0.6),
-    0 0 44px rgb(244 114 182 / 0.14),
+    0 0 44px rgb(0 229 255 / 0.14),
     inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
 }
 
@@ -966,17 +904,17 @@ body {
    glows stay on the frame, never on the text. */
 .glass-pane {
   background: linear-gradient(180deg,
-    rgb(16 16 42 / 0.5),
-    rgb(8 8 24 / 0.55));
+    rgb(16 24 48 / 0.5),
+    rgb(8 14 30 / 0.55));
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid rgb(244 114 182 / 0.14);
+  border: 1px solid rgb(0 229 255 / 0.14);
   border-radius: 28px;
   box-shadow:
-    0 0 36px rgb(244 114 182 / 0.06),
+    0 0 36px rgb(0 229 255 / 0.06),
     0 18px 60px rgb(5 5 16 / 0.35),
     inset 0 1px 0 rgb(255 255 255 / 0.06),
-    inset 0 0 80px rgb(24 24 70 / 0.22);
+    inset 0 0 80px rgb(18 30 60 / 0.22);
 }
 
 /* Neon light piping — Mehedi 2026-10-12: every panel carries a continuous
@@ -984,9 +922,9 @@ body {
    brightens, the panel lifts, the glow blooms — 300ms, eased, never snapping.
    GPU-cheap: border-color / box-shadow / transform / opacity only. */
 .neon-pipe {
-  border: 1px solid rgb(244 114 182 / 0.22);
+  border: 1px solid rgb(0 229 255 / 0.22);
   box-shadow:
-    0 0 18px rgb(244 114 182 / 0.1),
+    0 0 18px rgb(0 229 255 / 0.1),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
   transition:
     border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
@@ -995,9 +933,9 @@ body {
 }
 /* Lift is opt-in: fixed chrome (console, viewscreen) glows but never lifts. */
 .neon-pipe-lift:hover {
-  border-color: rgb(244 114 182 / 0.45);
+  border-color: rgb(0 229 255 / 0.45);
   box-shadow:
-    0 0 30px rgb(244 114 182 / 0.18),
+    0 0 30px rgb(0 229 255 / 0.18),
     0 10px 34px rgb(5 5 16 / 0.45),
     inset 0 1px 0 rgb(255 255 255 / 0.09);
   transform: translateY(-2px);
@@ -1009,11 +947,11 @@ body {
     box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .console-housing:hover {
-  border-top-color: rgb(244 114 182 / 0.45);
+  border-top-color: rgb(0 229 255 / 0.45);
   box-shadow:
-    0 -1px 0 rgb(244 114 182 / 0.28),
+    0 -1px 0 rgb(0 229 255 / 0.28),
     0 -14px 44px rgb(5 5 16 / 0.6),
-    0 -6px 34px rgb(244 114 182 / 0.14),
+    0 -6px 34px rgb(0 229 255 / 0.14),
     inset 0 1px 0 rgb(255 255 255 / 0.07);
 }
 /* Cluster easing aligned to the 300ms standard. */
@@ -1048,11 +986,11 @@ body {
    intentional — like the ship's interior lighting was designed by someone
    who cares how it makes you feel. Subtle, never harsh. Never cold.
 
-   Palette (unified across all squads):
-     pink   #f472b6 — the ship's heart light (primary)
+   Palette (unified across all squads — spacecraft palette, zero purple/pink):
+     cyan   #00E5FF — primary neon accent
      teal   #2dd4bf — systems nominal, calm
-     violet #a78bfa — depth, mystery, the far stars
-     gold   #fbbf24 — warmth, love, "needs extra love" (sparing)
+     green  #00FF88 — go, healthy, "on track"
+     amber  #FFB300 — warmth, caution, "needs extra love" (sparing)
    GPU-cheap only: border-color / box-shadow / transform / opacity.
    Text stays crisp — glows live on frames, never on glyphs.
    prefers-reduced-motion collapses all of this globally (see top of file).
@@ -1074,27 +1012,6 @@ a.neon-pipe-teal:hover, button.neon-pipe-teal:hover {
   border-color: rgb(45 212 191 / 0.45);
   box-shadow:
     0 0 30px rgb(45 212 191 / 0.16),
-    0 10px 34px rgb(5 5 16 / 0.45),
-    inset 0 1px 0 rgb(255 255 255 / 0.09);
-  transform: translateY(-2px);
-}
-
-/* Neon pipe — violet variant. Depth and wonder, the far-star modules. */
-.neon-pipe-violet {
-  border: 1px solid rgb(167 139 250 / 0.24);
-  box-shadow:
-    0 0 18px rgb(167 139 250 / 0.09),
-    inset 0 1px 0 rgb(255 255 255 / 0.06);
-  transition:
-    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.neon-pipe-lift.neon-pipe-violet:hover,
-a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
-  border-color: rgb(167 139 250 / 0.5);
-  box-shadow:
-    0 0 30px rgb(167 139 250 / 0.18),
     0 10px 34px rgb(5 5 16 / 0.45),
     inset 0 1px 0 rgb(255 255 255 / 0.09);
   transform: translateY(-2px);
@@ -1135,10 +1052,10 @@ a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
    unmistakably part of the ship. Use on interactive controls that lack
    their own focus style. */
 .quantum-ring:focus-visible {
-  outline: 2px solid rgb(244 114 182 / 0.7);
+  outline: 2px solid rgb(0 229 255 / 0.7);
   outline-offset: 3px;
   border-radius: 12px;
-  box-shadow: 0 0 18px rgb(244 114 182 / 0.35);
+  box-shadow: 0 0 18px rgb(0 229 255 / 0.35);
 }
 
 /* Pill glow — unifies badges and status pills in the glow language. Their
@@ -1156,8 +1073,7 @@ a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
 
 /* Bright Bridge theme: pipes stay visible but whisper-quiet on pale glass. */
 [data-theme="bright-bridge"] .neon-pipe,
-[data-theme="bright-bridge"] .neon-pipe-teal,
-[data-theme="bright-bridge"] .neon-pipe-violet {
+[data-theme="bright-bridge"] .neon-pipe-teal {
   box-shadow:
     0 0 14px rgb(0 184 212 / 0.12),
     inset 0 1px 0 rgb(255 255 255 / 0.6);
@@ -1243,25 +1159,25 @@ body::before {
   background: transparent;
   box-shadow:
     8vw 12vh 1px 0 rgb(255 255 255 / 0.55),
-    22vw 68vh 1px 0 rgb(196 181 253 / 0.5),
-    35vw 28vh 0 0 rgb(249 168 212 / 0.45),
+    22vw 68vh 1px 0 rgb(165 243 252 / 0.5),
+    35vw 28vh 0 0 rgb(186 230 253 / 0.45),
     48vw 82vh 1px 0 rgb(103 232 249 / 0.4),
     61vw 15vh 0 0 rgb(255 255 255 / 0.5),
-    73vw 55vh 1px 0 rgb(196 181 253 / 0.45),
+    73vw 55vh 1px 0 rgb(165 243 252 / 0.45),
     87vw 30vh 0 0 rgb(253 230 138 / 0.4),
     94vw 76vh 1px 0 rgb(255 255 255 / 0.45),
     15vw 45vh 0 0 rgb(103 232 249 / 0.35),
-    28vw 88vh 1px 0 rgb(249 168 212 / 0.4),
+    28vw 88vh 1px 0 rgb(186 230 253 / 0.4),
     42vw 5vh 0 0 rgb(255 255 255 / 0.5),
-    55vw 48vh 1px 0 rgb(196 181 253 / 0.4),
+    55vw 48vh 1px 0 rgb(165 243 252 / 0.4),
     68vw 70vh 0 0 rgb(255 255 255 / 0.4),
-    80vw 8vh 1px 0 rgb(249 168 212 / 0.35),
-    5vw 78vh 0 0 rgb(196 181 253 / 0.4),
+    80vw 8vh 1px 0 rgb(186 230 253 / 0.35),
+    5vw 78vh 0 0 rgb(165 243 252 / 0.4),
     92vw 52vh 1px 0 rgb(103 232 249 / 0.35),
     18vw 32vh 0 0 rgb(253 230 138 / 0.35),
     52vw 62vh 1px 0 rgb(255 255 255 / 0.4),
-    66vw 88vh 0 0 rgb(196 181 253 / 0.35),
-    38vw 52vh 1px 0 rgb(249 168 212 / 0.3),
+    66vw 88vh 0 0 rgb(165 243 252 / 0.35),
+    38vw 52vh 1px 0 rgb(186 230 253 / 0.3),
     76vw 38vh 0 0 rgb(255 255 255 / 0.35),
     10vw 58vh 1px 0 rgb(103 232 249 / 0.3);
   animation: sparkle-twinkle 5s ease-in-out infinite;
@@ -1284,7 +1200,7 @@ body::before {
   background: linear-gradient(
     115deg,
     transparent 44%,
-    rgb(196 181 253 / 0.055) 50%,
+    rgb(165 243 252 / 0.055) 50%,
     transparent 56%
   );
   background-size: 250% 100%;
@@ -1295,18 +1211,18 @@ body::before {
   50% { background-position: 100% 0; }
 }
 
-/* --- 4. Ambient pooling: the viewscreen floats in pooled nebula light ---
+/* --- 4. Ambient pooling: the viewscreen floats in pooled starlight ---
    The reference glows brightest where the glass sits. This later-cascade
    rule (same specificity as the original .glass-pane block) keeps every
-   original shadow and adds the violet pool around the pane. Luminous,
+   original shadow and adds the cyan pool around the pane. Luminous,
    never harsh. */
 .glass-pane {
   box-shadow:
-    0 0 64px rgb(139 92 246 / 0.12),
-    0 0 36px rgb(244 114 182 / 0.06),
+    0 0 64px rgb(0 229 255 / 0.12),
+    0 0 36px rgb(0 255 200 / 0.06),
     0 18px 60px rgb(5 5 16 / 0.35),
     inset 0 1px 0 rgb(255 255 255 / 0.06),
-    inset 0 0 80px rgb(24 24 70 / 0.22);
+    inset 0 0 80px rgb(18 30 60 / 0.22);
 }
 
 /* --- 5. Interactive smoothness: every tappable row gets a living hover --- */.cosmic-row {
@@ -1316,8 +1232,8 @@ body::before {
     transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .cosmic-row:hover {
-  background-color: rgb(139 92 246 / 0.07);
-  box-shadow: 0 0 18px rgb(139 92 246 / 0.12), inset 0 0 24px rgb(139 92 246 / 0.05);
+  background-color: rgb(0 229 255 / 0.07);
+  box-shadow: 0 0 18px rgb(0 229 255 / 0.12), inset 0 0 24px rgb(0 229 255 / 0.05);
 }
 .cosmic-row:active {
   transform: scale(0.99);
@@ -1380,16 +1296,16 @@ body {
     0 0 24px rgb(0 255 200 / 0.08),
     0 18px 60px rgb(5 5 18 / 0.4),
     inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 0 80px rgb(40 40 100 / 0.25);
+    inset 0 0 80px rgb(18 30 60 / 0.25);
 }
 .card-living {
-  background: linear-gradient(165deg, rgb(44 44 92 / 0.6), rgb(22 22 54 / 0.68));
-  border: 1px solid rgb(167 139 250 / 0.3);
+  background: linear-gradient(165deg, rgb(24 32 64 / 0.6), rgb(14 20 44 / 0.68));
+  border: 1px solid rgb(0 229 255 / 0.3);
   box-shadow: var(--shadow-glow-sm), inset 0 1px 0 rgb(255 255 255 / 0.09);
 }
 .input-rooted {
-  background: rgb(34 34 70 / 0.66);
-  border: 1px solid rgb(167 139 250 / 0.32);
+  background: rgb(20 28 58 / 0.66);
+  border: 1px solid rgb(0 229 255 / 0.32);
 }
 
 /* --- 4. Cosmic scene layers: the rotating window ---
@@ -1438,8 +1354,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: capitalize;
-  color: rgb(196 181 253 / 0.75);
-  text-shadow: 0 0 14px rgb(139 92 246 / 0.5);
+  color: rgb(165 243 252 / 0.75);
+  text-shadow: 0 0 14px rgb(0 229 255 / 0.5);
   animation: vista-cue-bob 3.2s ease-in-out infinite;
 }
 .vista-scroll-cue:hover {

@@ -108,7 +108,7 @@ export function NebulaBackground() {
     function initField() {
       stars = [];
       const count = Math.min(200, Math.floor((w * h) / 8500));
-      const hues = [0, 0, 0, 210, 280, 320]; // mostly white, some blue/violet/pink
+      const hues = [0, 0, 0, 210, 190, 45]; // mostly white, some blue/cyan/gold
       for (let i = 0; i < count; i++) {
         // Depth layers for parallax: 0 = far (slow), 2 = near (fast).
         // Weighted so the far field dominates — depth, not noise.
@@ -125,19 +125,19 @@ export function NebulaBackground() {
         });
       }
       nebulas = [
-        { x: w * 0.18, y: h * 0.14, r: Math.max(w, h) * 0.36, hue: 275, dx: 0.08, dy: 0.05, ph: Math.random() * 6.28, bs: 0.016 + Math.random() * 0.008 },
+        { x: w * 0.18, y: h * 0.14, r: Math.max(w, h) * 0.36, hue: 195, dx: 0.08, dy: 0.05, ph: Math.random() * 6.28, bs: 0.016 + Math.random() * 0.008 },
         { x: w * 0.85, y: h * 0.58, r: Math.max(w, h) * 0.3, hue: 200, dx: -0.06, dy: 0.04, ph: Math.random() * 6.28, bs: 0.013 + Math.random() * 0.008 },
-        { x: w * 0.5, y: h * 0.92, r: Math.max(w, h) * 0.28, hue: 320, dx: 0.05, dy: -0.07, ph: Math.random() * 6.28, bs: 0.019 + Math.random() * 0.008 },
-        { x: w * 0.7, y: h * 0.25, r: Math.max(w, h) * 0.22, hue: 250, dx: -0.04, dy: -0.03, ph: Math.random() * 6.28, bs: 0.015 + Math.random() * 0.008 },
+        { x: w * 0.5, y: h * 0.92, r: Math.max(w, h) * 0.28, hue: 45, dx: 0.05, dy: -0.07, ph: Math.random() * 6.28, bs: 0.019 + Math.random() * 0.008 },
+        { x: w * 0.7, y: h * 0.25, r: Math.max(w, h) * 0.22, hue: 210, dx: -0.04, dy: -0.03, ph: Math.random() * 6.28, bs: 0.015 + Math.random() * 0.008 },
       ];
       planets = [
-        { x: w * 0.08, y: h * 0.25, r: 22, colors: ["#f472b6", "#a855f7"], ring: true, dx: 0.03 },
+        { x: w * 0.08, y: h * 0.25, r: 22, colors: ["#2dd4bf", "#14b8a6"], ring: true, dx: 0.03 },
         { x: w * 0.92, y: h * 0.45, r: 16, colors: ["#22d3ee", "#0ea5e9"], ring: false, dx: -0.02 },
         { x: w * 0.06, y: h * 0.75, r: 12, colors: ["#fbbf24", "#f97316"], ring: false, dx: 0.025 },
       ];
       moon = { x: w * 0.94, y: h * 0.12, r: 26 };
       sparks = [];
-      const sparkHues = [140, 140, 190, 190, 45]; // green, cyan, gold — Canopy embers
+      const sparkHues = [140, 140, 190, 190, 45]; // green, cyan, gold — spacecraft embers
       const sparkCount = Math.min(36, Math.floor((w * h) / 45000));
       for (let i = 0; i < sparkCount; i++) {
         sparks.push({
@@ -170,7 +170,7 @@ export function NebulaBackground() {
 
     function spawnMeteor() {
       const fromLeft = Math.random() > 0.5;
-      const hues = [0, 0, 190, 280, 210]; // white, cyan, violet — neon streaks
+      const hues = [0, 0, 190, 45, 210]; // white, cyan, gold, blue — neon streaks
       meteors.push({
         x: fromLeft ? -50 : Math.random() * w,
         y: Math.random() * h * 0.4,
@@ -189,7 +189,7 @@ export function NebulaBackground() {
         y: Math.random() * h * 0.7,
         life: 0,
         maxLife: 90 + Math.random() * 60,
-        hue: [190, 280, 320, 0][Math.floor(Math.random() * 4)],
+        hue: [190, 45, 210, 0][Math.floor(Math.random() * 4)],
       });
     }
 
@@ -251,13 +251,13 @@ export function NebulaBackground() {
         if (aurora.band === 0) aurora.next = frame + 700 + Math.random() * 600;
       }
 
-      // Banking wash — a whisper of violet while the ship turns.
+      // Banking wash — a whisper of cyan while the ship turns.
       if (bank > 0.03) {
         const wa = Math.min(0.045, bank * 0.045);
         const gx = w / 2 + course.dx * w * 0.35;
         const gy = h / 2 + course.dy * h * 0.35;
         const wash = g.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * 0.7);
-        wash.addColorStop(0, `hsla(${270 + H}, 75%, 45%, ${wa})`);
+        wash.addColorStop(0, `hsla(${190 + H}, 80%, 50%, ${wa})`);
         wash.addColorStop(1, "transparent");
         g.fillStyle = wash;
         g.fillRect(0, 0, w, h);

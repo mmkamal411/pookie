@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 /**
  * CosmicSceneDirector — Squad Vista (2026-10-12).
  * The window the ship flies through is never static. A rotation of luminous
- * cosmic scenes (violet nebula, teal drift, rose nursery, indigo expanse,
+ * cosmic scenes (cyan nebula, teal drift, amber nursery, glacier expanse,
  * emerald aurora) crossfades on a slow timer AND on every navigation
  * (course-change). Luminous vistas, never near-black voids — Mehedi's bar:
- * "well-lit cockpit", easy on the eyes.
+ * "well-lit cockpit", easy on the eyes. Spacecraft palette only:
+ * cyan / teal / green / amber. Zero purple, zero lavender, zero pink.
  *
  * Two stacked fixed layers (z-index 1: above the starfield canvas at z-0,
  * below content at z-10+). Crossfade is opacity-only — GPU-cheap.
@@ -19,13 +20,13 @@ type Scene = { name: string; sky: string; wash: string };
 
 const SCENES: Scene[] = [
   {
-    name: "violet-nebula",
-    sky: "linear-gradient(180deg, hsl(252 48% 11%) 0%, hsl(246 52% 15%) 55%, hsl(254 48% 10%) 100%)",
+    name: "cyan-nebula",
+    sky: "linear-gradient(180deg, hsl(200 50% 11%) 0%, hsl(190 55% 15%) 55%, hsl(198 50% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 60% 48% at 14% 6%, rgb(139 92 246 / 0.30) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 88% 92%, rgb(109 40 217 / 0.26) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 38% 30% at 82% 12%, rgb(217 70 239 / 0.16) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 42% 34% at 8% 88%, rgb(99 102 241 / 0.18) 0%, transparent 70%)",
+      "radial-gradient(ellipse 60% 48% at 14% 6%, rgb(34 211 238 / 0.30) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 88% 92%, rgb(45 212 191 / 0.26) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 38% 30% at 82% 12%, rgb(125 211 252 / 0.16) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 42% 34% at 8% 88%, rgb(14 165 183 / 0.18) 0%, transparent 70%)",
   },
   {
     name: "teal-drift",
@@ -37,22 +38,22 @@ const SCENES: Scene[] = [
       "radial-gradient(ellipse 44% 36% at 90% 80%, rgb(14 165 183 / 0.16) 0%, transparent 70%)",
   },
   {
-    name: "rose-nursery",
-    sky: "linear-gradient(180deg, hsl(320 45% 11%) 0%, hsl(330 50% 14%) 55%, hsl(315 45% 10%) 100%)",
+    name: "amber-nursery",
+    sky: "linear-gradient(180deg, hsl(38 55% 11%) 0%, hsl(42 60% 13%) 55%, hsl(35 55% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 60% 48% at 12% 90%, rgb(244 114 182 / 0.28) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 88% 8%, rgb(251 113 133 / 0.22) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 38% 30% at 75% 85%, rgb(251 191 36 / 0.12) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 42% 34% at 15% 12%, rgb(192 38 211 / 0.18) 0%, transparent 70%)",
+      "radial-gradient(ellipse 60% 48% at 12% 90%, rgb(251 191 36 / 0.28) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 88% 8%, rgb(245 158 0 / 0.22) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 38% 30% at 75% 85%, rgb(253 224 71 / 0.12) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 42% 34% at 15% 12%, rgb(251 146 60 / 0.18) 0%, transparent 70%)",
   },
   {
-    name: "indigo-expanse",
-    sky: "linear-gradient(180deg, hsl(232 52% 11%) 0%, hsl(228 55% 15%) 55%, hsl(236 52% 10%) 100%)",
+    name: "glacier-expanse",
+    sky: "linear-gradient(180deg, hsl(210 55% 11%) 0%, hsl(215 60% 14%) 55%, hsl(208 55% 10%) 100%)",
     wash:
-      "radial-gradient(ellipse 62% 50% at 50% 4%, rgb(99 102 241 / 0.30) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 55% 45% at 8% 70%, rgb(129 140 248 / 0.20) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 40% 32% at 92% 65%, rgb(165 180 252 / 0.14) 0%, transparent 70%)," +
-      "radial-gradient(ellipse 44% 36% at 45% 100%, rgb(76 60 220 / 0.20) 0%, transparent 70%)",
+      "radial-gradient(ellipse 62% 50% at 50% 4%, rgb(56 130 246 / 0.30) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 55% 45% at 8% 70%, rgb(96 165 250 / 0.20) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 40% 32% at 92% 65%, rgb(125 211 252 / 0.14) 0%, transparent 70%)," +
+      "radial-gradient(ellipse 44% 36% at 45% 100%, rgb(14 116 144 / 0.20) 0%, transparent 70%)",
   },
   {
     name: "aurora-verdant",
