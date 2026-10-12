@@ -1134,7 +1134,7 @@ export async function hidePastHealth(childId: string): Promise<HealthResult<{ do
   if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
   const supabase = await createClient();
   try {
-    const { error } = await supabase.rpc("rpc_hide_past_health", { p_child_id: childId });
+    const { error } = await supabase.rpc("rpc_hide_past_health");
     if (error) {
       if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
       return fail("write_failed", "Could not hide past records. Try again.");
@@ -1152,8 +1152,23 @@ const deletionScopeSchema = z.union([
 ]);
 
 /**
+ * Map the UI deletion scope to the scope string rpc_request_health_deletion
+ * expects inside p_scope (024 reads p_scope ->> 'scope': 'tier:H2',
+ * 'category:wellbeing', 'all_health').
+ */
+function toDeletionScopeString(
+  scope: z.infer<typeof deletionScopeSchema>,
+): string {
+  if (scope.kind === "tier") return `tier:${scope.tier}`;
+  if (scope.kind === "category") return "category:wellbeing";
+  return "all_health";
+}
+
+/**
  * Deletion requests, honored within 30 days (section 3.3).
- * Contract: rpc_request_health_deletion(scope jsonb) (Appendix B).
+ * Contract: rpc_request_health_deletion(p_scope jsonb) (024) — p_scope is
+ * {"scope": "<tier:H2|tier:H3|category:wellbeing|all_health>"}; the RPC
+ * derives the child from the caller's own session (subject-only).
  */
 export async function requestHealthDeletion(
   childId: string,
@@ -1173,8 +1188,7 @@ export async function requestHealthDeletion(
   const supabase = await createClient();
   try {
     const { error } = await supabase.rpc("rpc_request_health_deletion", {
-      p_child_id: childId,
-      p_scope: parsed.data,
+      p_scope: { scope: toDeletionScopeString(parsed.data) },
     });
     if (error) {
       if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
@@ -1335,7 +1349,6 @@ export async function submitReconsent(
   const supabase = await createClient();
   try {
     const { error } = await supabase.rpc("rpc_health_reconsent_submit", {
-      p_child_id: childId,
       p_grants: parsed.data.grants.map((g) => ({
         grantee_user_id: g.granteeUserId,
         tier: g.tier,
@@ -1365,7 +1378,7 @@ export async function skipReconsent(childId: string): Promise<HealthResult<{ don
   if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
   const supabase = await createClient();
   try {
-    const { error } = await supabase.rpc("rpc_health_reconsent_skip", { p_child_id: childId });
+    const { error } = await supabase.rpc("rpc_health_reconsent_skip");
     if (error) {
       if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
       return fail("write_failed", "Could not save your choice. Try again.");
@@ -1391,7 +1404,7 @@ export async function getReviewQueue(childId: string): Promise<HealthResult<{ ro
   if (!ctx.schemaReady) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
   const supabase = await createClient();
   try {
-    const { data, error } = await supabase.rpc("rpc_health_review_queue", { p_child_id: childId });
+    const { data, error } = await supabase.rpc("rpc_health_review_queue");
     if (error) {
       if (isRelationMissing(error)) return fail("backend_not_ready", BACKEND_NOT_READY_MSG);
       return fail("read_failed", "Could not load your review queue. Try again.");
@@ -1443,7 +1456,6 @@ export async function correctHealthRecord(
   const supabase = await createClient();
   try {
     const { error } = await supabase.rpc("rpc_health_record_correct", {
-      p_child_id: childId,
       p_record_id: parsed.data.recordId,
       p_table: parsed.data.table,
       p_patch: parsed.data.patch,
@@ -1518,7 +1530,6 @@ export async function exportTransitionSummary(
   const supabase = await createClient();
   try {
     const { data, error } = await supabase.rpc("rpc_export_transition_summary", {
-      p_child_id: childId,
       p_format: parsed.data.format,
     });
     if (error) {
