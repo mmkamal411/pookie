@@ -1,7 +1,8 @@
--- Migration 028: support_grants — teen-approved break-glass data access (FR-SUPPORT-005).
+-- Migration 034: support_grants — teen-approved break-glass data access (FR-SUPPORT-005).
 --
 -- Design refs: sol-support §B.1/§B.2, EXPERT-SOLUTIONS §G.
--- NUMBERING NOTE: canonical §G map said 046; landing at next free number (028).
+-- NUMBERING NOTE: canonical §G map said 046; MD reconciliation
+-- (commit 306c8e5, 2026-10-12) renumbered the migration chain to 034.
 --
 -- Least-privilege: a grant names ONE allowlisted scope on ONE ticket, expires
 -- automatically (default 24h, max 72h), and every scoped read is audit-logged

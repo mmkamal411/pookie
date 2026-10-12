@@ -1,8 +1,9 @@
--- Migration 026: support backend — tickets, events, agents, on-call, credit approvals.
+-- Migration 032: support backend — tickets, events, agents, on-call, credit approvals.
 --
 -- Design refs: sol-support §B/§D, FR-SUPPORT-003/004/005, MD decision D4
 -- (rotating holiday on-call + tiered financial authority).
--- NUMBERING NOTE: canonical §G map said 044; landing at next free number (026).
+-- NUMBERING NOTE: canonical §G map said 044; MD reconciliation
+-- (commit 306c8e5, 2026-10-12) renumbered the migration chain to 032.
 --
 -- Tables: support_agents, support_tickets, ticket_events, support_oncall,
 --         support_credit_approvals.

@@ -1,8 +1,8 @@
--- Migration 025: visibility scopes — access_scopes + resolve_visible_scopes().
+-- Migration 026: visibility scopes — access_scopes + resolve_visible_scopes().
 --
 -- Design refs: sol-access §2, FR-ACCESS-006, EXPERT-SOLUTIONS §G.
--- NUMBERING NOTE: the canonical map reserved 022 for this; the health team
--- shipped 022_health_tiers.sql first. This lands at the next free number (025).
+-- NUMBERING NOTE: canonical §G reserved 022 for this; MD reconciliation
+-- (commit 306c8e5, 2026-10-12) renumbered the migration chain to 026.
 --
 -- [ADAPT] sol-access assumed child_access(id uuid PK). Shipped schema uses
 -- PRIMARY KEY (child_id, user_id), so access_scopes keys on the composite.
@@ -187,8 +187,8 @@ CREATE POLICY access_scopes_select ON public.access_scopes
     -- own row
     user_id = auth.uid()
     -- the teen sees all rows on their own record
-    OR EXISTS (SELECT 1 FROM public.children c
-               WHERE c.id = access_scopes.child_id AND c.user_id = auth.uid())
+    OR EXISTS (SELECT 1 FROM public.child_access ca
+               WHERE ca.child_id = access_scopes.child_id AND ca.user_id = auth.uid())
     -- an adult with an active/cooling grant sees the roster (Sharing screen)
     OR EXISTS (SELECT 1 FROM public.child_access mine
                WHERE mine.child_id = access_scopes.child_id

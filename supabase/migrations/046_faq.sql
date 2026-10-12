@@ -1,9 +1,10 @@
--- Migration 027: FAQ corpus tables (S1 Help Center).
+-- Migration 046: FAQ corpus tables (S1 Help Center).
 --
 -- Design ref: sol-support §A.5, §D. NUMBERING NOTE: canonical §G map said 045;
--- landing at next free number (027). Compact core: articles, versions,
--- feedback. Search indexes (GIN trgm + tsvector) included; pgvector semantic
--- fallback is a later migration (extension + backfill job).
+-- MD reconciliation (commit 306c8e5, 2026-10-12) renumbered the chain to 046.
+-- Compact core: articles, versions, feedback. Search indexes (GIN trgm +
+-- tsvector) included; pgvector semantic fallback is a later migration
+-- (extension + backfill job).
 --
 -- IDEMPOTENT: IF NOT EXISTS / DROP POLICY IF EXISTS.
 
@@ -16,9 +17,7 @@ CREATE TABLE IF NOT EXISTS public.faq_articles (
   keywords text[] NOT NULL DEFAULT '{}',
   age_band text NOT NULL DEFAULT 'all' CHECK (age_band IN ('all', 'teen', 'parent')),
   related_slugs text[] NOT NULL DEFAULT '{}',
-  search_vector tsvector GENERATED ALWAYS AS (
-    to_tsvector('english', title || ' ' || array_to_string(keywords, ' ') || ' ' || body_md)
-  ) STORED,
+  search_vector tsvector,
   -- Legal accordion fields (sol-support §A.5.2; attorney sign-off gate §E.1)
   legal_note_md text,
   legal_citation text,
@@ -79,3 +78,18 @@ CREATE POLICY faq_versions_service_all ON public.faq_article_versions
 DROP POLICY IF EXISTS faq_feedback_service_all ON public.faq_feedback;
 CREATE POLICY faq_feedback_service_all ON public.faq_feedback
   FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Trigger to populate search_vector (replaces GENERATED column — to_tsvector is STABLE, not IMMUTABLE)
+CREATE OR REPLACE FUNCTION public.faq_search_vector_trigger()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('english', COALESCE(NEW.title,'') || ' ' || COALESCE(array_to_string(NEW.keywords, ' '),'') || ' ' || COALESCE(NEW.body_md,''));
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS faq_search_vector_trg ON public.faq_articles;
+CREATE TRIGGER faq_search_vector_trg
+  BEFORE INSERT OR UPDATE OF title, keywords, body_md ON public.faq_articles
+  FOR EACH ROW EXECUTE FUNCTION public.faq_search_vector_trigger();
+
+CREATE INDEX IF NOT EXISTS faq_articles_search_idx ON public.faq_articles USING GIN (search_vector);
