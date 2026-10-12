@@ -425,3 +425,18 @@ CREATE POLICY nutrition_photos_tenant_insert ON storage.objects
         AND hs.child_id = ANY (public.current_child_ids())
     )
   );
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- REVIEW CHECKPOINTS — 012 amendments (2026-10-12, sol-health §6.7)
+-- ── RC-012-A — Fractional Team 1 (Compliance) ─────────────────────────────
+-- Verify: calorie/macro columns physically cannot hold values for minor-band
+-- subjects (enforce_no_calories_minor proven with direct SQL INSERT attempts
+-- as parent + teen); 'clinician_supervised' is the only deficit-adjacent
+-- kind and requires a verified gate + adult band; NPI-licensed credentials
+-- only (MD/DO/NP/PA/RD/LD).
+-- ── RC-012-B — Team 2 (RLS audit) ─────────────────────────────────────────
+-- Verify: nutrition_weekly_patterns() returns engagement-only for minor
+-- bands (calorie/macro averages NULL + detail='engagement_only_minor');
+-- diary-read policy admits teen-only for teen bands; no agent_reader grants.
+-- Phase completion blocked on sign-off.
+-- ═══════════════════════════════════════════════════════════════════════════

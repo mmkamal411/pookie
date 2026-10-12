@@ -1,3 +1,4 @@
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- =============================================================================
 -- Implements sol-health.md §3 (§1.6.3 grace, hide-past, deletion), Appendix A.
 -- Depends on 022 (tiers, tombstone columns), 023 (grants, cutover).
@@ -39,6 +40,9 @@ CREATE TABLE IF NOT EXISTS public.health_grace (
   viewer_user_id    uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   tier              public.health_tier NOT NULL,
   grace_expires_at  timestamptz NOT NULL,
+  revoke_cutoff     timestamptz NOT NULL DEFAULT now(),
+                    -- §3.1: grace covers records with recorded_at < revoke_cutoff
+                    -- (the revoke timestamp). Historical only, never new rows.
   created_from_event text NOT NULL,   -- e.g. 'health_cutover_18', 'grant_revoked'
   created_at        timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT health_grace_no_h3 CHECK (tier <> 'H3'),  -- H3 never graced
@@ -46,8 +50,7 @@ CREATE TABLE IF NOT EXISTS public.health_grace (
 );
 
 CREATE INDEX IF NOT EXISTS health_grace_lookup_idx
-  ON public.health_grace (child_id, viewer_user_id, tier)
-  WHERE grace_expires_at > now();
+  ON public.health_grace (child_id, viewer_user_id, tier);
 
 ALTER TABLE public.health_grace ENABLE ROW LEVEL SECURITY;
 
@@ -63,6 +66,50 @@ CREATE POLICY health_grace_subject_viewer_read ON public.health_grace
 GRANT SELECT ON public.health_grace TO authenticated;
 
 -- ---------------------------------------------------------------------------
+-- health_grace_read_allowed(p_subject_id, p_tier, p_recorded_at): the grace
+-- enforcement point (§3.1). True iff a live grace row covers (child, viewer,
+-- tier) AND the row predates the revoke cutoff. Expiry is enforced here, so
+-- even a missed sweep_health_grace() run fails closed — the predicate arm
+-- below, not the job, is the enforcement point. H3/H0 rows never pass
+-- (health_grace_no_h3 / _no_h0 constraints make such rows unrepresentable).
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.health_grace_read_allowed(
+  p_subject_id  uuid,
+  p_tier        public.health_tier,
+  p_recorded_at timestamptz
+)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $func$
+DECLARE
+  v_child_id uuid;
+BEGIN
+  SELECT hs.child_id INTO v_child_id
+  FROM public.health_subjects hs
+  WHERE hs.id = p_subject_id;
+  IF v_child_id IS NULL THEN
+    RETURN false;
+  END IF;
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.health_grace hg
+    WHERE hg.child_id = v_child_id
+      AND hg.viewer_user_id = auth.uid()
+      AND hg.tier = p_tier
+      AND hg.grace_expires_at > now()
+      AND p_recorded_at < hg.revoke_cutoff
+  );
+END;
+$func$;
+
+REVOKE ALL ON FUNCTION public.health_grace_read_allowed(uuid, public.health_tier, timestamptz) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.health_grace_read_allowed(uuid, public.health_tier, timestamptz)
+  TO authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
 -- 2. Tombstone columns on all remaining health content tables.
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.health_medications
@@ -71,9 +118,66 @@ ALTER TABLE public.allergy_list
   ADD COLUMN IF NOT EXISTS sealed_at timestamptz,
   ADD COLUMN IF NOT EXISTS sealed_by uuid REFERENCES public.users(id);
 
--- nutrition tables (012-amended; see 027 for the calorie-refusal trigger)
+-- nutrition tables (012-amended; see 031 for the calorie-refusal trigger)
 ALTER TABLE public.nutrition_targets
   ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+
+-- ---------------------------------------------------------------------------
+-- 2b. Grace policy arms (§3.1). Each content-table SELECT gains
+--      OR health_grace_read_allowed(subject_id, health_tier, recorded_at)
+-- so a viewer inside their 30-day window sees ONLY rows with
+-- recorded_at < revoke_cutoff — historical only, never new records.
+-- wellbeing_entries is DELIBERATELY excluded (§5.1: never parent-visible
+-- including aggregates — the panel requirement is absolute for W8).
+-- meal_checkins (created in 031) adds its grace arm there.
+-- ---------------------------------------------------------------------------
+DROP POLICY IF EXISTS health_metrics_tier_read ON public.health_metrics;
+CREATE POLICY health_metrics_tier_read ON public.health_metrics
+  FOR SELECT USING (
+    deleted_at IS NULL
+    AND (
+      public.health_tier_visible(subject_id, metric_key, health_tier)
+      OR public.health_grace_read_allowed(subject_id, health_tier, recorded_at)
+    )
+  );
+
+DROP POLICY IF EXISTS food_logs_diary_read ON public.food_logs;
+CREATE POLICY food_logs_diary_read ON public.food_logs
+  FOR SELECT USING (
+    deleted_at IS NULL
+    AND (
+      public.health_tier_visible(subject_id, 'food_log', health_tier)
+      OR public.health_grace_read_allowed(subject_id, health_tier, logged_at)
+    )
+  );
+
+DROP POLICY IF EXISTS allergy_list_tier_read ON public.allergy_list;
+CREATE POLICY allergy_list_tier_read ON public.allergy_list
+  FOR SELECT USING (
+    deleted_at IS NULL
+    AND (
+      public.health_tier_visible(subject_id, 'allergy', health_tier)
+      OR public.health_grace_read_allowed(subject_id, health_tier, created_at)
+    )
+  );
+
+DROP POLICY IF EXISTS health_medications_tier_read ON public.health_medications;
+CREATE POLICY health_medications_tier_read ON public.health_medications
+  FOR SELECT USING (
+    deleted_at IS NULL
+    AND (
+      public.health_tier_visible(subject_id, 'medication', health_tier)
+      OR public.health_grace_read_allowed(subject_id, health_tier, created_at)
+    )
+  );
+
+-- Relocated dedupe index (Squad 2 API layer, drafted in 011): the device
+-- ingestion pipeline dedupes on (subject, metric, device timestamp,
+-- provenance), ignoring tombstoned rows. It lives HERE — not in 011 —
+-- because deleted_at is added in 022 and tombstones are this file's domain.
+CREATE UNIQUE INDEX IF NOT EXISTS health_metrics_ingest_dedupe_idx
+  ON public.health_metrics (subject_id, metric_key, recorded_at, provenance)
+  WHERE deleted_at IS NULL;
 
 -- ---------------------------------------------------------------------------
 -- 3. health_retention_policies — per-child overrides over tier defaults.
@@ -143,8 +247,8 @@ BEGIN
     FROM public.health_grace hg
     WHERE hg.grace_expires_at <= now()
   LOOP
-    INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-    VALUES (v_child, 'health_grace_expired', NULL, '{}'::jsonb);
+    PERFORM public.log_access_event(
+      v_child, NULL, 'health_grace_expired', NULL, NULL, '{}'::jsonb);
   END LOOP;
 
   DELETE FROM public.health_grace
@@ -161,7 +265,7 @@ GRANT EXECUTE ON FUNCTION public.sweep_health_grace() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('sweep_health_grace', '15 0 * * *',
-    $$SELECT public.sweep_health_grace()$$);
+    $cron$SELECT public.sweep_health_grace()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -234,7 +338,7 @@ GRANT EXECUTE ON FUNCTION public.purge_tombstoned_health() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('purge_tombstoned_health', '30 1 * * *',
-    $$SELECT public.purge_tombstoned_health()$$);
+    $cron$SELECT public.purge_tombstoned_health()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -301,7 +405,7 @@ GRANT EXECUTE ON FUNCTION public.purge_expired_health() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('purge_expired_health', '45 1 * * *',
-    $$SELECT public.purge_expired_health()$$);
+    $cron$SELECT public.purge_expired_health()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -339,9 +443,9 @@ BEGIN
   WHERE hg.child_id = v_child_id;
   GET DIAGNOSTICS v_n = ROW_COUNT;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'hide_past_health', auth.uid(),
-          jsonb_build_object('grace_rows_removed', v_n));
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'hide_past_health', NULL, NULL,
+    jsonb_build_object('grace_rows_removed', v_n));
 
   RETURN jsonb_build_object('hidden', true, 'grace_rows_removed', v_n);
 END;
@@ -448,9 +552,9 @@ BEGIN
     RAISE EXCEPTION 'health_delete_scope_refused: %', v_scope;
   END IF;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'health_deletion', auth.uid(),
-          jsonb_build_object('scope', v_scope));  -- anonymized stub, no content/IDs
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'health_deletion', NULL, NULL,
+    jsonb_build_object('scope', v_scope));  -- anonymized stub, no content/IDs
 
   RETURN jsonb_build_object('tombstoned', true, 'scope', v_scope);
 END;

@@ -640,3 +640,16 @@ CREATE POLICY health_safety_overrides_creator_update ON public.health_safety_ove
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.health_subjects TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.health_metrics TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.health_safety_overrides TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- REVIEW CHECKPOINTS — 011 amendments (2026-10-12, sol-health §1.7)
+-- ── RC-011-A — Fractional Team 1 (Compliance) ─────────────────────────────
+-- Verify: health_tier enum values + metric_defs seed tiers match sol-health
+-- §1.2 backfill map; safety overrides are H2-only with ≤30-day expiry and a
+-- teen-appeal path; GA consent rules remain counsel-gated (reviewed=false).
+-- ── RC-011-B — Team 2 (RLS audit) ─────────────────────────────────────────
+-- Verify: health_tier_visible() arm-by-arm against the §1.3 matrix (esp. H3
+-- absolute, adult-band post-18 grant gating, unknown-DOB fail-closed);
+-- health_tier_insert_allowed() refuses H3-parent / H0-minor writes with the
+-- named codes; no agent_reader grants. Phase completion blocked on sign-off.
+-- ═══════════════════════════════════════════════════════════════════════════

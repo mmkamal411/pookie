@@ -1,3 +1,4 @@
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- =============================================================================
 -- Implements sol-health.md §5 (W8 wellbeing data side), Appendix A.
 -- Depends on 022 (tiers), 024 (tombstones, grace).
@@ -340,7 +341,7 @@ GRANT EXECUTE ON FUNCTION public.purge_expired_wellbeing() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('purge_expired_wellbeing', '0 2 * * *',
-    $$SELECT public.purge_expired_wellbeing()$$);
+    $cron$SELECT public.purge_expired_wellbeing()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -348,10 +349,10 @@ END $$;
 DO $$
 BEGIN
   PERFORM cron.schedule('nightly_wellbeing_pattern_check', '30 2 * * *',
-    $$SELECT public.detect_wellbeing_pattern(w.child_id)
+    $cron$SELECT public.detect_wellbeing_pattern(w.child_id)
       FROM (SELECT DISTINCT child_id FROM public.wellbeing_entries
             WHERE entered_at >= now() - interval '14 days'
-              AND deleted_at IS NULL) w$$);
+              AND deleted_at IS NULL) w$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

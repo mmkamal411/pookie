@@ -1,3 +1,4 @@
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- =============================================================================
 -- Implements sol-health.md §6 (W23 nutrition age-gate + W13 rules), Appendix A.
 -- Depends on 022 (tiers). Amends UNAPPLIED 012 in place (§6.7).
@@ -77,6 +78,10 @@ BEGIN
 END;
 $$;
 
+-- RECONCILED 2026-10-12: the 012 edit-in-place created
+-- food_logs_no_calories_minor; this migration's trg_enforce_no_calories_minor
+-- supersedes it (column-scoped firing). Drop the 012 one to avoid double fire.
+DROP TRIGGER IF EXISTS food_logs_no_calories_minor ON public.food_logs;
 DROP TRIGGER IF EXISTS trg_enforce_no_calories_minor ON public.food_logs;
 CREATE TRIGGER trg_enforce_no_calories_minor
   BEFORE INSERT OR UPDATE OF calories_low, calories_high,
@@ -131,6 +136,15 @@ GRANT SELECT, INSERT, UPDATE ON public.clinician_gates TO authenticated;
 -- nutrition_targets: gate FK + 'clinician_supervised' kind (§6.7 #2).
 ALTER TABLE public.nutrition_targets
   ADD COLUMN IF NOT EXISTS clinician_gate_id uuid REFERENCES public.clinician_gates(id);
+-- RECONCILED 2026-10-12: the 012 edit-in-place already added the bare uuid
+-- column, so the IF NOT EXISTS above skipped the REFERENCES. Add the FK
+-- explicitly (idempotent guard).
+DO $$ BEGIN
+  ALTER TABLE public.nutrition_targets
+    ADD CONSTRAINT nutrition_targets_clinician_gate_fk
+    FOREIGN KEY (clinician_gate_id) REFERENCES public.clinician_gates(id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 DO $$ BEGIN
   ALTER TABLE public.nutrition_targets
@@ -324,13 +338,17 @@ DROP POLICY IF EXISTS meal_checkins_tier_read ON public.meal_checkins;
 CREATE POLICY meal_checkins_tier_read ON public.meal_checkins
   FOR SELECT USING (
     deleted_at IS NULL
-    AND public.health_tier_visible(subject_id, 'meal_checkin', health_tier)
+    AND (
+      public.health_tier_visible(subject_id, 'meal_checkin', health_tier)
+      OR public.health_grace_read_allowed(subject_id, health_tier, logged_at)
+    )
   );
 
 DROP POLICY IF EXISTS meal_checkins_tenant_insert ON public.meal_checkins;
 CREATE POLICY meal_checkins_tenant_insert ON public.meal_checkins
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.health_subjects hs
+    health_tier = 'H2'   -- check-ins are H2, never H1
+    AND EXISTS (SELECT 1 FROM public.health_subjects hs
             WHERE hs.id = public.meal_checkins.subject_id
               AND hs.child_id = ANY (public.current_child_ids()))
   );
@@ -387,7 +405,7 @@ GRANT EXECUTE ON FUNCTION public.detect_nutrition_ed_signals() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('detect_nutrition_ed_signals', '45 2 * * *',
-    $$SELECT public.detect_nutrition_ed_signals()$$);
+    $cron$SELECT public.detect_nutrition_ed_signals()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

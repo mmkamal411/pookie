@@ -3,6 +3,7 @@
 -- Legal gate: counsel sign-off on H0–H3 required before production data flows
 -- (NFR-LEGAL); schema itself is complete and tested.
 -- =============================================================================
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- Migration 023: 18+ health re-consent (§1.6.2, FR-HEALTH-007)
 --
 -- Source: docs/solutions/sol-health.md §2, Appendix A. Depends on 022.
@@ -147,10 +148,11 @@ BEGIN
     ON CONFLICT DO NOTHING;
 
     -- access_events audit (no health content in the log).
-    INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-    VALUES (v_child.id, 'health_cutover_18', NULL,
-            jsonb_build_object('tiers_cut', ARRAY['H1','H2'],
-                               'grace_days', 30));
+    -- RECONCILED 2026-10-12: 021's log_access_event() is the single append
+    -- point; raw INSERTs used wrong column names and unlisted event types.
+    PERFORM public.log_access_event(
+      v_child.id, NULL, 'health_cutover_18', NULL, NULL,
+      jsonb_build_object('tiers_cut', ARRAY['H1','H2'], 'grace_days', 30));
 
     -- Suspend parent-connected device tokens; the adult re-authorizes.
     UPDATE public.health_device_tokens
@@ -178,7 +180,7 @@ BEGIN
   PERFORM cron.schedule(
     'nightly_health_birthday_cutover',
     '0 0 * * *',                                  -- midnight server-local
-    $$SELECT public.nightly_health_birthday_cutover()$$
+    $cron$SELECT public.nightly_health_birthday_cutover()$cron$
   );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
@@ -253,9 +255,9 @@ BEGIN
   SET health_reconsent_status = 'complete'
   WHERE id = v_child_id;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'health_reconsent_complete', auth.uid(),
-          jsonb_build_object('grants_written', v_written));
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'health_reconsent_complete', NULL, NULL,
+    jsonb_build_object('grants_written', v_written));
 
   RETURN jsonb_build_object('status', 'complete', 'grants_written', v_written);
 END;
@@ -298,8 +300,8 @@ BEGIN
   SET health_reconsent_status = 'skipped_private'
   WHERE id = v_child_id;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'health_reconsent_skipped_private', auth.uid(), '{}'::jsonb);
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'health_reconsent_skipped_private', NULL, NULL, '{}'::jsonb);
 
   RETURN jsonb_build_object('status', 'skipped_private');
 END;
@@ -459,9 +461,9 @@ BEGIN
   EXECUTE format('UPDATE public.%I SET deleted_at = now() WHERE id = $1', p_table)
     USING p_record_id;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child, 'health_deletion_requested', auth.uid(),
-          jsonb_build_object('table', p_table));  -- no record IDs that resolve to content
+  PERFORM public.log_access_event(
+    v_child, auth.uid(), 'health_deletion_requested', NULL, NULL,
+    jsonb_build_object('table', p_table));  -- no record IDs that resolve to content
 
   RETURN jsonb_build_object('tombstoned', true);
 END;
@@ -601,10 +603,10 @@ BEGIN
     'insurance_card', jsonb_build_object('note', 'Masked per W7 rules; populate from vault reference')
   ) INTO v_summary;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'transition_summary_export', auth.uid(),
-          jsonb_build_object('format', p_format,
-                             'h3_records_included', coalesce(array_length(p_include_h3_record_ids,1),0)));
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'transition_summary_export', NULL, NULL,
+    jsonb_build_object('format', p_format,
+                       'h3_records_included', coalesce(array_length(p_include_h3_record_ids,1),0)));
 
   RETURN v_summary;
 END;

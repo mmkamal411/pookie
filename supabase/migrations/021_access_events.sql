@@ -58,7 +58,18 @@ CREATE TABLE IF NOT EXISTS public.access_events (
     'support.consent_card.sent',
     -- financial authority (MD decision D4)
     'support.credit.issued', 'support.credit.approval_requested',
-    'support.credit.approval_decided'
+    'support.credit.approval_decided',
+    -- invite abuse telemetry (SEC-002: repeated consume failures are audited)
+    'invite_consume_failed',
+    -- health track (FR-HEALTH / sol-health §1–3, §8; Squad 2, 022+).
+    -- DRAFT values — counsel-gated with the health chain (NFR-LEGAL).
+    'health_cutover_18', 'health_reconsent_complete',
+    'health_reconsent_skipped_private', 'health_grace_created',
+    'health_grace_expired', 'hide_past_health', 'health_deletion_requested',
+    'health_deletion_purged', 'transition_summary_export', 'h0_minor_refusal',
+    'h3_parent_write_refusal', 'health_device_token_suspended',
+    'health_device_token_revoked', 'nutrition_minor_calorie_refusal',
+    'sud_disclosure_consented', 'sud_disclosure_revoked'
   )),
   granted_by text CHECK (granted_by IN ('child', 'parent', 'system')),
   reason_code text REFERENCES public.access_reason_codes(code),
@@ -133,8 +144,8 @@ CREATE POLICY access_events_teen_select ON public.access_events
   FOR SELECT TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM public.children c
-      WHERE c.id = access_events.child_id AND c.user_id = auth.uid()
+      SELECT 1 FROM public.child_access ca
+      WHERE ca.child_id = access_events.child_id AND ca.user_id = auth.uid()
     )
   );
 

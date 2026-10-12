@@ -1,3 +1,4 @@
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- =============================================================================
 -- Implements sol-health.md §9 (G22 immunization management), Appendix A.
 -- Depends on 022 (tiers), 024 (tombstones).
@@ -214,7 +215,7 @@ GRANT EXECUTE ON FUNCTION public.check_immunization_reminders() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('check_immunization_reminders', '0 7 * * *',
-    $$SELECT public.check_immunization_reminders()$$);
+    $cron$SELECT public.check_immunization_reminders()$cron$);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -338,7 +339,7 @@ GRANT EXECUTE ON FUNCTION public.check_hpv_catchup_reminders() TO service_role;
 DO $$
 BEGIN
   PERFORM cron.schedule('check_hpv_catchup_reminders', '0 8 * * 1',
-    $$SELECT public.check_hpv_catchup_reminders()$$);  -- weekly; deduped by year log
+    $cron$SELECT public.check_hpv_catchup_reminders()$cron$);  -- weekly; deduped by year log
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

@@ -1,3 +1,4 @@
+-- DRAFT — DO NOT APPLY until counsel clears H0–H3 (NFR-LEGAL gate).
 -- =============================================================================
 -- Implements sol-health.md §8.4 (42 CFR Part 2 separation), Appendix A.
 -- Depends on 022 (tiers, predicate).
@@ -127,7 +128,7 @@ CREATE TABLE IF NOT EXISTS public.sud_disclosure_consents (
 
 CREATE INDEX IF NOT EXISTS sud_disclosure_consents_child_idx
   ON public.sud_disclosure_consents (child_id)
-  WHERE revoked_at IS NULL AND expires_at > now();
+  WHERE revoked_at IS NULL;
 
 ALTER TABLE public.sud_disclosure_consents ENABLE ROW LEVEL SECURITY;
 
@@ -200,9 +201,11 @@ BEGIN
           p_consent_ciphertext, auth.uid())
   RETURNING id INTO v_id;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'sud_disclosure_consented', auth.uid(),
-          jsonb_build_object('recipient', p_recipient, 'purpose', p_purpose));
+  -- RECONCILED 2026-10-12: 021's log_access_event() is the single append
+  -- point (raw INSERTs used wrong column names).
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'sud_disclosure_consented', NULL, NULL,
+    jsonb_build_object('recipient', p_recipient, 'purpose', p_purpose));
 
   RETURN jsonb_build_object('consent_id', v_id, 'expires_at', p_expires_at);
 END;
@@ -236,8 +239,8 @@ BEGIN
   SET revoked_at = now()
   WHERE id = p_consent_id AND revoked_at IS NULL;
 
-  INSERT INTO public.access_events (child_id, event, actor_user_id, detail)
-  VALUES (v_child_id, 'sud_disclosure_revoked', auth.uid(), '{}'::jsonb);
+  PERFORM public.log_access_event(
+    v_child_id, auth.uid(), 'sud_disclosure_revoked', NULL, NULL, '{}'::jsonb);
 
   RETURN jsonb_build_object('revoked', true);
 END;

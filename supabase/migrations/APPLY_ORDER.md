@@ -30,14 +30,14 @@ a file that already applied; always check that table first.
 | 019 | `019_*.sql` | TBD (Backend — not landed yet) | ❌ File not yet on branch |
 | 020 | `020_*.sql` | TBD (Backend — not landed yet) | ❌ File not yet on branch |
 | 021 | `021_*.sql` | TBD (Backend — must land before any RPC that writes events) | ❌ File not yet on branch |
-| 022 | `022_*.sql` | TBD (Backend — not landed yet) | ❌ File not yet on branch |
-| 023 | `023_*.sql` | TBD incl. expires_at column (Backend — must land AFTER 018; Squad 4 W12 depends on expires_at) | ❌ File not yet on branch |
-| 024 | `024_w21_mail_retention.sql` | W21 mail retention policy | ❌ Pending — Mehedi dashboard apply |
+| 022 | `022_health_tiers.sql` | **DRAFT (NFR-LEGAL gate).** H0–H3 taxonomy: tier enum, tier/provenance/anomaly/tombstone columns on health_metrics, health_consent_grants, allergy_list, health_medications, health_alert_thresholds, predicate health_tier_visible() | ❌ Pending — Mehedi dashboard apply |
+| 023 | `023_health_reconsent.sql` | **DRAFT (NFR-LEGAL gate).** 18+ re-consent: health_reconsent_status, health_corrections, health_device_tokens lifecycle, nightly_health_birthday_cutover() + pg_cron, re-consent RPCs | ❌ Pending — Mehedi dashboard apply |
+| 024 | `024_health_grace_and_deletion.sql` | **DRAFT (NFR-LEGAL gate).** health_grace (historical-only, revoke_cutoff), tombstones, health_retention_policies, sweep/purge jobs + pg_cron, hide-past + deletion RPCs | ❌ Pending — Mehedi dashboard apply |
 | 025 | `025_access_scopes.sql` + `025_w11_spending.sql` + `025_wellbeing.sql` | Visibility scopes + W11 spending + Wellbeing shell (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 026 | `026_immunizations.sql` + `026_support_tickets.sql` | Immunizations + support tickets (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 027 | `027_faq.sql` + `027_nutrition_agegate.sql` | FAQ + nutrition age gate (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
-| 028 | `028_sud_separation.sql` + `028_support_grants.sql` | SUD separation + support grants (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
-| 029 | `029_immunizations.sql` | Immunizations | ❌ Pending — Mehedi dashboard apply |
+| 028 | `028_wellbeing.sql` | **DRAFT (NFR-LEGAL gate).** wellbeing_entries (teen-only RLS, H3 auto-tier trigger), wellbeing_events (metadata-only), emit_wellbeing_event(), pattern detection, purge_expired_wellbeing() + pg_cron | ❌ Pending — Mehedi dashboard apply |
+| 029 | `029_immunizations.sql` | **DRAFT (NFR-LEGAL gate).** immunizations (CVX, GA Form 3231 tracking), college_immunization_reqs, health-documents bucket, 3231 reminder job | ❌ Pending — Mehedi dashboard apply |
 | 030 | `030_safety_crisis_and_grant_tiers.sql` + `030_sud_separation.sql` | Squad 1: crisis_rulesets/events/alerts + D6 grant_ledger + grant_access redefined (D6 caps/co-approval) + SUD separation (multiple files share the number; `030_safety_*` sorts first) | ❌ Pending — Mehedi dashboard apply |
 | 031 | `031_nutrition_agegate.sql` + `031_safety_pending_revokes.sql` | Nutrition age gate + Squad 1: pending_revokes + parent_sync_frozen_until + revoke/safe-exit RPCs (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
 | 032 | `032_college_504_graduation.sql` + `032_support_tickets_base.sql` + `032_safety_outing_plans.sql` | College 504/graduation + support tickets base + Squad 1: outing_plans + Explorer Setup gate (multiple files share the number) | ❌ Pending — Mehedi dashboard apply |
@@ -49,6 +49,10 @@ a file that already applied; always check that table first.
 | 049 | `049_second_parent_claim.sql` + `049_safety_trusted_adult_fks.sql` | Second-parent claim + Squad 1: FK backfill trusted_adults → crisis_events/crisis_alerts/outing_plans/emergency_requests (multiple files share the number; `049_safety_*` sorts first, both after 048) | ❌ Pending — Mehedi dashboard apply |
 
 ### Status notes
+- **2026-10-12 (Squad 2 reconciliation):** health rows 022–024, 028, 029 updated to the
+  files actually on `staging-build`. 017–021 exist now (manifest still says TBD).
+  Number collisions are REAL and need a coordinator ruling before live apply:
+  030×2, 031×2, 032×3, 033×2, 034×2, 035×2, 036×2.
 - **001–014:** last BUILD-LOG evidence (2026-10-12, DBA/BE entries) says these were delivered
   **files-only, NOT applied to any live DB**; a subagent could not query
   `schema_migrations` from the sandbox. Whoever runs the apply MUST run
