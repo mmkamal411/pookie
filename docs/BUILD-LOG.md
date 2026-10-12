@@ -3,6 +3,25 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:10 EDT — Squad 1 Safety Track Coordinator (staging-build): ALL 5 DELIVERED — SQUAD COMPLETE
+
+**Squad 1 — Safety Track: all 5 experts delivered.** tsc clean on squad files; placeholder audit zero hits.
+
+| Expert | Deliverable | Commit |
+|---|---|---|
+| PM (PMP) | `docs/squad1/implementation-plan.md` — 10 work packages, 54 ACs, API contracts, 14-risk log | 401fc79 |
+| QA | `docs/squad1/test-plan.md` — 618 lines, ~150 test cases, ADV-001–013 adversarial suite, sign-off checklist | 298a9fb |
+| UX | `docs/squad1/ux-specs.md` — 750 lines, 15 sections, copy deck with [DV] flags | 4f69681 |
+| Backend | 8 migrations (030–036+048/049) + `src/lib/safety/actions.ts` (633 lines, 20 actions) + `crisis-router` Edge Function + `docs/squad1/api-contracts.md` | 309625e |
+| Frontend | `src/components/safety/` — 11 files (TrustedAdultFlow, CrisisCard, CoolingOffFlow, ScreenTimeCoSet, ExplorerSetup, EmergencyModule, SharingRevoke, BreakGlassRequest, GrantFlow, ui.tsx, types.ts) | 2f54a35 |
+
+**Contract reconciliation note:** frontend built against `types.ts` before backend's `actions.ts`/`api-contracts.md` landed — both now exist in tree. Reconciliation of `types.ts` vs real contracts is a follow-up task.
+
+**New collision found:** `049_safety_trusted_adult_fks.sql` vs `049_second_parent_claim.sql` (another squad). Adds to the 030–036 collision set — central renumbering still needed.
+
+**Gates before ship:** QA sign-off per flow (17 flows, all NOT STARTED — execution begins on staging) + Fractional Team 2 security review + DV-advocate string review + attorney sign-offs (checklist §5) + SEC-C1 RLS-layer revocation.
+
+
 ## 2026-10-12 ~10:30 EDT — Platform Team 2 Backend Developer (staging-build): Phase 0 shared rails + SEC-001/SEC-002 fixed
 
 **Delivered** (committed to `staging-build`, NOT deployed):
