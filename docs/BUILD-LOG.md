@@ -3,6 +3,14 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~09:05 EDT — Squad Windows — window/applet paradigm (IN FLIGHT)
+
+**Lane:** window chrome ONLY. New files: `src/components/window-manager.tsx` (context + module registry), `src/components/module-window.tsx` (title bar + minimize/close frame), `src/components/minimized-dock.tsx` (floating restore chips). One surgical edit: `src/app/c/[childSlug]/layout.tsx` — wrap the existing `<GlassPane><PageGlide>{children}</PageGlide></GlassPane>` block with `<WindowManagerProvider>` + `<ModuleWindowFrame>`, add `<MinimizedDock/>` after GlassPane. Preserving Squad Viewport's uncommitted changes to that file (their ChildToolbar removal + spacer comment stay intact).
+
+**Not touching:** `src/app/layout.tsx`, `src/app/globals.css` (Viewport), `src/components/command-deck.tsx` / `child-toolbar.tsx` / `more-popup.tsx` (Viewport/others), `src/components/development-badge.tsx` (Atlas). All window CSS is self-contained in a `<style>` tag rendered by the provider — zero globals.css edits.
+
+**Design:** each tenant module renders as a ship window — title bar (glow dot + readout prefix + prominent plain-English name), working minimize (collapses to a floating chip docked above the Command Deck; cosmic background fully visible), working close/X (returns to home viewport; hidden on home itself). Minimize state is per-module, survives route changes (provider lives at layout level), auto-restores when navigating to a minimized module's tab. Mobile-first: 44px+ touch targets, chips clear of toolbar buttons and the Pookie orb.
+
 ## 2026-10-12 ~08:50 EDT — Squad Bugfix — 4 glitches fixed (commit 23a934b, staging-build)
 
 **GLITCH 1 (Mookie "deeper" never resolves):** Root cause was APP-side, not the worker. Proved worker healthy end-to-end via curl (enqueue → pending → respond ok:true → poll "answered" → removed from pending). The app stranded responses two ways: (a) unmount cleared the poll interval but left `musePollRef` non-null, so remount resume was permanently blocked — navigating tabs killed the Mookie answer; (b) 5-min timeout silently abandoned polling. Fixed: ref reset on unmount, immediate first poll on resume, 5-min backoff to 10s polls with "taking longer" state (hard stop 30m with explanatory message), concurrent escalation shows a notice instead of silently dropping, enqueue failure retracts the bridge promise. Sibling hunt: other setInterval polls (TrustedAdultFlow, BreakGlassRequest, babysitters) are bounded with proper cleanup — chat was the outlier.
@@ -1733,3 +1741,29 @@ settings pages, me page. Integration/browser verification is the parent's step.
 **Verification:** `npx tsc --noEmit` clean (only pre-existing `.next/types` artifact noise); `npm run build` green. Pure CSS + copy/className changes — zero logic touched. Global `prefers-reduced-motion` rule stills all new animations.
 
 **Not done:** live-browser visual confirmation (generic subagents can't operate the browser) — the parent's signed-in pass should confirm the corner blooms, sparkles, and sheen render as intended before Mehedi flies it.
+
+## 2026-10-12 ~09:05 EDT — Squad Atlas: module audit + development tags COMPLETE
+
+**Commit:** `e9e7b96` — `feat(spaceship-atlas): module audit + development tags`
+
+**Audit method:** enumerated all 31 modules from `src/lib/modules.ts` (the canonical
+registry), verified each live module's route page + component for real content
+(no "coming soon" / lorem / TODO / empty handlers found anywhere).
+
+**FUNCTIONAL (23):** W2 Health, W8 Wellbeing, W13 Meals, W23 Nutrition, W21 Mail,
+W20 Shopping List, W11 Spending, W7 Money & Documents, W24 Credit, W14 Co-parenting,
+W1 School, W25 Fuel & Charging, W30 Flights, W31 Rental Cars, W27 Events,
+W28 Restaurants, W29 Trails & Parks, W26 Weather, W12 Babysitters, W6 Driving School,
+S1 Help Center & FAQ, S2 AI Support Chat, S3 Support Tickets.
+
+**NOT FUNCTIONAL — seedlings (8):** W22 Activity, W16 School Calendar, W5 College &
+Future, W4 Activities, W18 Summer, W3 Safety, W19 Emergency, W15 Screen Time.
+These have `route: null` and render as expandable seed cards in the More panel.
+
+**Tagging:** new `src/components/development-badge.tsx` — DevelopmentBadge component
+(spaceship aesthetic: amber/orange neon pill, uppercase micro-label, subtle glow).
+Added to every seedling card in `more-popup.tsx` next to the module name.
+Seedlings have no dedicated pages (route: null), so the More-panel card is the
+only surface — the badge appears exactly where users encounter them.
+
+**Verification:** `npx tsc --noEmit` clean, `npm run build` green.

@@ -48,21 +48,32 @@ export function OverviewDashboard({
   const urgentCount = (overview?.due_next ?? []).filter(isUrgent).length;
 
   return (
-    <main className="relative mx-auto max-w-5xl overflow-hidden px-4 pt-10 pb-8">
+    <main className="relative mx-auto max-w-5xl overflow-hidden px-4 pt-4 pb-8">
       <div className="firefly" style={{ width: 8, height: 8, top: "6%", left: "10%" }} />
       <div className="firefly" style={{ width: 6, height: 6, top: "18%", left: "88%", animationDelay: "1.6s" }} />
       <div className="firefly" style={{ width: 10, height: 10, top: "48%", left: "4%", animationDelay: "2.8s" }} />
 
-      <MissionBriefing
-        childName={childName}
-        schoolName={schoolName}
-        gradeLevel={gradeLevel}
-        attentionCount={attentionCount}
-        urgentCount={urgentCount}
-        classCount={classes.length}
-      />
+      {/* Vista hero — Squad Vista 2026-10-12: the open window. The astronaut
+          lands looking out at the cosmos; the mission board waits one gentle
+          scroll below. Space is the hero, not a wall of cards. */}
+      <div className="vista-hero">
+        <MissionBriefing
+          childName={childName}
+          schoolName={schoolName}
+          gradeLevel={gradeLevel}
+          attentionCount={attentionCount}
+          urgentCount={urgentCount}
+          classCount={classes.length}
+        />
+        <a href="#mission-board" className="vista-scroll-cue" aria-label="Scroll to your mission board">
+          <span>your mission board</span>
+          <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden="true">
+            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+      </div>
 
-      <div className="mt-6">
+      <div id="mission-board" className="vista-board mt-2">
         <CommandStrip
           classes={classes}
           dueNext={overview.due_next}

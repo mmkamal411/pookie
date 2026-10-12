@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getMemberships, signOut } from "@/lib/tenant/actions";
 import { NebulaBackground } from "@/components/nebula-background";
 import { PookieOrb } from "@/components/pookie-orb";
-import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 import PageGlide from "@/components/page-glide";
 
 // Session-dependent — always block, never prerender.
@@ -107,9 +106,9 @@ export default async function MePage() {
         </form>
       </div>
       </PageGlide>
-      <StandbyConsoleSpacer />
+      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+      <div className="h-32 shrink-0" aria-hidden="true" />
     </main>
-    <StandbyConsole label="Your Pookie, watching over home" />
     </>
   );
 }

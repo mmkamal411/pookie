@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
 import { InviteGenerator } from "./invite-generator";
-import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +45,8 @@ export default async function FamilyInvitePage() {
   return (
     <>
       <InviteGenerator children={eligible} />
-      <StandbyConsoleSpacer />
-      <StandbyConsole label="Family invites" />
+      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+      <div className="h-32 shrink-0" aria-hidden="true" />
     </>
   );
 }

@@ -4,10 +4,12 @@ import { getMemberships } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 import { ChildSwitcher } from "@/components/child-switcher";
 import { ShipSettingsControl } from "@/components/ship-settings-control";
-import { ChildToolbar } from "@/components/child-toolbar";
 import { GlassPane } from "@/components/glass-pane";
 import PageGlide from "@/components/page-glide";
 import { PookiePinball } from "@/components/pookie-pinball";
+import { WindowManagerProvider } from "@/components/window-manager";
+import { ModuleWindowFrame } from "@/components/module-window";
+import { MinimizedDock } from "@/components/minimized-dock";
 
 // Tenant-scoped route — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -89,12 +91,19 @@ export default async function ChildDashboard({
             </div>
           </div>
         </header>
-        <GlassPane>
-          <PageGlide>{children}</PageGlide>
-        </GlassPane>
-        {/* Spacer so the fixed bottom toolbar never covers page content. */}
-        <div className="h-24" aria-hidden="true" />
-        <ChildToolbar childSlug={childSlug} />
+        <WindowManagerProvider>
+          <GlassPane>
+            <PageGlide>
+              <ModuleWindowFrame>{children}</ModuleWindowFrame>
+            </PageGlide>
+          </GlassPane>
+          {/* Stowed-module chips — float above the Command Deck (Squad Windows 2026-10-12). */}
+          <MinimizedDock />
+        </WindowManagerProvider>
+        {/* Spacer so the fixed Command Deck never covers page content.
+            The deck itself now lives in the root layout (Squad Deck 2026-10-12)
+            — mounted once, never unmounts, never scrolls away. */}
+        <div className="h-32 shrink-0" aria-hidden="true" />
         <PookiePinball />
       </TenantProvider>
     </>

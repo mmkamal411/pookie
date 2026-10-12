@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
-import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
+
 import PageGlide from "@/components/page-glide";
 
 // Reads the session — always renders at request time.
@@ -67,9 +67,9 @@ export default async function SelectChildPage() {
         </div>
       </div>
       </PageGlide>
-      <StandbyConsoleSpacer />
+      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+      <div className="h-32 shrink-0" aria-hidden="true" />
     </main>
-    <StandbyConsole label="Select your crew member" />
     </>
   );
 }

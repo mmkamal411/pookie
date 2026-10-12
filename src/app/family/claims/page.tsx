@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ClaimsInbox } from "./claims-inbox";
-import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +23,8 @@ export default async function ClaimsInboxPage() {
   return (
     <>
       <ClaimsInbox />
-      <StandbyConsoleSpacer />
-      <StandbyConsole label="Family claims" />
+      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+      <div className="h-32 shrink-0" aria-hidden="true" />
     </>
   );
 }

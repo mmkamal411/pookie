@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { StandbyConsole, StandbyConsoleSpacer } from "@/components/standby-console";
 import PageGlide from "@/components/page-glide";
 
 // Household namespace — NOT under /c/[childSlug]. The data here is
@@ -22,8 +21,8 @@ export default async function HouseholdLayout({
   return (
     <>
       <PageGlide>{children}</PageGlide>
-      <StandbyConsoleSpacer />
-      <StandbyConsole label="Household systems" />
+      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+      <div className="h-32 shrink-0" aria-hidden="true" />
     </>
   );
 }

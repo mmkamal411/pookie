@@ -114,6 +114,13 @@ body {
   font-family: var(--font-sans);
   background: var(--color-canopy-950);
   color: var(--color-stardust-100);
+  /* Squad Deck 2026-10-12 — iOS Safari: 100vh includes the area behind the
+     dynamic browser chrome, causing layout jumps when it collapses. 100dvh
+     tracks the visible viewport. Fallback first for older browsers. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Prevent iOS rubber-band overscroll from revealing white behind the app. */
+  overscroll-behavior-y: none;
 }
 
 /* Nebula Dawn — the same sky at sunrise. The canvas hides; tokens go light. */
@@ -510,11 +517,14 @@ body {
    intentional; nothing harsh. (prefers-reduced-motion kills motion globally.)
    ========================================================================== */
 
-/* Console housing — the physical instrument bezel */
+/* Console housing — the physical instrument bezel.
+   Squad Deck 2026-10-12: REMOVED `position: relative` — it was unlayered CSS
+   overriding Tailwind v4's `fixed` utility (layered), which put the toolbar in
+   normal document flow so it scrolled off-screen. The deck is now truly fixed.
+   ::before/::after use position:absolute, which anchors to fixed just fine. */
 .console-housing {
-  position: relative;
   background:
-    linear-gradient(180deg, rgb(18 18 44 / 0.78), rgb(5 5 16 / 0.9));
+    linear-gradient(180deg, rgb(30 30 62 / 0.88), rgb(12 12 30 / 0.94));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgb(244 114 182 / 0.3);
@@ -523,6 +533,14 @@ body {
     0 -14px 44px rgb(5 5 16 / 0.6),
     0 -6px 28px rgb(244 114 182 / 0.07),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
+  /* Squad Deck 2026-10-12 — iOS Safari hardening: force GPU compositing so
+     the fixed deck doesn't flicker or drop during momentum scrolling, and
+     pin it above the iOS bottom chrome. translateZ(0) creates a stable
+     compositing layer; -webkit-transform ensures older WebKit honors it. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* The Tailwind `fixed inset-x-0 bottom-0 z-40` classes on the element set
+     position/size; this block only hardens the rendering. */
 }
 /* Luminous edge — a hairline of quantum light tracing the console rim */
 .console-housing::before {
@@ -562,11 +580,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 5px 18px 3px;
   font-size: 9px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgb(160 160 196 / 0.75);
+  /* Squad Deck 2026-10-12: brightened (was 0.75 alpha) + nowrap guards so
+     the two readouts never collide on narrow (320px) screens. */
+  color: rgb(190 190 220 / 0.9);
+}
+.console-status-strip > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .console-status-dot {
   display: inline-block;
@@ -616,7 +643,9 @@ body {
 }
 .console-tab-glyph {
   transition: filter 0.28s ease, transform 0.28s ease;
-  color: rgb(160 160 196 / 0.85);
+  /* Squad Deck 2026-10-12: brightened for the "well-lit cockpit" direction —
+     was rgb(160 160 196 / 0.85), too dim on mobile. */
+  color: rgb(200 200 230 / 0.95);
 }
 .console-tab-btn[data-active="true"] {
   color: var(--tab-glow);
@@ -689,8 +718,9 @@ a:active .console-orb-socket {
 
 /* Standby console — the deck at rest (pre-vessel pages) */
 .console-standby {
+  /* Squad Deck 2026-10-12: brightened for the "well-lit cockpit" direction. */
   background:
-    linear-gradient(180deg, rgb(18 18 44 / 0.66), rgb(5 5 16 / 0.85));
+    linear-gradient(180deg, rgb(30 30 62 / 0.78), rgb(12 12 30 / 0.9));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgb(244 114 182 / 0.22);
@@ -698,6 +728,10 @@ a:active .console-orb-socket {
     0 -1px 0 rgb(244 114 182 / 0.12),
     0 -12px 36px rgb(5 5 16 / 0.55),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
+  /* iOS Safari hardening — same as .console-housing: stable compositing
+     layer so the fixed deck survives momentum scrolling. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* Crew cluster — the header's crew + ship-controls instrument */
@@ -1127,4 +1161,126 @@ body::before {
 }
 [data-theme="light"] body::before {
   opacity: 0.5;
+}
+
+/* ==========================================================================
+   SQUAD VISTA — 2026-10-12. The cosmic viewport.
+   Mehedi's bar: "it's too dark hard to see" — the ship gets its lights on.
+   Well-lit cockpit, not pitch-black void. Luminous cosmic vistas, never
+   near-black voids. All additive: later-cascade rules that lift the palette,
+   never rewrites of other squads' selectors.
+
+   1. Palette lift — :root redefinition wins over @theme by source order.
+   2. body base — the old --color-canopy-950 token was never defined; set an
+      explicit luminous deep-space base (canvas covers it when healthy).
+   3. Brighter glass + cards so content pops from the background.
+   4. Cosmic scene layers (CosmicSceneDirector) — crossfading nebula scenes.
+   5. Vista hero — the open window: home greets you with open cosmos first.
+   GPU-cheap: opacity/gradient layers only. The global prefers-reduced-motion
+   rule at the top of this file stills all animation/transition.
+   ========================================================================== */
+
+/* --- 1. Palette lift: the lights come on --- */
+:root {
+  --color-nebula-950: #0d0d26;
+  --color-nebula-900: #171739;
+  --color-nebula-800: #212154;
+  --color-nebula-700: #2e2e68;
+  --color-stardust-500: #9090b8;
+  --color-stardust-300: #babade;
+  --color-stardust-200: #cfcfee;
+  --color-stardust-100: #e4e4f7;
+  --color-star-300: #d4d4f7;
+}
+
+/* --- 2. Luminous deep-space base --- */
+body {
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 0%, #151536 0%, #0d0d26 55%, #080818 100%);
+  background-attachment: fixed;
+  color: var(--color-stardust-100);
+}
+
+/* --- 3. Glass + cards glow a little brighter --- */
+.glass-pane {
+  background: linear-gradient(180deg,
+    rgb(34 34 78 / 0.52),
+    rgb(18 18 48 / 0.58));
+  border: 1px solid rgb(167 139 250 / 0.3);
+  box-shadow:
+    0 0 48px rgb(139 92 246 / 0.16),
+    0 0 24px rgb(244 114 182 / 0.08),
+    0 18px 60px rgb(5 5 18 / 0.4),
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 0 80px rgb(40 40 100 / 0.25);
+}
+.card-living {
+  background: linear-gradient(165deg, rgb(44 44 92 / 0.6), rgb(22 22 54 / 0.68));
+  border: 1px solid rgb(167 139 250 / 0.3);
+  box-shadow: var(--shadow-glow-sm), inset 0 1px 0 rgb(255 255 255 / 0.09);
+}
+.input-rooted {
+  background: rgb(34 34 70 / 0.66);
+  border: 1px solid rgb(167 139 250 / 0.32);
+}
+
+/* --- 4. Cosmic scene layers: the rotating window ---
+   z-index 1: above the starfield canvas (z-0), below content (z-10+).
+   Paint order at z-1: sparkles (body::before) → these layers → corner
+   blooms (body::after). All ambient, all pointer-transparent. */
+.cosmic-scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  will-change: opacity;
+}
+.cosmic-scene-top {
+  opacity: 0;
+  transition: opacity 2.8s ease-in-out;
+}
+.cosmic-scene-top.is-on {
+  opacity: 1;
+}
+
+/* --- 5. Vista hero: the open window ---
+   Home greets the astronaut with open cosmos first — the mission board
+   waits one gentle scroll below. Generous vertical room, content floats. */
+.vista-hero {
+  min-height: 44vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 2.5rem;
+  padding-bottom: 1rem;
+}
+@media (min-width: 640px) {
+  .vista-hero {
+    min-height: 50vh;
+    padding-top: 3.5rem;
+  }
+}
+.vista-scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.75rem;
+  align-self: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(196 181 253 / 0.75);
+  text-shadow: 0 0 14px rgb(139 92 246 / 0.5);
+  animation: vista-cue-bob 3.2s ease-in-out infinite;
+}
+.vista-scroll-cue:hover {
+  color: rgb(221 214 254 / 0.95);
+}
+@keyframes vista-cue-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.65; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+.vista-board {
+  scroll-margin-top: 6rem;
 }

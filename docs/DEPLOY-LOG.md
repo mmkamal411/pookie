@@ -4,6 +4,9 @@ Newest first. Each row: when, where, what commit, what changed, who/what trigger
 
 | Timestamp (EDT) | Env | Git SHA | Commits | Trigger | Smoke |
 |-----------------|-----|---------|---------|---------|-------|
+| 2026-10-12 09:00 | staging | 95b30f5 | 95b30f5 fix(spaceship-bugfix): replace invalid LayoutProps type in root layout; 299b791 docs: Squad Bugfix build-log entry (23a934b); 23a934b fix(spaceship-bugfix): 4 glitches — Mookie poll stranding, sign-out hang, overlay z-index, settings placeholder flash | deploy-staging.py (local) | fail |
+| 2026-10-12 08:37 | staging | d605af0 | d605af0 feat(spaceship-polish): cosmic glow layer — corner nebula blooms, sparkles, glass sheen; 94b361e fix(spaceship-verify): integration gate passed — tsc clean, build green, no conflicts; b5f9136 feat(spaceship-comms): Pookie/Mookie chat port — astronaut-assistant voice, Mookie queue, comm-chann | deploy-staging.py (local) | fail |
+| 2026-10-12 07:30 | staging | 4747b63 | 4747b63 fix: resolve /c/[childSlug] crash (Squad 2 root cause) + defensive hardening (Squad 3) | deploy-staging.py (local) | fail |
 | 2026-10-12 06:47 | staging | ed725dd | ed725dd diagnostic: bypass deletion check on / to isolate 500 | deploy-staging.py (local) | fail |
 | 2026-10-12 06:42 | staging | b1e3e9a | (no new commits) | deploy-staging.py (local) | fail |
 | 2026-10-12 06:31 | staging | b1e3e9a | b1e3e9a fix: dashboard-flagged runtime issues in 060-063 + authenticated smoke tests | deploy-staging.py (local) | pass |

@@ -162,7 +162,7 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
                   </span>
                   <span className="console-orb-pool" aria-hidden="true" />
                 </span>
-                <span className="console-tab-label mt-1 text-[11px] font-medium text-stardust-500">
+                <span className="console-tab-label mt-1 text-[11px] font-medium text-stardust-200">
                   {tab.label}
                 </span>
               </Link>
@@ -179,7 +179,7 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
               >
                 <span className="console-tab-glyph">{tab.glyph?.()}</span>
                 <span className="console-tab-slot" aria-hidden="true" />
-                <span className="console-tab-label text-[11px] font-medium text-stardust-500">
+                <span className="console-tab-label text-[11px] font-medium text-stardust-200">
                   {tab.label}
                 </span>
               </button>
@@ -194,7 +194,7 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
               >
                 <span className="console-tab-glyph">{tab.glyph?.()}</span>
                 <span className="console-tab-slot" aria-hidden="true" />
-                <span className="console-tab-label text-[11px] font-medium text-stardust-500">
+                <span className="console-tab-label text-[11px] font-medium text-stardust-200">
                   {tab.label}
                 </span>
               </Link>
