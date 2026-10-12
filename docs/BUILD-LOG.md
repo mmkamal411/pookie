@@ -3,6 +3,18 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Squad 2 Coordinator (Health Track 💚): SQUAD KICKOFF
+
+**Squad 2 — Health Track** (Managing Director directive). Five experts dispatched on `staging-build`:
+- **Product Manager (PMP)** → squad backlog (FR-HEALTH-001–011), phase exit criteria, dependency map, risk register → `docs/squads/squad2-health/PM-BACKLOG.md`
+- **Tech Lead / Backend** → migration drafts 022–027 (health_tier enum, `health_tier_visible()`, RLS, RPCs, cutover/purge jobs, 011/012 amendments) — DRAFT headers, not for apply until counsel clears taxonomy
+- **Senior Frontend** → W2 hub, W8 mood pulse, W23/W13 age-gated UI, `/health/review-18` interstitial, Sharing → Health toggles (Nebula theme)
+- **QA Engineer** → tier × band matrix tests, RLS deny-by-default proofs, cutover/deletion/chaos tests → `docs/squads/squad2-health/QA-PLAN.md`
+- **UX Designer** → consent screens, W8 interaction, weight-neutral copy system, review-18 flow, graduation-vs-rupture visuals → `docs/squads/squad2-health/UX-SPECS.md`
+
+**Posture:** plan now, build on legal signal. H0–H3 taxonomy gated on counsel sign-off (NFR-LEGAL). Every health table needs Fractional Team 1 compliance review + Team 2 RLS audit before phase completion. No deploy.
+
+
 ## 2026-10-12 ~03:45 EDT — Platform Team 1 Coordinator (staging-build): PHASE 0 KICKOFF
 
 **Platform Team 1 — Foundation & Access** (Managing Director directive). Four experts dispatched on `staging-build`:
