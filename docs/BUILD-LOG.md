@@ -3,6 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:52 EDT — Squad 1 Safety Track Coordinator (staging-build): UX DELIVERED (3/5)
+
+**UX specs delivered** (`docs/squad1/ux-specs.md`, 750 lines, commit 4f69681): 15 sections — trusted-adult A/B/C + decline (anti-dark-pattern), crisis card (4 placements, L3/L4 dismiss rules), cooling-off Steps 0–6-safe (visually-boring safe-exit trio), celebration-vs-rupture contrast table, Screen Time co-set, Explorer Setup, W19 (verbatim 911 banner, break-glass QR, lock-screen preview), full copy deck with [DV] review flags.
+
+**MD deltas applied:** D1 Path A 5-screen flow (request → calm waiting → 10-min timeout fallback → approved w/ countdown → denial), "trained crisis reviewer" copy rule; D7 CoarseLocationPicker (city/ZIP text, no map/pin) + trust copy at 6 placements; D6 Trusted/New badges + co-approval card + non-punitive cap copy; D4 after-hours/holiday banner variants + S2→ticket handoff. No-placeholders: loading/empty/error states on every screen; zero TBD/placeholder language (grep verified).
+
+**New blockers:**
+- D4 SLA value ("within 4 hours") is draft — needs MD confirmation of actual on-call SLA.
+- Path A strings added to DV-advocate review queue (scheduling needed).
+- W19 Cobb non-emergency number needs verification at seed time.
+
+**Still building:** Backend (migrations 022–029 + RPCs + crisis-router), Frontend (7 components). Prior blockers stand: vendor selection (MD), DB access (Mehedi), counsel sign-offs, crisis-ruleset contents.
+
+
 ## 2026-10-12 ~04:05 EDT — Squad 2 Health Track 💚 UX Designer (staging-build): UX-SPECS.md DELIVERED
 
 **File:** [docs/squads/squad2-health/UX-SPECS.md](sandbox://workspace/pookie-app/docs/squads/squad2-health/UX-SPECS.md) (731 lines, design-only, no code, no deploys). All 6 mission deliverables + implementation contracts, copy-lint, conflict register, acceptance criteria:
