@@ -43,41 +43,9 @@ export const bandStyles: Record<GradeBand, BandStyle> = {
   },
 };
 
-/** White-card tone — deeper shades for dark-on-white (Home tab). */
-export const bandStylesWhite: Record<GradeBand, BandStyle> = {
-  green: {
-    text: "text-emerald-600",
-    ring: "border-emerald-500/30",
-    bar: "bg-emerald-500",
-    chip: "border-emerald-500/40 bg-emerald-50 text-emerald-700",
-    glow: "0 0 14px rgb(74 222 128 / 0.25)",
-  },
-  yellow: {
-    text: "text-amber-600",
-    ring: "border-amber-500/30",
-    bar: "bg-amber-500",
-    chip: "border-amber-500/40 bg-amber-50 text-amber-700",
-    glow: "0 0 14px rgb(251 191 36 / 0.25)",
-  },
-  orange: {
-    text: "text-orange-600",
-    ring: "border-orange-500/30",
-    bar: "bg-orange-500",
-    chip: "border-orange-500/40 bg-orange-50 text-orange-700",
-    glow: "0 0 14px rgb(251 146 60 / 0.25)",
-  },
-  red: {
-    text: "text-red-600",
-    ring: "border-red-500/30",
-    bar: "bg-red-500",
-    chip: "border-red-500/40 bg-red-50 text-red-700",
-    glow: "0 0 14px rgb(248 113 113 / 0.28)",
-  },
-};
-
-/** Pick the band palette for the card tone. */
-export function bandStyleFor(band: GradeBand, tone: "dark" | "white" = "dark"): BandStyle {
-  return tone === "white" ? bandStylesWhite[band] : bandStyles[band];
+/** Pick the band palette for the card. Single cockpit theme: always dark. */
+export function bandStyleFor(band: GradeBand): BandStyle {
+  return bandStyles[band];
 }
 /** Gap-to-90 in words — the mission frame for every class. */
 export function gapCopy(gap: number | null): string {

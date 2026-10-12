@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NebulaBackground } from "@/components/nebula-background";
 import { CosmicSceneDirector } from "@/components/cosmic-scene-director";
+import { CockpitBackground } from "@/components/space-background";
 import { CommandDeck } from "@/components/command-deck";
 import { ServiceWorkerRegistrar } from "@/components/pwa/sw-registrar";
 // Squad Cookie 2026-10-12 — consent banner, preference center, footer.
@@ -58,10 +59,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Apply the saved theme before first paint (no flash). Default: space black. */}
+        {/* Clear legacy theme storage before first paint (no flash).
+            Bright Bridge is dead (Mehedi 2026-10-12): the whole ship is
+            Space Black, the only theme. This removes any stored preference
+            and the data-theme attribute it once drove. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("pookie-theme");if(t==="bright-bridge"||t==="light"){document.documentElement.setAttribute("data-theme","bright-bridge");}}catch(e){}})();`,
+            __html: `(function(){try{localStorage.removeItem("pookie-theme");document.documentElement.removeAttribute("data-theme");}catch(e){}})();`,
           }}
         />
         {/* Squad Mobile 2026-10-12 — iOS splash screens for Add to Home Screen.
@@ -111,6 +115,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegistrar />
+        {/* Cockpit video background — mounted once at root so it survives
+            full page loads on EVERY route (including /household/*). Picks
+            the per-route video itself; never unmounts on navigation. */}
+        <CockpitBackground />
         <NebulaBackground />
         <CosmicSceneDirector />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>

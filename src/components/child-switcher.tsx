@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/components/tenant-provider";
 import { setActiveChild } from "@/lib/tenant/actions";
-import { useTheme } from "@/components/use-theme";
 import type { TenantMembership } from "@/lib/tenant/types";
 
 function initials(name: string): string {
@@ -14,11 +13,9 @@ function initials(name: string): string {
 function ChildAvatar({
   child,
   size = 32,
-  dark,
 }: {
   child: TenantMembership["child"];
   size?: number;
-  dark: boolean;
 }) {
   if (child.avatar_url) {
     // User-provided external avatar — next/image would need remote config.
@@ -42,9 +39,9 @@ function ChildAvatar({
         width: size,
         height: size,
         fontSize: size * 0.42,
-        borderColor: dark ? "rgb(0 229 255 / 0.35)" : "rgb(0 184 212 / 0.4)",
-        background: dark ? "rgb(17 24 50 / 0.9)" : "rgb(234 242 246)",
-        color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)",
+        borderColor: "rgb(0 229 255 / 0.35)",
+        background: "rgb(13 17 22 / 0.9)",
+        color: "rgb(232 240 254)",
       }}
     >
       {initials(child.nickname ?? child.first_name ?? "?")}
@@ -55,7 +52,7 @@ function ChildAvatar({
 /**
  * ChildRosterPanel — the crew-roster menu content: pick which child to
  * view, plus Add Child for parents. Rendered inside the Command Center
- * menu. Theme-aware (space black / bright bridge).
+ * menu. Single cockpit theme: Space Black instrument panels.
  *
  * Identity model (Mehedi 2026-10-12): the menu shows the LOGGED-IN USER
  * (the parent) in the pilot readout; this roster picks which child is
@@ -70,8 +67,6 @@ export function ChildRosterPanel({
   /** Called after a selection so the hosting menu can close. */
   onDone?: () => void;
 }) {
-  const { theme } = useTheme();
-  const dark = theme !== "bright-bridge";
   const { memberships, activeChildId } = useTenant();
   const router = useRouter();
   const [switching, setSwitching] = useState(false);
@@ -106,18 +101,17 @@ export function ChildRosterPanel({
     else router.push("/add-child");
   }
 
-  const line = dark ? "rgb(0 229 255 / 0.14)" : "rgb(0 184 212 / 0.2)";
-  const label = dark ? "rgb(138 155 184)" : "rgb(74 96 112)";
-  const text = dark ? "rgb(232 240 254)" : "rgb(14 27 36)";
-  const sub = dark ? "rgb(138 155 184)" : "rgb(74 96 112)";
-  const hover = dark ? "rgb(0 229 255 / 0.07)" : "rgb(0 184 212 / 0.07)";
+  const line = "rgb(0 229 255 / 0.14)";
+  const label = "rgb(138 155 184)";
+  const text = "rgb(232 240 254)";
+  const hover = "rgb(0 229 255 / 0.07)";
 
   return (
     <section aria-label="Crew roster">
       <div className="px-4 pt-3 pb-1">
         <p
           className="font-mono text-[10px] font-semibold tracking-[0.22em] uppercase"
-          style={{ color: dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212)" }}
+          style={{ color: "rgb(0 229 255 / 0.9)" }}
         >
           Crew Roster
         </p>
@@ -144,11 +138,11 @@ export function ChildRosterPanel({
               onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <ChildAvatar child={m.child} size={34} dark={dark} />
+              <ChildAvatar child={m.child} size={34} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{name}</span>
                 {detail && (
-                  <span className="block truncate text-xs" style={{ color: sub }}>
+                  <span className="block truncate text-xs" style={{ color: label }}>
                     {detail}
                   </span>
                 )}
@@ -188,8 +182,8 @@ export function ChildRosterPanel({
               aria-hidden="true"
               className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed text-base"
               style={{
-                borderColor: dark ? "rgb(0 229 255 / 0.4)" : "rgb(0 184 212 / 0.45)",
-                color: dark ? "rgb(0 229 255)" : "rgb(0 184 212)",
+                borderColor: "rgb(0 229 255 / 0.4)",
+                color: "rgb(0 229 255)",
               }}
             >
               +

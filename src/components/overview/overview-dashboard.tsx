@@ -91,12 +91,12 @@ export function OverviewDashboard({
         <OverviewSection title="Classes" badge={classes.length} delay={0.2}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {classes.map((cls, i) => (
-              <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} tone="white" />
+              <ClassCard key={cls.class_id} cls={cls} childSlug={childSlug} index={i} />
             ))}
           </div>
           <Link
             href={`/c/${childSlug}/school`}
-            className="cta-glow mt-4 inline-block text-sm font-medium text-nova-600 hover:text-nova-500"
+            className="cta-glow mt-4 inline-block text-sm font-medium text-nova-400 hover:text-nova-300"
           >
             Open the school console →
           </Link>
@@ -136,12 +136,12 @@ export function OverviewDashboard({
           <OverviewSection title="Daily Log" badge="!" delay={0.36}>
             <Link
               href={`/c/${childSlug}/school#checkin`}
-              className="card-white block rounded-2xl px-5 py-4"
+              className="card-cockpit block rounded-2xl px-5 py-4"
             >
-              <p className="text-sm font-medium text-[#1e2a3a]">
+              <p className="text-sm font-medium text-star-100">
                 {childName} hasn't logged today's check-in yet.
               </p>
-              <p className="mt-1 text-sm text-[#55677e]">
+              <p className="mt-1 text-sm text-stardust-300">
                 Two minutes — how did the mission go? It shapes tonight's flight plan. →
               </p>
             </Link>

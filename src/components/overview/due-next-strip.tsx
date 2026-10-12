@@ -29,22 +29,22 @@ export function DueNextStrip({
     >
       <div className="flex snap-x snap-mandatory gap-3">
         {urgent.map((item) => {
-          const s = statusStyle(item.status, "white");
+          const s = statusStyle(item.status);
           return (
             <Link
               key={item.id}
               role="listitem"
               href={`/c/${childSlug}/school/${item.class_slug}`}
-              className="card-white w-56 shrink-0 snap-start rounded-2xl p-4"
+              className="card-cockpit w-56 shrink-0 snap-start rounded-2xl p-4"
             >
               <p className="flex items-center gap-2 text-[11px] font-semibold tracking-wide capitalize">
                 <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden="true" />
                 <span className={s.text}>{s.label}</span>
               </p>
-              <p className="mt-2 line-clamp-2 text-sm font-medium text-[#1e2a3a]">
+              <p className="mt-2 line-clamp-2 text-sm font-medium text-star-100">
                 {item.title}
               </p>
-              <p className="mt-1 truncate text-xs text-[#55677e]">
+              <p className="mt-1 truncate text-xs text-stardust-300">
                 {item.class_name}
                 {item.category ? ` · ${item.category}` : ""}
               </p>

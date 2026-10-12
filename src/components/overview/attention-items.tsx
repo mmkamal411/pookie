@@ -39,8 +39,8 @@ export function AttentionItems({
 
   if (needing.length === 0) {
     return (
-      <div className="card-white love-halo rounded-2xl px-5 py-4">
-        <p className="text-sm text-[#1e2a3a]">
+      <div className="card-cockpit love-halo rounded-2xl px-5 py-4">
+        <p className="text-sm text-star-100">
           Nothing needs extra attention right now — every class is at or above 80. ✅
         </p>
       </div>
@@ -51,7 +51,7 @@ export function AttentionItems({
     <div className="grid gap-3">
       {needing.map((cls, i) => {
         const band = gradeBand(cls.numeric);
-        const s = bandStyleFor(band, "white");
+        const s = bandStyleFor(band);
         const gap = gapTo90(cls.numeric);
         const delta = deltaCopy(cls.delta_7d);
         const urgent = dueNext
@@ -62,13 +62,13 @@ export function AttentionItems({
         return (
           <article
             key={cls.class_id}
-            className="card-white animate-bloom rounded-2xl border p-5"
+            className="card-cockpit animate-bloom rounded-2xl border p-5"
             style={{ animationDelay: `${0.05 + i * 0.06}s`, borderColor: "rgb(0 229 255 / 0.25)" }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium text-[#1e2a3a]">{displayName}</p>
-                <p className="mt-1 text-xs text-[#55677e]">
+                <p className="font-medium text-star-100">{displayName}</p>
+                <p className="mt-1 text-xs text-stardust-300">
                   {gapCopy(gap)}
                   {delta ? ` · ${delta}` : ""}
                 </p>
@@ -89,10 +89,10 @@ export function AttentionItems({
             {urgent.length > 0 && (
               <ul className="mt-3 space-y-2 border-t border-nova-600/15 pt-3">
                 {urgent.map((item) => {
-                  const st = statusStyle(item.status, "white");
+                  const st = statusStyle(item.status);
                   return (
                     <li key={item.id} className="flex items-center justify-between gap-3">
-                      <p className="min-w-0 truncate text-sm text-[#1e2a3a]">
+                      <p className="min-w-0 truncate text-sm text-star-100">
                         <span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden="true" />
                         {item.title}
                       </p>
@@ -109,7 +109,7 @@ export function AttentionItems({
 
             <Link
               href={`/c/${childSlug}/school/${cls.class_slug}`}
-              className="mt-3 inline-block text-sm font-medium text-nova-600 hover:text-nova-500"
+              className="mt-3 inline-block text-sm font-medium text-nova-400 hover:text-nova-300"
             >
               Open {displayName} →
             </Link>

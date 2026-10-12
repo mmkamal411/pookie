@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "@/components/use-theme";
 import { ChildRosterPanel } from "@/components/child-switcher";
 import { signOut } from "@/lib/tenant/actions";
 
@@ -11,9 +10,12 @@ import { signOut } from "@/lib/tenant/actions";
  * A 40px spacecraft button tucked in the top-right corner with a pulsing
  * neon ring + blinking beacon dot so it's instantly findable. Tapping it
  * unfolds the secret mission-critical menu: pilot readout, crew roster,
- * bridge theme switcher, and mission-parameter links.
+ * and mission-parameter links.
  *
- * Shared rules (both themes): no top toolbar, Title Case, spacecraft
+ * Single cockpit theme (Mehedi 2026-10-12): Space Black instrument panels
+ * everywhere. The Bridge Theme switcher was removed with Bright Bridge.
+ *
+ * Shared rules: no top toolbar, Title Case, spacecraft
  * metaphors only, zero purple/lavender/pink/warmth.
  *
  * Keyframes (cc-unfold, cc-beacon-blink, cc-ring-breathe) live in
@@ -48,54 +50,24 @@ function SaucerIcon() {
   );
 }
 
-function ThemeSwatch({ which, active }: { which: "space-black" | "bright-bridge"; active: boolean }) {
-  const dark = which === "space-black";
-  return (
-    <span
-      aria-hidden="true"
-      className="h-9 w-9 shrink-0 rounded-md border"
-      style={{
-        background: dark ? "#050510" : "#F4F8FA",
-        borderColor: dark ? "rgb(0 229 255 / 0.55)" : "rgb(0 184 212 / 0.5)",
-        boxShadow: active
-          ? dark
-            ? "0 0 12px rgb(0 229 255 / 0.5)"
-            : "0 0 12px rgb(0 184 212 / 0.45)"
-          : "none",
-      }}
-    >
-      <span
-        className="mx-auto mt-1.5 block h-1 w-5 rounded-full"
-        style={{ background: dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.85)" }}
-      />
-      <span
-        className="mx-auto mt-1 block h-1 w-3 rounded-full"
-        style={{ background: dark ? "rgb(0 255 136 / 0.7)" : "rgb(0 200 83 / 0.7)" }}
-      />
-    </span>
-  );
-}
-
 function MenuRow({
   href,
   label,
   detail,
-  dark,
   onNavigate,
 }: {
   href: string;
   label: string;
   detail: string;
-  dark: boolean;
   onNavigate: () => void;
 }) {
-  const hover = dark ? "rgb(0 229 255 / 0.07)" : "rgb(0 184 212 / 0.07)";
+  const hover = "rgb(0 229 255 / 0.07)";
   return (
     <Link
       href={href}
       onClick={onNavigate}
       className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors"
-      style={{ color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)" }}
+      style={{ color: "rgb(232 240 254)" }}
       onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
@@ -103,12 +75,12 @@ function MenuRow({
         <span className="block text-sm font-medium">{label}</span>
         <span
           className="block font-mono text-[10px] tracking-[0.14em] uppercase"
-          style={{ fontFamily: MONO, color: dark ? "rgb(138 155 184)" : "rgb(74 96 112)" }}
+          style={{ fontFamily: MONO, color: "rgb(138 155 184)" }}
         >
           {detail}
         </span>
       </span>
-      <span aria-hidden="true" style={{ color: dark ? "rgb(0 229 255 / 0.7)" : "rgb(0 184 212)" }}>
+      <span aria-hidden="true" style={{ color: "rgb(0 229 255 / 0.7)" }}>
         ▸
       </span>
     </Link>
@@ -126,8 +98,6 @@ function CommandCenterMenu({
   childSlug: string;
   onClose: () => void;
 }) {
-  const { theme, setTheme } = useTheme();
-  const dark = theme !== "bright-bridge";
   const [signingOut, setSigningOut] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -162,9 +132,9 @@ function CommandCenterMenu({
   }
 
   const base = `/c/${childSlug}/settings`;
-  const line = dark ? "rgb(0 229 255 / 0.14)" : "rgb(0 184 212 / 0.22)";
-  const label = dark ? "rgb(138 155 184)" : "rgb(74 96 112)";
-  const hover = dark ? "rgb(0 229 255 / 0.07)" : "rgb(0 184 212 / 0.07)";
+  const line = "rgb(0 229 255 / 0.14)";
+  const label = "rgb(138 155 184)";
+  const hover = "rgb(0 229 255 / 0.07)";
 
   return (
     <div
@@ -177,12 +147,10 @@ function CommandCenterMenu({
       <div
         className="relative"
         style={{
-          background: dark ? "rgb(5 5 16 / 0.97)" : "rgb(255 255 255 / 0.97)",
-          border: dark ? "1px solid rgb(0 229 255 / 0.28)" : "1px solid rgb(0 184 212 / 0.35)",
+          background: "rgb(5 8 10 / 0.97)",
+          border: "1px solid rgb(0 229 255 / 0.28)",
           borderRadius: 8,
-          boxShadow: dark
-            ? "0 0 28px rgb(0 229 255 / 0.14), 0 20px 55px rgb(0 0 0 / 0.55)"
-            : "0 8px 30px rgb(14 27 36 / 0.14), 0 0 22px rgb(0 184 212 / 0.12)",
+          boxShadow: "0 0 28px rgb(0 229 255 / 0.14), 0 20px 55px rgb(0 0 0 / 0.55)",
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
           transformOrigin: "top right",
@@ -195,8 +163,8 @@ function CommandCenterMenu({
           className="pointer-events-none absolute"
           style={{
             top: -1, left: -1, width: 12, height: 12,
-            borderTop: `2px solid ${dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.9)"}`,
-            borderLeft: `2px solid ${dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.9)"}`,
+            borderTop: "2px solid rgb(0 229 255 / 0.9)",
+            borderLeft: "2px solid rgb(0 229 255 / 0.9)",
             borderTopLeftRadius: 8,
           }}
         />
@@ -205,8 +173,8 @@ function CommandCenterMenu({
           className="pointer-events-none absolute"
           style={{
             bottom: -1, right: -1, width: 12, height: 12,
-            borderBottom: `2px solid ${dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.9)"}`,
-            borderRight: `2px solid ${dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212 / 0.9)"}`,
+            borderBottom: "2px solid rgb(0 229 255 / 0.9)",
+            borderRight: "2px solid rgb(0 229 255 / 0.9)",
             borderBottomRightRadius: 8,
           }}
         />
@@ -215,7 +183,7 @@ function CommandCenterMenu({
         <div className="px-4 pt-3.5 pb-3" style={{ borderBottom: `1px solid ${line}` }}>
           <p
             className="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.24em] uppercase"
-            style={{ fontFamily: MONO, color: dark ? "rgb(0 229 255 / 0.95)" : "rgb(0 184 212)" }}
+            style={{ fontFamily: MONO, color: "rgb(0 229 255 / 0.95)" }}
           >
             <span
               aria-hidden="true"
@@ -230,7 +198,7 @@ function CommandCenterMenu({
           </p>
           <p
             className="mt-1.5 text-lg font-semibold tracking-tight"
-            style={{ color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)" }}
+            style={{ color: "rgb(232 240 254)" }}
           >
             Command Center
           </p>
@@ -245,12 +213,10 @@ function CommandCenterMenu({
             aria-hidden="true"
             className="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold"
             style={{
-              borderColor: dark ? "rgb(0 229 255 / 0.4)" : "rgb(0 184 212 / 0.45)",
-              background: dark ? "rgb(17 24 50 / 0.9)" : "rgb(234 242 246)",
-              color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)",
-              boxShadow: dark
-                ? "0 0 12px rgb(0 229 255 / 0.25)"
-                : "0 0 10px rgb(0 184 212 / 0.2)",
+              borderColor: "rgb(0 229 255 / 0.4)",
+              background: "rgb(13 17 22 / 0.9)",
+              color: "rgb(232 240 254)",
+              boxShadow: "0 0 12px rgb(0 229 255 / 0.25)",
             }}
           >
             {(parentName.trim().slice(0, 1) || "?").toUpperCase()}
@@ -258,7 +224,7 @@ function CommandCenterMenu({
           <span className="min-w-0 flex-1">
             <span
               className="block truncate text-sm font-semibold"
-              style={{ color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)" }}
+              style={{ color: "rgb(232 240 254)" }}
             >
               {parentName}
             </span>
@@ -281,77 +247,21 @@ function CommandCenterMenu({
           <ChildRosterPanel role={role} onDone={onClose} />
         </div>
 
-        {/* Bridge theme switcher */}
-        <div className="px-4 py-3" style={{ borderBottom: `1px solid ${line}` }}>
-          <p
-            className="font-mono text-[10px] font-semibold tracking-[0.22em] uppercase"
-            style={{ fontFamily: MONO, color: dark ? "rgb(0 229 255 / 0.9)" : "rgb(0 184 212)" }}
-          >
-            Bridge Theme
-          </p>
-          <div className="mt-2 flex gap-2">
-            {(
-              [
-                { id: "space-black", label: "Space Black" },
-                { id: "bright-bridge", label: "Bright Bridge" },
-              ] as const
-            ).map((t) => {
-              const selected = theme === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTheme(t.id)}
-                  aria-pressed={selected}
-                  className="flex flex-1 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition"
-                  style={{
-                    borderColor: selected
-                      ? dark
-                        ? "rgb(0 229 255 / 0.6)"
-                        : "rgb(0 184 212 / 0.6)"
-                      : line,
-                    background: selected
-                      ? dark
-                        ? "rgb(0 229 255 / 0.08)"
-                        : "rgb(0 184 212 / 0.08)"
-                      : "transparent",
-                    boxShadow: selected
-                      ? dark
-                        ? "0 0 14px rgb(0 229 255 / 0.18)"
-                        : "0 0 14px rgb(0 184 212 / 0.18)"
-                      : "none",
-                  }}
-                >
-                  <ThemeSwatch which={t.id} active={selected} />
-                  <span
-                    className="text-xs font-semibold"
-                    style={{ color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)" }}
-                  >
-                    {t.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Mission parameters */}
         <nav aria-label="Command Center options" className="py-1.5">
-          <MenuRow href={base} label="User Profile" detail="Identity // Preferences" dark={dark} onNavigate={onClose} />
+          <MenuRow href={base} label="User Profile" detail="Identity // Preferences" onNavigate={onClose} />
           {role === "parent" && (
             <>
               <MenuRow
                 href={`${base}/family`}
                 label="Child Management"
                 detail="Roster // Access"
-                dark={dark}
                 onNavigate={onClose}
               />
               <MenuRow
                 href={`${base}/sync`}
                 label="Account Settings"
                 detail="Sync // Systems"
-                dark={dark}
                 onNavigate={onClose}
               />
             </>
@@ -361,7 +271,7 @@ function CommandCenterMenu({
             onClick={() => void handleSignOut()}
             disabled={signingOut}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors disabled:opacity-60"
-            style={{ color: dark ? "rgb(232 240 254)" : "rgb(14 27 36)" }}
+            style={{ color: "rgb(232 240 254)" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
@@ -397,8 +307,6 @@ export function CommandCenterButton({
   role?: "parent" | "child";
   childSlug: string;
 }) {
-  const { theme } = useTheme();
-  const dark = theme !== "bright-bridge";
   const [open, setOpen] = useState(false);
 
   return (
@@ -414,9 +322,9 @@ export function CommandCenterButton({
         aria-label="Command Center — open user menu"
         className="relative flex h-10 w-10 items-center justify-center rounded-full"
         style={{
-          background: dark ? "rgb(11 16 32 / 0.92)" : "rgb(255 255 255 / 0.94)",
-          border: `1px solid ${dark ? "rgb(0 229 255 / 0.45)" : "rgb(0 184 212 / 0.5)"}`,
-          color: dark ? "#00E5FF" : "#00B8D4",
+          background: "rgb(10 13 16 / 0.92)",
+          border: "1px solid rgb(0 229 255 / 0.45)",
+          color: "#00E5FF",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           animation: "cc-ring-breathe 3s ease-in-out infinite",

@@ -212,7 +212,7 @@ const WINDOW_CSS = `
   min-height: 48px; padding: 8px 14px 8px 12px; border-radius: 9999px;
   font-size: 13px; font-weight: 600; color: rgb(255 255 255 / 0.92);
   white-space: nowrap; flex-shrink: 0;
-  background: linear-gradient(180deg, rgb(26 42 68 / 0.92), rgb(12 22 40 / 0.94));
+  background: linear-gradient(180deg, rgb(13 17 22 / 0.94), rgb(7 10 14 / 0.96));
   border: 1px solid rgb(255 255 255 / 0.14);
   box-shadow: 0 6px 24px rgb(0 0 0 / 0.5), 0 0 16px var(--modwin-glow-soft, rgb(0 229 255 / 0.25));
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);

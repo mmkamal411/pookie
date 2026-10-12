@@ -9,11 +9,9 @@ import type { GradeBand } from "@/lib/grades";
  */
 export function GradeRing({
   numeric,
-  tone = "dark",
   size = 64,
 }: {
   numeric: number | null;
-  tone?: "dark" | "white";
   size?: number;
 }) {
   const band: GradeBand = gradeBand(numeric);
@@ -32,7 +30,7 @@ export function GradeRing({
     red: { main: "#f87171", soft: "rgb(248 113 113 / 0.35)" },
   };
   const h = numeric == null ? { main: "#a8b4c8", soft: "rgb(168 180 200 / 0.25)" } : hues[band];
-  const track = tone === "white" ? "rgb(35 42 58 / 0.12)" : "rgb(0 229 255 / 0.14)";
+  const track = "rgb(0 229 255 / 0.14)";
 
   const ringId = `gr-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -82,7 +80,7 @@ export function GradeRing({
         y="50%"
         dy="0.36em"
         textAnchor="middle"
-        fill={tone === "white" ? "#1e2a3a" : "#f4f2ff"}
+        fill="#f5fafb"
         fontSize={size * 0.26}
         fontWeight={600}
         style={{ fontVariantNumeric: "tabular-nums" }}

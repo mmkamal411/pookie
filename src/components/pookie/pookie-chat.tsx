@@ -20,7 +20,6 @@ import { detectClassNeon } from "@/components/pookie/class-neons";
 import { setPookieColor } from "@/components/pookie/pookie-color";
 import { orbListen, orbThink, orbCelebrate, orbCalm } from "@/lib/orb/orb-events";
 import { MiniPookie, MiniMuse, moodForMessage, POOKIE_AVATAR_KEYFRAMES } from "@/components/pookie/pookie-avatars";
-import { useTheme } from "@/components/use-theme";
 
 const STORAGE_KEY = "pookie-chat-v1";
 const QUEUE_KEY = "pookie-muse-queue";
@@ -86,47 +85,45 @@ function loadHistory(childName: string): ChatMessage[] {
 }
 
 /**
- * Theme class + token maps. Space Black (default) renders the Hull dark
- * instrument system; Bright Bridge renders the bridge light system.
- * One markup, two themes — switched instantly via useTheme().
+ * Theme class + token maps. Single cockpit theme (Mehedi 2026-10-12):
+ * the Hull dark instrument system only. The Bright Bridge light variant
+ * is dead and its classes were deleted.
  */
 function useChatTheme() {
-  const { theme } = useTheme();
-  const dark = theme !== "bright-bridge";
   const cx = {
-    panel: dark ? "hull-panel hull-panel-accent hull-cyan" : "bridge-panel bridge-panel-accent bridge-cyan",
-    title: dark ? "hull-title" : "bridge-title",
-    readout: dark ? "hull-readout" : "bridge-readout",
-    readoutLabel: dark ? "hull-readout-label" : "bridge-readout-label",
-    msg: dark ? "hull-msg" : "bridge-msg",
-    msgUser: dark ? "hull-msg-user" : "bridge-msg-user",
-    msgAi: dark ? "hull-msg-ai" : "bridge-msg-ai",
-    amber: dark ? "hull-amber" : "bridge-amber",
-    btn: dark ? "hull-btn" : "bridge-btn",
-    input: dark ? "hull-input" : "bridge-input",
+    panel: "hull-panel hull-panel-accent hull-cyan",
+    title: "hull-title",
+    readout: "hull-readout",
+    readoutLabel: "hull-readout-label",
+    msg: "hull-msg",
+    msgUser: "hull-msg-user",
+    msgAi: "hull-msg-ai",
+    amber: "hull-amber",
+    btn: "hull-btn",
+    input: "hull-input",
   };
   const tok = {
-    text: dark ? "var(--hull-text-rgb)" : "var(--bridge-text-rgb)",
-    textDim: dark ? "var(--hull-text-dim-rgb)" : "var(--bridge-text-dim-rgb)",
-    textFaint: dark ? "var(--hull-text-faint-rgb)" : "var(--bridge-text-faint-rgb)",
-    cyan: dark ? "var(--neon-cyan-rgb)" : "var(--bridge-cyan-rgb)",
-    green: dark ? "var(--neon-green-rgb)" : "var(--bridge-green-rgb)",
-    amber: dark ? "var(--neon-amber-rgb)" : "var(--bridge-amber-rgb)",
-    line: dark ? "var(--hull-line-rgb)" : "var(--bridge-line-rgb)",
-    glass: dark ? "var(--hull-bulkhead-rgb)" : "var(--bridge-glass-rgb)",
+    text: "var(--hull-text-rgb)",
+    textDim: "var(--hull-text-dim-rgb)",
+    textFaint: "var(--hull-text-faint-rgb)",
+    cyan: "var(--neon-cyan-rgb)",
+    green: "var(--neon-green-rgb)",
+    amber: "var(--neon-amber-rgb)",
+    line: "var(--hull-line-rgb)",
+    glass: "var(--hull-bulkhead-rgb)",
   };
-  return { dark, cx, tok };
+  return { cx, tok };
 }
 
 /** Square status-light frame around chat avatars (4px radius). */
-function StatusFrame({ children, dark }: { children: ReactNode; dark: boolean }) {
+function StatusFrame({ children }: { children: ReactNode }) {
   return (
     <div
       aria-hidden="true"
       className="shrink-0 border p-0.5"
       style={{
-        borderColor: dark ? "rgb(var(--hull-line-rgb))" : "rgb(var(--bridge-line-rgb))",
-        background: dark ? "rgb(var(--hull-bulkhead-rgb))" : "rgb(var(--bridge-glass-rgb))",
+        borderColor: "rgb(var(--hull-line-rgb))",
+        background: "rgb(var(--hull-bulkhead-rgb))",
         borderRadius: 4,
       }}
     >
@@ -136,15 +133,8 @@ function StatusFrame({ children, dark }: { children: ReactNode; dark: boolean })
 }
 
 /** Three blinking status dots — the mission-control typing indicator. */
-function TypingDots({ tone = "green", dark }: { tone?: "green" | "amber"; dark: boolean }) {
-  const rgb =
-    tone === "amber"
-      ? dark
-        ? "var(--neon-amber-rgb)"
-        : "var(--bridge-amber-rgb)"
-      : dark
-        ? "var(--neon-green-rgb)"
-        : "var(--bridge-green-rgb)";
+function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
+  const rgb = tone === "amber" ? "var(--neon-amber-rgb)" : "var(--neon-green-rgb)";
   return (
     <span className="flex items-center gap-1.5" aria-hidden="true">
       {[0, 1, 2].map((d) => (
@@ -226,7 +216,7 @@ export function PookieChat({
   /** The viewer's age in years, computed server-side. Null = unknown = gated. */
   viewerAge?: number | null;
 }) {
-  const { dark, cx, tok } = useChatTheme();
+  const { cx, tok } = useChatTheme();
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory(childName));
   const [draft, setDraft] = useState("");
   const [directMode, setDirectMode] = useState(false);
@@ -483,16 +473,14 @@ export function PookieChat({
     <main
       className="relative mx-auto flex w-full max-w-2xl flex-col px-4 pt-6"
       style={{
-        background: dark
-          ? "rgb(var(--hull-void-rgb) / 0.55)"
-          : "rgb(var(--bridge-white-rgb) / 0.86)",
+        background: "rgb(var(--hull-void-rgb) / 0.55)",
       }}
     >
       <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${CHAT_KEYFRAMES}`}</style>
 
-      {/* Header — instrument panel with cyan LED strip and corner brackets.
-          Space Black gets a soft breathing glow; Bright Bridge stays crisp. */}
-      <header className={`${cx.panel} ${dark ? "glow-breathe-soft" : ""} animate-bloom px-4 py-3`}>
+      {/* Header — instrument panel with cyan LED strip, corner brackets,
+          and a soft breathing glow. */}
+      <header className={`${cx.panel} glow-breathe-soft animate-bloom px-4 py-3`}>
         <div className="flex items-center gap-4">
           {/* AI core link — ambient instrument light; the one orb watches from the toolbar. */}
           <div
@@ -596,11 +584,11 @@ export function PookieChat({
             </div>
           ) : m.thinking ? (
             <div key={i} className="flex gap-2.5">
-              <StatusFrame dark={dark}>
+              <StatusFrame>
                 <MiniPookie size={24} speaking />
               </StatusFrame>
               <div className={`${cx.msg} ${cx.msgAi} flex items-center gap-3 px-4 py-3`}>
-                <TypingDots dark={dark} />
+                <TypingDots />
                 <p className={`${cx.readout} text-[11px]`} style={{ color: `rgb(${tok.textDim})` }}>
                   {m.persona === "muse" ? "Analyzing…" : "Transmitting…"}
                 </p>
@@ -608,7 +596,7 @@ export function PookieChat({
             </div>
           ) : (
             <div key={i} className="flex gap-2.5">
-              <StatusFrame dark={dark}>
+              <StatusFrame>
                 {m.persona === "muse" || m.museDeep ? (
                   <MiniMuse size={24} />
                 ) : (
@@ -635,11 +623,11 @@ export function PookieChat({
         )}
         {museThinking && (
           <div className="flex gap-2.5">
-            <StatusFrame dark={dark}>
+            <StatusFrame>
               <MiniMuse size={24} />
             </StatusFrame>
             <div className={`${cx.msg} ${cx.amber} flex items-center gap-3 px-4 py-3`}>
-              <TypingDots tone="amber" dark={dark} />
+              <TypingDots tone="amber" />
               <p className={`${cx.readout} text-[11px]`} style={{ color: `rgb(${tok.textDim})` }}>
                 {museSlow ? "Deep Scan Delayed — Still On It…" : "Deep Scan In Progress…"}
               </p>

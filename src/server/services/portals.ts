@@ -19,6 +19,7 @@
 //     (supabase/functions/verify-credential — stub; future work). The route
 //     must not present a boolean true as "portal login verified".
 import { createClient } from "@/lib/supabase/server";
+import { guardServiceError } from "@/server/services/backend-availability";
 
 export type PortalStatus = "unverified" | "verified" | "failed";
 
@@ -47,14 +48,22 @@ function maskUsername(username: string | null): string | null {
 /** Portal metadata for the child (secret-less view). Parent-asserted by the route. */
 export async function listPortals(childId: string): Promise<{ portals: PortalMetadata[] }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("child_portals_public")
-    .select(
-      "id, child_id, portal_key, label, username, status, last_verified_at, consecutive_failures, credentials_updated_at, created_at",
-    )
-    .eq("child_id", childId)
-    .order("portal_key");
-  if (error) throw error;
+  // Missing credential vault (003 not migrated) → 503 SERVICE_NOT_READY,
+  // never a 500.
+  let data: unknown[] | null;
+  try {
+    const { data: rows, error } = await supabase
+      .from("child_portals_public")
+      .select(
+        "id, child_id, portal_key, label, username, status, last_verified_at, consecutive_failures, credentials_updated_at, created_at",
+      )
+      .eq("child_id", childId)
+      .order("portal_key");
+    if (error) throw error;
+    data = rows;
+  } catch (err) {
+    guardServiceError(err);
+  }
   const portals: PortalMetadata[] = ((data ?? []) as Array<{
     id: string;
     child_id: string | null;
@@ -99,17 +108,23 @@ export async function savePortal(
   input: SavePortalInput,
 ): Promise<{ portal: { id: string; portal_key: string; status: PortalStatus } }> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("set_tenant_secret", {
-    p_child_id: childId,
-    p_portal_key: input.portal_key,
-    p_label: input.label,
-    p_username: input.username ?? null,
-    p_secret: input.password,
-  });
-  if (error) throw error;
-  return {
-    portal: { id: data as string, portal_key: input.portal_key, status: "unverified" },
-  };
+  // Missing set_tenant_secret() (003 not migrated) → 503 SERVICE_NOT_READY,
+  // never a 500.
+  try {
+    const { data, error } = await supabase.rpc("set_tenant_secret", {
+      p_child_id: childId,
+      p_portal_key: input.portal_key,
+      p_label: input.label,
+      p_username: input.username ?? null,
+      p_secret: input.password,
+    });
+    if (error) throw error;
+    return {
+      portal: { id: data as string, portal_key: input.portal_key, status: "unverified" },
+    };
+  } catch (err) {
+    guardServiceError(err);
+  }
 }
 
 export interface PortalTestResult {
@@ -172,11 +187,18 @@ export async function testPortal(
   }
   // Saved-credential mode: decrypt the Vault material server-side, boolean only.
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("test_portal_connection", {
-    p_child_id: childId,
-    p_portal_key: input.portal_key,
-  });
-  if (error) throw error;
+  // Missing test_portal_connection() (003 not migrated) → 503, never a 500.
+  let data: unknown;
+  try {
+    const { data: result, error } = await supabase.rpc("test_portal_connection", {
+      p_child_id: childId,
+      p_portal_key: input.portal_key,
+    });
+    if (error) throw error;
+    data = result;
+  } catch (err) {
+    guardServiceError(err);
+  }
   const ok = data === true;
   return {
     ok,

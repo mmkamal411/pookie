@@ -29,17 +29,17 @@ export function UpcomingList({
   return (
     <div className="grid gap-3">
       {sorted.map((item, i) => {
-        const s = statusStyle(item.status, "white");
+        const s = statusStyle(item.status);
         return (
           <Link
             key={item.id}
             href={`/c/${childSlug}/school/${item.class_slug}`}
-            className="card-white animate-bloom flex items-center justify-between gap-3 rounded-2xl px-5 py-4"
+            className="card-cockpit animate-bloom flex items-center justify-between gap-3 rounded-2xl px-5 py-4"
             style={{ animationDelay: `${0.05 + i * 0.04}s` }}
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#1e2a3a]">{item.title}</p>
-              <p className="mt-0.5 truncate text-xs text-[#55677e]">
+              <p className="truncate text-sm font-medium text-star-100">{item.title}</p>
+              <p className="mt-0.5 truncate text-xs text-stardust-300">
                 {item.class_name}
                 {item.category ? ` · ${item.category}` : ""}
               </p>

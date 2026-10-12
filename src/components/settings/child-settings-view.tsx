@@ -6,7 +6,6 @@
 //   INCLUDED — the child's own controls:
 //     • My profile: nickname (own record, real PATCH API), avatar display,
 //       school/grade read-only
-//     • Appearance: Nebula Dawn / Deep Space theme (real, local)
 //     • Check-in reminders: notification prefs (probed; honest pending state
 //       if the backend hasn't built them)
 //     • Pookie AI: personality/tone picker (localStorage-backed, labeled
@@ -22,7 +21,6 @@
 
 import { useEffect, useState } from "react";
 import { signOut } from "@/lib/tenant/actions";
-import { useTheme } from "@/components/use-theme";
 import {
   updateChild,
   getNotificationPrefs,
@@ -106,7 +104,6 @@ export function ChildSettingsView({
   schoolName: string | null;
   gradeLevel: string | null;
 }) {
-  const { theme, setTheme } = useTheme();
   const [nickname, setNickname] = useState(initialNickname ?? "");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -218,27 +215,6 @@ export function ChildSettingsView({
             {saving ? "Saving…" : "Save nickname"}
           </PrimaryButton>
           {notice && <p className="text-xs text-white/60">{notice}</p>}
-        </div>
-      </SettingsCard>
-
-      {/* Appearance — real, local */}
-      <SettingsCard title="Appearance" description="Space Black (dark) or Bright Bridge (light).">
-        <div className="flex gap-2.5">
-          {(["space-black", "bright-bridge"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTheme(t)}
-              aria-pressed={theme === t}
-              className={`flex-1 rounded-2xl border px-4 py-2.5 text-sm font-medium capitalize transition ${
-                theme === t
-                  ? "border-nova-400/50 bg-nova-500/15 text-white shadow-glow-sm"
-                  : "border-white/10 text-white/60 hover:border-white/25"
-              }`}
-            >
-              {t === "bright-bridge" ? "Bright Bridge" : "Space Black"}
-            </button>
-          ))}
         </div>
       </SettingsCard>
 

@@ -35,22 +35,20 @@ export function byDueDate(a: DueNextItem, b: DueNextItem): number {
   return da - db;
 }
 
-/** Status chip styling — soft, never harsh. Tone "white" deepens the text colors for white cards. */
+/** Status chip styling — bright text on dark instrument panels, always. */
 export function statusStyle(
-  status: string,
-  tone: "dark" | "white" = "dark"
+  status: string
 ): { text: string; dot: string; label: string } {
-  const white = tone === "white";
   switch (status) {
     case "missing":
-      return { text: white ? "text-red-600" : "text-red-300", dot: "bg-red-400", label: "Missing — recover it" };
+      return { text: "text-red-300", dot: "bg-red-400", label: "Missing — recover it" };
     case "late":
-      return { text: white ? "text-red-600" : "text-red-300", dot: "bg-red-400", label: "Late — still turn it in" };
+      return { text: "text-red-300", dot: "bg-red-400", label: "Late — still turn it in" };
     case "graded":
-      return { text: white ? "text-nova-600" : "text-nova-300", dot: "bg-nova-400", label: "Graded" };
+      return { text: "text-nova-300", dot: "bg-nova-400", label: "Graded" };
     case "submitted":
-      return { text: white ? "text-nova-600" : "text-nova-300", dot: "bg-nova-400", label: "Submitted" };
+      return { text: "text-nova-300", dot: "bg-nova-400", label: "Submitted" };
     default:
-      return { text: white ? "text-amber-700" : "text-aurum-300", dot: "bg-aurum-400", label: "Upcoming" };
+      return { text: "text-aurum-300", dot: "bg-aurum-400", label: "Upcoming" };
   }
 }
