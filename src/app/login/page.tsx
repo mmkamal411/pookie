@@ -16,7 +16,6 @@ export default function LoginPage({
   searchParams: Promise<{
     token?: string;
     error?: string;
-    demo?: string;
     next?: string;
   }>;
 }) {
@@ -26,11 +25,8 @@ export default function LoginPage({
   const [oauthBusy, setOauthBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Demo entry — deploy-gated via public env var, link-gated via ?demo=1.
   // searchParams unwrapped with use(): available on server and client, no hydration risk.
   const params = use(searchParams);
-  const demoAvail =
-    process.env.NEXT_PUBLIC_DEMO_MODE === "1" && params.demo === "1";
 
   // Surface auth failures redirected back from /auth/callback.
   const authError = params.error === "auth";
@@ -193,14 +189,6 @@ export default function LoginPage({
                   </button>
                 </form>
               </div>
-            )}
-            {demoAvail && (
-              <a
-                href="/demo"
-                className="animate-bloom mt-4 block rounded-2xl border border-aurum-400/30 bg-aurum-400/10 py-3 text-center text-sm font-semibold text-aurum-200 shadow-sun-warm transition hover:bg-aurum-400/20"
-              >
-                ✨ View demo — no login needed
-              </a>
             )}
           </div>
         </section>

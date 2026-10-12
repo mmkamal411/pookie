@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { shouldShowDemo } from "@/lib/demo";
 import {
   consumeInvite,
   getActiveChildId,
@@ -20,6 +19,7 @@ export const dynamic = "force-dynamic";
  * - N memberships (parent) → /select-child
  * - Existing session with active child → that child's dashboard
  */
+
 export default async function Home({
   searchParams,
 }: {
@@ -29,14 +29,6 @@ export default async function Home({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  // Demo mode: no session needed — the /demo route already set the
-  // active-child cookie. Walk straight into the demo dashboard.
-  // shouldShowDemo is false for real users: a stale demo cookie never
-  // hijacks a logged-in session.
-  if (await shouldShowDemo(user)) {
-    redirect("/c/dawson");
-  }
 
   if (!user) redirect("/login");
 

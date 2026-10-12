@@ -4,7 +4,6 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getDemoMemberships, isDemoRequest } from "@/lib/demo";
 import {
   ACTIVE_CHILD_COOKIE,
   type TenantMembership,
@@ -15,51 +14,42 @@ import {
  * The logged-in user's tenant memberships, resolved from child_access.
  * This is the single source of truth for "which children can this user see".
  *
- * Demo mode short-circuits to mock memberships — the RLS flow below is
- * untouched and runs exactly as before on every non-demo deploy.
+ * Returns [] when there is no authenticated session — callers redirect
+ * to /login in that case.
  */
 export async function getMemberships(): Promise<TenantMembership[]> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return [];
 
-  // Real authenticated user always wins — demo mode only applies to guests.
-  // (Fix 2026-10-12: a stale demo cookie was overriding real sessions,
-  // showing "Demo Parent" / parent@example.com to logged-in users.)
-  if (user) {
-    const { data, error } = await supabase
-      .from("child_access")
-      .select(
-        "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level)",
-      )
-      .eq("user_id", user.id);
+  const { data, error } = await supabase
+    .from("child_access")
+    .select(
+      "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level)",
+    )
+    .eq("user_id", user.id);
 
-    if (error || !data) return [];
+  if (error || !data) return [];
 
-    return data.map((row) => {
-      // Supabase types the !inner join as an array; the inner join guarantees one row.
-      const child = Array.isArray(row.children) ? row.children[0] : row.children;
-      return {
-        child_id: row.child_id,
-        role: row.role as TenantRole,
-        child: {
-          id: child.id,
-          slug: child.slug,
-          first_name: child.first_name,
-          nickname: child.nickname,
-          avatar_url: child.avatar_url,
-          school_name: child.school_name,
-          grade_level: child.grade_level,
-        },
-      };
-    });
-  }
-
-  // No session — fall back to demo mode if the demo cookie is present.
-  if (await isDemoRequest()) return getDemoMemberships();
-
-  return [];
+  return data.map((row) => {
+    // Supabase types the !inner join as an array; the inner join guarantees one row.
+    const child = Array.isArray(row.children) ? row.children[0] : row.children;
+    return {
+      child_id: row.child_id,
+      role: row.role as TenantRole,
+      child: {
+        id: child.id,
+        slug: child.slug,
+        first_name: child.first_name,
+        nickname: child.nickname,
+        avatar_url: child.avatar_url,
+        school_name: child.school_name,
+        grade_level: child.grade_level,
+      },
+    };
+  });
 }
 
 /** Read the session's active tenant from the HttpOnly cookie. */

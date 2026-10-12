@@ -1,8 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DemoBanner } from "@/components/demo-banner";
-import { shouldShowDemo } from "@/lib/demo";
 import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 import { ChildSwitcher } from "@/components/child-switcher";
@@ -28,25 +26,17 @@ export default async function ChildDashboard({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // Demo sessions have no Supabase user — memberships come from mock data.
-  // shouldShowDemo returns false for real users, so a stale demo cookie
-  // never overrides a logged-in session.
-  if (!user && !(await shouldShowDemo(user))) redirect("/login");
+  if (!user) redirect("/login");
 
   const { childSlug } = await params;
   const memberships = await getMemberships();
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
-  // Demo sessions: the /demo route handler already set the active-child
-  // cookie (cookies().set() throws in Server Components on the edge).
-  if (!(await shouldShowDemo(user))) {
-    await setActiveChild(membership.child_id);
-  }
+  await setActiveChild(membership.child_id);
 
   return (
     <>
-      <DemoBanner />
       <TenantProvider
         memberships={memberships}
         activeChildId={membership.child_id}

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { getDemoClassDetail, getDemoMemberships, shouldShowDemo, DEMO_CHILD_ID } from "@/lib/demo";
 import { getMemberships } from "@/lib/tenant/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getClassDetail, hasCheckinToday } from "@/server/services/school";
@@ -11,7 +10,6 @@ export const dynamic = "force-dynamic";
 /**
  * /c/[childSlug]/school/[classSlug] — W1 class page.
  * classSlug = classes.class_slug (UNIQUE per child — stable, readable URLs).
- * Demo mode renders mock detail; the demo never calls /api/v1/*.
  */
 export default async function ClassPage({
   params,
@@ -20,28 +18,7 @@ export default async function ClassPage({
 }) {
   const { childSlug, classSlug } = await params;
 
-  // Real sessions always win over a stale demo cookie.
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (await shouldShowDemo(user)) {
-    const detail = getDemoClassDetail(classSlug);
-    if (!detail) notFound();
-    const child = getDemoMemberships()[0].child;
-    return (
-      <ClassDetailView
-        detail={detail}
-        childName={child.nickname ?? child.first_name}
-        childSlug={childSlug}
-        childId={DEMO_CHILD_ID}
-        checkinToday={false}
-        role="parent"
-        demo
-      />
-    );
-  }
 
   const memberships = await getMemberships();
   const membership = memberships.find((m) => m.child.slug === childSlug);
@@ -68,7 +45,6 @@ export default async function ClassPage({
       childId={membership.child_id}
       checkinToday={checkinToday}
       role={membership.role}
-      demo={false}
     />
   );
 }
