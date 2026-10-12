@@ -153,7 +153,7 @@ export function MissionBriefing({
       {/* Quote of the day — d-dash's beloved briefing quote, as an instrument readout */}
       {quote && (
         <figure
-          className="animate-bloom mt-5 rounded-2xl border border-nova-400/20 bg-nebula-800/40 px-5 py-4"
+          className="holo-panel animate-bloom mt-5 px-5 py-4"
           style={{ animationDelay: "0.16s" }}
         >
           <blockquote className="text-[15px] leading-relaxed text-star-100 italic">

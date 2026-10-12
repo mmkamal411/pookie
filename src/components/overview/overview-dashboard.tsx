@@ -55,8 +55,10 @@ export function OverviewDashboard({
 
       {/* Vista hero — Squad Vista 2026-10-12: the open window. The astronaut
           lands looking out at the cosmos; the mission board waits one gentle
-          scroll below. Space is the hero, not a wall of cards. */}
-      <div className="vista-hero">
+          scroll below. Space is the hero, not a wall of cards.
+          Squad Horizon: the hero gets a viewport frame — the physical window
+          frame of the bridge. */}
+      <div className="vista-hero viewport-frame light-bleed">
         <MissionBriefing
           childName={childName}
           schoolName={schoolName}

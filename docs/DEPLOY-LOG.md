@@ -4,6 +4,7 @@ Newest first. Each row: when, where, what commit, what changed, who/what trigger
 
 | Timestamp (EDT) | Env | Git SHA | Commits | Trigger | Smoke |
 |-----------------|-----|---------|---------|---------|-------|
+| 2026-10-12 09:40 | staging | a635df8 | a635df8 feat(spaceship-lumina): cool hi-tech design polish — Title Case, LED details, crisp copy; 857a05a docs: Squad Anchor integration + deploy record (9045ee1) | deploy-staging.py (local) | fail |
 | 2026-10-12 09:25 | staging | 9045ee1 | 9045ee1 docs: Squad Value progress log (5 builds); 0bfa235 feat(spaceship-value): Morning Briefing Digest — day at a glance; aa2e674 feat(spaceship-value): Pookie Chat → Actions (task creation from chat); 83de243 feat(spaceship-value): Meal Plan → Shopping List pipeline; bd551c4 feat(spaceship-value | deploy-staging.py (local) | fail |
 | 2026-10-12 09:00 | staging | 95b30f5 | 95b30f5 fix(spaceship-bugfix): replace invalid LayoutProps type in root layout; 299b791 docs: Squad Bugfix build-log entry (23a934b); 23a934b fix(spaceship-bugfix): 4 glitches — Mookie poll stranding, sign-out hang, overlay z-index, settings placeholder flash | deploy-staging.py (local) | fail |
 | 2026-10-12 08:37 | staging | d605af0 | d605af0 feat(spaceship-polish): cosmic glow layer — corner nebula blooms, sparkles, glass sheen; 94b361e fix(spaceship-verify): integration gate passed — tsc clean, build green, no conflicts; b5f9136 feat(spaceship-comms): Pookie/Mookie chat port — astronaut-assistant voice, Mookie queue, comm-chann | deploy-staging.py (local) | fail |
