@@ -29,8 +29,8 @@ const LONG_MESSAGE = 300;
 const QUICK_REPLIES = ["What are my priorities today?"];
 
 /** Local chat keyframes — blinking status dots for the transmitting indicator. */
-const HULL_CHAT_KEYFRAMES = `
-  @keyframes hull-blink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+const BRIDGE_CHAT_KEYFRAMES = `
+  @keyframes bridge-blink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 `;
 
 /** Explicit depth requests escalate to the async Mookie queue.
@@ -84,12 +84,17 @@ function loadHistory(childName: string): ChatMessage[] {
   }
 }
 
-/** Square instrument status-light frame around chat avatars (4px radius per hull spec). */
+/** Square status-light frame around chat avatars (4px radius per bridge spec). */
 function StatusFrame({ children }: { children: ReactNode }) {
   return (
     <div
       aria-hidden="true"
-      className="shrink-0 rounded border border-hull-line bg-hull-void/60 p-0.5"
+      className="shrink-0 border p-0.5"
+      style={{
+        borderColor: "rgb(var(--bridge-line-rgb))",
+        background: "rgb(var(--bridge-glass-rgb))",
+        borderRadius: 4,
+      }}
     >
       {children}
     </div>
@@ -98,7 +103,7 @@ function StatusFrame({ children }: { children: ReactNode }) {
 
 /** Three blinking status dots — the mission-control typing indicator. */
 function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
-  const rgb = tone === "amber" ? "var(--neon-amber-rgb)" : "var(--neon-green-rgb)";
+  const rgb = tone === "amber" ? "var(--bridge-amber-rgb)" : "var(--bridge-green-rgb)";
   return (
     <span className="flex items-center gap-1.5" aria-hidden="true">
       {[0, 1, 2].map((d) => (
@@ -107,7 +112,7 @@ function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
           className="h-1.5 w-1.5 rounded-full"
           style={{
             background: `rgb(${rgb})`,
-            animation: `hull-blink 1.2s ease-in-out ${d * 0.2}s infinite`,
+            animation: `bridge-blink 1.2s ease-in-out ${d * 0.2}s infinite`,
           }}
         />
       ))}
@@ -117,15 +122,22 @@ function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
 
 function BotText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
+  const cyan = { color: "rgb(var(--bridge-cyan-rgb))" } as const;
   if (text.length <= LONG_MESSAGE || expanded) {
     return (
       <div>
-        <p className="text-[15px] leading-[1.65] whitespace-pre-wrap text-hull-text">{text}</p>
+        <p
+          className="text-[15px] leading-[1.65] whitespace-pre-wrap"
+          style={{ color: "rgb(var(--bridge-text-rgb))" }}
+        >
+          {text}
+        </p>
         {text.length > LONG_MESSAGE && (
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="mt-1 text-xs font-medium text-neon-cyan/90 hover:text-neon-cyan"
+            className="mt-1 text-xs font-medium hover:underline"
+            style={cyan}
           >
             Show Less
           </button>
@@ -135,11 +147,17 @@ function BotText({ text }: { text: string }) {
   }
   return (
     <div>
-      <p className="line-clamp-4 text-[15px] leading-[1.65] whitespace-pre-wrap text-hull-text">{text}</p>
+      <p
+        className="line-clamp-4 text-[15px] leading-[1.65] whitespace-pre-wrap"
+        style={{ color: "rgb(var(--bridge-text-rgb))" }}
+      >
+        {text}
+      </p>
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-1 text-xs font-medium text-neon-cyan/90 hover:text-neon-cyan"
+        className="mt-1 text-xs font-medium hover:underline"
+        style={cyan}
       >
         Read Full Answer ▾
       </button>
@@ -420,77 +438,99 @@ export function PookieChat({
   }
 
   return (
-    <main className="chat-shell relative mx-auto flex w-full max-w-2xl flex-col bg-hull-void/85 px-4 pt-6">
-      <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${HULL_CHAT_KEYFRAMES}`}</style>
+    <main
+      className="relative mx-auto flex w-full max-w-2xl flex-col px-4 pt-6"
+      style={{ background: "rgb(var(--bridge-white-rgb) / 0.86)" }}
+    >
+      <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${BRIDGE_CHAT_KEYFRAMES}`}</style>
 
-      {/* Header — instrument panel */}
-      <div className="animate-bloom flex items-center gap-4">
-        {/* AI core link — ambient instrument light; the one orb watches from the toolbar. */}
-        <div
-          className="relative flex h-8 w-8 items-center justify-center rounded-full border border-neon-cyan/30 bg-neon-cyan/5"
-          aria-hidden="true"
-        >
-          <span
-            className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon-green"
-            style={{ boxShadow: "0 0 8px rgb(var(--neon-green-rgb) / 0.5)" }}
-          />
-          <span
-            className="absolute inset-0 rounded-full border border-neon-cyan/10"
-            style={{ animation: "orb-beckon 4s ease-in-out infinite" }}
-          />
-        </div>
-        <div>
-          <p className="hull-title hull-cyan">Ship Comms · Pookie</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hull-text">
-            Hailing Your Co-Pilot
-          </h1>
-        </div>
-      </div>
-
-      {/* Technical readouts — link state, mode, message count */}
-      <div className="animate-bloom mt-3 flex flex-wrap items-center gap-x-5 gap-y-1" role="status">
-        <span>
-          <span className="hull-readout-label">Link </span>
-          <span className="hull-readout text-[11px]" style={{ color: "rgb(var(--neon-green-rgb))" }}>
-            Secure
-          </span>
-        </span>
-        <span>
-          <span className="hull-readout-label">Mode </span>
-          <span className="hull-readout text-[11px]">{effectiveDirect ? "Direct" : "Pookie"}</span>
-        </span>
-        <span>
-          <span className="hull-readout-label">Msgs </span>
-          <span className="hull-readout text-[11px]">{messages.length}</span>
-        </span>
-      </div>
-
-      {/* Squad Gavel 2026-10-12 — persistent AI disclosure: subtle, always visible during chat. */}
-      <p className="mt-2 text-[11px] text-hull-text-faint" role="note">
-        You&apos;re chatting with Pookie, an AI assistant. Responses are generated automatically and may be inaccurate — verify important details.
-      </p>
-
-      {isAdult ? (
-        <div className="animate-bloom mt-3 flex items-center gap-3" style={{ animationDelay: "0.08s" }}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={directMode}
-            aria-label="Direct mode"
-            onClick={() => setDirectMode((v) => !v)}
-            className="hull-btn neon-cyan px-3 py-1.5 text-[11px]"
+      {/* Header — bright instrument panel with cyan LED strip and corner brackets */}
+      <header className="bridge-panel bridge-panel-accent bridge-cyan animate-bloom px-4 py-3">
+        <div className="flex items-center gap-4">
+          {/* AI core link — ambient instrument light; the one orb watches from the toolbar. */}
+          <div
+            className="relative flex h-8 w-8 items-center justify-center rounded-full"
+            style={{
+              border: "1px solid rgb(var(--bridge-cyan-rgb) / 0.35)",
+              background: "rgb(var(--bridge-cyan-rgb) / 0.06)",
+            }}
+            aria-hidden="true"
           >
-            Direct · {directMode ? "On" : "Off"}
-          </button>
-          <p className="text-xs text-hull-text-dim">
-            Blunter answers when it&apos;s on. Safety rules don&apos;t change.
-          </p>
+            <span
+              className="h-1.5 w-1.5 animate-pulse rounded-full"
+              style={{
+                background: "rgb(var(--bridge-green-rgb))",
+                boxShadow: "0 0 8px rgb(var(--bridge-green-rgb) / 0.55)",
+              }}
+            />
+            <span
+              className="absolute inset-0 rounded-full"
+              style={{
+                border: "1px solid rgb(var(--bridge-cyan-rgb) / 0.12)",
+                animation: "orb-beckon 4s ease-in-out infinite",
+              }}
+            />
+          </div>
+          <div>
+            <p className="bridge-title">Ship Comms · Pookie</p>
+            <h1
+              className="mt-1 text-2xl font-semibold tracking-tight"
+              style={{ color: "rgb(var(--bridge-text-rgb))" }}
+            >
+              Hailing Your Co-Pilot
+            </h1>
+          </div>
         </div>
-      ) : (
-        <p className="animate-bloom mt-2 text-xs text-hull-text-faint" style={{ animationDelay: "0.08s" }}>
-          Your devoted co-pilot for the whole mission — school, plans, tasks, life. Direct mode is for adults (18+) — same safety, same smarts.
+
+        {/* Technical readouts — link state, mode, message count */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1" role="status">
+          <span>
+            <span className="bridge-readout-label">Link </span>
+            <span className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-green-rgb))" }}>
+              Secure
+            </span>
+          </span>
+          <span>
+            <span className="bridge-readout-label">Mode </span>
+            <span className="bridge-readout text-[11px]">{effectiveDirect ? "Direct" : "Pookie"}</span>
+          </span>
+          <span>
+            <span className="bridge-readout-label">Msgs </span>
+            <span className="bridge-readout text-[11px]">{messages.length}</span>
+          </span>
+        </div>
+
+        {/* Squad Gavel 2026-10-12 — persistent AI disclosure: subtle, always visible during chat. */}
+        <p
+          className="mt-2 text-[11px]"
+          style={{ color: "rgb(var(--bridge-text-faint-rgb))" }}
+          role="note"
+        >
+          You&apos;re chatting with Pookie, an AI assistant. Responses are generated automatically and may be inaccurate — verify important details.
         </p>
-      )}
+
+        {isAdult ? (
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={directMode}
+              aria-label="Direct mode"
+              onClick={() => setDirectMode((v) => !v)}
+              className="bridge-btn px-3 py-1.5 text-[11px]"
+            >
+              Direct · {directMode ? "On" : "Off"}
+            </button>
+            <p className="text-xs" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
+              Blunter answers when it&apos;s on. Safety rules don&apos;t change.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs" style={{ color: "rgb(var(--bridge-text-faint-rgb))" }}>
+            Your devoted co-pilot for the whole mission — school, plans, tasks, life. Direct mode is for adults (18+) — same safety, same smarts.
+          </p>
+        )}
+      </header>
 
       <div
         ref={scrollRef}
@@ -500,7 +540,10 @@ export function PookieChat({
         {messages.map((m, i) =>
           m.role === "user" ? (
             <div key={i} className="flex justify-end">
-              <p className="hull-msg hull-msg-user max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed text-hull-text">
+              <p
+                className="bridge-msg bridge-msg-user max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed"
+                style={{ color: "rgb(var(--bridge-text-rgb))" }}
+              >
                 {m.text}
               </p>
             </div>
@@ -509,9 +552,9 @@ export function PookieChat({
               <StatusFrame>
                 <MiniPookie size={24} speaking />
               </StatusFrame>
-              <div className="hull-msg hull-msg-ai flex items-center gap-3 px-4 py-3">
+              <div className="bridge-msg bridge-msg-ai flex items-center gap-3 px-4 py-3">
                 <TypingDots />
-                <p className="hull-readout text-[11px] text-hull-text-dim">
+                <p className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
                   {m.persona === "muse" ? "Analyzing…" : "Transmitting…"}
                 </p>
               </div>
@@ -526,12 +569,15 @@ export function PookieChat({
                 )}
               </StatusFrame>
               <div
-                className={`hull-msg min-w-0 flex-1 px-4 py-3 ${
-                  m.persona === "muse" || m.museDeep ? "hull-amber" : "hull-msg-ai"
+                className={`bridge-msg min-w-0 flex-1 px-4 py-3 ${
+                  m.persona === "muse" || m.museDeep ? "bridge-amber" : "bridge-msg-ai"
                 }`}
               >
                 {(m.persona === "muse" || m.museDeep) && (
-                  <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-neon-amber uppercase">
+                  <p
+                    className="mb-1 text-[10px] font-bold tracking-[0.22em] uppercase"
+                    style={{ color: "rgb(var(--bridge-amber-rgb))" }}
+                  >
                     {m.museDeep ? "Mookie · Deeper Take" : "Muse · Straight Talk"}
                   </p>
                 )}
@@ -545,9 +591,9 @@ export function PookieChat({
             <StatusFrame>
               <MiniMuse size={24} />
             </StatusFrame>
-            <div className="hull-msg hull-amber flex items-center gap-3 px-4 py-3">
+            <div className="bridge-msg bridge-amber flex items-center gap-3 px-4 py-3">
               <TypingDots tone="amber" />
-              <p className="hull-readout text-[11px] text-hull-text-dim">
+              <p className="bridge-readout text-[11px]" style={{ color: "rgb(var(--bridge-text-dim-rgb))" }}>
                 {museSlow ? "Deep Scan Delayed — Still On It…" : "Deep Scan In Progress…"}
               </p>
             </div>
@@ -562,36 +608,38 @@ export function PookieChat({
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="hull-btn neon-cyan px-3 py-1.5 text-[11px]"
+              className="bridge-btn px-3 py-1.5 text-[11px]"
             >
               {q}
             </button>
           ))}
         </div>
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(draft);
-          }}
-        >
-          <input
-            ref={inputRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={isThinking ? "Holding the channel…" : "Hail Pookie — what's on your mind, Captain?"}
-            aria-label="Message Pookie"
-            className="hull-input min-w-0 flex-1 px-4 py-3 text-[15px]"
-          />
-          <button
-            type="submit"
-            aria-label="Send message"
-            disabled={!draft.trim() || isThinking}
-            className="hull-btn neon-cyan flex h-12 w-12 shrink-0 items-center justify-center text-lg disabled:opacity-40"
+        <div className="bridge-panel bridge-panel-accent bridge-cyan p-2">
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(draft);
+            }}
           >
-            <span aria-hidden="true">↑</span>
-          </button>
-        </form>
+            <input
+              ref={inputRef}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={isThinking ? "Holding the channel…" : "Hail Pookie — what's on your mind, Captain?"}
+              aria-label="Message Pookie"
+              className="bridge-input min-w-0 flex-1 px-4 py-3 text-[15px]"
+            />
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={!draft.trim() || isThinking}
+              className="bridge-btn flex h-12 w-12 shrink-0 items-center justify-center text-lg disabled:opacity-40"
+            >
+              <span aria-hidden="true">↑</span>
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
