@@ -352,3 +352,121 @@ export async function disconnectPlaidItem(ownerUserId: string, plaidItemRowId: s
     .eq('owner_user_id', ownerUserId);
   if (error) failWith(ErrorCodes.INTERNAL);
 }
+
+/**
+ * WINDOW-NOT-VAULT (2026-10-12): Fetch transactions live from Plaid WITHOUT
+ * storing them. This is the fetch-on-view path — the server decrypts the
+ * access token in memory, calls Plaid, returns the data in the response, and
+ * discards it. Nothing is written to the transactions table.
+ *
+ * User annotations (custom categories, notes) are merged from transaction_notes
+ * — that IS the user's own data, stored with consent.
+ */
+export interface LiveTransaction {
+  plaid_transaction_id: string;
+  merchant: string;
+  amount: number;
+  category: string;
+  category_detailed: string | null;
+  posted_date: string;
+  pending: boolean;
+  account_ref: string;
+  // User's own annotations (from transaction_notes, if any)
+  custom_category: string | null;
+  note: string | null;
+}
+
+export async function fetchTransactionsLive(
+  ownerUserId: string,
+  opts?: { count?: number; offset?: number },
+): Promise<{ transactions: LiveTransaction[]; has_more: boolean }> {
+  const client = getPlaidClient();
+  const items = await listPlaidItems(ownerUserId);
+  if (items.length === 0) return { transactions: [], has_more: false };
+
+  const allTx: LiveTransaction[] = [];
+  let hasMore = false;
+
+  for (const item of items) {
+    const { data: itemRow } = await supabaseAdmin
+      .from('plaid_items')
+      .select('access_token_ciphertext')
+      .eq('id', item.id)
+      .single();
+    if (!itemRow) continue;
+    const accessToken = await decryptAccessToken(
+      (itemRow as { access_token_ciphertext: string }).access_token_ciphertext,
+    );
+
+    // Use transactions/sync for incremental updates, but do NOT persist.
+    // We fetch the latest page only — no cursor persistence, no storage.
+    const req: TransactionsSyncRequest = { access_token: accessToken };
+    // Note: we intentionally do NOT pass a stored cursor. Each view fetches
+    // fresh. For pagination, Plaid's sync returns added/modified; we take
+    // the current snapshot.
+    const res = await client.transactionsSync(req);
+    const body = res.data;
+
+    // Build account ref map (from spending_accounts metadata, not balances)
+    const { data: acctRows } = await supabaseAdmin
+      .from('spending_accounts')
+      .select('plaid_account_id, account_ref')
+      .eq('plaid_item_id', item.id);
+    const accountRef = new Map<string, string>();
+    for (const a of (acctRows ?? []) as { plaid_account_id: string | null; account_ref: string }[]) {
+      if (a.plaid_account_id) accountRef.set(a.plaid_account_id, a.account_ref);
+    }
+
+    const txs = [...body.added, ...body.modified];
+    for (const tx of txs) {
+      const category =
+        tx.personal_finance_category?.primary ??
+        tx.personal_finance_category?.detailed ??
+        'Other';
+      allTx.push({
+        plaid_transaction_id: tx.transaction_id,
+        merchant: tx.merchant_name ?? tx.name,
+        amount: tx.amount,
+        category: categorizeTransaction(tx.merchant_name ?? tx.name, category),
+        category_detailed: tx.personal_finance_category?.detailed ?? null,
+        posted_date: tx.date,
+        pending: tx.pending,
+        account_ref: accountRef.get(tx.account_id) ?? 'Bank account',
+        custom_category: null, // merged below
+        note: null, // merged below
+      });
+    }
+    if (body.has_more) hasMore = true;
+  }
+
+  // Merge user annotations (their data, stored with consent)
+  if (allTx.length > 0) {
+    const ids = allTx.map((t) => t.plaid_transaction_id);
+    const { data: notes } = await supabaseAdmin
+      .from('transaction_notes')
+      .select('plaid_transaction_id, custom_category, note')
+      .eq('owner_user_id', ownerUserId)
+      .in('plaid_transaction_id', ids);
+    const noteMap = new Map(
+      ((notes ?? []) as { plaid_transaction_id: string; custom_category: string | null; note: string | null }[]).map(
+        (n) => [n.plaid_transaction_id, n],
+      ),
+    );
+    for (const tx of allTx) {
+      const note = noteMap.get(tx.plaid_transaction_id);
+      if (note) {
+        tx.custom_category = note.custom_category;
+        tx.note = note.note;
+      }
+    }
+  }
+
+  // Sort by date descending, apply pagination
+  allTx.sort((a, b) => b.posted_date.localeCompare(a.posted_date));
+  const count = opts?.count ?? 100;
+  const offset = opts?.offset ?? 0;
+  return {
+    transactions: allTx.slice(offset, offset + count),
+    has_more: hasMore || allTx.length > offset + count,
+  };
+}

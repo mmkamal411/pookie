@@ -13,6 +13,7 @@ export const ErrorCodes = {
   CONSENT_REQUIRED: 'CONSENT_REQUIRED',
   RATE_LIMITED: 'RATE_LIMITED',
   UPSTREAM_UNAVAILABLE: 'UPSTREAM_UNAVAILABLE',
+  GONE: 'GONE',
   INTERNAL: 'INTERNAL',
   // Health track (FR-HEALTH). Codes are stable API — add, never rename.
   HEALTH_H0_REFUSED: 'HEALTH_H0_REFUSED',
@@ -49,6 +50,7 @@ const HUMAN_MESSAGES: Record<ErrorCode, string> = {
   CONSENT_REQUIRED: 'Explicit consent is required before using this service.',
   RATE_LIMITED: 'Too many requests. Please try again shortly.',
   UPSTREAM_UNAVAILABLE: 'A downstream service is unavailable. Please try again.',
+  GONE: 'This feature has been retired. Device health data stays on your device — it is never uploaded.',
   INTERNAL: 'Something went wrong. Please try again.',
   HEALTH_H0_REFUSED:
     'This type of health data is not collected for anyone under 18.',
@@ -86,6 +88,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   CONSENT_REQUIRED: 403,
   RATE_LIMITED: 429,
   UPSTREAM_UNAVAILABLE: 502,
+  GONE: 410,
   INTERNAL: 500,
   HEALTH_H0_REFUSED: 403,
   HEALTH_MINOR_CALORIE_REFUSED: 403,

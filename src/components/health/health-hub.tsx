@@ -57,11 +57,18 @@ function DeviceSyncCard({
     <div className="card-living rounded-2xl p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-star-100">Health app connection</p>
-          <p className="mt-1 text-xs leading-relaxed text-stardust-300">{COPY.deviceSyncConsent}</p>
+          <p className="text-sm font-semibold text-star-100">
+            <span aria-hidden="true">🔒</span> Health app connection
+          </p>
+          {/* WINDOW-NOT-VAULT: device data never leaves the phone. */}
+          <p className="mt-1 text-xs leading-relaxed text-stardust-300">
+            Your health app data stays on your phone. Pookie reads it there and
+            shows it to you — nothing is ever uploaded to our servers. Not even
+            we can see it.
+          </p>
           <p className="mt-2 text-xs text-stardust-500">
             {state.status === "connected" &&
-              `Connected${state.deviceName ? `, ${state.deviceName}` : ""}${state.lastSyncAt ? `, last sync ${formatTime(state.lastSyncAt)}` : ""}.`}
+              `On-device access${state.deviceName ? `, ${state.deviceName}` : ""}. Read locally, never uploaded.`}
             {state.status === "never_connected" && "No health app connected yet."}
             {state.status === "disconnected" && "Disconnected."}
             {state.status === "suspended_pending_reauth" &&
@@ -78,7 +85,8 @@ function DeviceSyncCard({
         {state.status !== "connected" ? (
           <p className="rounded-xl border border-nova-400/20 bg-nebula-900/60 px-4 py-3 text-xs leading-relaxed text-stardust-300">
             To connect: open Pookie on your phone, open Health, and follow the steps there. Your
-            phone asks for permission first. Nothing connects from this screen.
+            phone asks for permission first. Data is read on your phone only — nothing
+            connects from this screen, nothing uploads.
           </p>
         ) : (
           <button
@@ -93,7 +101,7 @@ function DeviceSyncCard({
       </div>
       <p className="mt-2 text-xs text-stardust-500">
         Under 13, Pookie never connects a health app directly. Teens connect it themselves on their
-        own phone.
+        own phone. Entries you type here are separate — those you choose to share with Pookie.
       </p>
     </div>
   );

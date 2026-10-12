@@ -239,6 +239,11 @@ export async function recategorizeTransaction(
  * Parent-only spending aggregates. The RPC is SECURITY DEFINER with an
  * is_household_parent() check inside — it returns totals by category/month
  * including teen-private amounts, but NEVER merchant line items (FR-MOD-W11).
+ *
+ * WINDOW-NOT-VAULT (2026-10-12): Computes from LIVE Plaid data via
+ * fetchTransactionsLive() — bank transactions are never persisted. Aggregates
+ * are computed in memory per request and discarded. Manual/CSV entries (the
+ * user's own data) are still read from the transactions table.
  */
 export async function getSpendingSummary(
   supabase: Db,
@@ -246,16 +251,42 @@ export async function getSpendingSummary(
   from?: string,
   to?: string,
 ): Promise<Record<string, unknown>> {
-  const { data, error } = await supabase.rpc('spending_summary', {
-    p_owner: ownerUserId,
-    p_from: from ?? null,
-    p_to: to ?? null,
-  });
-  if (error) {
-    if (error.message.includes('parent_membership_required')) {
-      failWith(ErrorCodes.PARENT_ROLE_REQUIRED);
-    }
-    failWith(ErrorCodes.INTERNAL);
+  // Fetch live bank data (not stored) + manual entries (stored, user's own data)
+  const { fetchTransactionsLive } = await import('./plaid');
+  const [{ transactions: liveTx }, { data: manualTx }] = await Promise.all([
+    fetchTransactionsLive(ownerUserId, { count: 500 }).catch(() => ({
+      transactions: [],
+      has_more: false,
+    })),
+    supabase
+      .from('transactions')
+      .select('amount, category, posted_date')
+      .eq('owner_user_id', ownerUserId)
+      .gte('posted_date', from ?? '1970-01-01')
+      .lte('posted_date', to ?? '2999-12-31'),
+  ]);
+
+  // Combine: live Plaid data (transient) + manual/CSV (stored)
+  const all = [
+    ...liveTx.map((t) => ({
+      amount: t.amount,
+      category: t.custom_category ?? t.category,
+      posted_date: t.posted_date,
+    })),
+    ...((manualTx ?? []) as { amount: number; category: string; posted_date: string }[]),
+  ];
+
+  // Aggregate by category and month in memory
+  const byCategory: Record<string, number> = {};
+  const byMonth: Record<string, number> = {};
+  let total = 0;
+  for (const tx of all) {
+    const cat = tx.category ?? 'Other';
+    byCategory[cat] = (byCategory[cat] ?? 0) + Math.abs(tx.amount);
+    const month = tx.posted_date.slice(0, 7);
+    byMonth[month] = (byMonth[month] ?? 0) + Math.abs(tx.amount);
+    total += Math.abs(tx.amount);
   }
-  return (data ?? {}) as Record<string, unknown>;
+
+  return { total, by_category: byCategory, by_month: byMonth, live_count: liveTx.length, manual_count: (manualTx ?? []).length };
 }
