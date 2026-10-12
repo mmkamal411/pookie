@@ -3,6 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:50 EDT — Squad 1 PM (staging-build): IMPLEMENTATION PLAN DELIVERED (all MD directives)
+
+**`docs/squad1/implementation-plan.md` written** — 10 work packages, 54 acceptance criteria (AC-001–054), dependency sequence, API contract summary, phase-exit checklist, risk log, contract drift watch.
+
+**Incorporated:** D1 vendor seam for break-glass Path A (schema + request/corroboration/callback contract; deny-closed until MD selects vendor; no disclosure tooling per NFR-LEGAL-006) · D4 holiday on-call crisis routing + banner variants (S3 $50-authority workflow is Support-squad scope; we ship only the handoff contract) · D6 tiered grant caps (8/30d trusted, 2/30d new, teen co-approval for new grantees only — Squad 4 W12 builds against this contract) · D7 coarse-only location NFR-LOC-001 (precise GPS **rejected** at ingestion, aligned with QA LC tests) · Mehedi NO-PLACEHOLDERS directive (per-package DoD "works end-to-end against real Supabase data"; INTEGRATION POINT markers for Platform Team 1 `access_events` 021, vendor selection, Squad 4, Support squad — spec contracts, never mocks; zero-hit placeholder grep audit in phase-exit checklist).
+
+**Resolved collisions:** `emergency_requests` folds into migration 026 (not a second 022); single `trusted_adults` table (no parallel `trusted_adult_contacts`); `profiles.safe_notification_pref` coordination flagged with Platform Team 1.
+
+**Contract drift watch:** QA test-plan (SUP/TG/LC/BGA matrices) aligned; backend `api-contracts.md` not yet landed — §3 signatures are canonical until reconciled.
+
+**Blockers for coordinator:** R-01 vendor selection (MD action item) · R-07 Mehedi's DB access for migrations · R-08/R-09 DV-advocate + attorney launch gates need scheduling.
+
+
+
 ## 2026-10-12 ~03:50 EDT — Platform Team 1 DevOps Engineer (staging-build): MIGRATION AUDIT + CI CHECK DELIVERED
 
 **Migration ordering & idempotency audit (001–016):**
