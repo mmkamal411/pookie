@@ -2662,3 +2662,20 @@ Surfaces A (a–m): account-deleted, add-child, c/ home, coparenting, credit, he
 **Verification:** `npx tsc --noEmit` clean. No `next build` (deploy window). Commits: ae91067, e911896, 117cd3b, d24abff, 754c835, 545aecc — all pushed to `origin/staging-build`.
 
 **Flags for other squads:** `/family/invite` + `/family/claims` have no in-app inbound links (confirm deep-link-only or wire entry); `/household/babysitters` vs tenant `/marketplace` duplication undecided; SettingsTabs active glow needs a browser visual check; travel hub lacks "← Back" (E2 P2).
+
+## 2026-10-12 ~12:10 EDT — Prism E4 (UI Engineer, component polish) — audit-driven fixes
+
+**Title Case sweep (P1, Mehedi non-negotiable):** single scripted pass, 34 files, ~70 replacements — health ("Delete My Health Data", "Food Diary", "Recent Check-Ins", "Your Past Check-Ins", "How Is Today Feeling?", "How Long to Keep My Words", "Save Your Choices", "Meal Logging Activity", "Take It to Your New Doctor", "Who Should Be Called in an Emergency?", "Who Can See My Health Stuff?"), safety ("A Deal You Both Can See", "Ask for a Change", "Change Requests", "Check In", "Emergency Info", "How Safety Works Here", "If Something Feels Wrong", "My Action Plans", "Name Your Adult"), school ("Coming Up", "Counselor Conversations", "Daily Log", "Teacher Messages", "This Week", "This Week's Haul"), settings ("Ship Systems", "My Controls", "School Logins" tab, "Parents Only"), sharing ("Who Can See My Stuff?"), credit ("Credit Freezes"), overview ("Course Corrections", "On the Horizon"), account-deleted h1, add-child labels, shopping h1 + page title, "Open a Ticket" (9x), review-18 "Keep As Is"/"Save Correction". Commit `0f1df9c` pushed.
+
+**Neon gaps (E3 system `neon-*` classes, docs/PRISM-NEON-SYSTEM.md):**
+- ScreenTimeCoSet: all 8 raw buttons → `neon-hover neon-teal|green neon-active` (biggest neon gap in the E1 audit).
+- review-18: primary CTAs → `neon-cta neon-pink`; secondary/comet/destructive/text buttons → `neon-hover` variants; copy "Keep" → "Keep As Is".
+- Onboarding atoms (`PrimaryButton`/`QuietButton`/`inputClass`, shared with /add-child): `neon-cta` / `neon-hover` / `neon-focus`.
+- faq-tree rows, TravelPageShell "← Back" (all 7 travel module pages), /me grid links (`neon-card` lift + "Add a Child" Title Case).
+- BackButton/SectionHeader/Button reconciled onto E3 classes (`neon-hover`, `neon-divider`, `neon-cta`); SectionHeader divider now uses `.neon-divider`.
+
+**Back links:** claims-inbox + /family/invite already had BackButton added in prior E4 pass; this pass added `back` to coparenting + credit boards; travel hub got BackButton; E5's review-18-parent/village/account-deleted/invite-accept fixes brought onto neon classes (no duplication).
+
+**Bugfix (cross-squad):** E5's commit 754c835 introduced a JSX syntax error in `travel-hub.tsx` (adjacent JSX nodes: comment + `<Link>` inside `return (`) — `npx tsc --noEmit` failed on it. Wrapped in a fragment; tsc clean again.
+
+**Verification:** `npx tsc --noEmit` clean (builds still paused per deploy window). Commits `93b6d34` pushed to `origin/staging-build`. Note: parallel agents' uncommitted files got swept into adjacent commits twice (E5's health-module-nav into 0f1df9c; my travel-hub//me edits into E5's commits) — tree is clean, attribution noted here.
