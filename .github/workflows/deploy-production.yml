@@ -19,6 +19,8 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
@@ -28,21 +30,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (production)
+      - name: Build (Next.js)
         run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
+          NEXT_PUBLIC_POOKIE_TUTOR_URL: ${{ secrets.POOKIE_TUTOR_URL }}
           NEXT_PUBLIC_ASSET_VERSION: ${{ github.sha }}
+
+      - name: Build (OpenNext Cloudflare worker)
+        run: npx opennextjs-cloudflare build
+
+      - name: Verify fresh build (no stale demo code)
+        run: |
+          if grep -rq "NEXT_PUBLIC_DEMO_MODE" .open-next/assets/_next/static/chunks/ 2>/dev/null; then
+            echo "STALE BUILD: demo-mode code found in fresh build output"
+            exit 1
+          fi
+          echo "Build is fresh."
+
+      - name: Assemble Pages deploy directory
+        run: python3 scripts/assemble-pages-deploy.py
 
       - name: Deploy to Cloudflare Pages (pookie)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # Account ID is not sensitive (matches deploy scripts in d-dash-app).
           accountId: 91264b3fa69afffd6ffe57bdb3c545a8
-          command: pages deploy ./out --project-name=pookie --branch=main
+          command: pages deploy .pages-deploy --project-name=pookie --branch=main
 
       - name: Verify single asset version (?v= check)
         run: bash scripts/verify-asset-version.sh https://pookie.pages.dev
+
+      - name: Record deployment
+        run: python3 scripts/record-deploy.py production ${{ github.sha }} "GitHub Actions (manual)"
