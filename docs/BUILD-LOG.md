@@ -2728,3 +2728,33 @@ Surfaces A (a–m): account-deleted, add-child, c/ home, coparenting, credit, he
 `npm run build` succeeds. Deploying working tree to staging.
 
 **Note:** Squad Triage initially attempted a minimal fix but discovered Team 2 had already completed the proper migration. No Triage changes were needed — Team 2's work is intact and correct.
+
+## 2026-10-12 ~13:00 EDT — R&D Team 3 (Coordinator): Navigation Flow + Polish — zero-purple purge + nav fixes
+
+**Mission:** verify and perfect the flow — theme switch on every surface, navigation audit, Command Center polish, chat + remaining surfaces. 6 commits, all pushed to `origin/staging-build`, `npx tsc --noEmit` clean throughout.
+
+**Headline finding:** the killed Nebula direction (lavender/pink) was still rendering across the app — the Command Deck's own rim light was pink, tab glows were violet, the nova token family rendered pink in space-black, and the cosmic background scenes cycled violet/rose/indigo washes. DESIGN-DIRECTION.md bans these in BOTH themes. Purged app-wide; final sweep: **0 remaining pink/purple/violet values** in live source (tsx/ts/css).
+
+**Commits:**
+- `39ae870` — globals.css token remap: `--color-nova-200..600` pink→cyan (space-black; bright-bridge already cooled), `--shadow-glow-sm/md` violet→cyan, `.text-sunlit`/`.card-living`/`.glass-pane`/`.led-strip` violet→cyan, deleted `.led-strip-violet` (events-panel→teal).
+- `9304a3c` — `.neon-pink` legacy alias now truly maps to cyan (fixes review-18 CTAs); ui/button secondary, ui/badge choice, health H2 chip, legal-accordion: violet→teal; assorted hardcoded pink shadows→cyan.
+- `65d57fb` — Deck tabs: Home `#a78bfa`→`#00E5FF`, More `#c4b5fd`→`#2dd4bf`; window-manager module glows → palette.
+- `dd4cb54` — Pookie class neons (geometry→teal, litcomp→ice), resource-library type colors, grade 80–89 band `#a5b4fc`→`#22d3ee` cyan, misc.
+- `6ca281c` — cosmic-scene-director scenes renamed/remapped (violet-nebula→cyan-nebula, rose-nursery→amber-nursery, indigo-expanse→glacier-expanse); nebula-background canvas hues → cyan/gold/blue; deck chrome (housing/standby/cluster/dock) pink→cyan; deleted 4 dead classes.
+- `4db5df4` — **nav dead-end fixed**: ChildRosterPanel "Add Child" did nothing for parents with zero memberships → falls back to `/add-child`; MorePopup pink sigil shadow→cyan, removed hardcoded dark input shadow.
+
+**Verified (static — no live browser on this agent):**
+- E1 theme switch: `useTheme()` writes localStorage + sets/removes `data-theme`; pre-paint script in layout.tsx prevents flash; `migrate()` handles legacy `dark`/`light` (+ pre-paint handles `light`). Both toggle locations (Command Center menu, Settings→Profile BridgeThemeSelector) call the same `setTheme`.
+- E2 navigation: all CommandCenterMenu rows resolve to real routes (`/settings`, `/settings/family`, `/settings/sync`); "Add Child" routing confirmed against the documented create_child flow (`/add-child` redirects existing families → Settings→Profile is correct for them); CommandDeck hidden-routes + standby labels intact; More popup links use `resolveModuleHref`.
+- E3 Command Center: 240ms unfold (`cc-unfold ... both`, mounts fresh each open), 3s ring breathe + 2.4s beacon blink, Escape/outside-click close, confirm + 15s dead-man's sign-out, role-aware rows (parent-only: Child Management, Account Settings).
+- E4 chat: pookie-chat fully token-driven via `useTheme()` (hull-*/bridge-* classes), no hardcoded colors, no violet remnants.
+
+**Known limitation:** no live-browser verification on this agent — animation feel, actual toggle/persistence across reload, and visual review of both themes need a browser-capable pass or Mehedi.
+
+**Flags for Team 4:**
+1. Only `parent`/`child` roles exist in the codebase — no `mentor` role; role-aware rows can't cover mentor until the role exists (spec gap).
+2. Long tail of dark-first hardcoded styles in settings/safety/travel/sync/cookies surfaces (`text-white`, etc.) — token-adjacent but won't fully flip in bright-bridge; needs a per-surface bright-bridge visual pass.
+3. `.glass-pane` is dark glass in BOTH themes (hardcoded gradients, not tokens) — may be intentional contrast on Bright Bridge; needs a visual call.
+4. `body { background: var(--color-canopy-950) }` references a never-defined token (masked by the later Vista body rule) — harmless, should be cleaned.
+5. `viewport themeColor #050510` is static — won't adapt to Bright Bridge (minor).
+6. Sign-out dead-man's switch + theme persistence/migration verified statically only — live test still needed.
