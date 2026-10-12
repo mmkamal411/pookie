@@ -1,69 +1,74 @@
-# Mission Critical Spacecraft — Design Direction
+# Bright White Bridge — Design Direction
 
-**Status:** THE single source of truth for Pookie's visual design. Supersedes all prior direction docs.
-**Issued:** Mon 2026-10-12 by the Managing Director, on Mehedi's directive after he reviewed the Pookie chat page: *"It looks more like a lavender spa station. Nothing that looks like a Mission Critical Spacecraft."*
+**Status:** THE single source of truth for Pookie's visual design. Supersedes all prior direction docs (including the interim "Mission Critical Spacecraft / deep space blacks" draft).
+**Issued:** Mon 2026-10-12 by the Managing Director, on Mehedi's correction: the 9:35 AM visual target stands — the **BRIGHT WHITE BRIDGE** aesthetic from his reference images. "Deep space blacks" was wrong. The lavender/purple wash is the enemy.
 
 ## The Idea
 
-The app is a spacecraft the user is flying. Every surface should read as a **NASA mission control instrument panel** — angular, technical, phosphor-lit, mission-critical. Not a spa. Not a chat app. A ship.
+The app is a spacecraft the user is flying — but it's the **bright, well-lit bridge**, not a dark dungeon. Think the white bridge shots: cool color temperature, every panel lit up, holographic cyan displays, a panoramic cosmic window as the emotional centerpiece. A cockpit you'd want to spend your morning in.
 
 ## Palette Tokens
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--hull-void` | `#05080C` | Primary background — deep space black |
-| `--hull-deck` | `#0A0F16` | Panel/surface background — dark slate |
-| `--hull-bulkhead` | `#11161F` | Elevated surfaces, cards |
-| `--hull-line` | `#1E2836` | Borders, hairlines — visible but quiet |
-| `--hull-cyan` | `#00E5FF` | Primary neon accent — data, active states, CTAs |
-| `--hull-amber` | `#FFB300` | Warning/caution accent — alerts, pending, attention |
-| `--hull-green` | `#00FF88` | Go/success accent — confirmed, healthy, online |
-| `--hull-red` | `#FF4D5A` | Alert/critical accent — errors, urgent, offline |
-| `--hull-text` | `#E8F1F2` | Primary text — near-white, cool tint |
-| `--hull-text-dim` | `#8A99A8` | Secondary text — slate gray |
-| `--hull-text-faint` | `#5A6B7D` | Tertiary text — labels, captions |
+| `--bridge-white` | `#F4F8FA` | Primary background — cool white, icy |
+| `--bridge-panel` | `#FFFFFF` | Panel/surface background — clean white |
+| `--bridge-glass` | `#EAF2F6` | Elevated surfaces, secondary cards |
+| `--bridge-line` | `#D5E2E9` | Borders, hairlines — cool gray-blue |
+| `--bridge-cyan` | `#00B8D4` | Primary neon accent — data, active states, CTAs (slightly deeper than dark-mode cyan for light-surface contrast) |
+| `--bridge-ice` | `#7DD3FC` | Secondary accent — highlights, hover states |
+| `--bridge-amber` | `#F59E00` | Warning/caution accent — alerts, pending |
+| `--bridge-green` | `#00C853` | Go/success accent — confirmed, healthy |
+| `--bridge-red` | `#E5484D` | Alert/critical accent — errors, urgent |
+| `--bridge-text` | `#0E1B24` | Primary text — deep slate, near-black with cool tint |
+| `--bridge-text-dim` | `#4A6070` | Secondary text — slate |
+| `--bridge-text-faint` | `#8AA0AE` | Tertiary text — labels, captions |
 
-**BANNED:** Lavender, purple washes, pink-on-dark backgrounds, soft pastel blobs. The old lavender palette is dead. Pink may appear only inside the Pookie orb itself (divine light), never as a page accent.
+**BANNED:** Lavender, purple washes, pink as a page accent, warm tones of any kind. Zero warmth. The old lavender palette is dead.
 
-## Panel Specs (HUD Cards)
+**Dark mode** may exist as a user option (the Hull dark tokens are preserved), but the **default signature look is bright, cool, well-lit**.
 
-- Background: `var(--hull-bulkhead)` at 0.85–0.95 opacity
-- Border: 1px solid `var(--hull-line)`, with a **1px neon edge accent** on one edge (top or left) in the panel's semantic color
-- **Corner brackets:** small L-shaped corner marks (8px × 8px, 1px stroke) in the accent color at the panel's top-left and bottom-right corners — the "instrument bezel" look
-- Border radius: **8px max**, typically 4–6px. Pill shapes (24px+) are banned except for small status chips.
-- Shadow: none (no drop shadows). Depth comes from the neon edge line + faint inner glow.
-- Glow spec: `box-shadow: 0 0 12px rgb(var(--hull-cyan) / 0.15)` on the accent edge only. Never full-box neon.
+## Panel Specs (Holographic Display Panels)
+
+- Background: `var(--bridge-panel)` (white) or `var(--bridge-glass)` (elevated)
+- Border: 1px solid `var(--bridge-line)`, with a **1px cyan LED-strip accent** along one edge (top or left)
+- **Corner brackets:** small L-shaped corner marks (8px × 8px, 1px stroke) in `--bridge-cyan` at top-left and bottom-right — the instrument bezel look
+- Border radius: **8px max**, typically 4–6px. Pill shapes (24px+) banned except small status chips.
+- Shadow: soft, cool — `0 2px 12px rgb(0 184 212 / 0.08)`. No heavy drop shadows.
+- Glow spec: subtle cyan edge glow `0 0 10px rgb(0 184 212 / 0.12)` on the accent edge. Holographic, not neon-sign.
+
+## The Window (Emotional Centerpiece)
+
+- Every page background features the **cosmic viewport**: stars/Earth visible through a panoramic window framing. This is the hero of the page, not the orb.
+- The window sits BEHIND the bright panels — panels float over the viewport like bridge consoles.
+- Keep the starfield. Nebula: cool teal/cyan wisps only, very low alpha, never purple.
+
+## LED Strip Lighting
+
+- Thin cyan strips (1–2px) run along panel top edges, section dividers, and the toolbar top edge.
+- Status lights: small (6–8px) glowing dots — cyan (active), green (ok), amber (pending), red (alert).
 
 ## Typography
 
-- **Data readouts** (grades, stats, telemetry, timestamps, numbers): monospace — `ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace`. Uppercase labels, letter-spacing 0.08em, in `--hull-text-dim`.
-- **Prose** (body text, chat messages, descriptions): clean sans — system stack. Normal case, Title Case for headings.
-- **Headings:** Title Case everywhere (Mehedi's rule). Section headers get a small neon tick mark (▸) in accent color, not emoji.
-- **Never:** all-lowercase headings, emoji in headings, decorative script fonts.
+- **Data readouts** (grades, stats, telemetry, timestamps, numbers): monospace — `ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace`. Uppercase labels, letter-spacing 0.08em, in `--bridge-text-dim`.
+- **Prose** (body text, chat messages, descriptions): clean sans — system stack. Title Case for headings.
+- **Headings:** Title Case everywhere (Mehedi's rule). Section headers get a small cyan tick mark (▸).
+- **Never:** all-lowercase headings, emoji in headings, decorative scripts.
 
 ## Chat Surfaces
 
-- Message bubbles → **angular message panels**: 6px radius, 1px border (`--hull-line`), user messages get a cyan left-edge accent, Pookie messages get a subtle green left-edge accent.
-- Avatars: small square (28px, 4px radius) status-light style, not big soft circles.
-- Typing indicator: three blinking status dots in accent color, monospace "TRANSMITTING…" label.
-- Input bar: instrument-panel style — dark deck background, 1px border, monospace placeholder, send button as a square neon-edged key.
+- Messages → **angular panels**: white/glass background, 6px radius, 1px `--bridge-line` border, cyan left-edge accent for user, green for Pookie.
+- Avatars: small square (28px, 4px radius) status-light bezels.
+- Typing indicator: three blinking cyan dots + monospace "TRANSMITTING…" label.
+- Input bar: console style — white panel, 1px border, cyan focus glow, square send key.
 
 ## The Orb
 
-Keep the Pookie orb, but demote it: **ambient instrument light, not the hero of every page.** Smaller (≤64px on pages, ≤48px in toolbar), subtler glow, no plate. Divine-light color cycling stays (it's Pookie's signature), but opacity of the glow drops to 0.3–0.5. The orb is the ship's AI core — it should feel like it's embedded in the console, not floating in a spa.
+Ambient instrument light, not the hero. Smaller (≤64px on pages, ≤48px toolbar), subtle glow. Divine-light color cycling stays (Pookie's signature) but the orb sits within the bright bridge like a holographic core — it should glow gently against the light surfaces. The WINDOW is the page hero, not the orb.
 
 ## Bottom Toolbar Console
 
-Already on the right track (PWR/SHD bars, sector labels, mission clock). Push further:
-- Darker background (`--hull-void`), sharper top edge (1px cyan hairline, no soft gradient)
-- Tab labels in monospace uppercase, 10px, letter-spaced
-- Active tab: cyan underline bar + cyan text, not a glowing pill
-- Keep the orb centered but smaller
-
-## Backgrounds
-
-- Deep space black (`--hull-void`) base. Starfield stays. Nebula stays but **desaturate and darken it** — it should read as deep space through a viewport, not a purple gradient wash.
-- Page transitions: background shifts subtly (the "course change" feel) — keep this, it works.
+Bright bridge version: white/glass background, cyan top LED-strip edge, monospace uppercase tab labels (10px, letter-spaced), active tab = cyan underline + cyan text. PWR/SHD bars in cyan/green. Orb centered, smaller.
 
 ## Corner-Radius Rules
 
@@ -73,30 +78,23 @@ Already on the right track (PWR/SHD bars, sector labels, mission clock). Push fu
 | Buttons | 6px |
 | Inputs | 6px |
 | Chat message panels | 6px |
-| Status chips, badges | 12px (small pills OK here) |
-| Avatars, icons | 4px (squarish) |
+| Status chips, badges | 12px |
+| Avatars, icons | 4px |
 
-## Glow Rules (replaces the old neon-system softness)
-
-- Opacity: 0.1–0.25 for ambient glows, never 0.5+
-- Blur radius: 8–16px, not 24px+
-- Glows live on **edges and status lights**, never full-surface washes
-- Phosphor style: think CRT/radar green-on-black, not Instagram gradient
-
-## What Survives From the Old Direction
+## What Survives
 
 - Title Case everywhere
-- Subtle neon, never harsh
-- The orb itself (demoted, not removed)
-- Starfield + nebula background (darkened)
-- Ship-console toolbar concept
-- Collapsed-by-default, expandable detail (intuitiveness)
+- Angular HUD panels, corner brackets, LED strips, status lights
+- Monospace data readouts + clean sans prose
+- The orb (demoted to ambient)
+- Starfield + cool nebula (never purple)
+- Collapsed-by-default, expandable detail
 - Shame-free, elevated copy
 
 ## What Dies
 
-- Lavender/purple page washes
+- Deep space black backgrounds as the default (dark mode = option only)
+- Lavender/purple washes (the enemy)
 - 24px+ pill radii on panels and bubbles
-- Soft full-surface glows
-- Pink as a page accent color
-- "Spa station" rounded-everything aesthetic
+- Warm tones of any kind
+- The orb as page hero

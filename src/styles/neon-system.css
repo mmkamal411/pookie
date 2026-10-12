@@ -56,7 +56,7 @@
   --neon-teal-rgb: 0 229 255;
   --neon-blue-rgb: 0 229 255;
   --neon-pink-rgb: 244 114 182;
-  /* Hull surface RGB */
+  /* Hull surface RGB (dark-mode option — see docs/DESIGN-DIRECTION.md) */
   --hull-void-rgb: 5 8 12;
   --hull-deck-rgb: 10 15 22;
   --hull-bulkhead-rgb: 17 22 31;
@@ -64,6 +64,19 @@
   --hull-text-rgb: 232 241 242;
   --hull-text-dim-rgb: 138 153 168;
   --hull-text-faint-rgb: 90 107 125;
+  /* Bright White Bridge RGB — the DEFAULT signature look */
+  --bridge-white-rgb: 244 248 250;
+  --bridge-panel-rgb: 255 255 255;
+  --bridge-glass-rgb: 234 242 246;
+  --bridge-line-rgb: 213 226 233;
+  --bridge-cyan-rgb: 0 184 212;
+  --bridge-ice-rgb: 125 211 252;
+  --bridge-amber-rgb: 245 158 0;
+  --bridge-green-rgb: 0 200 83;
+  --bridge-red-rgb: 229 72 77;
+  --bridge-text-rgb: 14 27 36;
+  --bridge-text-dim-rgb: 74 96 112;
+  --bridge-text-faint-rgb: 138 160 174;
 
   /* Active neon color for behavior classes. Defaults to cyan. */
   --nx: var(--neon-cyan-rgb);
@@ -274,6 +287,128 @@
 .hull-amber { --hx: var(--neon-amber-rgb); }
 .hull-green { --hx: var(--neon-green-rgb); }
 .hull-red { --hx: var(--neon-red-rgb); }
+
+/* ==========================================================================
+   BRIDGE PANELS — Bright White Bridge holographic display panels.
+   The DEFAULT signature look (see docs/DESIGN-DIRECTION.md).
+   White/glass surfaces, cyan LED-strip accents, corner brackets.
+   ========================================================================== */
+
+/* -- .bridge-panel: holographic display panel ---------------------------- */
+.bridge-panel {
+  --bx: var(--bridge-cyan-rgb); /* panel accent, override per panel */
+  position: relative;
+  background: rgb(var(--bridge-panel-rgb));
+  border: 1px solid rgb(var(--bridge-line-rgb));
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgb(var(--bridge-cyan-rgb) / 0.07);
+}
+.bridge-panel::before,
+.bridge-panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+.bridge-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid rgb(var(--bx) / 0.9);
+  border-left: 1px solid rgb(var(--bx) / 0.9);
+  border-top-left-radius: 6px;
+}
+.bridge-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid rgb(var(--bx) / 0.9);
+  border-right: 1px solid rgb(var(--bx) / 0.9);
+  border-bottom-right-radius: 6px;
+}
+.bridge-panel-accent {
+  box-shadow: inset 0 1px 0 rgb(var(--bx) / 0.6), 0 0 10px rgb(var(--bx) / 0.1);
+}
+
+/* Accent modifiers */
+.bridge-cyan { --bx: var(--bridge-cyan-rgb); }
+.bridge-amber { --bx: var(--bridge-amber-rgb); }
+.bridge-green { --bx: var(--bridge-green-rgb); }
+.bridge-red { --bx: var(--bridge-red-rgb); }
+
+/* -- .bridge-title: monospace uppercase section header ------------------- */
+.bridge-title {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--bridge-text-dim-rgb));
+}
+.bridge-title::before {
+  content: "▸ ";
+  color: rgb(var(--bridge-cyan-rgb) / 0.9);
+}
+
+/* -- .bridge-readout: technical data readout ------------------------------ */
+.bridge-readout {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  color: rgb(var(--bridge-text-rgb));
+  letter-spacing: 0.04em;
+}
+.bridge-readout-label {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--bridge-text-faint-rgb));
+}
+
+/* -- .bridge-msg: angular chat message panel ------------------------------ */
+.bridge-msg {
+  --bx: var(--bridge-cyan-rgb);
+  background: rgb(var(--bridge-panel-rgb));
+  border: 1px solid rgb(var(--bridge-line-rgb));
+  border-left: 2px solid rgb(var(--bx) / 0.75);
+  border-radius: 6px;
+  box-shadow: 0 1px 8px rgb(var(--bx) / 0.06);
+}
+.bridge-msg-user { --bx: var(--bridge-cyan-rgb); }
+.bridge-msg-ai { --bx: var(--bridge-green-rgb); }
+
+/* -- .bridge-btn: square instrument key ----------------------------------- */
+.bridge-btn {
+  --bx: var(--bridge-cyan-rgb);
+  background: rgb(var(--bridge-panel-rgb));
+  border: 1px solid rgb(var(--bridge-line-rgb));
+  border-radius: 6px;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--bridge-text-rgb));
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.bridge-btn:hover {
+  border-color: rgb(var(--bx) / 0.7);
+  box-shadow: 0 0 10px rgb(var(--bx) / 0.15);
+}
+
+/* -- .bridge-input: console input ------------------------------------------ */
+.bridge-input {
+  background: rgb(var(--bridge-white-rgb));
+  border: 1px solid rgb(var(--bridge-line-rgb));
+  border-radius: 6px;
+  color: rgb(var(--bridge-text-rgb));
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+.bridge-input:focus {
+  outline: none;
+  border-color: rgb(var(--bridge-cyan-rgb) / 0.6);
+  box-shadow: 0 0 10px rgb(var(--bridge-cyan-rgb) / 0.12);
+}
+.bridge-input::placeholder {
+  color: rgb(var(--bridge-text-faint-rgb));
+}
 
 /* -- .hull-title: panel section header ------------------------------------
    Monospace uppercase label with a small neon tick mark. */
