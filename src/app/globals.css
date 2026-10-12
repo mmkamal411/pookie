@@ -985,3 +985,146 @@ a.neon-pipe-violet:hover, button.neon-pipe-violet:hover {
   pointer-events: none;
   animation: page-glide-out 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* ==========================================================================
+   SQUAD POLISH — 2026-10-12. The cosmic glow layer + final 1% details.
+   Mehedi's bar: the entire site must feel interactive, smooth, space mission,
+   glowing, modern next-gen technology. Nothing flat, nothing ordinary.
+
+   What this adds (all additive, zero changes to existing selectors):
+   1. Cosmic ambient wash (body::after) — nebula light bleeding from the
+      page edges: violet top-left, deep blue bottom-right, magenta + teal
+      wisps. Like flying through a colorful nebula. z-index 1: above the
+      starfield canvas (z-0), below all content (z-10+). Very low alpha.
+   2. Sparkle field (body::before) — tiny light glints scattered across the
+      viewport, slow twinkle. True space-mission dust.
+   3. Glass sheen (.glass-pane::before) — a slow diagonal shine sweeping
+      across the viewscreen, like cosmic light playing on glass.
+   GPU-cheap: fixed layers, opacity/transform/background-position only.
+   The global prefers-reduced-motion rule (top of file) stills everything.
+   ========================================================================== */
+
+/* --- 1. Cosmic ambient wash: nebula light blooming from the corners ---
+   Mehedi's reference (2026-10-12): deep purple/violet washes blooming from
+   the top-left and bottom-right corners of the void, soft ambient light
+   pooling around the glass card. This is the target glow. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 50% at 6% 2%, rgb(124 58 237 / 0.17) 0%, rgb(139 92 246 / 0.07) 45%, transparent 72%),
+    radial-gradient(ellipse 60% 48% at 96% 100%, rgb(109 40 217 / 0.16) 0%, rgb(99 60 220 / 0.06) 45%, transparent 72%),
+    radial-gradient(ellipse 40% 32% at 90% 6%, rgb(192 38 211 / 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 44% 36% at 4% 94%, rgb(76 60 220 / 0.08) 0%, transparent 70%);
+  animation: cosmic-drift 90s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+@keyframes cosmic-drift {
+  from { transform: scale(1) translate(0, 0); opacity: 0.85; }
+  to { transform: scale(1.12) translate(-1.5%, 1.5%); opacity: 1; }
+}
+
+/* --- 2. Sparkle field: scattered light glints, slow twinkle --- */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  z-index: 1;
+  pointer-events: none;
+  background: transparent;
+  box-shadow:
+    8vw 12vh 1px 0 rgb(255 255 255 / 0.55),
+    22vw 68vh 1px 0 rgb(196 181 253 / 0.5),
+    35vw 28vh 0 0 rgb(249 168 212 / 0.45),
+    48vw 82vh 1px 0 rgb(103 232 249 / 0.4),
+    61vw 15vh 0 0 rgb(255 255 255 / 0.5),
+    73vw 55vh 1px 0 rgb(196 181 253 / 0.45),
+    87vw 30vh 0 0 rgb(253 230 138 / 0.4),
+    94vw 76vh 1px 0 rgb(255 255 255 / 0.45),
+    15vw 45vh 0 0 rgb(103 232 249 / 0.35),
+    28vw 88vh 1px 0 rgb(249 168 212 / 0.4),
+    42vw 5vh 0 0 rgb(255 255 255 / 0.5),
+    55vw 48vh 1px 0 rgb(196 181 253 / 0.4),
+    68vw 70vh 0 0 rgb(255 255 255 / 0.4),
+    80vw 8vh 1px 0 rgb(249 168 212 / 0.35),
+    5vw 78vh 0 0 rgb(196 181 253 / 0.4),
+    92vw 52vh 1px 0 rgb(103 232 249 / 0.35),
+    18vw 32vh 0 0 rgb(253 230 138 / 0.35),
+    52vw 62vh 1px 0 rgb(255 255 255 / 0.4),
+    66vw 88vh 0 0 rgb(196 181 253 / 0.35),
+    38vw 52vh 1px 0 rgb(249 168 212 / 0.3),
+    76vw 38vh 0 0 rgb(255 255 255 / 0.35),
+    10vw 58vh 1px 0 rgb(103 232 249 / 0.3);
+  animation: sparkle-twinkle 5s ease-in-out infinite;
+}
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.85; }
+}
+
+/* --- 3. Glass sheen: slow shine sweeping across the viewscreen --- */
+.glass-pane {
+  position: relative;
+}
+.glass-pane::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 44%,
+    rgb(196 181 253 / 0.055) 50%,
+    transparent 56%
+  );
+  background-size: 250% 100%;
+  animation: glass-sheen 16s ease-in-out infinite;
+}
+@keyframes glass-sheen {
+  0%, 100% { background-position: 0% 0; }
+  50% { background-position: 100% 0; }
+}
+
+/* --- 4. Ambient pooling: the viewscreen floats in pooled nebula light ---
+   The reference glows brightest where the glass sits. This later-cascade
+   rule (same specificity as the original .glass-pane block) keeps every
+   original shadow and adds the violet pool around the pane. Luminous,
+   never harsh. */
+.glass-pane {
+  box-shadow:
+    0 0 64px rgb(139 92 246 / 0.12),
+    0 0 36px rgb(244 114 182 / 0.06),
+    0 18px 60px rgb(5 5 16 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 0 80px rgb(24 24 70 / 0.22);
+}
+
+/* --- 5. Interactive smoothness: every tappable row gets a living hover --- */.cosmic-row {
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cosmic-row:hover {
+  background-color: rgb(139 92 246 / 0.07);
+  box-shadow: 0 0 18px rgb(139 92 246 / 0.12), inset 0 0 24px rgb(139 92 246 / 0.05);
+}
+.cosmic-row:active {
+  transform: scale(0.99);
+}
+
+/* Light theme: the cosmic layer whispers instead of glows. */
+[data-theme="light"] body::after {
+  opacity: 0.35;
+}
+[data-theme="light"] body::before {
+  opacity: 0.5;
+}

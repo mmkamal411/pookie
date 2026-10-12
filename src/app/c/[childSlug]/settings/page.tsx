@@ -27,7 +27,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ child
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
       {isParent ? (
         <>
-          <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Settings</h1>
+          <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Ship systems</h1>
           <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
             <SettingsTabs childSlug={childSlug} role="parent" />
           </div>

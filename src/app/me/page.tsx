@@ -72,7 +72,7 @@ export default async function MePage() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-2xl border border-nebula-700 bg-nebula-900/60 p-5 transition hover:border-nova-400/60 hover:bg-nebula-900"
+              className="neon-pipe rounded-2xl bg-nebula-900/60 p-5 transition hover:bg-nebula-900"
             >
               <span className="block text-sm font-semibold text-star-100">
                 {link.title}

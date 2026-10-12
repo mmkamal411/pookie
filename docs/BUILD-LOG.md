@@ -1700,3 +1700,24 @@ settings pages, me page. Integration/browser verification is the parent's step.
 - Browser/visual verification NOT done (generic subagents can't operate live browser) — needs parent's signed-in visual pass before Mehedi sees it.
 
 **Verdict:** Integration is clean. Ready for Squad Polish → Squad Launch.
+
+## 2026-10-12 ~08:32 EDT — Squad Polish (final visual QA + cosmic glow layer) COMPLETE
+
+**Commit:** `feat(spaceship-polish):` — the cosmic glow layer Mehedi asked for.
+
+**The cosmic glow layer** (`src/app/globals.css`, append-only POLISH section):
+1. `body::after` — cosmic ambient wash: deep purple/violet nebula washes blooming from the top-left and bottom-right corners (Mehedi's "Glows." reference), magenta/teal wisps at the other corners. z-index 1: above the starfield canvas, below all content. 90s slow drift. Very low alpha, luminous never harsh.
+2. `body::before` — sparkle field: 22 tiny light glints (white/violet/pink/cyan/gold) scattered via box-shadow, 5s slow twinkle. Space-mission dust.
+3. `.glass-pane::before` — glass sheen: slow diagonal shine sweeping the viewscreen every 16s, like cosmic light playing on glass.
+4. `.glass-pane` box-shadow — ambient pooling: added a violet pool around the viewscreen (later-cascade, keeps all original shadows).
+5. `.cosmic-row` — living hover for tappable rows (violet wash + glow, press scale).
+6. Light theme: cosmic layer whispers (reduced opacity).
+
+**Small surgical fixes:**
+- `src/app/select-child/page.tsx` — heading → "Who's on this mission?" (voice guide); child cards get `neon-pipe`; standby label → "Select your crew member".
+- `src/app/me/page.tsx` — household link cards → `neon-pipe` (replaces plain border).
+- `src/app/c/[childSlug]/settings/page.tsx` — parent h1 → "Ship systems" (voice guide).
+
+**Verification:** `npx tsc --noEmit` clean (only pre-existing `.next/types` artifact noise); `npm run build` green. Pure CSS + copy/className changes — zero logic touched. Global `prefers-reduced-motion` rule stills all new animations.
+
+**Not done:** live-browser visual confirmation (generic subagents can't operate the browser) — the parent's signed-in pass should confirm the corner blooms, sparkles, and sheen render as intended before Mehedi flies it.

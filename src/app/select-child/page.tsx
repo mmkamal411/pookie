@@ -33,7 +33,7 @@ export default async function SelectChildPage() {
           Pookie
         </p>
         <h1 className="text-sunlit animate-bloom mt-3 text-center text-2xl font-semibold tracking-tight">
-          Who are we tending to today?
+          Who's on this mission?
         </h1>
         <div className="mt-8 grid gap-4">
           {parents.map((m, i) => (
@@ -46,7 +46,7 @@ export default async function SelectChildPage() {
               <input type="hidden" name="child_id" value={m.child_id} />
               <button
                 type="submit"
-                className="card-living flex w-full items-center gap-4 rounded-3xl p-5 text-left"
+                className="card-living neon-pipe flex w-full items-center gap-4 rounded-3xl p-5 text-left"
               >
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-nova-500/15 text-xl font-semibold text-nova-300 shadow-glow-sm">
                   {m.child.first_name.charAt(0)}
@@ -69,7 +69,7 @@ export default async function SelectChildPage() {
       </PageGlide>
       <StandbyConsoleSpacer />
     </main>
-    <StandbyConsole label="Choose who to tend to" />
+    <StandbyConsole label="Select your crew member" />
     </>
   );
 }
