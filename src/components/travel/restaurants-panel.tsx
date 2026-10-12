@@ -54,9 +54,9 @@ const CUISINE_SIGILS: { match: RegExp; glyph: string; hue: string }[] = [
   { match: /american|burger|bbq|steak/i, glyph: "🍔", hue: "sky" },
   { match: /seafood|fish/i, glyph: "🦐", hue: "cyan" },
   { match: /breakfast|brunch|coffee|cafe/i, glyph: "☕", hue: "stone" },
-  { match: /bakery|dessert|ice cream|sweet/i, glyph: "🧁", hue: "pink" },
+  { match: /bakery|dessert|ice cream|sweet/i, glyph: "🧁", hue: "amber" },
   { match: /vietnamese|pho/i, glyph: "🍲", hue: "emerald" },
-  { match: /korean/i, glyph: "🍱", hue: "violet" },
+  { match: /korean/i, glyph: "🍱", hue: "teal" },
   { match: /mediterranean|greek/i, glyph: "🫒", hue: "teal" },
 ];
 

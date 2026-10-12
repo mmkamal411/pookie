@@ -8,14 +8,14 @@ const TYPE_META: Record<ResourceType, { label: string; icon: string; color: stri
   youtube: { label: "YouTube", icon: "▶️", color: "#f87171", glow: "rgb(248 113 113 / 0.25)" },
   cheat_sheet: { label: "Cheat Sheet", icon: "📋", color: "#fbbf24", glow: "rgb(251 191 36 / 0.25)" },
   clever: { label: "Clever", icon: "🟠", color: "#fb923c", glow: "rgb(251 146 60 / 0.25)" },
-  kahoot: { label: "Kahoot", icon: "🟣", color: "#c084fc", glow: "rgb(192 132 252 / 0.25)" },
-  blooket: { label: "Blooket", icon: "💗", color: "#f472b6", glow: "rgb(244 114 182 / 0.25)" },
+  kahoot: { label: "Kahoot", icon: "🎯", color: "#2dd4bf", glow: "rgb(45 212 191 / 0.25)" },
+  blooket: { label: "Blooket", icon: "📦", color: "#fbbf24", glow: "rgb(251 191 36 / 0.25)" },
   quizlet: { label: "Quizlet", icon: "🔵", color: "#60a5fa", glow: "rgb(96 165 250 / 0.25)" },
   desmos: { label: "Desmos", icon: "📐", color: "#2dd4bf", glow: "rgb(45 212 191 / 0.25)" },
   deltamath: { label: "DeltaMath", icon: "∑", color: "#a3e635", glow: "rgb(163 230 53 / 0.25)" },
   ap_classroom: { label: "AP Classroom", icon: "🏛️", color: "#94a3b8", glow: "rgb(148 163 184 / 0.25)" },
-  ebook: { label: "Ebook", icon: "📕", color: "#818cf8", glow: "rgb(129 140 248 / 0.25)" },
-  game: { label: "Game", icon: "🎮", color: "#a78bfa", glow: "rgb(167 139 250 / 0.25)" },
+  ebook: { label: "Ebook", icon: "📕", color: "#7dd3fc", glow: "rgb(125 211 252 / 0.25)" },
+  game: { label: "Game", icon: "🎮", color: "#22d3ee", glow: "rgb(34 211 238 / 0.25)" },
   other: { label: "Link", icon: "🔗", color: "#9ca3af", glow: "rgb(156 163 175 / 0.25)" },
 };
 

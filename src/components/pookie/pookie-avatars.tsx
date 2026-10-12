@@ -109,8 +109,8 @@ export const POOKIE_AVATAR_KEYFRAMES = `
   @keyframes pookie-border-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
   @keyframes pookie-chip-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
   @keyframes pookie-thinking-glow {
-    0%, 100% { box-shadow: 0 0 12px rgb(244 114 182 / 0.3); }
-    50% { box-shadow: 0 0 24px rgb(244 114 182 / 0.6), 0 0 48px rgb(244 114 182 / 0.3); }
+    0%, 100% { box-shadow: 0 0 12px rgb(0 229 255 / 0.3); }
+    50% { box-shadow: 0 0 24px rgb(0 229 255 / 0.6), 0 0 48px rgb(0 229 255 / 0.3); }
   }
   .pookie-researching {
     position: relative;

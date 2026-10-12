@@ -26,9 +26,9 @@ export const CLASS_NEONS: ClassNeon[] = [
     match: ["chinese"] },
   { id: "gov", neon: "#fbbf24", glow: "251,191,36", text: "#fde68a",
     match: ["government", "gov"] },
-  { id: "geometry", neon: "#a78bfa", glow: "167,139,250", text: "#ddd6fe",
+  { id: "geometry", neon: "#2dd4bf", glow: "45,212,191", text: "#ccfbf1",
     match: ["geometry"] },
-  { id: "litcomp", neon: "#f472b6", glow: "244,114,182", text: "#fbcfe8",
+  { id: "litcomp", neon: "#7DD3FC", glow: "125,211,252", text: "#e0f2fe",
     match: ["lit", "comp ii", "literature", "litcomp"] },
 ];
 

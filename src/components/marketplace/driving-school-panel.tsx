@@ -56,7 +56,7 @@ function ProgressRing({ pct, label }: { pct: number; label: string }) {
           cy="42"
           r={r}
           fill="none"
-          stroke="#f472b6"
+          stroke="#00E5FF"
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={c}

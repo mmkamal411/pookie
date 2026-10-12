@@ -9,7 +9,7 @@ import { cleanCategory, matchWeight } from "@/lib/school/category-weights";
 function pctHex(pct: number | null): string {
   if (pct == null) return "#a1a1aa";
   if (pct >= 90) return "#6ee7b7";
-  if (pct >= 80) return "#a5b4fc";
+  if (pct >= 80) return "#22d3ee";
   if (pct >= 74) return "#fcd34d";
   if (pct >= 70) return "#fdba74";
   return "#fbbf24";
@@ -121,7 +121,7 @@ export function AssignmentsGrouped({
         {upcoming.length > 0 ? (
           <div className="space-y-2">
             {upcoming.map((a) => (
-              <Row key={a.id} a={a} right={dueDateLabel(a.due_date)} rightColor="#a5b4fc" />
+              <Row key={a.id} a={a} right={dueDateLabel(a.due_date)} rightColor="#22d3ee" />
             ))}
           </div>
         ) : (
