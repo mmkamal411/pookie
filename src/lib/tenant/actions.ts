@@ -1,7 +1,8 @@
 "use server";
 
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -10,53 +11,88 @@ import {
   type TenantRole,
 } from "./types";
 
+/** Structured server error log for RCA (NO BLANK PAGES rule). */
+function logServerError(info: {
+  route: string;
+  op: string;
+  err?: unknown;
+  detail?: string;
+}) {
+  const id = crypto.randomUUID().slice(0, 8);
+  console.error(
+    `[${id}] ${info.route} :: ${info.op}` +
+      (info.detail ? ` :: ${info.detail}` : "") +
+      (info.err instanceof Error ? ` :: ${info.err.message}` : ""),
+  );
+}
+
 /**
  * The logged-in user's tenant memberships, resolved from child_access.
  * This is the single source of truth for "which children can this user see".
  *
  * Returns [] when there is no authenticated session — callers redirect
  * to /login in that case.
+ *
+ * F1: Never throws — unexpected errors are logged and [] is returned.
+ * F6: Skips orphaned rows (child null/missing id/slug); NULL fields get fallbacks.
  */
-export async function getMemberships(): Promise<TenantMembership[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
+async function getMembershipsUncached(): Promise<TenantMembership[]> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
 
-  const { data, error } = await supabase
-    .from("child_access")
-    .select(
-      "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level, deletion_requested_at)",
-    )
-    .eq("user_id", user.id);
+    const { data, error } = await supabase
+      .from("child_access")
+      .select(
+        "child_id, role, children!inner(id, slug, first_name, nickname, avatar_url, school_name, grade_level, deletion_requested_at)",
+      )
+      .eq("user_id", user.id);
 
-  if (error || !data) return [];
+    if (error || !data) {
+      if (error) logServerError({ route: "tenant/getMemberships", op: "select child_access", err: error });
+      return [];
+    }
 
-  // Soft-deleted children are hidden from the UI immediately (grace period).
-  const visible = data.filter((row) => {
-    const child = Array.isArray(row.children) ? row.children[0] : row.children;
-    return !child?.deletion_requested_at;
-  });
-
-  return visible.map((row) => {
-    // Supabase types the !inner join as an array; the inner join guarantees one row.
-    const child = Array.isArray(row.children) ? row.children[0] : row.children;
-    return {
-      child_id: row.child_id,
-      role: row.role as TenantRole,
-      child: {
-        id: child.id,
-        slug: child.slug,
-        first_name: child.first_name,
-        nickname: child.nickname,
-        avatar_url: child.avatar_url,
-        school_name: child.school_name,
-        grade_level: child.grade_level,
-      },
-    };
-  });
+    // Soft-deleted children are hidden from the UI immediately (grace period).
+    const result: TenantMembership[] = [];
+    for (const row of data) {
+      const child = Array.isArray(row.children) ? row.children[0] : row.children;
+      // F1+F6: skip orphaned rows instead of crashing on undefined child
+      if (!child?.id || !child?.slug) {
+        logServerError({ route: "tenant/getMemberships", op: "skip orphaned row", detail: `child_id=${row.child_id}` });
+        continue;
+      }
+      if (child.deletion_requested_at) continue;
+      result.push({
+        child_id: row.child_id,
+        role: row.role as TenantRole,
+        child: {
+          id: child.id,
+          slug: child.slug,
+          first_name: child.first_name ?? "Your child",
+          nickname: child.nickname ?? null,
+          avatar_url: child.avatar_url ?? null,
+          school_name: child.school_name ?? null,
+          grade_level: child.grade_level ?? null,
+        },
+      });
+    }
+    return result;
+  } catch (err) {
+    // F1: Never crash the segment on a membership lookup failure.
+    logServerError({ route: "tenant/getMemberships", op: "select child_access", err });
+    return [];
+  }
 }
+
+/**
+ * F2: Deduplicated via React cache() — one child_access query per request
+ * instead of three (layout, setActiveChild, page).
+ */
+export const getMemberships: () => Promise<TenantMembership[]> = cache(getMembershipsUncached);
 
 /** Read the session's active tenant from the HttpOnly cookie. */
 export async function getActiveChildId(): Promise<string | null> {
@@ -67,11 +103,21 @@ export async function getActiveChildId(): Promise<string | null> {
 /**
  * Set the session's active tenant. Rejects any child_id outside the
  * caller's membership set — RLS enforces this server-side regardless.
+ *
+ * F2: Takes already-resolved memberships instead of re-fetching
+ * (deduplicates to one query per request). Calls notFound() instead of
+ * throwing, so a slug mismatch renders the 404 page, not the error boundary.
  */
-export async function setActiveChild(childId: string): Promise<void> {
-  const memberships = await getMemberships();
-  const match = memberships.find((m) => m.child_id === childId);
-  if (!match) throw new Error("not_a_member_of_child");
+export async function setActiveChild(
+  childId: string,
+  memberships?: TenantMembership[],
+): Promise<void> {
+  const ms = memberships ?? (await getMemberships());
+  const match = ms.find((m) => m.child_id === childId);
+  if (!match) {
+    logServerError({ route: "tenant/setActiveChild", op: "membership lookup", detail: "not_a_member_of_child" });
+    notFound();
+  }
 
   const store = await cookies();
   store.set(ACTIVE_CHILD_COOKIE, childId, {

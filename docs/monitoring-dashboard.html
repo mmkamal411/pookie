@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pookie Monitoring</title>
+<style>
+  :root {
+    --ink: #050510;
+    --pink: #f472b6;
+    --pink-dim: rgba(244, 114, 182, 0.25);
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text: #e8e6f0;
+    --text-dim: #a7a3c0;
+    --card: rgba(255, 255, 255, 0.045);
+    --card-border: rgba(255, 255, 255, 0.09);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1px 1px at 68% 8%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.5px 1.5px at 84% 42%, rgba(244,114,182,.8), transparent 60%),
+      radial-gradient(1px 1px at 32% 68%, rgba(255,255,255,.45), transparent 60%),
+      radial-gradient(1px 1px at 52% 88%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(2px 2px at 8% 78%, rgba(244,114,182,.5), transparent 60%),
+      radial-gradient(1px 1px at 92% 72%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1px 1px at 44% 34%, rgba(255,255,255,.4), transparent 60%),
+      var(--ink);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 48px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 1.5rem; font-weight: 700; letter-spacing: 0.01em;
+    text-shadow: 0 0 24px var(--pink-dim);
+  }
+  h1 .orb {
+    display: inline-block; width: 0.9em; height: 0.9em; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fef9c3, #f472b6 55%, #7c2d52);
+    box-shadow: 0 0 14px var(--pink-dim), 0 0 34px rgba(244,114,182,.18);
+    margin-right: 0.45em; vertical-align: baseline;
+  }
+  .pill {
+    font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--card-border); white-space: nowrap;
+  }
+  .pill.ok { color: var(--green); border-color: rgba(52,211,153,.4); box-shadow: 0 0 16px rgba(52,211,153,.15); }
+  .pill.bad { color: var(--red); border-color: rgba(248,113,113,.45); box-shadow: 0 0 16px rgba(248,113,113,.18); }
+  .pill.warn { color: var(--amber); border-color: rgba(251,191,36,.4); }
+  .pill.na { color: var(--text-dim); }
+  .sub { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 18px; }
+  .sub code { color: var(--text); font-size: 0.8rem; }
+  .env {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 4px 28px rgba(0,0,0,.35);
+  }
+  .env-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .env-name { font-weight: 700; font-size: 1.05rem; }
+  .env-url { color: var(--text-dim); font-size: 0.78rem; word-break: break-all; margin-bottom: 10px; }
+  .tag {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--card-border); color: var(--text-dim);
+    margin-left: 8px; vertical-align: middle;
+  }
+  .tag.canon { color: var(--pink); border-color: var(--pink-dim); }
+  .ep {
+    display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: baseline;
+    padding: 9px 4px; border-top: 1px solid rgba(255,255,255,.06); font-size: 0.88rem;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; justify-self: center; position: relative; top: 1px; }
+  .dot.ok { background: var(--green); box-shadow: 0 0 10px rgba(52,211,153,.7); }
+  .dot.bad { background: var(--red); box-shadow: 0 0 10px rgba(248,113,113,.7); }
+  .ep-name { font-weight: 600; }
+  .ep-detail { color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 2px; word-break: break-word; }
+  .ep-meta { text-align: right; font-size: 0.78rem; color: var(--text-dim); white-space: nowrap; }
+  .ep-meta .ms { color: var(--text); font-variant-numeric: tabular-nums; }
+  .note { color: var(--text-dim); font-size: 0.85rem; line-height: 1.55; }
+  .note strong { color: var(--text); }
+  section.card {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px; margin-bottom: 14px;
+  }
+  section.card h2 { font-size: 1.05rem; margin-bottom: 10px; text-shadow: 0 0 18px var(--pink-dim); }
+  table.deploys { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  table.deploys th, table.deploys td { text-align: left; padding: 8px 8px; border-top: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+  table.deploys th { color: var(--text-dim); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-top: none; }
+  table.deploys td.sha { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.76rem; }
+  .checklist { list-style: none; }
+  .checklist li { padding: 8px 0; border-top: 1px solid rgba(255,255,255,.06); font-size: 0.86rem; line-height: 1.5; }
+  .checklist li:first-child { border-top: none; }
+  .checklist code { background: rgba(255,255,255,.08); padding: 1px 7px; border-radius: 6px; font-size: 0.8rem; }
+  .checklist .why { color: var(--text-dim); display: block; font-size: 0.8rem; margin-top: 2px; }
+  .refresh { text-align: center; color: var(--text-dim); font-size: 0.75rem; margin-top: 18px; }
+  .err { color: var(--red); font-size: 0.88rem; line-height: 1.6; }
+  @media (max-width: 520px) {
+    .ep { grid-template-columns: 18px 1fr; }
+    .ep-meta { grid-column: 2; text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="orb"></span>Pookie Monitoring</h1>
+    <span id="overall" class="pill na">loading…</span>
+  </header>
+  <p class="sub" id="checked-line">Fetching latest health status…</p>
+
+  <div id="envs"></div>
+
+  <section class="card">
+    <h2>Deployment history</h2>
+    <div id="deploys"><p class="note">Loading…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>What each check verifies</h2>
+    <ul class="checklist">
+      <li><code>GET /</code> → expect <code>307</code><span class="why">Root must redirect unauthenticated visitors to /login. A 500 here means the Pages server function is broken (the 2026-10-12 incident).</span></li>
+      <li><code>GET /login</code> → expect <code>200</code> + "Pookie" in HTML<span class="why">Login shell renders. The content marker catches a 200 that is actually the Next.js error boundary.</span></li>
+      <li><code>GET /auth/callback</code> → expect <code>307</code><span class="why">Callback with no code must redirect gracefully instead of crashing.</span></li>
+      <li><code>GET /api/v1/me</code> → expect <code>403</code> + <code>TENANT_SCOPE_VIOLATION</code><span class="why">API tenant firewall rejects unauthenticated callers with the canonical error envelope.</span></li>
+      <li><code>GET /_next/static/…</code> → expect <code>200</code><span class="why">One real JS/CSS asset from the login page must serve via Pages. Catches stale bundles and _routes.json regressions.</span></li>
+    </ul>
+    <p class="note" style="margin-top:10px">Run the check manually any time: <code>python3 health-check.py</code> from <code>~/workspace/pookie-app</code>. It writes <code>docs/health-status.json</code>, which this page reads.</p>
+  </section>
+
+  <p class="refresh" id="refresh-line">Auto-refresh every 60s.</p>
+</div>
+
+<script>
+(function () {
+  var envsEl = document.getElementById('envs');
+  var overallEl = document.getElementById('overall');
+  var checkedEl = document.getElementById('checked-line');
+  var deploysEl = document.getElementById('deploys');
+  var refreshEl = document.getElementById('refresh-line');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function ago(iso) {
+    var t = new Date(iso).getTime();
+    if (isNaN(t)) return '';
+    var s = Math.max(0, Math.round((Date.now() - t) / 1000));
+    if (s < 60) return s + 's ago';
+    var m = Math.round(s / 60);
+    if (m < 60) return m + 'm ago';
+    return Math.round(m / 60) + 'h ago';
+  }
+
+  function setOverall(ok, skipped) {
+    overallEl.className = 'pill ' + (ok ? 'ok' : 'bad');
+    overallEl.textContent = ok ? '● ALL HEALTHY' : '● ATTENTION NEEDED';
+    if (skipped && skipped.length) {
+      overallEl.textContent += '  (' + skipped.length + ' not deployed)';
+    }
+  }
+
+  function renderStatus(data) {
+    var names = Object.keys(data.environments || {});
+    if (!names.length) {
+      envsEl.innerHTML = '<p class="err">health-status.json has no environments.</p>';
+      return;
+    }
+    var skipped = [];
+    var html = '';
+    names.forEach(function (key) {
+      var e = data.environments[key];
+      var canonTag = e.canonical
+        ? '<span class="tag canon">canonical</span>'
+        : '<span class="tag">alias</span>';
+      html += '<div class="env"><div class="env-head"><span class="env-name">' +
+        esc(e.name) + canonTag + '</span>';
+      if (e.status === 'not_deployed') {
+        skipped.push(e.name);
+        html += '<span class="pill warn">NOT DEPLOYED</span></div>' +
+          '<div class="env-url">' + esc(e.base_url) + '</div>' +
+          '<p class="note">' + esc(e.presence || '') + '</p>' +
+          (e.notes ? '<p class="note">' + esc(e.notes) + '</p>' : '') +
+          '</div>';
+        return;
+      }
+      html += '<span class="pill ' + (e.ok ? 'ok' : 'bad') + '">' +
+        (e.ok ? 'HEALTHY' : 'UNHEALTHY') + '</span></div>' +
+        '<div class="env-url">' + esc(e.base_url) + '</div>';
+      (e.endpoints || []).forEach(function (ep) {
+        var actual = ep.actual === -1 ? 'ERR' : esc(ep.actual);
+        html += '<div class="ep"><span class="dot ' + (ep.ok ? 'ok' : 'bad') + '"></span>' +
+          '<div><span class="ep-name">' + esc(ep.name) + '</span>' +
+          '<span class="ep-detail">' + esc(ep.detail || '') + '</span></div>' +
+          '<div class="ep-meta"><span class="ms">' + esc(ep.ms) + 'ms</span><br>' +
+          'exp ' + esc(ep.expected) + ' · got ' + actual + '</div></div>';
+      });
+      html += '</div>';
+    });
+    envsEl.innerHTML = html;
+    setOverall(!!data.ok, skipped);
+    checkedEl.innerHTML = 'Last checked: <code>' + esc(data.checked_at || 'unknown') +
+      '</code> (' + esc(ago(data.checked_at)) + ')';
+  }
+
+  function renderNoStatus(err) {
+    overallEl.className = 'pill na';
+    overallEl.textContent = 'NO DATA';
+    checkedEl.textContent = 'No health data yet.';
+    envsEl.innerHTML = '<p class="err">Could not load <code>health-status.json</code> (' +
+      esc(err && err.message || err) + '). Run <code>python3 health-check.py</code> ' +
+      'from ~/workspace/pookie-app to generate it.</p>';
+  }
+
+  function parseDeployLog(md) {
+    var rows = [];
+    var lines = md.split('\n');
+    var header = null;
+    lines.forEach(function (line) {
+      var t = line.trim();
+      if (!/^\|.*\|$/.test(t)) return;
+      var cells = t.split('|').slice(1, -1).map(function (c) { return c.trim(); });
+      if (/^-+$/.test(cells.join('').replace(/:/g, ''))) return; // separator row
+      if (!header) { header = cells; return; }
+      rows.push(cells);
+    });
+    return { header: header, rows: rows };
+  }
+
+  function renderDeploys(md) {
+    if (!md || !md.trim()) { renderDeployPlaceholder(); return; }
+    var parsed = parseDeployLog(md);
+    if (!parsed.header || !parsed.rows.length) { renderDeployPlaceholder(); return; }
+    var html = '<div style="overflow-x:auto"><table class="deploys"><thead><tr>';
+    parsed.header.forEach(function (h, i) {
+      html += '<th>' + esc(h) + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    parsed.rows.slice(-12).reverse().forEach(function (r) {
+      html += '<tr>';
+      r.forEach(function (c, i) {
+        var cls = /sha/i.test(parsed.header[i] || '') ? ' class="sha"' : '';
+        html += '<td' + cls + '>' + esc(c) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    deploysEl.innerHTML = html;
+  }
+
+  function renderDeployPlaceholder() {
+    deploysEl.innerHTML = '<p class="note">Deployment history will appear here after the next deploy. ' +
+      'Expected format in <code>docs/DEPLOY-LOG.md</code>:<br><code>| Timestamp | Env | Git SHA | Commits | Smoke |</code></p>';
+  }
+
+  function tick() {
+    refreshEl.textContent = 'Auto-refresh every 60s · last refresh ' + new Date().toLocaleTimeString() + '.';
+  }
+
+  async function load() {
+    try {
+      var res = await fetch('health-status.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      renderStatus(await res.json());
+    } catch (e) {
+      renderNoStatus(e);
+    }
+    try {
+      var res2 = await fetch('DEPLOY-LOG.md', { cache: 'no-store' });
+      if (!res2.ok) throw new Error('HTTP ' + res2.status);
+      renderDeploys(await res2.text());
+    } catch (e) {
+      renderDeployPlaceholder();
+    }
+    tick();
+  }
+
+  load();
+  setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>

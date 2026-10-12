@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getMemberships, setActiveChild } from "@/lib/tenant/actions";
+import { getMemberships } from "@/lib/tenant/actions";
 import { TenantProvider } from "@/components/tenant-provider";
 import { ChildSwitcher } from "@/components/child-switcher";
 import { ChildToolbar } from "@/components/child-toolbar";
@@ -30,10 +30,18 @@ export default async function ChildDashboard({
 
   const { childSlug } = await params;
   const memberships = await getMemberships();
+  // F4: Signed-in user with zero visible memberships → onboarding, not 404.
+  // This is the recovery path for fresh accounts or transient lookup failures.
+  if (memberships.length === 0) redirect("/onboarding");
   const membership = memberships.find((m) => m.child.slug === childSlug);
   if (!membership) notFound();
 
-  await setActiveChild(membership.child_id);
+  // NOTE: Do NOT call setActiveChild() here. cookies().set() throws
+  // "Cookies can only be modified in a Server Action or Route Handler"
+  // when executed during Server Component render, which 500s this layout
+  // for every user (Squad 2 root-cause 2026-10-12). The tenant is already
+  // resolved from the URL slug and passed to TenantProvider below —
+  // the cookie is redundant for rendering.
 
   return (
     <>

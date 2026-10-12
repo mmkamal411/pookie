@@ -29,13 +29,14 @@ export function OverviewDashboard({
   gradeLevel: string | null;
   role: "parent" | "child";
 }) {
-  const classes = [...overview.classes].sort((a, b) => {
+  // F3: Null-guard — overview may be partial if a query failed.
+  const classes = [...(overview?.classes ?? [])].sort((a, b) => {
     if (a.numeric == null) return 1;
     if (b.numeric == null) return -1;
     return b.numeric - a.numeric;
   });
   const attentionCount = classes.filter((c) => c.numeric != null && c.numeric < 80).length;
-  const urgentCount = overview.due_next.filter(isUrgent).length;
+  const urgentCount = (overview?.due_next ?? []).filter(isUrgent).length;
 
   return (
     <main className="relative mx-auto max-w-5xl overflow-hidden px-4 pt-10 pb-8">

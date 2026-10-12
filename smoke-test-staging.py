@@ -316,7 +316,7 @@ def get_supabase_vault():
         return url, str(entry["surrogate"]).strip()
     except Exception as e:
         print(f"  SKIP authenticated checks: Secure Vault entry "
-              f"'custom.supabase-service-role' unavailable ({e})")
+              f"'custom.supabase-service' unavailable ({e})")
         print(f"       Founder action: create the vault entry with the "
               f"staging service_role key, then re-run.")
         return None, None

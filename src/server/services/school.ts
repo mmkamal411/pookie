@@ -212,6 +212,19 @@ export async function hasCheckinToday(childId: string): Promise<boolean> {
 // ---------------------------------------------------------------------------
 
 export async function getSchoolOverview(childId: string): Promise<SchoolOverview> {
+  // F3: Never throw — return empty overview on failure so the dashboard
+  // shell renders instead of crashing to the error boundary.
+  // Each failure is logged with a structured error ID for RCA.
+  try {
+    return await getSchoolOverviewInner(childId);
+  } catch (err) {
+    const id = crypto.randomUUID().slice(0, 8);
+    console.error(`[${id}] school/getSchoolOverview :: child ${childId} :: ${err instanceof Error ? err.message : String(err)}`);
+    return { classes: [], due_next: [], checkin_today: false };
+  }
+}
+
+async function getSchoolOverviewInner(childId: string): Promise<SchoolOverview> {
   const supabase = await createClient();
 
   const { data: classes, error: classErr } = await supabase

@@ -161,19 +161,26 @@ export async function getAccountDeletionStatus(): Promise<{
   pending: boolean;
   permanentDeleteAfter?: string;
 } | null> {
-  const uid = await sessionUserId();
-  if (!uid) return null;
+  // Never throw — a deletion-status lookup failure must not crash the page.
+  // Returns {pending:false} (safe default) on any error.
+  try {
+    const uid = await sessionUserId();
+    if (!uid) return null;
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("users")
-    .select("permanent_delete_after")
-    .eq("id", uid)
-    .maybeSingle();
-  const row = data as { permanent_delete_after?: string } | null;
-  if (!row?.permanent_delete_after) return { pending: false };
-  return {
-    pending: true,
-    permanentDeleteAfter: row.permanent_delete_after,
-  };
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("users")
+      .select("permanent_delete_after")
+      .eq("id", uid)
+      .maybeSingle();
+    const row = data as { permanent_delete_after?: string } | null;
+    if (!row?.permanent_delete_after) return { pending: false };
+    return {
+      pending: true,
+      permanentDeleteAfter: row.permanent_delete_after,
+    };
+  } catch (err) {
+    console.error(`[account] getAccountDeletionStatus failed: ${err instanceof Error ? err.message : String(err)}`);
+    return { pending: false };
+  }
 }
