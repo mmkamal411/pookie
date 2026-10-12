@@ -3,6 +3,30 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:01 EDT — Squad 2 Senior Frontend (staging-build): HEALTH UI SURFACES COMPLETE (commit bc08c26)
+
+**All 5 deliverables built as full working implementations — no mocks, no stubs, no TODOs** (MD no-placeholders directive). Contracts: `docs/solutions/sol-health.md` App A/B + `docs/squads/squad2-health/UX-SPECS.md`.
+
+- `src/lib/health/{types,actions}.ts` — tier-aware server actions. `tierVisibleFor()` mirrors `health_tier_visible()` deny-by-default in code (H3: no grant arm ever; H0 refused <18; unknown DOB fails closed). User-JWT client throughout (RLS backstop). Missing tables/RPCs → `backend_not_ready` honest error path.
+- **W2 hub** `/c/[childSlug]/health` — tier-badged sections, provenance on every reading, persistent not-a-medical-device header+footer, device-sync card.
+- **W8 wellbeing** `/health/wellbeing` — route denies parents outright (zero content, zero aggregates); teen mood pulse + journal + retention picker + tombstone deletes; Rung-1 inline warmth, Rung-3 one-tap 988/741741 crisis screen, persistent Get help, NEDA card.
+- **W23 nutrition** `/health/nutrition` — <18: descriptive check-ins only, zod-strict `minor_numeric_refusal`, weight-neutral copy, parent sees engagement-only via `nutrition_weekly_patterns()`; 18+: diary with uncertainty ranges.
+- **W13 meals** `/health/meals` — planner + grocery list, no calorie fields at any age.
+- **review-18** `/health/review-18` — 5-step interstitial: per-tier per-parent toggles (default OFF), H3 static line, review–correct–seal queue, transition-summary export (PDF/JSON), decoupled emergency contacts, save/skip-private.
+- **Settings → Sharing → Health** `/settings/sharing` — per-tier per-parent toggles (`rpc_set_health_grant`), grace windows, hide-past FERPA lever, `access_events` audit, deletion lever. Sharing tab added to settings nav.
+- Module tiles W2/W8/W13/W23 → `live` with `/health/*` routes (converged with Platform Team 2's menu commit 6fd6760 — identical routes, no conflict).
+- tsc: zero errors in health files. No `console.log`, no dead code.
+
+**Blocked/flagged:** (1) Backend needs `rpc_set_health_grant` (semantics: sol-health §2.3) + `meal_plans`/`health_preferences` tables (Squad 2 backend, 027 scope). (2) `saveEmergencyContacts` validates fully but reports `dependency_not_ready` until Squad 1's `emergency_contacts` write contract lands — no fake write. (3) Contract tension flagged: sol-health §5.1 RLS sketch is teen-only, but §1.3 matrix grants under-13 stewards full H1/H2 — backend must add the steward arm or explicitly deny. (4) Login-time interstitial hook for review-18 → Platform Team 2. **No deploy.**
+
+## 2026-10-12 ~04:01 EDT — Squad 2 Senior Frontend: MD NO-PLACEHOLDERS DIRECTIVE APPLIED TO BACKLOG
+
+**`docs/squads/squad2-health/PM-BACKLOG.md` created** (PM agent had not delivered it). Rewritten under the directive:
+- Backlog-wide rules: any story containing mock/stub/TODO/fake-data **fails acceptance**; every story's DoD requires real tables + real endpoints + real UI on real data + real RLS (user-JWT only, no service_role in product paths).
+- All 10 frontend stories cite spec'd contracts (file + section) and are marked implemented against them (commit bc08c26).
+- Dependency register D1–D5 (Squad 2 backend migrations/RPCs; Platform Team 1 access_events/child_access; Squad 1 emergency tables + trusted-adult list + §5.5 sign-off; Platform Team 2 login hook; counsel launch gate).
+- Launch gates (sol-health §12) kept as **launch preconditions, not code placeholders**: code ships complete; data flows open when counsel/RLS-matrix gates clear.
+
 ## 2026-10-12 ~04:20 EDT — Security Engineer (Platform Team 1): RLS + UNDER-13 BANS STAGED, RPC REVIEW COMPLETE
 
 **MD FREEZE honored:** no files created/modified in `supabase/migrations/`. All SQL staged durably at `~/workspace/pookie-security-staging/` (NOT /tmp — /tmp was wiped mid-session in this environment):
@@ -1116,7 +1140,14 @@ which was never written (only the unrelated `college-extra.ts` existed).
 **Scope:** full health data layer per sol-health.md — schema (022–028), RLS, RPCs, API routes.
 **MD directives honored mid-flight:** (1) no-placeholders → full implementations, legal gate controls DATA not schema; (2) migration FREEZE → no new/modified migration files after the signal; colliding numbers left for MD renumbering.
 
-**Migration files CREATED (this run, before freeze — for MD reconciliation, do not delete):**
+**Migration files CREATED (this run, before freeze):**
+> MD RENUMBERING (commit 306c8e5, applied by the reconciler — my content confirmed intact via grep):
+> 022_health_tiers.sql → KEPT 022 · 023_health_reconsent.sql → KEPT 023 ·
+> 024_health_grace_and_deletion.sql → KEPT 024 · 025_wellbeing.sql → **028_wellbeing.sql** ·
+> 026_immunizations.sql → **029_immunizations.sql** · 027_nutrition_agegate.sql → **031_nutrition_agegate.sql** ·
+> 028_sud_separation.sql → **030_sud_separation.sql**.
+> NOTE for reconciler: internal "-- Migration 025/026/027/028:" headers inside the renamed files still carry the OLD numbers; duplicate numbers remain in the tree (030×2, 031×2, 032×3, 033×3, 034×2, 035×2, 036×2) — MD renumbering still in progress. Do not apply until unique.
+**Original files (pre-renumber):**
 - `supabase/migrations/022_health_tiers.sql` — health_tier enum; tier columns + provenance/anomaly/tombstone/seal columns; metric_defs.health_tier; `health_tier_visible()` predicate (deny-by-default, H3 absolute); `health_consent_grants` (H3/H0 unrepresentable); `allergy_list`; `health_medications` (H2); `health_alert_thresholds` (counsel-gated); 011 amendments (H2-only ≤30d teen-appealable overrides, age-band split); GA consent-rules seed (counsel_reviewed=false).
 - `supabase/migrations/023_health_reconsent.sql` — reconsent status enum; `health_corrections`; `health_device_tokens` lifecycle; `nightly_health_birthday_cutover()` + pg_cron; RPCs: reconsent_submit/skip, review_queue, record_correct/delete, export_transition_summary (real meds/allergies/immunizations/vitals-trends/H3-opt-in/emergency-contact assembly).
 - `supabase/migrations/024_health_grace_and_deletion.sql` — `health_grace` (predicate-enforced expiry); `health_retention_policies`; `sweep_health_grace()`; `purge_tombstoned_health()` (H3 fast path, storage purge); `purge_expired_health()` (rolling retention, no indefinite retention); RPCs: hide_past_health, request_health_deletion.
@@ -1174,3 +1205,13 @@ All six are complete on disk, UNCOMMITTED, awaiting MD renumbering.
 - CRITICAL-1 fix: `/verify-invite` pre-auth view no longer renders `child_first_name`/`child_nickname` (validity + inviter display name only); post-auth preview unchanged.
 **Notes for other teams:** `createChildProfile` calls SECURITY DEFINER RPC `provision_onboarding_child` — SQL staged at `src/lib/onboarding/provision_onboarding_child.sql`, NOT in `supabase/migrations/` (MD freeze 2026-10-12); DBA to place post-freeze. "Just me" users (completed, 0 memberships) currently hit `/login?error=no-invite` per brief — needs a personal dashboard before it makes sense.
 **tsc:** clean for all touched files (remaining repo errors are other teams' pre-existing).
+
+## 2026-10-12 — Squad 4 addendum: MD renumbering landed (Tech Lead 73204527-f367-455d-9fd9-13a8ea76d440)
+
+The MD renumbering pass relocated Squad 4's six migrations (drafted 024–029) to:
+`035_w11_spending.sql` · `036_w7_vault.sql` · `037_w24_credit.sql` · `038_w14_coparenting.sql` · `039_w12_babysitters.sql` · `040_w21_mail_retention.sql`
+(byte-identical to the drafts — content verified). The renumbering team owns those files; freeze still in effect — Squad 4 is not touching them.
+
+**Flag for MD:** the new sequence has duplicate numbers from parallel teams — `035_safety_events.sql` vs `035_w11_spending.sql`, `036_safety_extensions.sql` vs `036_w7_vault.sql`. Needs a dedupe pass before anything is applied.
+
+**Service restart incident:** the sandbox restarted mid-session and rolled back `package.json`/`package-lock.json` (plaid dep entry lost; node_modules survived). Repaired via `npm install --package-lock-only plaid@^48`. All services, routes, OCR edits, and docs verified intact afterward. `npx tsc --noEmit` clean for all squad files.
