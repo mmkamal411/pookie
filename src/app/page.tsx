@@ -51,11 +51,10 @@ export default async function Home({
 
   if (!user) redirect("/login");
 
-  // Deletion grace: a user who requested deletion sees the recovery page,
-  // not the app. (getAccountDeletionStatus reads the caller's own row.)
-  const { getAccountDeletionStatus } = await import("@/lib/account/actions");
-  const deletion = await getAccountDeletionStatus();
-  if (deletion?.pending) redirect("/account-deleted");
+  // TEMP-DIAGNOSTIC (2026-10-12): bypassing deletion check to isolate 500.
+  // const { getAccountDeletionStatus } = await import("@/lib/account/actions");
+  // const deletion = await getAccountDeletionStatus();
+  // if (deletion?.pending) redirect("/account-deleted");
 
   const params = await searchParams;
   if (params.invite) {
