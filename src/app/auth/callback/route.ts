@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import {
+  authFailureCode,
+  safePostAuthNext,
+} from "@/lib/auth/callback-helpers";
 
 /**
  * OAuth / OTP callback. Supabase redirects here after the user
@@ -12,11 +16,18 @@ import { createServerClient } from "@supabase/ssr";
  * propagation to a freshly-created NextResponse — that propagation is
  * framework magic that is unreliable on Cloudflare Workers (OpenNext).
  * Reading the incoming cookies comes straight from the request.
+ *
+ * ?next= is re-validated here (safePostAuthNext) even though /login
+ * validates it too — the callback must never trust a query param
+ * blindly, or a crafted link could bounce a fresh session off-site.
+ * Exchange failures map to specific ?error= codes so /login can show
+ * a targeted recovery hint (expired link vs blocked cookies) instead
+ * of one generic "try again".
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const next = safePostAuthNext(searchParams.get("next"));
 
   if (code) {
     // Collect every Set-Cookie the Supabase client wants to write so we
@@ -45,6 +56,9 @@ export async function GET(request: NextRequest) {
       }
       return response;
     }
+    return NextResponse.redirect(
+      `${origin}/login?error=${authFailureCode(error.message)}`,
+    );
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth`);

@@ -85,16 +85,32 @@ export async function clearActiveChild(): Promise<void> {
 
 /**
  * Consume an invite token after OTP login (0-membership case).
- * Calls the SECURITY DEFINER rpc consume_invite, then redirects home.
+ * Calls the SECURITY DEFINER rpc consume_invite.
+ *
+ * Never throws for invite problems: an expired, used, or bogus token
+ * returns { ok: false } so the caller can route to the friendly
+ * /verify-invite invalid state instead of hitting the error boundary
+ * (the old throw-here behavior 500'd for logged-in users while curl,
+ * with no session, saw a clean 307 — the browser-vs-curl mystery).
  */
-export async function consumeInvite(token: string): Promise<void> {
+export async function consumeInvite(
+  token: string,
+): Promise<{ ok: true; childId: string } | { ok: false; error: string }> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("consume_invite", {
     p_token: token,
   });
-  if (error) throw new Error(error.message);
-  if (data) await setActiveChild(data as string);
-  redirect("/");
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "consume_failed" };
+  }
+  try {
+    await setActiveChild(data as string);
+  } catch {
+    // Non-fatal: the membership was just granted, so the tenant router
+    // re-resolves the active child below. A stale cookie write must never
+    // 500 the front door.
+  }
+  return { ok: true, childId: data as string };
 }
 
 /** Sign out: clear Supabase session + tenant cookie. */

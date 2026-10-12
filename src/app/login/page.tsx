@@ -9,6 +9,12 @@ import { PookieOrb } from "@/components/pookie-orb";
  * Magic-link sign-in (no passwords anywhere). Invite links land here
  * with ?token=… and are consumed after sign-in. ?next=… carries a
  * post-auth return URL (e.g. /verify-invite?token=…) for both flows.
+ *
+ * Rate-limit UX: Supabase throttles magic-link sends (429 / "rate limit"
+ * messages — the founder hit a project-wide throttle on launch night).
+ * Those errors get plain-English copy pointing at the Google button
+ * instead of raw API text, and the sent state carries a resend path so
+ * a missing email is never a dead end.
  */
 export default function LoginPage({
   searchParams,
@@ -21,6 +27,7 @@ export default function LoginPage({
 }) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [resent, setResent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +35,16 @@ export default function LoginPage({
   // searchParams unwrapped with use(): available on server and client, no hydration risk.
   const params = use(searchParams);
 
-  // Surface auth failures redirected back from /auth/callback.
-  const authError = params.error === "auth";
+  // Surface auth failures redirected back from /auth/callback, with a
+  // recovery hint matched to the failure kind.
+  const authError = params.error ?? null;
+  const authErrorCopy: Record<string, string> = {
+    auth: "Sign-in didn't finish — please try again.",
+    auth_expired:
+      "That sign-in link expired — request a fresh one below.",
+    auth_pkce:
+      "Your browser blocked part of the sign-in. Enable cookies and try again — or use a magic link below.",
+  };
 
   // Post-auth destination. Legacy ?token=… invites keep their /?invite=
   // handoff; ?next=… is honored only when it is a same-origin path
@@ -45,6 +60,17 @@ export default function LoginPage({
     }
     return null;
   }
+
+  /** True when the Supabase error is a send-rate throttle. */
+  function isRateLimitError(err: unknown): boolean {
+    const status = (err as { status?: number } | null)?.status;
+    if (status === 429) return true;
+    const msg = err instanceof Error ? err.message : "";
+    return /rate.?limit|too many|request this after/i.test(msg);
+  }
+
+  const RATE_LIMIT_COPY =
+    "Too many sign-in attempts right now — wait a minute and try again, or continue with Google above.";
 
   async function signInWithGoogle() {
     setOauthBusy(true);
@@ -64,9 +90,36 @@ export default function LoginPage({
       if (error) throw error;
       // On success the browser leaves for Google's consent screen.
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        isRateLimitError(err)
+          ? RATE_LIMIT_COPY
+          : err instanceof Error
+            ? err.message
+            : "Something went wrong.",
+      );
       setOauthBusy(false);
     }
+  }
+
+  /** One magic-link send. Throws on failure; the caller maps the error. */
+  async function requestLink() {
+    const sp = await searchParams;
+    const next = postAuthNext(sp);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback${
+          next ? `?next=${encodeURIComponent(next)}` : ""
+        }`,
+      },
+    });
+    if (error) throw error;
+  }
+
+  function mapSendError(err: unknown): string {
+    if (isRateLimitError(err)) return RATE_LIMIT_COPY;
+    return err instanceof Error ? err.message : "Something went wrong.";
   }
 
   async function sendLink(e: React.FormEvent) {
@@ -74,21 +127,24 @@ export default function LoginPage({
     setBusy(true);
     setError(null);
     try {
-      const sp = await searchParams;
-      const next = postAuthNext(sp);
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback${
-            next ? `?next=${encodeURIComponent(next)}` : ""
-          }`,
-        },
-      });
-      if (error) throw error;
+      await requestLink();
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(mapSendError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendLink() {
+    setBusy(true);
+    setError(null);
+    setResent(false);
+    try {
+      await requestLink();
+      setResent(true);
+    } catch (err) {
+      setError(mapSendError(err));
     } finally {
       setBusy(false);
     }
@@ -146,15 +202,51 @@ export default function LoginPage({
             </p>
 
             {sent ? (
-              <p className="animate-bloom mt-6 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center text-sm text-stardust-200">
-                Your link is fluttering toward your inbox — check your email.
-              </p>
+              <div className="animate-bloom mt-6 space-y-4 rounded-2xl border border-nova-400/25 bg-nova-500/10 p-4 text-center">
+                <p className="text-sm text-stardust-200">
+                  Your link is fluttering toward your inbox — check your email
+                  (and the spam folder, just in case).
+                </p>
+                {resent && (
+                  <p className="text-xs text-nova-300">
+                    Sent again — give it a minute to arrive.
+                  </p>
+                )}
+                {error && <p className="text-sm text-red-400">{error}</p>}
+                <button
+                  type="button"
+                  onClick={resendLink}
+                  disabled={busy}
+                  className="text-sm font-medium text-nova-300 underline-offset-4 transition hover:text-nova-200 hover:underline disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Didn't get it? Resend the link"}
+                </button>
+                <p className="text-xs text-stardust-400">
+                  Or{" "}
+                  <button
+                    type="button"
+                    onClick={signInWithGoogle}
+                    disabled={oauthBusy}
+                    className="font-medium text-nova-300 underline-offset-4 hover:underline disabled:opacity-50"
+                  >
+                    {oauthBusy ? "Connecting…" : "continue with Google"}
+                  </button>{" "}
+                  instead.
+                </p>
+              </div>
             ) : (
               <div className="mt-6 space-y-4">
-                {authError && (
-                  <p className="rounded-2xl border border-red-400/25 bg-red-500/10 p-3 text-center text-sm text-red-300">
-                    Sign-in didn&apos;t finish — please try again.
-                  </p>
+                {authError && authErrorCopy[authError] && (
+                  <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-3 text-center">
+                    <p className="text-sm text-red-300">
+                      {authErrorCopy[authError]}
+                    </p>
+                    <p className="mt-1 text-xs text-stardust-400">
+                      Links expire after a while — and private-mode tabs
+                      sometimes drop the handoff. A fresh link usually fixes
+                      it.
+                    </p>
+                  </div>
                 )}
                 <button
                   type="button"
