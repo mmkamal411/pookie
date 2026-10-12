@@ -1,12 +1,12 @@
 // GET /api/v1/marketplace/driving/rules?state=GA — W6 GA DDS rules.
 //
-// Serves the REAL `driving_rules` table (PENDING Unit P3) when applied.
-// Until the migration lands (frozen by MD), serves the verified snapshot in
+// Serves the REAL `driving_rules` table when it has rows for the state.
+// Falls back to the verified snapshot in
 // src/lib/marketplace/driving-rules-seed.ts — the exact verified seed rows
-// from PENDING-MIGRATIONS (dds.georgia.gov / flhsmv.gov, verified
-// 2026-10-12), marked `from_snapshot: true`. Per-state from day one (MD D3);
-// the response names its source either way. Never invented, never stale
-// without a date: every rule carries rules_verified_at (BACKLOG R-007).
+// (dds.georgia.gov / flhsmv.gov, verified 2026-10-12), marked
+// `from_snapshot: true`. Per-state from day one; the response names its
+// source either way. Never invented, never stale without a date: every rule
+// carries rules_verified_at.
 
 import { handleRoute } from "@/server/rest";
 import { ApiError, ErrorCodes, failWith } from "@/server/errors";

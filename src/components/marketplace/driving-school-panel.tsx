@@ -1,7 +1,6 @@
 // W6 Driving School — GA DDS rules engine UI.
 // "Your Georgia timeline" computed from DOB; Joshua's Law hours log with a
-// progress ring backed by the real driving_log table (PENDING — honest
-// "connecting" state until the migration lands). Under-15: planning mode
+// progress ring backed by the real driving_log table. Under-15: planning mode
 // only — no log UI, no "eligible" language. Per-state from day one (GA/FL).
 
 "use client";

@@ -151,8 +151,8 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
           🌍
         </span>
         <div>
-          <h1 className="text-xl font-semibold text-star-100">Travel</h1>
-          <p className="text-sm text-stardust-300">getting around, and the world beyond the door</p>
+          <h1 className="text-xl font-semibold text-star-100">Mission Planning</h1>
+          <p className="text-sm text-stardust-300">Chart the course — fuel, flights, and the world beyond the door</p>
         </div>
       </div>
 

@@ -5,11 +5,9 @@
 // POST {child_id, drive_date, minutes_total, minutes_night, supervisor_name, conditions}
 //                      → append a drive (append-only; edits create new rows)
 //
-// Coded against the pending rpc_log_driving_hours /
-// rpc_driving_hours_progress contract. Until those RPCs land, the route
-// reads/writes the real `driving_log` table directly (PENDING Unit P3);
-// when the table is missing entirely it returns an honest
-// "service initializing" state — never fabricated hours.
+// Prefers the rpc_log_driving_hours / rpc_driving_hours_progress RPCs when
+// they exist; falls back to direct driving_log table reads/writes
+// (family-scoped RLS). Never fabricates hours.
 
 import { z } from "zod";
 import { handleRoute } from "@/server/rest";
@@ -50,7 +48,7 @@ export const GET = handleRoute(async (_ctx, req) => {
     if (!rpcError && rpcData) return { status: "ok", ...(rpcData as object) };
     if (rpcError && !/function .* does not exist|42883|PGRST202|Could not find the function/i.test(rpcError.message ?? "")) throw rpcError;
 
-    // Fall back to direct table read (PENDING table; RLS family-scoped).
+    // Fall back to direct table read (RLS family-scoped).
     const { data, error } = await supabase
       .from("driving_log")
       .select("minutes_total, minutes_night, drive_date, supervisor_name, conditions")

@@ -1,5 +1,15 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:40 EDT — Phase1-Weather — W26 standalone weather hub built
+
+**W26 Weather** is now a standalone household module (`/household/weather`), wired into the module registry (More tab → Travel grove → Weather).
+
+- `src/server/services/weather.ts` (new) — NWS api.weather.gov primary (current observations via nearest station, 7-day, next-24-hours, active alerts), Open-Meteo keyless fallback, graceful standby payload when both are down (never throws on upstream failure; never blank). 1h process-local TTL, D7 coarse-ZIP only, NWS icon-URL → condition mapping with day/night.
+- `src/app/api/v1/household/weather/route.ts` (new) — GET via handleRoute envelope; `?zip=` optional (5-digit validated), defaults to home ZIP 30067 (Marietta, GA) with `defaulted` flag; carries `not_emergency_system` contract; bad ZIP → 404, unreachable providers → 503.
+- `src/components/weather/weather-hub.tsx` (new) — cosmic hero with pure-CSS animated condition art (sun rays, moon, drifting clouds, rain, lightning flicker, snowfall, fog bands, wind lines) and condition-matched ambient glow (gold sun, ice-blue rain, violet storms); current conditions stat grid (feels-like, humidity, wind + compass arrow, gusts, sunrise/sunset, precip, visibility); hourly strip; 7-day rows with temp-range bars; NWS alerts with severity tones + permanent emergency disclaimer; ZIP setter sharing `pookie.travel.zip` with the travel module. Shimmer loading + graceful standby with retry — never blank. Title Case throughout.
+- `src/app/household/weather/page.tsx` (new) — household-namespace page, force-dynamic, session-gated by layout.
+- `src/lib/modules.ts` — W26 route now `/household/weather` (absolute route used as-is by MorePopup). The child-scoped `/c/[childSlug]/travel/weather` page remains for the travel context.
+
 ## 2026-10-12 ~10:40 EDT — Squad Phase1 — Kicked off: 6 engineers building Phase 1 standalone modules
 
 **Squad Phase1** (Managing Director's 24h effort) deployed 6 engineers in parallel:
@@ -2323,3 +2333,23 @@ No critical issues. Baseline diffs within animation noise.
 - ✅ `/c/dawson/today` — PASS — HTTP 403 -> needs signed-in validation
 
 No critical issues. Baseline diffs within animation noise.
+
+## 2026-10-12 — Squad Phase68 — Family (Phase 6) + Travel (Phase 8) verification & polish
+
+**Status:** All 6 modules verified functional. Polish pass complete. tsc clean on Phase68 files.
+
+### Verification results
+- **W12 Babysitters** ✅ — Full CRUD + time-boxed grants (D6 tiered caps 8/30d trusted, 2/30d first-time) + teen co-approval + instant revoke. API routes solid with tenant assertion + audit logging.
+- **W14 Co-parenting** ✅ — Parallel-parenting mode, immutable log, logistics-only entries, no messaging UI. API routes functional.
+- **W6 Driving School** ✅ — GA DDS rules API (real driving_rules table, verified via anon key — GA data live) + Joshua's Law hours log API (RPC-preferred, direct-table fallback) + full panel with progress rings and log-a-drive sheet.
+- **W25 Fuel & Charging** ✅ — Real EIA regional gas prices + real OpenChargeMap EV chargers. Generic EV (Tesla integration is separate pending item per MD).
+- **W30 Flights** ✅ — 18+ purchaser invariant enforced server-side (/api/v1/travel/purchase/check defaults to "child" band on error, audits denials). Teens get planning-mode only.
+- **W31 Rental Cars** ✅ — Hard age-gate: page server-gates with notFound() for non-adults, API enforces via purchase/check. Hidden from teen accounts entirely.
+
+### Changes made
+1. **Code cleanliness** — Removed stale "PENDING" comments in driving school files (migration 061 is applied, driving_rules/driving_log tables live and verified).
+2. **Travel mission-deck framing** — Travel hub retitled "Mission Planning" with "Chart the course" subtitle (MD directive: travel = mission-planning deck).
+3. **Family warmth** — Verified existing copy already warm/trustworthy ("People you trust — shared with, for a bit, on your terms"). No changes needed.
+
+### Age gate audit
+All gates verified server-side, never UI-only. When in doubt, restrict — confirmed.
