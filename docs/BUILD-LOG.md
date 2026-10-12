@@ -1804,3 +1804,33 @@ only surface — the badge appears exactly where users encounter them.
 **NOTE:** This commit also swept in parallel squads' untracked files (cosmic-scene-director.tsx, minimized-dock.tsx, module-window.tsx, window-manager.tsx, overview-dashboard.tsx changes). Build is green with all of it; attribution to be sorted by parent.
 
 **Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys. Browser re-verification still needed (subagent can't operate live browser).
+
+## 2026-10-12 ~09:15 EDT — Squad Value — PHASE 1 RESEARCH COMPLETE: Top-10 Value Opportunities
+
+**Method:** Audited all 31 modules (code depth, DB schema), competitive analysis (Cozi, FamilyWall, Family Tools, Greenlight Hub), mapped against Mehedi's daily needs (real estate investor, father of 15yo, 90%-grade goal).
+
+**Critical gaps found:** NO task/todo/chore system. NO family calendar. NO bill tracker. NO push notifications. These are the top daily-use drivers in every successful family app — Pookie is missing all of them.
+
+### TOP 10 (ranked by impact × feasibility)
+
+**1. Family Task System** — Shared to-dos, chores with assignment, recurring tasks, due dates. The #1 missing daily driver. *Build: tasks table + CRUD UI + assignment + recurrence.*
+
+**2. Family Calendar** — Unified events (school, activities, manual), color-coded per person. The other #1 missing feature. *Build: events table + calendar UI.*
+
+**3. Bill Tracker + Due Alerts** — Track bills/amounts/due dates with 7-day + 2-day reminders. Mehedi had this in Command Center; Pookie lost it. Critical for a real estate investor. *Build: bills table + reminder logic.*
+
+**4. Pookie Chat → Actions** — "Remind me to pay electric Friday" creates a real task/reminder. Makes the AI assistant genuinely useful. *Build: intent parsing + task/reminder hooks in chat.*
+
+**5. Grade Drop Alerts** — Proactive alert when a grade drops below threshold or a new missing assignment appears. Data pipeline exists; just needs alert logic. Huge emotional value for the 90% goal. *Build: threshold checks + alert surface.*
+
+**6. Meal Plan → Shopping List Pipeline** — Planned meals auto-generate shopping list items. Both modules exist; just needs linking. Classic Cozi killer feature. *Build: ingredient extraction + list injection.*
+
+**7. Morning Briefing Digest** — True unified "today" view: weather + calendar + due bills + due tasks + grade alerts + quote in one scroll. Home has pieces; needs composition. *Build: digest composer UI.*
+
+**8. Emergency Module** (seedling) — Emergency contacts, medical info, household plan. Static but critical; lowest build cost of any seedling. *Build: contacts + info forms + quick-dial UI.*
+
+**9. School Calendar** (seedling) — Cobb County holidays, early releases, breaks. Feeds the family calendar. Directly serves Dawson's school tracking. *Build: calendar data + display.*
+
+**10. Global Quick Capture** — Floating action to instantly add task/note/bill from anywhere. Removes the #1 friction barrier. *Build: FAB + quick-add sheets.*
+
+**Phase 2 plan:** Building in priority order. Starting with #1 (Family Task System) — the foundation everything else plugs into.
