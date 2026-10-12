@@ -70,6 +70,15 @@ export function AcceptFlow({
                 wrong. Ask the other parent to generate a fresh one from their
                 Family settings.
               </p>
+              {/* Prism E5 2026-10-12: the invalid state had no CTA — a
+                  signed-in user with a dead link just stared at it. */}
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="btn-dapple mt-6 w-full rounded-2xl px-6 py-2.5 text-sm font-semibold text-nebula-950"
+              >
+                Go to my Pookie
+              </button>
             </div>
           ) : accepted ? (
             <div className="card-living animate-rise mt-6 rounded-3xl border border-nova-400/20 p-6">
