@@ -4,7 +4,6 @@ import {
   consumeInvite,
   getActiveChildId,
   getMemberships,
-  setActiveChild,
 } from "@/lib/tenant/actions";
 
 // Tenant resolution reads the session cookie — this route always blocks.
@@ -102,7 +101,10 @@ export default async function Home({
   if (active) redirect(`/c/${active.child.slug}`);
 
   if (memberships.length === 1) {
-    await setActiveChild(memberships[0].child_id);
+    // NOTE: do NOT call setActiveChild() here — cookies().set() throws in a
+    // Server Component ("Cookies can only be modified in a Server Action or
+    // Route Handler"), which 500s the front door for every single-child user.
+    // The /c/[slug] page resolves the tenant from the URL slug directly.
     redirect(`/c/${memberships[0].child.slug}`);
   }
 
