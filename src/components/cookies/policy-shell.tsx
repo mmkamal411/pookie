@@ -30,6 +30,9 @@ export function PolicyShell({
       <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{title}</h1>
       <p className="mt-2 text-sm text-white/50">Last Updated: {updated}</p>
       <div className="policy-body mt-8 space-y-8">{children}</div>
+      <p className="mt-12 border-t border-white/5 pt-6 text-xs italic text-white/40">
+        This page describes our practices and is not legal advice.
+      </p>
       <style>{`
         .policy-body h2 { font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 0.75rem; }
         .policy-body p { font-size: 0.95rem; line-height: 1.75; color: rgb(255 255 255 / 0.75); margin-bottom: 0.75rem; }

@@ -411,6 +411,10 @@ export function PookieChat({
           <h1 className="text-sunlit mt-1 text-2xl font-semibold tracking-tight">Hailing your co-pilot</h1>
         </div>
       </div>
+      {/* Squad Gavel 2026-10-12 — persistent AI disclosure: subtle, always visible during chat. */}
+      <p className="mt-2 text-[11px] text-stardust-500" role="note">
+        You&apos;re chatting with Pookie, an AI assistant. Responses are generated automatically and may be inaccurate — verify important details.
+      </p>
       {isAdult ? (
         <div className="animate-bloom mt-3 flex items-center gap-3" style={{ animationDelay: "0.08s" }}>
           <button

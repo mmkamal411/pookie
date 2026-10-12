@@ -7,6 +7,16 @@
  * explicit, verifiable consent. The default is closed — this panel is the
  * auditable key that opens it. Rendered on the Sharing screen for
  * under-13 children, parent role only.
+ *
+ * Squad Gavel 2026-10-12 — added verification-method selector (signed form
+ * upload / card verification / video call scheduling — UI + copy only,
+ * backend stubs show "coming soon, contact us") and the direct notice text
+ * (what data is collected, how it's used, who sees it — in the notice
+ * itself, per COPPA's direct-notice requirement).
+ *
+ * NOTE: production verifiable parental consent (VPC) needs compliance
+ * review before launch. The current `in_app_parent_attestation` method is a
+ * TEST method — do not ship it as the production VPC pattern.
  */
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@/components/home-money/shared";
@@ -33,6 +43,31 @@ interface Consent {
   revoked_at: string | null;
 }
 
+type VerifyMethod = "attestation" | "signed_form" | "card" | "video_call";
+
+const VERIFY_METHODS: { id: VerifyMethod; label: string; hint: string }[] = [
+  {
+    id: "attestation",
+    label: "In-App Confirmation",
+    hint: "Confirm right here, right now. Fastest option.",
+  },
+  {
+    id: "signed_form",
+    label: "Signed Consent Form",
+    hint: "Upload a signed parental consent form.",
+  },
+  {
+    id: "card",
+    label: "Card Verification",
+    hint: "Verify with a credit or debit card (no charge).",
+  },
+  {
+    id: "video_call",
+    label: "Video Call",
+    hint: "Schedule a brief video call with our team.",
+  },
+];
+
 export function ParentalConsentPanel({
   childId,
   childName,
@@ -44,6 +79,7 @@ export function ParentalConsentPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [method, setMethod] = useState<VerifyMethod>("attestation");
 
   const refresh = useCallback(async () => {
     try {
@@ -61,6 +97,14 @@ export function ParentalConsentPanel({
   }, [refresh]);
 
   const grant = async () => {
+    // NOTE: signed_form / card / video_call are UI + copy only in this build.
+    // Their backends are stubs — production VPC needs compliance review.
+    if (method !== "attestation") {
+      setError(
+        "This verification method is coming soon. Please choose In-App Confirmation, or contact us at privacy@pookie.app.",
+      );
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -137,10 +181,64 @@ export function ParentalConsentPanel({
       {confirming && !active && (
         <div className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-500/5 p-4">
           <p className="text-sm font-medium text-star-100">
-            You are consenting to {childName} having their own Pookie login.
+            Direct Notice — Please Read Before Consenting
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-stardust-300">
-            <li>They will sign in with their own email and password.</li>
+          <div className="mt-2 space-y-2 text-xs leading-relaxed text-stardust-300">
+            <p>
+              <strong className="text-star-100">What we collect from {childName}:</strong>{" "}
+              name, birthdate, login email, and — only if you connect them —
+              school data (classes, grades, assignments, attendance) plus any
+              check-ins or tasks your family tracks.
+            </p>
+            <p>
+              <strong className="text-star-100">How it is used:</strong> solely
+              to provide Pookie&apos;s family features to your household. We do
+              not sell children&apos;s data, serve them ads, or share it for
+              marketing.
+            </p>
+            <p>
+              <strong className="text-star-100">Who can see it:</strong> you,
+              anyone you explicitly grant access to (such as mentors), and our
+              systems that store and sync it. No one else.
+            </p>
+            <p>
+              You can review, delete, or stop collection of {childName}&apos;s
+              information at any time — see{" "}
+              <a href="/privacy/children" className="underline underline-offset-2">
+                Children&apos;s Privacy
+              </a>
+              .
+            </p>
+          </div>
+
+          <p className="mt-4 text-sm font-medium text-star-100">
+            Choose A Verification Method
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {VERIFY_METHODS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setMethod(m.id)}
+                aria-pressed={method === m.id}
+                className={`rounded-xl border p-3 text-left transition ${
+                  method === m.id
+                    ? "border-teal-400/60 bg-teal-400/10"
+                    : "border-white/10 bg-white/[0.02] hover:border-white/25"
+                }`}
+              >
+                <span className="block text-sm font-medium text-star-100">
+                  {m.label}
+                </span>
+                <span className="mt-0.5 block text-xs text-stardust-400">
+                  {m.hint}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-stardust-300">
+            <li>{childName} will sign in with their own email and password.</li>
             <li>You stay in full control — you can revoke this anytime.</li>
             <li>This consent is logged with a timestamp for compliance.</li>
           </ul>
