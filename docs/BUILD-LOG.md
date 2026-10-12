@@ -3,6 +3,28 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~08:15 EDT — Squad Harbor — Child settings scope + self-service enforcement (staging-build, in flight)
+
+**Lane:** child settings only. My files: `src/app/api/v1/children/[childId]/route.ts` (PATCH), `src/components/settings/settings-ui.tsx` (SettingsTabs role filter), settings sub-pages (role prop pass-through). No overlap with Console/Glide in-flight files.
+
+**Scope decisions (Mehedi 2026-10-12, for review):**
+- INCLUDED for child (13–17): own nickname (real PATCH, see fix), appearance/theme, check-in reminders (honest pending state), Pookie AI tone (device-local), sign out. Profile card read-only school/grade.
+- EXCLUDED (parent-only, hidden not disabled): family management, invites, school logins, sync console, worker health, data deletion, other children's data. Sharing stays open to both (teen manages own sharing per authority model); Family shows the 18+ independence flow for children.
+- Age tiers: under-13 = no child login by design (N/A); 13–17 = scoped panel; 18+ = independence flow → graduates to parent role → full panel.
+- **Bug found & fixed:** child's "Save nickname" called PATCH which was `assertParent` → always 403 for children. Fixed server-side: child role may PATCH **nickname only** on their own tenant record; parent keeps full schema. UI hiding was never the enforcement — the route is.
+- SettingsTabs now takes `role` and hides Sync/Workers/School-logins tabs for children (they previously led to dead-end ParentOnlyNotice pages).
+
+## 2026-10-12 ~08:10 EDT — Squad Glide (motion + layout, spaceship-cockpit redesign)
+
+**Touching (ride only — incoming/outgoing page transitions + viewscreen frame):**
+- `src/components/page-glide.tsx` (new, untracked — completing it) — adds the OUTGOING transition the skeleton lacked: on pathname change the previous view is held 250ms as an inert, pointer-events-free absolute overlay that fades + drifts out (`page-glide-out`) while the new view glides in beneath (existing `page-glide-in`, 350ms). `prefers-reduced-motion` skips the hold (matchMedia guard + global CSS kill-switch).
+- `src/components/glass-pane.tsx` (new, untracked — as found) — thin frame; the CSS does the work. Verified `.glass-pane` in globals.css: frosted glass (14px blur), neon edge, inner glow, same `max-w-5xl` as the header viewscreen.
+- `src/app/globals.css` — APPEND-ONLY: `@keyframes page-glide-out` + `.page-glide-wrap` / `.page-glide-out` (opacity/transform only, GPU-cheap).
+
+**Not touching:** child-toolbar.tsx (Console), header cluster (Helm), layout.tsx (Helm's in-flight edit mounts GlassPane/PageGlide — leaving it for their commit), Instrument/Homeport components (framed, not restructured), Quantum's CSS section. Committing ONLY the two new component files; globals.css rides with the integration commit.
+
+**Next:** tsc + build, commit `feat(spaceship-glide):`, hand off to integration (build/test/deploy/smoke).
+
 ## 2026-10-12 ~07:55 EDT — Squad Instrument — Spaceship Cockpit: page-content instrument styling (staging-build, in flight)
 
 **Lane:** page content only — dashboard pages (home/today/school tabs), grade readouts, empty states, section collapse, neon detail. Squad Aurora owns background/orb; Squad Console owns toolbar/popups. Cross-boundary note: appended shared CSS utilities to `src/app/globals.css` (`.readout`, `.instrument-divider`, `.awaiting-data`, `.cta-glow`, `@keyframes pulse-soft`) — clearly commented, safe for other squads to use.
@@ -1581,3 +1603,48 @@ Built the full UI for all 7 Squad 4 modules against BACKEND-CONTRACTS.md, per UX
 - `src/components/child-switcher.tsx` — avatar-pulse class on the ACTIVE avatar only (one line)
 
 **Not touching:** toolbar structure/nav (`child-toolbar.tsx` — Squad Console's domain), page layouts, popups.
+
+## 2026-10-12 ~08:05 EDT — Squad Homeport (d-dash home port → spaceship home tab)
+
+**Touching (home tab content only):**
+- `src/lib/daily/quotes.ts` (new) — port of d-dash's 30-quote rotation + seeded RNG
+- `src/lib/daily/weather.ts` (new) — port of d-dash's Open-Meteo 5-day fetch (Marietta GA)
+- `src/components/home/mission-briefing.tsx` (new) — greeting + date + quote of the day + weather strip
+- `src/components/home/command-strip.tsx` (new) — KPI strip: 90% goal, GPA, due-soon
+- `src/components/home/school-calendar.tsx` (new) — upcoming school_events
+- `src/components/home/study-sparks.tsx` (new) — brain hacks from study_sparks
+- `src/components/home/formula-card.tsx` (new) — formula of the day from formula_bank
+- `src/components/overview/overview-dashboard.tsx` — reorder sections, add new ones
+- `src/server/services/school.ts` — add getHomeBriefing() (events/sparks/formula/streak, never throws)
+- `src/app/c/[childSlug]/page.tsx` — pass briefing data
+
+**Not touching:** layout.tsx, child-toolbar.tsx, child-switcher.tsx, glass-pane.tsx, page-glide.tsx, globals.css (Squad Console's active work), or Instrument's components (reusing them).
+
+## 2026-10-12 ~08:05 EDT — Squad Quantum (atmosphere polish, spaceship-cockpit redesign)
+
+**Touching (cross-cutting polish only — no restructuring, no layout):**
+- `src/app/globals.css` — APPEND-ONLY Quantum section: neon-pipe teal/violet variants, quantum-warm undertone, quantum-press touch state, quantum-ring focus ring, pill-glow. Unifies the glow palette (pink #f472b6 + teal + violet).
+- `src/components/ui/badge.tsx`, `ui/status-pill.tsx` — pill-glow class on the chip (className only)
+- `src/components/ui/empty-state.tsx` — awaiting-data breathing on empty bays (className only)
+
+**Not touching:** anything Console has open (child-toolbar.tsx, child-switcher.tsx, glass-pane.tsx, page-glide.tsx, ship-settings-control.tsx, standby-console.tsx, bottom-sheet.tsx, child layout, settings pages, select-child, me page, household layout, DEPLOY-LOG.md) or Homeport's home-page targets. Other squads: `neon-pipe-teal` / `neon-pipe-violet` / `quantum-warm` / `quantum-press` are available for your surfaces.
+
+## 2026-10-12 ~08:10 EDT — Squad Console (spaceship console: bottom toolbar + handoffs)
+
+**CORE SCOPE (mine, staying): the bottom toolbar console.**
+- `src/components/child-toolbar.tsx` — rebuilt as the ship's main control console: dark-glass instrument bezel (`.console-housing`, luminous pink rim, warm ambient wash), thin status strip (blinking green "systems nominal" dot + section readout: NAV/HOME/TODAY/PROGRESS, POOKIE·AI, MODULES, SHIP SYSTEMS), 5 tabs as instrument switches with warmed signature neon (home violet #a78bfa, today warm mint #6ee7b7, pookie pink #f472b6, progress warm gold #fbbf24, more lavender #c4b5fd), custom SVG glyphs, center orb docked in a raised socket collar with warm light pool, springy press feedback (scale + glow bloom), 56px targets, `aria-current`, safe-area padding. `ToolbarOrb` pinball-color logic + `MorePopup` kept; `PookieOrb` untouched (Aurora's).
+- `src/components/standby-console.tsx` (new) — slim deck-at-rest console for authenticated non-tenant pages: mini orb socket + status strip + label + spacer.
+- Persistence verified: full console on all `/c/[childSlug]/*` (child layout); StandbyConsole on `/select-child`, `/me`, `/household/*`, `/family/claims`, `/family/invite`. Excluded by design: `/login` (pre-auth hero — dead switches would fight it), `/onboarding`, `/add-child`, `/verify-invite`, `/family/invite/accept`, `/account-deleted` (focused full-screen flows). Parent can overrule any exclusion.
+- `src/app/globals.css` — appended SPACESHIP CONSOLE section (`console-` prefix, no collision with Aurora's utilities): housing, status strip, tab signature-glow vars + press/spring states + lit-slot indicator, orb socket + light pool, standby, header crew-cluster bezel, callsign readout, module-dock chrome, glass pane, page-glide keyframes, `.neon-pipe` light-piping utility (continuous luminous edge; hover brightens + lifts + blooms, 300ms cubic-bezier(0.22,1,0.36,1), GPU-cheap props only; lift is opt-in via `.neon-pipe-lift` — fixed chrome glows but never lifts). NOTE: this commit also carries Squad Quantum's appended Quantum section (their work, ~line 844) — committing the shared file, not the content.
+- `src/components/ui/bottom-sheet.tsx` — docking-module chrome: `module-dock-panel` class + "DOCKED MODULE" eyebrow row with dock dot. API unchanged.
+
+**HANDED OFF (built by Console, now owned by the named squad — build on it, don't redo):**
+- → Squad Helm (header cluster): `src/components/child-switcher.tsx` reworked to the crew-cluster model — header trigger shows the LOGGED-IN PARENT's name (callsign readout + "Aboard" dot + avatar initial); tap docks a glowing CREW ROSTER panel listing children with active indicator + View affordance + Add child. Aurora's `avatar-pulse` preserved on the active roster avatar; export name `ChildSwitcher` kept. `src/components/ship-settings-control.tsx` (new) — settings as SVG ship-systems dial (hex bezel + mixer sliders, neon stroke, no emoji). `src/app/c/[childSlug]/layout.tsx` — header: left subtle "POOKIE" instrument wordmark; right `console-cluster` bezel = ChildSwitcher parentName + divider + ShipSettingsControl; parentName fetched server-side from `profiles.display_name` (fallbacks: email prefix → "You"; profiles-table-missing degrades gracefully). Old ⚙️ emoji link removed.
+- → Squad Harbor (child settings scope): `src/components/settings/child-settings-view.tsx` (new) + `src/app/c/[childSlug]/settings/page.tsx` rewired — role-based: parent → full SettingsView; child (13–17) → scoped panel (own nickname edit via real PATCH on own record with honest errors, avatar initial, real theme toggle, check-in reminders probed with honest pending state, Pookie AI tone picker localStorage-backed "on this device", sign out). EXCLUDED for children: family management, DangerZone deletion, school-login credentials, sync console, worker health, family invites, sharing grants, other children's data. Reasoning: under-13 has no child login (N/A); 18+ graduates via independence flow → parent role → full panel.
+- → Squad Glide (glass pane + page transitions): `src/components/glass-pane.tsx` (new) — one consistent max-w-5xl frosted viewscreen frame (neon edge, inner glow) wrapping `{children}` in the child layout; `src/components/page-glide.tsx` (new) — pathname-keyed client wrapper, incoming view glides in (fade + 10px rise, 350ms, opacity/transform only); pane stays stable while content glides within. Mounted in child layout (inside GlassPane), select-child, me, household layout. `prefers-reduced-motion` collapses it via the existing global rule.
+- → Squad Quantum (neon borders/hover polish): `.neon-pipe` base utility is mine and committed here; their teal/violet variants + `quantum-press`/`quantum-ring` build on the same pattern. `.card-living` already had hover lift + border brighten — left as-is for their pass.
+- → Squad Homeport: no overlap (home content untouched).
+
+**Not touching:** Aurora's files (`pookie-orb.tsx`, `pookie-pinball.tsx`, `nebula-background.tsx`) — only wrapped/consumed. `tab-active-glow` class left in CSS (zero tsx usages now; was pre-existing — remove only after confirming no squad needs it).
+
+**Verified:** `npx tsc --noEmit` clean; `npm run build` green; dead-code sweep on touched files (removed 2 unused type imports). Browser/visual verification NOT done by Console — generic subagents can't operate the live browser; needs a signed-in visual pass (console on tab pages, standby on /me, roster panel, glide between tabs).

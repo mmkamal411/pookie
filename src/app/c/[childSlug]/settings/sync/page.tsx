@@ -19,7 +19,7 @@ export default async function SyncPage({ params }: { params: Promise<{ childSlug
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
       <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">Sync</h1>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
-        <SettingsTabs childSlug={childSlug} />
+        <SettingsTabs childSlug={childSlug} role="parent" />
       </div>
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
         <SyncConsole childId={membership.child_id} />

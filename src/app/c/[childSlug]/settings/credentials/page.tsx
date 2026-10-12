@@ -21,7 +21,7 @@ export default async function CredentialsPage({ params }: { params: Promise<{ ch
     <main className="mx-auto max-w-3xl px-4 pt-10 pb-8">
       <h1 className="text-sunlit animate-bloom text-3xl font-semibold tracking-tight">School logins</h1>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
-        <SettingsTabs childSlug={childSlug} />
+        <SettingsTabs childSlug={childSlug} role="parent" />
       </div>
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
         <PortalsView childId={membership.child_id} childName={name} />

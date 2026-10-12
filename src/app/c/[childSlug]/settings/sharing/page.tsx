@@ -41,7 +41,7 @@ export default async function SharingPage({ params }: { params: Promise<{ childS
         here.
       </p>
       <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
-        <SettingsTabs childSlug={childSlug} />
+        <SettingsTabs childSlug={childSlug} role={membership.role} />
       </div>
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
         <SharingHealthView childId={membership.child_id} ctx={ctxRes.data} />

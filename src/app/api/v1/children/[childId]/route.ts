@@ -4,7 +4,8 @@
 // with 403 (never 404 — do not confirm/deny tenant existence).
 //
 // PATCH /api/v1/children/[childId] — edit child fields (name, school, grade…).
-// Parent-only. slug/status excluded by design (see services/children.ts).
+// Parent: full field set. Child role: nickname ONLY (self-service, own record).
+// slug/status excluded by design (see services/children.ts).
 //
 // DELETE /api/v1/children/[childId] — remove a child = SOFT DELETE
 // (status -> 'archived'). Parent-only. History (grades, assignments,
@@ -36,12 +37,29 @@ const updateChildSchema = z.object({
   avatarUrl: z.string().max(500).nullable().optional(),
 });
 
+/** Child self-service schema: nickname ONLY. Every other field stays parent-only. */
+const childSelfServiceSchema = z.object({
+  nickname: z.string().max(80).nullable(),
+});
+
 export const PATCH = handleRoute<{ childId: string }>(async (ctx, req) => {
-  const tenant = await assertParent(ctx.params.childId);
-  const body = updateChildSchema.parse(await req.json());
-  const child = await updateChild(tenant.childId, body);
+  const tenant = await assertTenant(ctx.params.childId);
+  const body = await req.json();
+  if (tenant.role === 'parent') {
+    const parsed = updateChildSchema.parse(body);
+    const child = await updateChild(tenant.childId, parsed);
+    if (!child) failWith(ErrorCodes.NOT_FOUND);
+    await auditEvent(tenant.childId, 'child.updated');
+    return child;
+  }
+  // Child self-service (Squad Harbor 2026-10-12): a child-role session may
+  // update ONLY its own nickname. assertTenant already scopes childId to the
+  // caller's own tenant record(s); the restricted schema keeps every other
+  // field parent-only. UI hiding is not the enforcement — this branch is.
+  const parsed = childSelfServiceSchema.parse(body);
+  const child = await updateChild(tenant.childId, { nickname: parsed.nickname });
   if (!child) failWith(ErrorCodes.NOT_FOUND);
-  await auditEvent(tenant.childId, 'child.updated');
+  await auditEvent(tenant.childId, 'child.nickname_updated');
   return child;
 });
 

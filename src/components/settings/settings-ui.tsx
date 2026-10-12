@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /** Sub-navigation for the settings area. */
-export function SettingsTabs({ childSlug }: { childSlug: string }) {
+export function SettingsTabs({ childSlug, role }: { childSlug: string; role?: "parent" | "child" }) {
   const pathname = usePathname();
   const base = `/c/${childSlug}/settings`;
   const tabs = [
-    { label: "Profile", href: base },
-    { label: "Family", href: `${base}/family` },
-    { label: "Sharing", href: `${base}/sharing` },
-    { label: "Sync", href: `${base}/sync` },
-    { label: "Workers", href: `${base}/health` },
-    { label: "School logins", href: `${base}/credentials` },
-  ];
+    { label: "Profile", href: base, roles: ["parent", "child"] as const },
+    { label: "Family", href: `${base}/family`, roles: ["parent", "child"] as const },
+    { label: "Sharing", href: `${base}/sharing`, roles: ["parent", "child"] as const },
+    { label: "Sync", href: `${base}/sync`, roles: ["parent"] as const },
+    { label: "Workers", href: `${base}/health`, roles: ["parent"] as const },
+    { label: "School logins", href: `${base}/credentials`, roles: ["parent"] as const },
+  ].filter((t) => !role || (t.roles as readonly string[]).includes(role));
   return (
     <nav aria-label="Settings sections" className="flex gap-2 overflow-x-auto pb-1">
       {tabs.map((t) => {

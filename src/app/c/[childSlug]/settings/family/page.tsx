@@ -31,7 +31,7 @@ export default async function FamilyPage({ params }: { params: Promise<{ childSl
       </p>
       {isParent && (
         <div className="animate-bloom mt-4" style={{ animationDelay: "0.1s" }}>
-          <SettingsTabs childSlug={childSlug} />
+          <SettingsTabs childSlug={childSlug} role={membership.role} />
         </div>
       )}
       <div className="animate-bloom mt-6" style={{ animationDelay: "0.16s" }}>
