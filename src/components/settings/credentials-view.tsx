@@ -25,7 +25,6 @@ import {
   type PortalMeta,
   type PortalKey,
 } from "@/lib/management-api";
-import { demoPortals } from "@/lib/management-demo";
 import { SettingsCard, Field, inputClass, PrimaryButton, BackendPending } from "./settings-ui";
 
 function fmtTime(iso: string | null) {
@@ -115,14 +114,12 @@ function PortalRow({
 export function PortalsView({
   childId,
   childName,
-  demo,
 }: {
   childId: string;
   childName: string;
-  demo: boolean;
 }) {
-  const [portals, setPortals] = useState<PortalMeta[]>(demo ? demoPortals : []);
-  const [pending, setPending] = useState(!demo);
+  const [portals, setPortals] = useState<PortalMeta[]>([]);
+  const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [portalKey, setPortalKey] = useState<PortalKey>("studentvue");
   const [username, setUsername] = useState("");
@@ -132,7 +129,6 @@ export function PortalsView({
   const [notice, setNotice] = useState<string | null>(null);
 
   const load = async () => {
-    if (demo) return;
     try {
       const { portals: fresh } = await listPortals(childId);
       setPortals(fresh);
@@ -146,7 +142,6 @@ export function PortalsView({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (demo) return;
       try {
         const { portals: fresh } = await listPortals(childId);
         if (!cancelled) setPortals(fresh);
@@ -159,7 +154,7 @@ export function PortalsView({
     return () => {
       cancelled = true;
     };
-  }, [demo, childId]);
+  }, [childId]);
 
   async function handleSave() {
     if (!password) {
@@ -169,35 +164,13 @@ export function PortalsView({
     setSaving(true);
     setNotice(null);
     try {
-      if (demo) {
-        setPortals((ps) => {
-          const rest = ps.filter((p) => p.portal_key !== portalKey);
-          return [
-            ...rest,
-            {
-              id: `portal-demo-${portalKey}`,
-              child_id: childId,
-              portal_key: portalKey,
-              label: PORTAL_LABEL[portalKey],
-              username_masked: username ? `${username.slice(0, 1)}••••` : null,
-              has_credential: true,
-              status: "unverified",
-              last_verified_at: null,
-              consecutive_failures: 0,
-              credentials_updated_at: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            },
-          ];
-        });
-      } else {
-        await savePortal(childId, {
-          portal_key: portalKey,
-          label: PORTAL_LABEL[portalKey],
-          username: username || undefined,
-          password,
-        });
-        await load();
-      }
+      await savePortal(childId, {
+        portal_key: portalKey,
+        label: PORTAL_LABEL[portalKey],
+        username: username || undefined,
+        password,
+      });
+      await load();
       setPassword("");
       setNotice(`Saved the ${PORTAL_LABEL[portalKey]} login for ${childName}.`);
     } catch (e) {
@@ -215,21 +188,17 @@ export function PortalsView({
     setTesting(true);
     setNotice(null);
     try {
-      if (demo) {
-        setNotice(`Pre-save check passed for ${PORTAL_LABEL[portalKey]} (demo). Nothing was stored.`);
-      } else {
-        // Password present → pre_save sanity checks only, nothing persisted.
-        const { ok, message } = await testPortal(childId, {
-          portal_key: portalKey,
-          username: username || undefined,
-          password,
-        });
-        setNotice(
-          ok
-            ? `Pre-save check passed — ${message} (nothing stored yet; this is not a live portal login).`
-            : `Pre-save check failed — ${message}`
-        );
-      }
+      // Password present → pre_save sanity checks only, nothing persisted.
+      const { ok, message } = await testPortal(childId, {
+        portal_key: portalKey,
+        username: username || undefined,
+        password,
+      });
+      setNotice(
+        ok
+          ? `Pre-save check passed — ${message} (nothing stored yet; this is not a live portal login).`
+          : `Pre-save check failed — ${message}`
+      );
     } catch (e) {
       setNotice(e instanceof ManagementApiError ? e.message : "Couldn't test the credential.");
     } finally {
@@ -238,10 +207,6 @@ export function PortalsView({
   }
 
   async function handleRemove(key: PortalKey) {
-    if (demo) {
-      setPortals((ps) => ps.filter((p) => p.portal_key !== key));
-      return;
-    }
     try {
       await deletePortal(childId, key);
       await load();

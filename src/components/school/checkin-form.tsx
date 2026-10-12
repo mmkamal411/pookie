@@ -6,18 +6,15 @@ import { PookieOrb } from "@/components/pookie-orb";
 /**
  * Daily check-in: mood / energy / stress + a private note.
  * Writes to POST /api/v1/children/[childId]/school/checkins (upsert 1/day).
- * In demo mode the form is inert — demo never calls /api/v1/*.
  */
 export function CheckinForm({
   childId,
   childName,
   doneToday,
-  demo = false,
 }: {
   childId: string;
   childName: string;
   doneToday: boolean;
-  demo?: boolean;
 }) {
   const [mood, setMood] = useState(3);
   const [energy, setEnergy] = useState(3);
@@ -28,7 +25,6 @@ export function CheckinForm({
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
-    if (demo) return;
     setSaving(true);
     setError(null);
     try {
@@ -98,7 +94,6 @@ export function CheckinForm({
               max={5}
               step={1}
               value={m.value}
-              disabled={demo}
               onChange={(e) => m.set(Number(e.target.value))}
               className="w-full accent-nova-400"
               aria-label={`${m.label}: ${m.low} to ${m.high}`}
@@ -114,7 +109,6 @@ export function CheckinForm({
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        disabled={demo}
         maxLength={2000}
         rows={2}
         placeholder="Anything on your mind today? (private — just between you and Pookie)"
@@ -126,10 +120,10 @@ export function CheckinForm({
       <button
         type="button"
         onClick={submit}
-        disabled={saving || demo}
+        disabled={saving}
         className="btn-dapple mt-4 rounded-2xl px-6 py-2.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
       >
-        {demo ? "Sign in to save check-ins" : saving ? "Saving…" : "Save check-in"}
+        {saving ? "Saving…" : "Save check-in"}
       </button>
     </div>
   );

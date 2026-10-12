@@ -18,14 +18,12 @@ export function SchoolOverview({
   childSlug,
   childId,
   role,
-  demo = false,
 }: {
   overview: SchoolOverview;
   childName: string;
   childSlug: string;
   childId: string;
   role: "parent" | "child";
-  demo?: boolean;
 }) {
   const needsAttention = overview.classes.filter((c) => c.numeric != null && c.numeric < 80).length;
 
@@ -96,7 +94,7 @@ export function SchoolOverview({
       )}
 
       <div className="mt-10" id="checkin">
-        <CheckinForm childId={childId} childName={childName} doneToday={overview.checkin_today} demo={demo} />
+        <CheckinForm childId={childId} childName={childName} doneToday={overview.checkin_today} />
       </div>
 
       <p className="mt-8 text-center text-xs text-stardust-500">

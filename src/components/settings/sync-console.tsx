@@ -9,7 +9,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { listSyncJobs, triggerSync, ManagementApiError, type SyncJob, type SyncJobStatus } from "@/lib/management-api";
-import { demoSyncJobs } from "@/lib/management-demo";
 import { SettingsCard, PrimaryButton, BackendPending } from "./settings-ui";
 
 const STATUS_STYLE: Record<SyncJobStatus, { dot: string; label: string }> = {
@@ -33,15 +32,14 @@ function latestJob(jobs: SyncJob[]): SyncJob | null {
   return jobs.length ? jobs[0] : null;
 }
 
-export function SyncConsole({ childId, demo }: { childId: string; demo: boolean }) {
-  const [jobs, setJobs] = useState<SyncJob[]>(demo ? demoSyncJobs : []);
-  const [pending, setPending] = useState(!demo);
+export function SyncConsole({ childId }: { childId: string }) {
+  const [jobs, setJobs] = useState<SyncJob[]>([]);
+  const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [triggering, setTriggering] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (demo) return;
     try {
       const { jobs: fresh } = await listSyncJobs(childId);
       setJobs(fresh);
@@ -50,7 +48,7 @@ export function SyncConsole({ childId, demo }: { childId: string; demo: boolean 
     } finally {
       setPending(false);
     }
-  }, [demo, childId]);
+  }, [childId]);
 
   // Initial load — deferred so setState stays out of the effect body.
   useEffect(() => {
@@ -64,28 +62,12 @@ export function SyncConsole({ childId, demo }: { childId: string; demo: boolean 
     setTriggering(true);
     setNotice(null);
     try {
-      if (demo) {
-        setJobs((js) => [
-          {
-            id: `job-demo-${Date.now()}`,
-            status: "pending",
-            device: null,
-            summary: "Queued by you just now (demo)",
-            errors: [],
-            created_at: new Date().toISOString(),
-            claimed_at: null,
-            completed_at: null,
-          },
-          ...js,
-        ]);
-      } else {
-        const { job } = await triggerSync(childId);
-        setNotice(`Sync requested — job ${job.id.slice(0, 8)} is queued. The laptop worker picks it up within a few minutes.`);
-        // The new job lands at the top of the list; refresh to show it.
-        setTimeout(() => {
-          void load();
-        }, 1500);
-      }
+      const { job } = await triggerSync(childId);
+      setNotice(`Sync requested — job ${job.id.slice(0, 8)} is queued. The laptop worker picks it up within a few minutes.`);
+      // The new job lands at the top of the list; refresh to show it.
+      setTimeout(() => {
+        void load();
+      }, 1500);
     } catch (e) {
       setNotice(e instanceof ManagementApiError ? e.message : "Couldn't queue the sync.");
     } finally {

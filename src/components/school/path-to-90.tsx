@@ -8,21 +8,18 @@ import type { StudyPlan } from "@/lib/school/types";
  * Checkboxes persist to Supabase (PATCH plans/[planId]), not localStorage,
  * so progress syncs across devices and feeds guidance.
  * Parents can draft a new weekly plan and review safety_status.
- * In demo mode everything is read-only — demo never calls /api/v1/*.
  */
 export function PathTo90({
   plan,
   childId,
   classId,
   role,
-  demo = false,
   onChanged,
 }: {
   plan: StudyPlan | null;
   childId: string;
   classId: string;
   role: "parent" | "child";
-  demo?: boolean;
   onChanged: () => void;
 }) {
   const [draft, setDraft] = useState("");
@@ -33,7 +30,7 @@ export function PathTo90({
   const [error, setError] = useState<string | null>(null);
 
   async function toggle(rank: number, done: boolean) {
-    if (!plan || role !== "parent" || demo) return;
+    if (!plan || role !== "parent") return;
     setBusy(true);
     setError(null);
     try {
@@ -52,7 +49,7 @@ export function PathTo90({
   }
 
   async function review(status: "approved" | "rejected") {
-    if (!plan || role !== "parent" || demo) return;
+    if (!plan || role !== "parent") return;
     setBusy(true);
     setError(null);
     try {
@@ -71,7 +68,7 @@ export function PathTo90({
   }
 
   async function create() {
-    if (role !== "parent" || demo) return;
+    if (role !== "parent") return;
     const actions = draft
       .split("\n")
       .map((l) => l.trim())
@@ -137,13 +134,13 @@ export function PathTo90({
               <li key={a.rank}>
                 <label
                   className={`flex items-start gap-3 rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3 ${
-                    role === "parent" && !demo ? "cursor-pointer" : ""
+                    role === "parent" ? "cursor-pointer" : ""
                   } ${a.done ? "opacity-60" : ""}`}
                 >
                   <input
                     type="checkbox"
                     checked={a.done}
-                    disabled={role !== "parent" || demo || busy}
+                    disabled={role !== "parent" || busy}
                     onChange={(e) => toggle(a.rank, e.target.checked)}
                     className="mt-0.5 h-5 w-5 shrink-0 accent-nova-400"
                     aria-label={`Step ${a.rank}: ${a.action}`}
@@ -161,7 +158,7 @@ export function PathTo90({
         </ol>
       )}
 
-      {plan && role === "parent" && plan.safety_status === "pending" && !demo && (
+      {plan && role === "parent" && plan.safety_status === "pending" && (
         <div className="mt-4 flex gap-2">
           <button
             type="button"
@@ -182,7 +179,7 @@ export function PathTo90({
         </div>
       )}
 
-      {role === "parent" && !demo && (
+      {role === "parent" && (
         <details className="mt-4 rounded-2xl border border-nova-400/10 bg-nebula-800/60 px-4 py-3">
           <summary className="cursor-pointer text-sm font-medium text-nova-300">
             Draft a new weekly plan

@@ -64,29 +64,19 @@ function NotWiredYet({ feature }: { feature: string }) {
   );
 }
 
-export function SettingsView({
-  demo,
-  demoProfile,
-  demoChildren,
-  demoPrefs,
-}: {
-  demo: boolean;
-  demoProfile: Profile;
-  demoChildren: ChildSummary[];
-  demoPrefs: NotificationPrefs;
-}) {
+export function SettingsView() {
   const { theme, setTheme } = useTheme();
 
   // Children — real API.
-  const [children, setChildren] = useState<ChildSummary[]>(demo ? demoChildren : []);
-  const [childrenPending, setChildrenPending] = useState(!demo);
+  const [children, setChildren] = useState<ChildSummary[]>([]);
+  const [childrenPending, setChildrenPending] = useState(true);
   const [childrenError, setChildrenError] = useState<string | null>(null);
 
   // Profile + notifications — APIs not built; per-card pending states.
-  const [profile, setProfile] = useState<Profile | null>(demo ? demoProfile : null);
-  const [prefs, setPrefs] = useState<NotificationPrefs | null>(demo ? demoPrefs : null);
-  const [profileWired, setProfileWired] = useState(demo);
-  const [prefsWired, setPrefsWired] = useState(demo);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
+  const [profileWired, setProfileWired] = useState(false);
+  const [prefsWired, setPrefsWired] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -95,7 +85,7 @@ export function SettingsView({
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", nickname: "", schoolName: "", gradeLevel: "" });
-  const [nameDraft, setNameDraft] = useState(demo ? (demoProfile.name ?? "") : "");
+  const [nameDraft, setNameDraft] = useState("");
 
   const reloadChildren = async () => {
     const fresh = await listChildren();
@@ -103,7 +93,6 @@ export function SettingsView({
   };
 
   useEffect(() => {
-    if (demo) return;
     let cancelled = false;
     (async () => {
       // Children: real. Profile/notifications: probe — the backend hasn't
@@ -140,19 +129,15 @@ export function SettingsView({
     return () => {
       cancelled = true;
     };
-  }, [demo]);
+  }, []);
 
   async function saveProfile() {
     if (!profileWired) return;
     setSaving(true);
     setNotice(null);
     try {
-      if (demo) {
-        setProfile((p) => (p ? { ...p, name: nameDraft } : p));
-      } else {
-        const updated = await updateProfile({ name: nameDraft });
-        setProfile(updated);
-      }
+      const updated = await updateProfile({ name: nameDraft });
+      setProfile(updated);
       setNotice("Profile saved.");
     } catch (e) {
       setNotice(e instanceof ManagementApiError ? e.message : "Couldn't save the profile.");
@@ -166,7 +151,7 @@ export function SettingsView({
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value });
     try {
-      if (!demo) await updateNotificationPrefs({ [key]: value });
+      await updateNotificationPrefs({ [key]: value });
     } catch {
       setPrefs(prev);
       setNotice("Couldn't save that preference — try again.");
@@ -178,7 +163,7 @@ export function SettingsView({
     const prev = prefs;
     setPrefs({ ...prefs, [key]: value || null });
     try {
-      if (!demo) await updateNotificationPrefs({ [key]: value || null });
+      await updateNotificationPrefs({ [key]: value || null });
     } catch {
       setPrefs(prev);
       setNotice("Couldn't save quiet hours — try again.");
@@ -195,7 +180,7 @@ export function SettingsView({
     setNotice(null);
     try {
       // Fetch full detail — ChildSummary lacks lastName.
-      const detail = demo ? null : await getChild(child.id);
+      const detail = await getChild(child.id);
       setForm({
         firstName: detail?.firstName ?? child.firstName,
         lastName: detail?.lastName ?? "",
@@ -225,35 +210,7 @@ export function SettingsView({
     setSaving(true);
     setNotice(null);
     try {
-      if (demo) {
-        if (editingId) {
-          setChildren((cs) =>
-            cs.map((c) =>
-              c.id === editingId
-                ? {
-                    ...c,
-                    firstName: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
-                    nickname: form.nickname.trim() || null,
-                    schoolName: form.schoolName.trim() || null,
-                    gradeLevel: form.gradeLevel.trim() || null,
-                  }
-                : c
-            )
-          );
-        } else {
-          setChildren((cs) => [
-            ...cs,
-            {
-              id: `demo-child-${Date.now()}`,
-              firstName: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
-              nickname: form.nickname.trim() || null,
-              slug: form.firstName.trim().toLowerCase(),
-              schoolName: form.schoolName.trim() || null,
-              gradeLevel: form.gradeLevel.trim() || null,
-            },
-          ]);
-        }
-      } else if (editingId) {
+      if (editingId) {
         await updateChild(editingId, {
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
@@ -287,12 +244,8 @@ export function SettingsView({
     if (!confirm(`Remove ${name}? This archives the child — history is preserved and it can be restored.`)) return;
     setNotice(null);
     try {
-      if (demo) {
-        setChildren((cs) => cs.filter((c) => c.id !== child.id));
-      } else {
-        await deleteChild(child.id);
-        await reloadChildren();
-      }
+      await deleteChild(child.id);
+      await reloadChildren();
       setNotice(`${name} archived.`);
     } catch (e) {
       setNotice(e instanceof ManagementApiError ? e.message : "Couldn't remove the child.");

@@ -6,7 +6,6 @@ import type {
   ShoppingItem,
   ShoppingList,
 } from "@/server/services/shopping";
-import type { ShoppingDemoData } from "@/lib/shopping-demo";
 
 /* ------------------------------------------------------------------ */
 /* api helper                                                          */
@@ -384,15 +383,10 @@ function PreferencesPanel({
 /* the board                                                           */
 /* ------------------------------------------------------------------ */
 
-export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
-  const demoMode = !!demo;
-  const [payload, setPayload] = useState<ListPayload | null>(
-    demo
-      ? { list: demo.list, items: demo.items, role: demo.role, userId: demo.userId }
-      : null,
-  );
-  const [prices, setPrices] = useState<PriceReport[]>(demo?.prices ?? []);
-  const [loading, setLoading] = useState(!demoMode);
+export function ShoppingBoard() {
+  const [payload, setPayload] = useState<ListPayload | null>(null);
+  const [prices, setPrices] = useState<PriceReport[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
@@ -416,7 +410,6 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
   }, []);
 
   useEffect(() => {
-    if (demoMode) return;
     (async () => {
       try {
         await Promise.all([refresh(), refreshPrices()]);
@@ -426,19 +419,9 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
         setLoading(false);
       }
     })();
-  }, [demoMode, refresh, refreshPrices]);
+  }, [refresh, refreshPrices]);
 
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "Something went wrong.");
-
-  /** Demo-mode local mutation mirror (no network). */
-  const mutateDemo = (fn: (items: ShoppingItem[], prices: PriceReport[]) => { items: ShoppingItem[]; prices: PriceReport[] }) => {
-    setPayload((p) => {
-      if (!p) return p;
-      const next = fn(p.items, prices);
-      setPrices(next.prices);
-      return { ...p, items: next.items };
-    });
-  };
 
   const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
@@ -447,41 +430,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
     if (!trimmed || !payload) return;
     setError(null);
     try {
-      if (demoMode) {
-        const norm = normalize(trimmed);
-        mutateDemo((items, pr) => {
-          const existing = items.find((i) => i.name === norm && (i.status === "needed" || i.status === "claimed"));
-          if (existing) {
-            return {
-              items: items.map((i) =>
-                i.id === existing.id ? { ...i, quantity: Number(i.quantity ?? 1) + Number(quantity || 1) } : i,
-              ),
-              prices: pr,
-            };
-          }
-          const newItem: ShoppingItem = {
-            id: `demo-${Date.now()}`,
-            list_id: payload.list.id,
-            name: norm,
-            quantity: Number(quantity || 1),
-            unit: unit.trim() || null,
-            note: note.trim() || null,
-            status: "needed",
-            added_by: payload.userId,
-            added_by_name: "You",
-            claimed_by: null,
-            bought_by: null,
-            bought_at: null,
-            store: null,
-            price_paid: null,
-            source: "manual",
-            source_ref: null,
-            created_at: new Date().toISOString(),
-          };
-          return { items: [...items, newItem], prices: pr };
-        });
-      } else {
-        const data = await api<{ item: ShoppingItem; merged: boolean }>(`${BASE}/items`, {
+              const data = await api<{ item: ShoppingItem; merged: boolean }>(`${BASE}/items`, {
           method: "POST",
           body: JSON.stringify({
             name: trimmed,
@@ -500,7 +449,6 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
               }
             : p,
         );
-      }
       setName("");
       setQuantity("1");
       setUnit("");
@@ -514,41 +462,7 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
     setBusyId(itemId);
     setError(null);
     try {
-      if (demoMode) {
-        mutateDemo((items, pr) => {
-          const item = items.find((i) => i.id === itemId);
-          if (!item) return { items, prices: pr };
-          const updated: ShoppingItem = {
-            ...item,
-            status,
-            claimed_by: status === "claimed" ? payload!.userId : status === "needed" ? null : item.claimed_by,
-            bought_by: status === "bought" ? payload!.userId : item.bought_by,
-            bought_at: status === "bought" ? new Date().toISOString() : item.bought_at,
-            store: store ?? item.store,
-            price_paid: price ?? item.price_paid,
-          };
-          let nextPrices = pr;
-          if (status === "bought" && price != null && store) {
-            nextPrices = [
-              {
-                id: `demo-p-${Date.now()}`,
-                list_id: item.list_id,
-                item_name: item.name,
-                store,
-                price,
-                reported_by: payload!.userId,
-                reported_by_name: "You",
-                reported_at: new Date().toISOString().slice(0, 10),
-                receipt_item_id: item.id,
-                created_at: new Date().toISOString(),
-              },
-              ...pr,
-            ];
-          }
-          return { items: items.map((i) => (i.id === itemId ? updated : i)), prices: nextPrices };
-        });
-      } else {
-        const data = await api<{ item: ShoppingItem }>(`${BASE}/items/${itemId}`, {
+              const data = await api<{ item: ShoppingItem }>(`${BASE}/items/${itemId}`, {
           method: "PATCH",
           body: JSON.stringify({ status, store, price_paid: price }),
         });
@@ -556,7 +470,6 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
           p ? { ...p, items: p.items.map((i) => (i.id === itemId ? { ...data.item, added_by_name: i.added_by_name } : i)) } : p,
         );
         if (status === "bought") await refreshPrices();
-      }
       setBuyingId(null);
     } catch (e) {
       fail(e);
@@ -570,15 +483,8 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
     setBusyId(itemId);
     setError(null);
     try {
-      if (demoMode) {
-        mutateDemo((items, pr) => ({
-          items: items.filter((i) => i.id !== itemId),
-          prices: pr,
-        }));
-      } else {
-        await api(`${BASE}/items/${itemId}/remove`, { method: "POST", body: "{}" });
+              await api(`${BASE}/items/${itemId}/remove`, { method: "POST", body: "{}" });
         await refresh();
-      }
     } catch (e) {
       fail(e);
     } finally {
@@ -589,32 +495,11 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
   const handleReportPrice = async (item: ShoppingItem, store: string, price: number) => {
     setError(null);
     try {
-      if (demoMode) {
-        mutateDemo((items, pr) => ({
-          items,
-          prices: [
-            {
-              id: `demo-p-${Date.now()}`,
-              list_id: item.list_id,
-              item_name: item.name,
-              store,
-              price,
-              reported_by: payload!.userId,
-              reported_by_name: "You",
-              reported_at: new Date().toISOString().slice(0, 10),
-              receipt_item_id: null,
-              created_at: new Date().toISOString(),
-            },
-            ...pr,
-          ],
-        }));
-      } else {
-        await api(`${BASE}/prices`, {
+              await api(`${BASE}/prices`, {
           method: "POST",
           body: JSON.stringify({ item_name: item.name, store, price }),
         });
         await refreshPrices();
-      }
     } catch (e) {
       fail(e);
     }
@@ -624,15 +509,11 @@ export function ShoppingBoard({ demo }: { demo?: ShoppingDemoData }) {
     setPrefsBusy(true);
     setError(null);
     try {
-      if (demoMode) {
-        setPayload((p) => (p ? { ...p, list: { ...p.list, preferences: { ...p.list.preferences, ...prefs } } } : p));
-      } else {
-        const data = await api<{ preferences: Record<string, unknown> }>(`${BASE}/preferences`, {
+              const data = await api<{ preferences: Record<string, unknown> }>(`${BASE}/preferences`, {
           method: "PATCH",
           body: JSON.stringify({ preferences: prefs }),
         });
         setPayload((p) => (p ? { ...p, list: { ...p.list, preferences: data.preferences } } : p));
-      }
     } catch (e) {
       fail(e);
     } finally {

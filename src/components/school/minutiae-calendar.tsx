@@ -15,7 +15,6 @@ interface Props {
   childName: string;
   childId: string;
   role: "parent" | "child";
-  demo?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +254,6 @@ export function MinutiaeCalendar({
   childName,
   childId,
   role,
-  demo = false,
 }: Props) {
   const [items, setItems] = useState(initial);
 
@@ -273,7 +271,6 @@ export function MinutiaeCalendar({
         : e,
     );
     setItems(optimistic);
-    if (demo) return; // demo: local state only, never calls /api/v1/*
     try {
       const res = await fetch(
         `/api/v1/children/${childId}/school/minutiae/${id}`,

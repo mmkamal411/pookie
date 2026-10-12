@@ -12,7 +12,6 @@ import { isUrgent } from "./due-helpers";
  * Home tab — `/c/[childSlug]/`.
  * The morning glance: greeting hero, due-next strip, 6 grade cards
  * (highest first), attention items, upcoming assignments, check-in nudge.
- * Accepts the shared SchoolOverview shape, so demo and real data render
  * through the same component.
  */
 export function OverviewDashboard({

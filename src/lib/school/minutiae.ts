@@ -1,6 +1,6 @@
 // W16 school minutiae — client-safe shapes + deterministic lead-time map.
 // Backed by the DBA's `school_events` table (010_w16_minutiae.sql).
-// No server imports: UI, API payloads, demo seed, and the extractor stub
+// No server imports: UI, API payloads, and the extractor stub
 // all share this module.
 
 export type MinutiaeKind =

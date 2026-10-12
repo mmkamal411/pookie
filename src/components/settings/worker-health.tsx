@@ -12,7 +12,6 @@ import {
   heartbeatHealth,
   type WorkerHeartbeat,
 } from "@/lib/management-api";
-import { demoHeartbeats } from "@/lib/management-demo";
 import { SettingsCard, BackendPending } from "./settings-ui";
 
 const HEALTH_STYLE = {
@@ -77,13 +76,12 @@ function WorkerCard({ worker }: { worker: WorkerHeartbeat }) {
   );
 }
 
-export function WorkerHealthView({ childId, demo }: { childId: string; demo: boolean }) {
-  const [workers, setWorkers] = useState<WorkerHeartbeat[]>(demo ? demoHeartbeats : []);
-  const [pending, setPending] = useState(!demo);
+export function WorkerHealthView({ childId }: { childId: string }) {
+  const [workers, setWorkers] = useState<WorkerHeartbeat[]>([]);
+  const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    if (demo) return;
     let cancelled = false;
     (async () => {
       try {
@@ -98,7 +96,7 @@ export function WorkerHealthView({ childId, demo }: { childId: string; demo: boo
     return () => {
       cancelled = true;
     };
-  }, [demo, childId]);
+  }, [childId]);
 
   if (pending) {
     return (

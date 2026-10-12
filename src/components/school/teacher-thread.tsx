@@ -7,7 +7,6 @@ import type { TeacherMessage } from "@/lib/school/types";
  * Per-class teacher thread + parent draft flow.
  * Draft → approve → send, all parent-gated (role enforced server-side too).
  * Quiet-hour approvals are HELD — the approve response says when it may go.
- * In demo mode everything is read-only — demo never calls /api/v1/*.
  */
 export function TeacherThread({
   thread,
@@ -15,7 +14,6 @@ export function TeacherThread({
   classId,
   teacherName,
   role,
-  demo = false,
   onChanged,
 }: {
   thread: TeacherMessage[];
@@ -23,7 +21,6 @@ export function TeacherThread({
   classId: string;
   teacherName: string | null;
   role: "parent" | "child";
-  demo?: boolean;
   onChanged: () => void;
 }) {
   const [subject, setSubject] = useState("");
@@ -34,7 +31,7 @@ export function TeacherThread({
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
 
   async function draft() {
-    if (role !== "parent" || demo || !body.trim()) return;
+    if (role !== "parent" || !body.trim()) return;
     setBusy(true);
     setError(null);
     try {
@@ -59,7 +56,7 @@ export function TeacherThread({
   }
 
   async function approve(id: string) {
-    if (role !== "parent" || demo) return;
+    if (role !== "parent") return;
     setBusy(true);
     setError(null);
     setHeldNote(null);
@@ -85,7 +82,7 @@ export function TeacherThread({
   }
 
   async function send(id: string) {
-    if (role !== "parent" || demo) return;
+    if (role !== "parent") return;
     setBusy(true);
     setError(null);
     try {
@@ -140,7 +137,7 @@ export function TeacherThread({
             <p className="mt-1.5 text-[10px] text-stardust-500">
               {new Date(m.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
             </p>
-            {role === "parent" && !demo && m.direction === "outbound" && m.status === "draft" && (
+            {role === "parent" && m.direction === "outbound" && m.status === "draft" && (
               <button
                 type="button"
                 onClick={() => approve(m.id)}
@@ -150,7 +147,7 @@ export function TeacherThread({
                 Approve exact text
               </button>
             )}
-            {role === "parent" && !demo && m.direction === "outbound" && m.status === "approved" && (
+            {role === "parent" && m.direction === "outbound" && m.status === "approved" && (
               <button
                 type="button"
                 onClick={() => send(m.id)}
@@ -170,7 +167,7 @@ export function TeacherThread({
         </p>
       )}
 
-      {role === "parent" && !demo && (
+      {role === "parent" && (
         <div className="mt-4 space-y-3 border-t border-nova-400/10 pt-4">
           <p className="text-sm font-medium text-nova-300">Write to the teacher</p>
           <input

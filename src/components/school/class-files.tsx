@@ -6,7 +6,6 @@ import type { ClassFile } from "@/lib/school/types";
 /**
  * Class handout uploads — files land in the class-files bucket at
  * <uid>/<child-slug>/<class-slug>/<yyyy-mm-dd>/<file>; viewed via signed URLs.
- * In demo mode this section is hidden — demo never calls /api/v1/*.
  */
 export function ClassFiles({
   childId,

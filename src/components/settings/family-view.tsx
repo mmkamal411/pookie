@@ -5,7 +5,7 @@
 // "invite your child to log in" form, and pending invites with
 // resend / revoke. Sending uses the backend's sendChildInvite server
 // action (@/lib/tenant/actions); listing/resend/revoke live in
-// @/lib/family/actions. Demo mode renders fixtures, never the backend.
+// @/lib/family/actions.
 
 import { useCallback, useEffect, useState } from "react";
 import { sendChildInvite } from "@/lib/tenant/actions";
@@ -198,18 +198,10 @@ function MemberRow({
   );
 }
 
-export function FamilyView({
-  demo = false,
-  demoMembers = [],
-  demoInvites = [],
-}: {
-  demo?: boolean;
-  demoMembers?: FamilyMember[];
-  demoInvites?: PendingInvite[];
-}) {
-  const [members, setMembers] = useState<FamilyMember[]>(demo ? demoMembers : []);
-  const [invites, setInvites] = useState<PendingInvite[]>(demo ? demoInvites : []);
-  const [pending, setPending] = useState(!demo);
+export function FamilyView() {
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [invites, setInvites] = useState<PendingInvite[]>([]);
+  const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -245,7 +237,6 @@ export function FamilyView({
 
   // Initial load — same inline-IIFE-with-cancelled pattern as settings-view.
   useEffect(() => {
-    if (demo) return;
     let cancelled = false;
     (async () => {
       try {
@@ -266,7 +257,7 @@ export function FamilyView({
     return () => {
       cancelled = true;
     };
-  }, [demo]);
+  }, []);
 
   const inviteLink = (token: string) =>
     typeof window !== "undefined"
@@ -291,30 +282,14 @@ export function FamilyView({
     }
     setSending(true);
     try {
-      if (demo) {
-        const child = members.find((m) => m.childId === childId);
-        const fresh: PendingInvite = {
-          id: `demo-invite-${Date.now()}`,
-          email: cleanEmail.toLowerCase(),
-          childId,
-          childName: child ? (child.nickname ?? child.firstName) : "your child",
-          sentAt: new Date().toISOString(),
-          expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
-          token: "demo-token",
-        };
-        setInvites((list) => [fresh, ...list]);
-        setLastVerifyUrl(inviteLink(fresh.token));
-        setNotice({ kind: "ok", text: `Invitation sent to ${cleanEmail} — they'll need to verify it.` });
-      } else {
-        const result = await sendChildInvite(childId, cleanEmail);
-        if (!result.ok) {
-          setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
-          return;
-        }
-        setLastVerifyUrl(result.verifyUrl);
-        setNotice({ kind: "ok", text: `Invitation sent to ${cleanEmail} — they'll need to verify it.` });
-        await refresh();
+      const result = await sendChildInvite(childId, cleanEmail);
+      if (!result.ok) {
+        setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
+        return;
       }
+      setLastVerifyUrl(result.verifyUrl);
+      setNotice({ kind: "ok", text: `Invitation sent to ${cleanEmail} — they'll need to verify it.` });
+      await refresh();
       setEmail("");
     } catch {
       setNotice({ kind: "err", text: inviteErrorMessage("invite_create_failed") });
@@ -327,22 +302,12 @@ export function FamilyView({
     setNotice(null);
     setBusyInvite(invite.id);
     try {
-      if (demo) {
-        setInvites((list) =>
-          list.map((i) =>
-            i.id === invite.id
-              ? { ...i, sentAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString() }
-              : i
-          )
-        );
-      } else {
-        const result = await resendChildInvite(invite.id);
-        if (!result.ok) {
-          setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
-          return;
-        }
-        await refresh();
+      const result = await resendChildInvite(invite.id);
+      if (!result.ok) {
+        setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
+        return;
       }
+      await refresh();
       setNotice({ kind: "ok", text: `Invite re-sent to ${invite.email} — the old link no longer works.` });
     } catch {
       setNotice({ kind: "err", text: inviteErrorMessage("resend_failed") });
@@ -356,16 +321,12 @@ export function FamilyView({
     setNotice(null);
     setBusyInvite(invite.id);
     try {
-      if (demo) {
-        setInvites((list) => list.filter((i) => i.id !== invite.id));
-      } else {
-        const result = await revokeChildInvite(invite.id);
-        if (!result.ok) {
-          setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
-          return;
-        }
-        await refresh();
+      const result = await revokeChildInvite(invite.id);
+      if (!result.ok) {
+        setNotice({ kind: "err", text: inviteErrorMessage(result.error) });
+        return;
       }
+      await refresh();
       setNotice({ kind: "ok", text: `Invite for ${invite.email} revoked.` });
     } catch {
       setNotice({ kind: "err", text: inviteErrorMessage("revoke_failed") });

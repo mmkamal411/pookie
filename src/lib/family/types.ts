@@ -1,5 +1,5 @@
 // Shared shapes for the family (child account management) feature.
-// Imported by server actions, client views, and demo fixtures alike —
+// Imported by server actions and client views alike —
 // plain types only, no "use server" boundary here.
 
 export type FamilyRole = "parent" | "child";

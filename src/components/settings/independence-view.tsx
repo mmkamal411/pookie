@@ -8,11 +8,9 @@
 // The graduation mutation is the backend's graduateToIndependence server
 // action (@/lib/tenant/actions) — it enforces the age check in the
 // graduate_child_access RPC and redirects to /?graduated=1 on success.
-// This view owns the gating, the confirmation UX, and the demo preview
-// of the success state.
+// This view owns the gating and the confirmation UX.
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { graduateToIndependence } from "@/lib/tenant/actions";
 import { getIndependenceStatus } from "@/lib/family/actions";
 import type { IndependenceStatus } from "@/lib/family/types";
@@ -46,22 +44,9 @@ function graduationErrorMessage(message: string): string {
   return "Couldn't complete the change — try again.";
 }
 
-export function IndependenceView({ demo = false }: { demo?: boolean }) {
-  const router = useRouter();
-  const [status, setStatus] = useState<IndependenceStatus | null>(
-    demo
-      ? {
-          isChild: true,
-          childId: "demo-child-id",
-          childName: "Dawson",
-          dateOfBirth: "2008-01-15",
-          age: 18,
-          eligible: true,
-          turnsEighteenOn: null,
-        }
-      : null
-  );
-  const [pending, setPending] = useState(!demo);
+export function IndependenceView() {
+  const [status, setStatus] = useState<IndependenceStatus | null>(null);
+  const [pending, setPending] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Confirmation flow
@@ -70,10 +55,8 @@ export function IndependenceView({ demo = false }: { demo?: boolean }) {
   const [understood, setUnderstood] = useState(false);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [demoDone, setDemoDone] = useState(false);
 
   useEffect(() => {
-    if (demo) return;
     let cancelled = false;
     (async () => {
       try {
@@ -88,18 +71,13 @@ export function IndependenceView({ demo = false }: { demo?: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [demo]);
+  }, []);
 
   async function handleGraduate() {
     if (!status?.childId) return;
     setWorking(true);
     setError(null);
     try {
-      if (demo) {
-        await new Promise((r) => setTimeout(r, 900));
-        setDemoDone(true);
-        return;
-      }
       // Redirects to /?graduated=1 on success — the throw below is the
       // navigation itself; anything else is a real failure.
       await graduateToIndependence(status.childId);
@@ -139,24 +117,6 @@ export function IndependenceView({ demo = false }: { demo?: boolean }) {
           Family tab instead.
         </p>
       </SettingsCard>
-    );
-  }
-
-  // Success — demo preview of the post-graduation state.
-  // (Real mode redirects to /?graduated=1; the same copy belongs there.)
-  if (demoDone) {
-    return (
-      <div className="card-living animate-bloom rounded-3xl p-8 text-center sm:p-10">
-        <p className="text-5xl" aria-hidden="true">🌅</p>
-        <h2 className="text-sunlit mt-4 text-2xl font-semibold">You&apos;re independent now.</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stardust-300">
-          Welcome to your own Pookie. Everything you&apos;ve built — grades, check-ins,
-          history — is right where you left it, and it&apos;s yours now.
-        </p>
-        <div className="mt-6">
-          <PrimaryButton onClick={() => router.push("/")}>Go to my dashboard</PrimaryButton>
-        </div>
-      </div>
     );
   }
 

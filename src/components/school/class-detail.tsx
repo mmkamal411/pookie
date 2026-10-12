@@ -24,7 +24,6 @@ export function ClassDetailView({
   childId,
   checkinToday,
   role,
-  demo = false,
 }: {
   detail: ClassDetail;
   childName: string;
@@ -32,13 +31,11 @@ export function ClassDetailView({
   childId: string;
   checkinToday: boolean;
   role: "parent" | "child";
-  demo?: boolean;
 }) {
   const [data, setData] = useState(detail);
   const [version, setVersion] = useState(0);
 
   const refresh = useCallback(async () => {
-    if (demo) return;
     try {
       const res = await fetch(`/api/v1/children/${childId}/school/classes/${data.class.id}`);
       if (!res.ok) return;
@@ -48,7 +45,7 @@ export function ClassDetailView({
     } catch {
       // A failed refresh keeps the last good render — never a blank page.
     }
-  }, [childId, data.class.id, demo]);
+  }, [childId, data.class.id]);
 
   const band = gradeBand(data.grade?.numeric);
   const s = bandStyles[band];
@@ -148,7 +145,6 @@ export function ClassDetailView({
             childId={childId}
             classId={data.class.id}
             role={role}
-            demo={demo}
             onChanged={refresh}
           />
         </div>
@@ -164,7 +160,6 @@ export function ClassDetailView({
             classId={data.class.id}
             teacherName={data.class.teacher_name}
             role={role}
-            demo={demo}
             onChanged={refresh}
           />
         </div>
@@ -172,8 +167,8 @@ export function ClassDetailView({
 
       {/* Check-in + handouts below the hero */}
       <section className="mt-8 grid gap-4 lg:grid-cols-2">
-        <CheckinForm childId={childId} childName={childName} doneToday={checkinToday} demo={demo} />
-        {!demo && <ClassFiles childId={childId} classId={data.class.id} className={displayName} />}
+        <CheckinForm childId={childId} childName={childName} doneToday={checkinToday} />
+        <ClassFiles childId={childId} classId={data.class.id} className={displayName} />
       </section>
     </main>
   );
