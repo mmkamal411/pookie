@@ -296,7 +296,7 @@ export function Review18View({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm"
+                className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950"
               >
                 Continue
               </button>
@@ -342,14 +342,14 @@ export function Review18View({
                         type="button"
                         onClick={() => doCorrect(r)}
                         disabled={!correctionText.trim()}
-                        className="rounded-xl bg-nova-500 px-4 py-2 text-sm font-semibold text-nebula-950 disabled:opacity-50"
+                        className="neon-cta neon-pink rounded-xl bg-nova-500 px-4 py-2 text-sm font-semibold text-nebula-950 disabled:opacity-50"
                       >
-                        Save correction
+                        Save Correction
                       </button>
                       <button
                         type="button"
                         onClick={() => setCorrecting(null)}
-                        className="rounded-xl border border-nova-400/30 px-4 py-2 text-sm text-stardust-300"
+                        className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-4 py-2 text-sm text-stardust-300"
                       >
                         Cancel
                       </button>
@@ -360,9 +360,9 @@ export function Review18View({
                     <button
                       type="button"
                       onClick={() => setReviewed((prev) => new Set(prev).add(r.recordId))}
-                      className="rounded-xl border border-comet-400/40 px-4 py-2 text-sm font-medium text-comet-200 hover:bg-comet-400/10"
+                      className="neon-hover neon-green neon-active rounded-xl border border-comet-400/40 px-4 py-2 text-sm font-medium text-comet-200 hover:bg-comet-400/10"
                     >
-                      Keep
+                      Keep As Is
                     </button>
                     <button
                       type="button"
@@ -377,7 +377,7 @@ export function Review18View({
                     <button
                       type="button"
                       onClick={() => doDelete(r)}
-                      className="rounded-xl border border-red-400/40 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-400/10"
+                      className="neon-hover neon-active rounded-xl border border-red-400/40 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-400/10"
                     >
                       Delete
                     </button>
@@ -389,14 +389,14 @@ export function Review18View({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
+                className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm"
+                className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950"
               >
                 Continue
               </button>
@@ -420,7 +420,7 @@ export function Review18View({
                   type="button"
                   onClick={() => doExport("pdf")}
                   disabled={exporting != null}
-                  className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm disabled:opacity-50"
+                  className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 disabled:opacity-50"
                 >
                   {exporting === "pdf" ? "Building." : "Download PDF"}
                 </button>
@@ -428,7 +428,7 @@ export function Review18View({
                   type="button"
                   onClick={() => doExport("json")}
                   disabled={exporting != null}
-                  className="rounded-xl border border-nova-400/30 px-5 py-2.5 text-sm font-medium text-stardust-300 hover:text-star-100 disabled:opacity-50"
+                  className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-5 py-2.5 text-sm font-medium text-stardust-300 hover:text-star-100 disabled:opacity-50"
                 >
                   {exporting === "json" ? "Building." : "Download JSON"}
                 </button>
@@ -441,14 +441,14 @@ export function Review18View({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
+                className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm"
+                className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950"
               >
                 Continue
               </button>
@@ -512,7 +512,7 @@ export function Review18View({
               <button
                 type="button"
                 onClick={addContact}
-                className="text-sm text-nova-300 underline decoration-dotted underline-offset-2"
+                className="neon-hover neon-pink text-sm text-nova-300 underline decoration-dotted underline-offset-2"
               >
                 Add another contact
               </button>
@@ -522,7 +522,7 @@ export function Review18View({
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
+                className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm text-stardust-300"
               >
                 Back
               </button>
@@ -530,14 +530,14 @@ export function Review18View({
                 <button
                   type="button"
                   onClick={saveContacts}
-                  className="rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm font-medium text-stardust-300 hover:text-star-100"
+                  className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-4 py-2.5 text-sm font-medium text-stardust-300 hover:text-star-100"
                 >
                   Save contacts
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  className="rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950 shadow-glow-sm"
+                  className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-2.5 text-sm font-semibold text-nebula-950"
                 >
                   Continue
                 </button>
@@ -566,7 +566,7 @@ export function Review18View({
                 type="button"
                 onClick={submit}
                 disabled={submitting}
-                className="rounded-xl bg-nova-500 px-5 py-3 text-sm font-semibold text-nebula-950 shadow-glow-sm disabled:opacity-50"
+                className="neon-cta neon-pink rounded-xl bg-nova-500 px-5 py-3 text-sm font-semibold text-nebula-950 disabled:opacity-50"
               >
                 {submitting ? "Saving." : "Save my choices"}
               </button>
@@ -574,7 +574,7 @@ export function Review18View({
                 type="button"
                 onClick={skip}
                 disabled={submitting}
-                className="rounded-xl border border-nova-400/30 px-5 py-3 text-sm font-medium text-stardust-300 hover:text-star-100 disabled:opacity-50"
+                className="neon-hover neon-teal neon-active rounded-xl border border-nova-400/30 px-5 py-3 text-sm font-medium text-stardust-300 hover:text-star-100 disabled:opacity-50"
               >
                 Skip. Keep everything private.
               </button>
@@ -586,7 +586,7 @@ export function Review18View({
             <button
               type="button"
               onClick={() => setStep(4)}
-              className="text-sm text-stardust-300 underline decoration-dotted underline-offset-2 hover:text-star-100"
+              className="neon-hover neon-teal text-sm text-stardust-300 underline decoration-dotted underline-offset-2 hover:text-star-100"
             >
               Back
             </button>

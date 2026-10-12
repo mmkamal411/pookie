@@ -54,7 +54,7 @@ export function PrimaryButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className="w-full rounded-2xl bg-nova-500 px-6 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+      className="neon-cta neon-pink w-full rounded-2xl bg-nova-500 px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
     >
       {children}
     </button>
@@ -75,7 +75,7 @@ export function QuietButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-2xl px-6 py-3 text-sm font-medium text-stardust-300 transition hover:text-star-100 disabled:opacity-60"
+      className="neon-hover neon-teal neon-active w-full rounded-2xl px-6 py-3 text-sm font-medium text-stardust-300 transition hover:text-star-100 disabled:opacity-60"
     >
       {children}
     </button>
@@ -104,7 +104,7 @@ export function FieldError({ message }: { message: string | null }) {
 }
 
 export const inputClass =
-  "w-full rounded-2xl border border-nebula-700 bg-nebula-900/80 px-4 py-3 text-sm text-star-100 placeholder:text-stardust-500 outline-none transition focus:border-nova-400/70";
+  "neon-focus w-full rounded-2xl border border-nebula-700 bg-nebula-900/80 px-4 py-3 text-sm text-star-100 placeholder:text-stardust-500 outline-none transition focus:border-nova-400/70";
 
 export const labelClass =
   "mb-1.5 block text-xs font-medium text-stardust-200";

@@ -71,11 +71,8 @@ export function SectionHeader({
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      {/* soft neon divider */}
-      <div
-        aria-hidden="true"
-        className="mt-2 h-px bg-gradient-to-r from-nova-400/50 via-violet-400/25 to-transparent shadow-[0_0_8px_rgb(167_139_250/0.35)]"
-      />
+      {/* soft neon divider — E3 system */}
+      <hr aria-hidden="true" className="neon-divider neon-pink mt-2 border-0" />
     </div>
   );
 }

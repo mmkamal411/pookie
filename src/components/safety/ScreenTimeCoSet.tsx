@@ -483,7 +483,7 @@ function ReviewActions({
             <button
               type="button"
               onClick={() => setDeclining(false)}
-              className="min-h-[48px] flex-1 rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-medium text-stardust-300"
+              className="neon-hover neon-teal neon-active min-h-[48px] flex-1 rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-medium text-stardust-300"
             >
               Back
             </button>
@@ -491,7 +491,7 @@ function ReviewActions({
               type="button"
               onClick={() => void decide("decline")}
               disabled={busy}
-              className="min-h-[48px] flex-1 rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100 disabled:opacity-50"
+              className="neon-hover neon-teal neon-active min-h-[48px] flex-1 rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100 disabled:opacity-50"
             >
               {busy ? "Sending…" : "Decline with reason"}
             </button>
@@ -503,21 +503,21 @@ function ReviewActions({
             type="button"
             onClick={() => void decide("approve")}
             disabled={busy}
-            className="min-h-[48px] rounded-2xl border border-comet-400/40 bg-comet-400/10 px-4 py-3 text-sm font-semibold text-comet-300 disabled:opacity-50"
+            className="neon-hover neon-green neon-active min-h-[48px] rounded-2xl border border-comet-400/40 bg-comet-400/10 px-4 py-3 text-sm font-semibold text-comet-300 disabled:opacity-50"
           >
             Approve
           </button>
           <button
             type="button"
             onClick={onCounter}
-            className="min-h-[48px] rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100"
+            className="neon-hover neon-teal neon-active min-h-[48px] rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100"
           >
             Suggest changes
           </button>
           <button
             type="button"
             onClick={() => setDeclining(true)}
-            className="min-h-[48px] rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100"
+            className="neon-hover neon-teal neon-active min-h-[48px] rounded-2xl border border-nova-400/25 px-4 py-3 text-sm font-semibold text-star-100"
           >
             Decline with reason
           </button>
@@ -711,7 +711,7 @@ function AppealHistory({
                       type="button"
                       onClick={() => void respond(ap.id, "approve")}
                       disabled={busy}
-                      className="min-h-[44px] flex-1 rounded-xl border border-comet-400/40 bg-comet-400/10 text-sm font-semibold text-comet-300 disabled:opacity-50"
+                      className="neon-hover neon-green neon-active min-h-[44px] flex-1 rounded-xl border border-comet-400/40 bg-comet-400/10 text-sm font-semibold text-comet-300 disabled:opacity-50"
                     >
                       Approve
                     </button>
@@ -719,7 +719,7 @@ function AppealHistory({
                       type="button"
                       onClick={() => void respond(ap.id, "deny")}
                       disabled={busy}
-                      className="min-h-[44px] flex-1 rounded-xl border border-nova-400/25 text-sm font-semibold text-star-100 disabled:opacity-50"
+                      className="neon-hover neon-teal neon-active min-h-[44px] flex-1 rounded-xl border border-nova-400/25 text-sm font-semibold text-star-100 disabled:opacity-50"
                     >
                       Deny with reason
                     </button>
@@ -729,7 +729,7 @@ function AppealHistory({
                 <button
                   type="button"
                   onClick={() => setRespondId(ap.id)}
-                  className="mt-3 min-h-[44px] rounded-xl border border-nova-400/25 px-4 py-2 text-sm font-medium text-stardust-300 hover:text-star-100"
+                  className="neon-hover neon-teal neon-active mt-3 min-h-[44px] rounded-xl border border-nova-400/25 px-4 py-2 text-sm font-medium text-stardust-300 hover:text-star-100"
                 >
                   Respond
                 </button>

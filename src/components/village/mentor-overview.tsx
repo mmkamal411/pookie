@@ -131,8 +131,7 @@ export function MentorOverview({ childId }: { childId: string }) {
           drilling in had no visible way back to the roster. */}
       <Link
         href="/village"
-        className="inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
-        style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+        className="neon-hover neon-pink inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
       >
         ← Who You&apos;re Helping
       </Link>

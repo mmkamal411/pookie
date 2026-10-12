@@ -71,7 +71,7 @@ export function FaqTree({ childSlug }: { childSlug: string }) {
                 <li key={a.slug}>
                   <Link
                     href={`/c/${childSlug}/support/faq/${a.slug}`}
-                    className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-star-100 transition-colors hover:bg-nova-500/10"
+                    className="neon-hover neon-teal flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-star-100 transition-colors hover:bg-nova-500/10"
                   >
                     <span>{a.title}</span>
                     {a.has_legal && (

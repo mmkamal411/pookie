@@ -39,7 +39,7 @@ export function BackButton({
       type="button"
       onClick={goBack}
       aria-label="Go back"
-      className={`group inline-flex items-center gap-1.5 rounded-full border border-nova-400/25 bg-nebula-900/60 px-3.5 py-1.5 text-xs font-semibold text-stardust-300 transition-all hover:border-nova-300/60 hover:text-nova-200 hover:shadow-glow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nova-300/70 ${className}`}
+      className={`neon-hover neon-teal neon-focus neon-active group inline-flex items-center gap-1.5 rounded-full border border-nova-400/25 bg-nebula-900/60 px-3.5 py-1.5 text-xs font-semibold text-stardust-300 transition-all hover:border-nova-300/60 hover:text-nova-200 active:scale-95 ${className}`}
     >
       <span
         aria-hidden="true"

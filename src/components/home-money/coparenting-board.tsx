@@ -315,6 +315,7 @@ export function CoparentingBoard({ childId, childName }: { childId: string; chil
         icon="🤝"
         title="Co-parenting"
         subtitle={`Your space for ${childName} — logistics only, kept clean.`}
+        back
       />
 
       <div className="mt-4">

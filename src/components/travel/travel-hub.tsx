@@ -186,9 +186,10 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
                 ? { kind: "live", line: "Real totals, 21+ company rules." }
                 : (states[m.id] ?? { kind: "checking" as const });
           return (
-            {/* Prism E5 2026-10-12: P0 fix — W26 Weather's route is absolute
-                (/household/*); naive tenant-prefixing 404'd its card. */}
-            <Link key={m.id} href={resolveModuleHref(childSlug, m.route ?? "/travel")} className="block">
+            <>
+              {/* Prism E5 2026-10-12: P0 fix — W26 Weather's route is absolute
+                  (/household/*); naive tenant-prefixing 404'd its card. */}
+              <Link key={m.id} href={resolveModuleHref(childSlug, m.route ?? "/travel")} className="block">
               <Card className="flex h-full items-start gap-3 transition-transform hover:-translate-y-0.5">
                 <span aria-hidden="true" className="text-2xl">
                   {ICONS[m.id] ?? "🧭"}
@@ -207,6 +208,7 @@ export function TravelHub({ childSlug }: { childSlug: string }) {
                 </span>
               </Card>
             </Link>
+            </>
           );
         })}
       </div>

@@ -216,6 +216,7 @@ export function CreditBoard({ childId, childName }: { childId: string; childName
         icon="🧊"
         title="Credit Freezes"
         subtitle={`${childName} — freeze the file, track it here.`}
+        back
       />
 
       <div className="mt-4">

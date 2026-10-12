@@ -63,7 +63,7 @@ export function TravelPageShell({
     <main className="mx-auto max-w-3xl px-4 pt-6 pb-10">
       <Link
         href={backHref}
-        className="text-sm text-nova-300 transition-colors hover:text-nova-200"
+        className="neon-hover neon-pink inline-block text-sm text-nova-300 transition-colors hover:text-nova-200"
       >
         ← Back
       </Link>

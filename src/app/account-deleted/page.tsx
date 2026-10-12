@@ -65,8 +65,7 @@ export default async function AccountDeletedPage() {
         <form action={signOut} className="mt-4">
           <button
             type="submit"
-            className="w-full rounded-2xl border border-white/15 py-2.5 text-sm font-medium text-stardust-300 transition-all hover:border-nova-400/50 hover:text-nova-200"
-            style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.25)" }}
+            className="neon-hover neon-teal neon-active w-full rounded-2xl border border-white/15 py-2.5 text-sm font-medium text-stardust-300 transition-all hover:border-nova-400/50 hover:text-nova-200"
           >
             Sign out
           </button>

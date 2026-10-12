@@ -22,13 +22,13 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const VARIANTS: Record<string, string> = {
   primary:
-    "btn-dapple border border-nova-300/40 text-nebula-950 font-semibold hover:shadow-glow-md active:scale-[0.98]",
+    "neon-cta neon-pink btn-dapple border border-nova-300/40 text-nebula-950 font-semibold hover:shadow-glow-md",
   secondary:
-    "border border-violet-300/45 bg-violet-500/15 text-violet-100 shadow-glow-sm hover:bg-violet-500/25 hover:shadow-glow-md hover:border-violet-300/70 active:scale-[0.98]",
+    "neon-hover neon-teal neon-active border border-violet-300/45 bg-violet-500/15 text-violet-100 shadow-glow-sm hover:bg-violet-500/25 hover:shadow-glow-md hover:border-violet-300/70",
   ghost:
-    "border border-nova-400/30 text-star-100 bg-nebula-900/50 hover:border-nova-400/60 hover:bg-nebula-900/80 hover:shadow-glow-sm active:scale-[0.98]",
+    "neon-hover neon-teal neon-active border border-nova-400/30 text-star-100 bg-nebula-900/50 hover:border-nova-400/60 hover:bg-nebula-900/80 hover:shadow-glow-sm",
   danger:
-    "border border-red-400/40 text-red-200 bg-red-950/40 hover:border-red-400/70 hover:bg-red-950/60 hover:shadow-[0_0_14px_rgb(248_113_113/0.25)] active:scale-[0.98]",
+    "neon-hover neon-active border border-red-400/40 text-red-200 bg-red-950/40 hover:border-red-400/70 hover:bg-red-950/60 hover:shadow-[0_0_14px_rgb(248_113_113/0.25)]",
 };
 
 const SIZES: Record<string, string> = {

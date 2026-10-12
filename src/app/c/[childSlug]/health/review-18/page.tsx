@@ -35,8 +35,7 @@ export default async function Review18Page({ params }: { params: Promise<{ child
         {/* Prism E5 2026-10-12: this was a visual dead end for parents. */}
         <Link
           href={`/c/${childSlug}/health`}
-          className="mb-6 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
-          style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+          className="neon-hover neon-teal mb-6 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
         >
           ← Back to Health
         </Link>
