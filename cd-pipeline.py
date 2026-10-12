@@ -40,6 +40,13 @@ DEMO_ROUTE_DIR = os.path.join(APP_DIR, "src", "app", "demo")
 SOURCE_WATCH = ["src", "middleware.ts"]
 
 
+# Coordination artifacts the pipeline itself (and squads) append to — they are
+# not shipped code, so they never block a deploy. (Without this, the
+# pipeline's own ❌/✅ BUILD-LOG notification would dirty the tree and block
+# the next run.)
+NON_BLOCKING_DIRTY = {"docs/BUILD-LOG.md", "docs/DEPLOY-LOG.md"}
+
+
 def now_edt():
     return datetime.datetime.now(
         datetime.timezone(datetime.timedelta(hours=-4)))
@@ -99,11 +106,15 @@ def step_preflight():
     subprocess.run(["git", "fetch", "origin"], cwd=APP_DIR, check=True,
                    capture_output=True, timeout=120)
     dirty = git("status", "--porcelain")
-    if dirty:
+    # Coordination logs are not shipped code — ignore them (the pipeline's
+    # own BUILD-LOG notifications must never block the next run).
+    blocking = [l for l in dirty.splitlines()
+                if l[3:] not in NON_BLOCKING_DIRTY]
+    if blocking:
         raise PipelineError(
             "refusing: working tree is dirty (uncommitted changes) — "
             "commit or stash first; the pipeline never ships partial work.\n"
-            + dirty[:500])
+            + "\n".join(blocking)[:500])
     before = git("rev-parse", "--short", "HEAD")
     r = subprocess.run(["git", "pull", "--ff-only", "origin", BRANCH],
                        cwd=APP_DIR, capture_output=True, text=True)
