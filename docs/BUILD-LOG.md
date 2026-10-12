@@ -2600,3 +2600,32 @@ browser/dashboard/WIN laptop — test plan documents every step for the parent.
 - School Logins tab: portal cards (StudentVUE, ParentVUE, CTLS Learn, Microsoft 365) with connected/needs-attention/not-configured status, masked usernames, Test Connection per portal, add/update form with write-only passwords (never displayed), remove. Reuses the vault-backed portals API.
 - New API: GET .../school/sync-runs (paginated, filterable, + known sources), GET .../school/workers (fleet status), POST .../school/sync-now. New service: src/server/services/sync-command.ts. New components: src/components/sync/ (gear, command-shell, workers-view, console-view, logins-view).
 - Verified: npx tsc --noEmit clean; npm run build green (isolated copy, all new routes in manifest). Pushed to origin/staging-build. No deploy (coordinator owns deploys).
+
+## 2026-10-12 ~11:55 EDT — Prism E6 (QA) — visual-regression loop stood up
+
+**Deliverables (commit d11cdee, pushed to origin/staging-build):**
+- `prism-screenshot-harness.py` — Playwright capture harness for the 9 Prism
+  verification surfaces (login, Home `/c/[slug]`, Today, Pookie, Progress
+  `/c/[slug]/school`, More client-side popup, health module page, Sync Command
+  Center `/c/[slug]/settings/sync`, Village `/village`), full-page PNGs at
+  390x844 + 1440x900 into `docs/PRISM-QA/screenshots/<run>/` with manifest.json.
+  Canonical staging URL enforced; refuses non-staging base URLs. Authenticated
+  pages via `--storage-state`; coordinator signs in once and reuses the session.
+- `docs/PRISM-QA-CHECKLIST.md` — per-deploy procedure: capture → per-page
+  visual review (no blank pages, neon consistency incl. tab-glow spec
+  violet/green/amber/amber/violet, no harsh colors, Title Case, back buttons,
+  no 390px breakage, toolbar intact, no stale surfaces) → record → gate.
+- `docs/PRISM-QA-BASELINE.md` — baseline observation format; populated once the
+  coordinator supplies screenshots from the first Prism deploy.
+- `docs/PRISM-QA-LOG.md` — per-deploy PASS/FAIL regression log scaffold.
+
+**Verification:** `py_compile` clean; staging-URL guard tested (refuses
+non-staging URL with exit 2). Live capture run deferred to the coordinator —
+Chromium browser download was still in progress on this VM when the Squad
+Harbor deploy window opened (no builds were run; browser download is not a
+build). Read-only review of `src/components/child-toolbar.tsx` confirmed the
+IA mapping: Home→`/c/[slug]`, Today→`/today`, Pookie→`/pookie`,
+Progress→`/school`, More = client-side popup (no route — per smoke test note).
+
+**Ready for:** coordinator to run the harness post-deploy and hand E6 the
+screenshot dir for the baseline pass.
