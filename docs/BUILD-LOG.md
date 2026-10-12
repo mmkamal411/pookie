@@ -3,6 +3,29 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~10:10 EDT — Squad 1 Auth & Onboarding Ignition (staging-build): FRONT-DOOR DEAD ENDS KILLED
+
+**Gaps found (file:line evidence):**
+- G1 DEAD END: "Just me" users (signed in, onboarded, 0 memberships) hit `src/app/page.tsx:79` → `/login?error=no-invite`; `src/app/login/page.tsx:32` only surfaces `error=auth`, so they landed signed-in on the login form — no dashboard, no add-child path, StepDone's "Go to my Pookie" looped forever.
+- G2: `provision_onboarding_child` existed only as standalone `src/lib/onboarding/provision_onboarding_child.sql` (never a migration) — every onboarding add-child failed closed with `create_failed`. `actions.ts` header cited "(migration 021)" — stale.
+- G3: `create_child()` (`001:590`) has no DOB param and raises `parent_membership_required` (`001:617`) for zero-membership callers — post-onboarding adds (Settings → Profile) left `date_of_birth` NULL, so 018 age tiering / 18+ gates fail-closed forever for those children.
+- G4: magic-link 429s surfaced raw Supabase text; sent state had no resend and no "try Google instead" (founder hit the project-wide throttle on launch night).
+- G5: `/auth/callback` built `${origin}${next}` without re-validating `next` (`//evil.com` normalizes off-site).
+- G6: `consumeInvite` threw on RPC failure → logged-in users opening an expired/used `?invite=` link 500'd while session-less curl saw 307 (the browser-vs-curl mystery). Stale active-child cookie could throw the same way.
+- G7: every callback failure collapsed to `?error=auth` — no expired-link vs blocked-cookie distinction.
+- G8 (copy): `already_has_family` pointed at "Settings → Family", which has no add form (it's in the Profile tab's Children card).
+
+**Fixes (3 commits, on staging-build):**
+- `706d13d` db: **052** `provision_onboarding_child` promoted into `supabase/migrations/` (standalone file deleted; APPLY_ORDER.md row added) + **053** `create_child()` gains optional trailing `p_date_of_birth` (DROP+recreate of the 7-arg overload so old callers resolve to the new signature — plain CREATE OR REPLACE would have left a shadow overload). File-only, NOT applied live.
+- `2d12d2a` auth: `/` routes 0-membership onboarded users to new **/me** (personal home: household links + add-child door + sign out); new **/add-child** reuses the onboarding `createChildProfile` action → 052 RPC (the only path that works with zero memberships); `consumeInvite` returns a result (invite failures → `/verify-invite?token=…&error=invalid`, never the error boundary); callback re-validates `?next=` (`src/lib/auth/callback-helpers.ts`) and maps failures to `auth_expired`/`auth_pkce`; login shows targeted recovery hints, friendly 429 copy pointing at the Google button, and a resend path in the sent state; shared `childErrorMessage()` module + fixed the Family/Profile pointer.
+- `7c42b9a` auth: DOB wired through `services/children.ts` (real-date/not-future/≤150 validation → 400 not a Postgres 500) → `POST /api/v1/children` schema → `management-api` → Settings → Profile add form (add-flow-only birthdate field; `parent_membership_required` → 403 PARENT_ROLE_REQUIRED).
+
+**Verification:** `node --test src/lib/auth/callback-helpers.test.ts` 6/6 pass; `npx tsc --noEmit` + `npx eslint` clean on all 16 touched files (repo-wide pre-existing errors in other squads' files untouched); both migrations parse via pglast and pass `check.sh` (the 002 policy warnings are pre-existing). No console.logs; no dead code (`consumeInvite`'s old throw-contract replaced, not left behind).
+
+**Needs founder/dashboard action:** apply 052 + 053 to the Pookie Supabase project (dashboard session — sandbox can't DDL). Until 052 applies, add-child still fails closed with `create_failed` — the UI message is honest about retrying. Note: another squad amended 052's header post-commit (018 dependency note — correct, INSERT writes 018's columns); left uncommitted in the tree for them. Recommend DevOps extend `smoke-test-staging.py`: `/me` → 307 (logged out), `/add-child` → 307 (logged out) — their file, didn't touch.
+
+**Next (Squad 1):** verify the full signup path on staging after the next staging deploy (Google OAuth → /onboarding → add child → /me); watch for the project-wide magic-link rate limit recurring (dashboard Auth → Rate Limits if it does).
+
 ## 2026-10-12 ~10:00 EDT — Squad 2 Deploy Pipeline (staging-build): 6 GAPS CLOSED, STALE-BUILD CLASS HARDENED
 
 **Context:** tonight's incident — `deploy-staging.py` shipped a stale local `.open-next/` (predating demo-mode removal), wrangler uploaded 0 files (content-hash dedup), reported success, Google OAuth broke. Diagnosis required downloading the live JS bundle. All fixes below make "deployed" mean "verified fresh build live".
