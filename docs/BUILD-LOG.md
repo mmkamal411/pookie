@@ -1,5 +1,34 @@
 # Pookie Build Log — 3-agent team coordination
 
+## 2026-10-12 ~10:30 EDT — Squad Oracle — The orb as a living presence
+
+**Mehedi's identity:** "Divine bright light, all-knowing, part of God — here to guide you through your journey and on your side to help you win."
+
+**New: src/lib/orb/orb-events.ts** — global orb event bus (window CustomEvents):
+- `orbCelebrate(reason)` / `orbThink()` / `orbListen()` / `orbExcite()` / `orbReveal()` / `orbCalm()`
+- Any component can tell the orb what happened; every mounted ReactiveOrb responds.
+
+**New: src/components/pookie/orb-reactive.tsx** — ReactiveOrb wrapper:
+- Listens to the bus; transient moods (celebrating, excited) decay to idle after holdMs; thinking/listening/revelation persist until calmed.
+- Explicit `mood` prop wins over the bus (chat header drives its own).
+
+**New moods in globals.css:** `listening` (gentle attentive pulse, gaze brightens) and `revelation` (deep radiant swell — the orb delivering a briefing). Reduced-motion covers `.orb-gaze` now.
+
+**Celebration triggers:**
+- Task completion (task-board.tsx) → orbCelebrate
+- Grade rise (new use-grade-celebration.ts hook, wired in school-overview.tsx) → orbCelebrate once per rise
+- Daily check-in save (checkin-form.tsx) → orbCelebrate ("daily debriefing complete")
+
+**Morning Briefing Ritual (mission-briefing.tsx):** first morning open of the day (5–11am, localStorage date gate) gets the full ceremony — "Overnight transmission" panel (today's mission, what needs firepower, warm sign-off) with the orb in revelation mood. The reason to open the app every morning.
+
+**Pookie Chat elevation (pookie-chat.tsx):** the orb listens while you type (draft non-empty → listening), thinks while the answer brews (already), flares warm when the reply lands (celebrating 2.6s → idle).
+
+**Swapped to ReactiveOrb:** child-toolbar (persistent), today-view, greeting-hero, mission-briefing, school-overview, debriefing-chamber, checkin-form.
+
+**Drive-by fix:** class-detail.tsx — Telemetry's `gradeWeights` prop was in the interface but not destructured (tsc error). One-line fix.
+
+tsc clean, build green. NOT deployed — parent owns deploys.
+
 ## 2026-10-12 ~10:22 EDT — Squad Pipeline — ❌ Staging deploy blocked
 
 **The pipeline stopped before anything reached staging.**
@@ -2168,3 +2197,39 @@ Remaining from E4: backfill run → `telemetry/health.py` done (unit-tested) →
 3. **Migrations 001 + 002** in the Supabase SQL editor (old project) — optional, graceful degradation without them.
 4. **GitHub**: `mmkamal411/dawson-sync-workers` — no usable key on this VM (SSH denied for both keys); commits ready locally, push commands in the E2 handoff.
 5. **POOKIE_SERVICE_ROLE_KEY** into cron worker env (E3's blocker — unblocks E4 health writes from automation).
+
+## 2026-10-12 ~14:26 EDT — Squad Prism — visual validation (20261012-142538)
+
+- ✅ `login-desktop` — PASS — http=200 mean=12.7 std=39.4 bright=1.75% baseline set
+- ✅ `login-mobile` — PASS — http=200 mean=22.0 std=47.0 bright=1.80% baseline set
+- ✅ `root-desktop` — PASS — http=200 mean=12.7 std=39.3 bright=1.75% baseline set
+- ✅ `/select-child` — PASS — HTTP 403 -> needs signed-in validation
+- ✅ `/c/dawson` — PASS — HTTP 403 -> needs signed-in validation
+- ✅ `/c/dawson/today` — PASS — HTTP 403 -> needs signed-in validation
+
+No critical issues. Baseline diffs within animation noise.
+
+## 2026-10-12 ~14:30 EDT — Squad Telemetry E3 — build complete, verified live
+
+**Shipped:**
+1. **email-class-matcher.py v2** (backup: `.WORKING-20261012`): Gmail-direct primary source (Family/Dawson label) + snapshot fallback; scored matching (teacher +100 / counselor +80 / body-signature +70 / thread-inherit +60 / subject-kw +40 / body-kw +15, threshold 40); garbled-Outlook recovery (embedded Subject: lines, signature matching); dedupe via Gmail id + body-hash pre-flight (fixed a real NULL-email_date duplicate bug — 2 dup rows deleted); per-teacher digests → `teacher-thread-summary.json` with reply_needed flags; writes pookie `teacher_messages` (E4 contract, service_role-gated) + legacy `class_emails` (kept working); SyncHealth rows per run; structured logs + runs.jsonl. Verified: 12/12 snapshot emails matched (v1 logic: 0/12 on same data — the Armocida study-guide email v1 lost is now matched), 12 legacy pairs written to DB, health row in sync_logs.
+2. **cobb-calendar-scraper.py**: official iCal feed ingest (method research: iCal > JSON API > HTML scrape; Walton has no separate feed; no RSS exists). 23 VEVENTs → 21 stored (2 stale pre-2026-06-01 skipped). Idempotent upsert on ICS UID; `--mode smart/full/drift`; weekly-full/daily-drift via `cobb-calendar-sync` cron (daily ~03:10 ET). Always refreshes `ccsd-calendar-feed.json`.
+3. **cobb-calendar-feed.py**: month-grid JSON for the Overview UI (Engineer 5 contract) — weeks/days with color-coded event dots + d-dash-matching legend. Verified Oct 2026: Digital Learning Day 10/12, Conference Week 10/13-16, Board Meeting 10/15.
+4. **telemetry/sqids.py**: vendored Sqids encoder (verified `encode([0])=="bM"` against the site's own lib) for subscription URLs.
+5. **schedule.yaml**: `gmail-teacher-mail-vm` placeholder → real script; added `ccsd-calendar-vm` job. **README-TELEMETRY-E3.md** in dawson-grades/.
+6. Crons: `email-class-matcher` body updated to v2 (30m kept); new `cobb-calendar-sync` daily.
+
+**E2/E4 coordination notes:** (a) E2's health.py `sync_health` columns ≠ E4's `school_sync_health` contract — suggest health.py adopt E4's contract; E3's fallback uses source `watchdog` on legacy due to the CHECK constraint. (b) Pookie writes need `POOKIE_SERVICE_ROLE_KEY` in cron env (Secure Vault) + Dawson child/classes seeded — until then file fallbacks are live and correct.
+
+**Blocker for parent/MD:** wire the pookie service_role key into the cron worker env; seed the Dawson child row.
+
+## 2026-10-12 ~14:27 EDT — Squad Prism — visual validation (20261012-142623)
+
+- ✅ `login-desktop` — PASS — http=200 mean=12.7 std=39.4 bright=1.75% diff=0.0%
+- ✅ `login-mobile` — PASS — http=200 mean=22.0 std=47.0 bright=1.81% diff=0.0%
+- ✅ `root-desktop` — PASS — http=200 mean=12.7 std=39.3 bright=1.75% diff=0.0%
+- ✅ `/select-child` — PASS — HTTP 403 -> needs signed-in validation
+- ✅ `/c/dawson` — PASS — HTTP 403 -> needs signed-in validation
+- ✅ `/c/dawson/today` — PASS — HTTP 403 -> needs signed-in validation
+
+No critical issues. Baseline diffs within animation noise.

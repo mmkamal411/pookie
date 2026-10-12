@@ -141,6 +141,10 @@ export function PookieChat({
   const [, setColorTick] = useState(0);
   const [museThinking, setMuseThinking] = useState(false);
   const [museSlow, setMuseSlow] = useState(false);
+  // Squad Oracle: the orb's conversation presence — it listens while you
+  // type, thinks while the answer brews, and flares warm when it lands.
+  const [orbMood, setOrbMood] = useState<"idle" | "listening" | "thinking" | "celebrating">("idle");
+  const celebrateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const museSlowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -157,6 +161,18 @@ export function PookieChat({
   const pookieNeon = resolvePookieNeon(getPookieColor());
 
   useEffect(() => subscribePookieColor(() => setColorTick((t) => t + 1)), []);
+
+  // Squad Oracle: while the user types, the orb leans in — listening.
+  useEffect(() => {
+    if (isThinking) return; // thinking takes precedence
+    setOrbMood(draft.trim().length > 0 ? "listening" : "idle");
+  }, [draft, isThinking]);
+
+  useEffect(() => {
+    return () => {
+      if (celebrateTimer.current) clearTimeout(celebrateTimer.current);
+    };
+  }, []);
 
   // Resume polling for a pending Muse answer (survives reload AND remount —
   // navigating away from the chat tab unmounts this component, which must
@@ -333,6 +349,8 @@ export function PookieChat({
     const history = messagesRef.current;
     const thinking: ChatMessage = { role: "pookie", text: "", thinking: true, persona };
     setMessages((prev) => [...prev, userMsg, thinking].slice(-MAX_MESSAGES));
+    // Squad Oracle: the orb contemplates — deep inner swirl.
+    setOrbMood("thinking");
 
     // Squad Value: Pookie Chat → Actions. Detect task intents and create
     // a real family task. The confirmation rides along with Pookie's reply.
@@ -346,6 +364,10 @@ export function PookieChat({
           : reply;
         const done: ChatMessage = { role: "pookie", text: finalReply, persona };
         setMessages((prev) => prev.map((m) => (m.thinking ? done : m)).slice(-MAX_MESSAGES));
+        // Squad Oracle: the answer lands — a warm flare, then back to rest.
+        if (celebrateTimer.current) clearTimeout(celebrateTimer.current);
+        setOrbMood("celebrating");
+        celebrateTimer.current = setTimeout(() => setOrbMood("idle"), 2600);
         // Pookie shifts color to match the class being discussed.
         const neon = detectClassNeon(`${trimmed} ${reply}`);
         if (neon.id !== "pookie") setPookieColor(neon.neon);
@@ -363,6 +385,7 @@ export function PookieChat({
       () => {
         const fallback: ChatMessage = { role: "pookie", text: FALLBACK_MESSAGE, persona };
         setMessages((prev) => prev.map((m) => (m.thinking ? fallback : m)).slice(-MAX_MESSAGES));
+        setOrbMood("idle");
       }
     );
   }
@@ -375,7 +398,7 @@ export function PookieChat({
 
       <div className="animate-bloom flex items-center gap-4">
         <div className="relative">
-          <PookieOrb size={52} mood={isThinking ? "thinking" : "idle"} />
+          <PookieOrb size={52} mood={orbMood} />
           {/* comm signal indicator — the channel is open */}
           <span
             aria-hidden="true"

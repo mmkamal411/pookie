@@ -179,6 +179,58 @@ export function MissionBriefing({
         .
       </p>
 
+      {/* The Morning Briefing Ritual — the orb's daily transmission.
+          Overnight changes, today's mission, what needs attention.
+          Warm, sci-fi, brief. The reason to open the app every morning. */}
+      {isRitual && (
+        <section
+          className="animate-bloom mt-5 overflow-hidden rounded-3xl border border-nova-400/25 bg-nebula-900/60"
+          style={{
+            animationDelay: "0.14s",
+            boxShadow: "0 0 32px rgb(96 165 250 / 0.15), inset 0 1px 0 rgb(255 255 255 / 0.06)",
+          }}
+          aria-label="Morning briefing ritual"
+        >
+          <div className="flex items-center gap-3 border-b border-nova-400/15 px-5 py-3">
+            <span aria-hidden="true" className="inline-block h-2 w-2 animate-pulse rounded-full bg-nova-400" />
+            <p className="text-xs font-medium tracking-[0.22em] text-nova-300 capitalize">
+              Overnight transmission · {childName}&apos;s day
+            </p>
+          </div>
+          <div className="space-y-3 px-5 py-4 text-[15px] leading-relaxed text-star-100">
+            <p>
+              {urgentCount > 0 ? (
+                <>
+                  <span className="font-semibold text-amber-300">Today&apos;s mission:</span>{" "}
+                  {urgentCount} {urgentCount === 1 ? "item" : "items"} due soon — handle
+                  those first and the day is yours.
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-emerald-300">Today&apos;s mission:</span>{" "}
+                  nothing due, nothing overdue — a clear runway. Perfect day to get ahead.
+                </>
+              )}
+            </p>
+            <p className="text-stardust-300">
+              {classCount === 0 ? (
+                <>The instruments are quiet — school data syncs in the background.</>
+              ) : attentionCount > 0 ? (
+                <>
+                  {attentionCount} {attentionCount === 1 ? "class" : "classes"} below 80 —
+                  that&apos;s where your firepower goes today.
+                </>
+              ) : (
+                <>Every class at the 90 goal. The orb is proud of you, Captain.</>
+              )}
+            </p>
+            <p className="text-sm text-stardust-400 italic">
+              Pookie watched the skies overnight. Fly well today.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Quote of the day — d-dash's beloved briefing quote, as an instrument readout */}
       {quote && (
         <figure

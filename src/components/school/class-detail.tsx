@@ -36,6 +36,7 @@ export function ClassDetailView({
   curatedSlug,
   room,
   currentUnit,
+  gradeWeights,
 }: {
   detail: ClassDetail;
   childName: string;

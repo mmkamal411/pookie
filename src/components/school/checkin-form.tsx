@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PookieOrb } from "@/components/pookie-orb";
+import { ReactiveOrb } from "@/components/pookie/orb-reactive";
+import { orbCelebrate } from "@/lib/orb/orb-events";
 import type { CalibrationSummary, TodayCheckin } from "@/lib/school/types";
 import { ProvenanceLabel } from "./provenance-label";
 
@@ -70,7 +71,7 @@ export function CheckinForm({
     return (
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 px-5 py-4">
         <div className="flex items-center gap-3">
-          <PookieOrb size={36} />
+          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">Check-ins are {childName}&apos;s private space</p>
             <p className="mt-0.5 text-xs leading-relaxed text-stardust-300">
@@ -113,6 +114,8 @@ export function CheckinForm({
       };
       if (!res.ok || !json.ok) throw new Error(json.error?.message ?? "save_failed");
       setCheckinId(json.data?.checkin?.id ?? null);
+      // Squad Oracle: the debriefing officer celebrates — mission logged.
+      orbCelebrate("daily debriefing complete");
       if (json.data && (!json.data.estimates_saved || (labToday && !json.data.lab_saved))) {
         setPartialNote(
           "Your check-in saved. The newest bits (estimates / lab pulse) need one more backend update — they'll appear here once it's live. Nothing was lost.",
@@ -165,7 +168,7 @@ export function CheckinForm({
     return (
       <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
         <div className="flex items-center gap-4">
-          <PookieOrb size={36} />
+          <ReactiveOrb size={36} />
           <div>
             <p className="text-sm font-medium text-star-100">Checked in for today 🌱</p>
             <p className="mt-0.5 text-xs text-stardust-300">
@@ -234,7 +237,7 @@ export function CheckinForm({
   return (
     <div className="card-living animate-rise rounded-3xl border border-nova-400/20 p-5">
       <div className="flex items-center gap-3">
-        <PookieOrb size={40} />
+        <ReactiveOrb size={40} />
         <div>
           <h3 className="font-medium text-star-100">Daily log</h3>
           <p className="text-xs text-stardust-300">
