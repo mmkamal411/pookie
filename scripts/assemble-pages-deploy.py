@@ -31,11 +31,12 @@ def main() -> int:
     if os.path.isdir(build_dir):
         shutil.copytree(build_dir, os.path.join(dst, ".build"))
     shutil.copy2(os.path.join(src, "worker.js"), os.path.join(dst, "_worker.js"))
-    # Serve /_next/static/* directly from Pages, not via the worker.
+    # Serve static assets directly from Pages, not via the worker.
     # Without this, the OpenNext worker 404s every static asset (2026-10-11).
+    # /videos/* added 2026-10-12: cockpit space-loop backgrounds 404'd via worker.
     with open(os.path.join(dst, "_routes.json"), "w") as f:
         json.dump({"version": 1, "include": ["/*"],
-                   "exclude": ["/_next/static/*"]}, f)
+                   "exclude": ["/_next/static/*", "/videos/*"]}, f)
     print(f"Assembled {dst} from fresh .open-next build.")
     return 0
 
