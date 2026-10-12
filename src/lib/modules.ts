@@ -1,4 +1,4 @@
-// The module directory — 6 popup categories, plain job names.
+// The module directory — 7 popup categories, plain job names.
 // (Mehedi 2026-10-12: popup bottom-sheet with collapsed categories;
 //  W10 Fairness and W17 Friends removed; W6 → "Driving School" in Marketplace;
 //  W14 Co-parenting → Home; W15 Screen Time → Safety.)
@@ -47,11 +47,11 @@ export const GROVES: Grove[] = [
     subtitle: "the body you live in",
     sigil: "💚",
     modules: [
-      { id: "W2", name: "Health", watchOver: "Vitals, trends, and gentle glanceables — the body you live in.", seedAction: "Connect your health app", status: "seedling", route: null },
-      { id: "W8", name: "Wellbeing", watchOver: "The mood pulse — how the day actually felt.", seedAction: "Start the daily pulse", status: "seedling", route: null, teenPrivate: true },
-      { id: "W13", name: "Meals", watchOver: "What's for dinner — planned, not panicked.", seedAction: "Plan this week's meals", status: "seedling", route: null },
+      { id: "W2", name: "Health", watchOver: "Vitals, trends, and gentle glanceables — the body you live in.", seedAction: "Connect your health app", status: "live", route: "/health" },
+      { id: "W8", name: "Wellbeing", watchOver: "The mood pulse — how the day actually felt.", seedAction: "Start the daily pulse", status: "live", route: "/health/wellbeing", teenPrivate: true },
+      { id: "W13", name: "Meals", watchOver: "What's for dinner — planned, not panicked.", seedAction: "Plan this week's meals", status: "live", route: "/health/meals" },
       { id: "W22", name: "Activity", watchOver: "Steps, workouts, streaks — the movement log.", seedAction: "Connect your fitness tracker", status: "seedling", route: null },
-      { id: "W23", name: "Nutrition", watchOver: "Fuel for the day — protein, balance, honesty.", seedAction: "Log today's meals", status: "seedling", route: null },
+      { id: "W23", name: "Nutrition", watchOver: "Fuel for the day — protein, balance, honesty.", seedAction: "Log today's meals", status: "live", route: "/health/nutrition" },
     ],
   },
   {
