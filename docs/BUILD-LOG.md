@@ -2560,3 +2560,27 @@ tsc clean, `npm run build` green. NOT deployed — parent owns deploys.
 - Audit: toolbar tabs 56px (≥44px ✅), window dock 48px chips with safe-area offset ✅, login centered max-w-md ✅ — no horizontal overflow sources found
 
 **Verification:** `npx tsc --noEmit` clean. Full `next build` not run to green this session — 4+ squads were running concurrent `next build`s in the shared repo (build-cache stampede, ENOTEMPTY/ENOENT races); changes are additive and TS-verified. The CD pipeline's build gate will validate before any staging deploy. All work committed + pushed to `origin/staging-build`.
+
+## 2026-10-12 ~11:35 EDT — Squad Cradle — Parental Consent for Under-13 Login (076)
+
+**Built:** Verifiable parental consent path for under-13 child login (COPPA).
+- `supabase/migrations/076_parental_consent_under13_login.sql` — `parental_consents`
+  table, `grant_parental_consent()` / `revoke_parental_consent()` /
+  `has_valid_parental_consent()` RPCs, `consume_invite()` amended: under-13
+  allowed ONLY with valid consent. Default stays closed. (Squad Harbor fixed
+  2 syntax bugs during live apply: END→END IF, LOOP;→END LOOP;.)
+- `src/server/services/parental-consent.ts` — service wrappers.
+- `GET/POST/DELETE /api/v1/children/[childId]/consent` — parent-only writes.
+- `src/components/village/parental-consent-panel.tsx` — consent UI on Sharing
+  screen for under-13 children.
+- `docs/CRADLE-TEST-PLAN.md` — full Eli Chowdhury E2E test plan (consent →
+  invite → uncle grant → revoke → school sync → cleanup).
+
+**Live state (verified):** 076 applied live (parental_consents: 200). 070 village
+(child_mentors: 200) also live. 069 shared shopping still pending dashboard.
+
+**Test evidence:** tsc clean, `npm run build` green, migration parses (pglast),
+check.sh clean. Live E2E (account creation, portal login, worker sync) requires
+browser/dashboard/WIN laptop — test plan documents every step for the parent.
+
+**Committed:** 186b4e3, pushed to origin/staging-build. NOT deployed.
