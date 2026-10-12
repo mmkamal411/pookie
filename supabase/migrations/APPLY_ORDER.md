@@ -23,8 +23,8 @@ a file that already applied; always check that table first.
 | 012 | `012_w23_nutrition.sql` | W23 nutrition tracker: food logs, targets, weekly patterns, food swaps | ❓ UNVERIFIED (see note) |
 | 013 | `013_sync_queue.sql` | Sync queue + atomic sweep upsert for school portal workers | ❓ UNVERIFIED (see note) |
 | 014 | `014_fix_safe_auth_uid.sql` | M1 fix: safe_auth_uid() for UUID-cast-safe RLS | ❓ UNVERIFIED (see note) |
-| 015 | `015_child_account_management.sql` | Parent-facing child account management (account lifecycle flows) | ❌ Pending — Mehedi dashboard apply |
-| 016 | `016_invite_preview.sql` | Public invite preview RPC (requires 015's invites.invited_by_user_id + graduate_child_access) | ❌ Pending — Mehedi dashboard apply |
+| 015 | `015_child_account_management.sql` | Parent-facing child account management (account lifecycle flows) | ✅ Applied live 2026-10-12 (Squad Harbor, mgmt API) |
+| 016 | `016_invite_preview.sql` | Public invite preview RPC (requires 015's invites.invited_by_user_id + graduate_child_access) | ✅ Applied live 2026-10-12 (Squad Harbor, mgmt API) |
 | 017 | `017_*.sql` | Onboarding / profiles (Backend — not landed yet) | ❌ File not yet on branch |
 | 018 | `018_*.sql` | child_access.granted_by column (Backend — must land before 023) | ❌ File not yet on branch |
 | 019 | `019_*.sql` | TBD (Backend — not landed yet) | ❌ File not yet on branch |
@@ -76,6 +76,7 @@ a file that already applied; always check that table first.
 | 068 | `068_class_handouts_storage.sql` | Squad Telemetry E4: `class-handouts` private bucket (50 MB) + child-scoped storage policies (`<child_id>/<class_slug>/<filename>`). | ❌ Pending — dashboard SQL editor ONLY (mgmt API role 42501 on storage schema) |
 | 069 | `069_shared_shopping_lists.sql` | Squad Village: `shopping_list_shares` (one row per list↔user, active/revoked), `can_access_shopping_list()` DEFINER helper, additive RLS extending list/item/price-report visibility to share recipients; recipients can self-revoke (leave). | ❌ Pending — Mehedi dashboard apply |
 | 070 | `070_child_mentors_village.sql` | Squad Village (The Village): `child_mentors` (age-tiered consent — <13 parent-immediate, 13–15 consent+7d cooling-off, 16+ consent-instant), `mentor_access_log` (append-only audit), `mentor_kudos`; `is_active_mentor()`/`mentor_can_see_class()` helpers; mentor read policies on classes/grades/assignments (scoped). Health/teacher-messaging explicitly NOT granted. | ❌ Pending — Mehedi dashboard apply |
+| 076 | `076_parental_consent_under13_login.sql` | Squad Cradle: verifiable parental consent for under-13 child login (COPPA); grant/revoke/has_valid consent RPCs; consume_invite() amended gate. Fixed 2 syntax bugs during apply (END→END IF, LOOP;→END LOOP;). | ✅ Applied live 2026-10-12 (Squad Harbor, mgmt API) |
 | 071 | `071_meal_recipes_preferences.sql` | Phase1 Meals (W13 elevate): NEW meal_recipes (structured ingredients, instructions, photo, tags, favorites) + meal_preferences (per-person likes/dislikes/allergen flags, one row per person label) for the recipe library, smart shopping list, and Surprise Me. H1, no calories, explicit entry only. | ❌ Pending — Mehedi dashboard apply |
 | 074 | `074_activity_tracking.sql` | Phase1 Activity (W22): NEW workouts (type, duration_min, distance_mi, optional calories — logged only, never a target, notes, logged_at; child_id null = self) + activity_steps (manual daily step goal + count, device sync is a later phase); household RLS via is_household_member(). | ❌ Pending — Mehedi dashboard apply |
 
