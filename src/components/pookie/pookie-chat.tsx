@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { SchoolOverview } from "@/lib/school/types";
 import {
   POOKIE_TUTOR_URL,
@@ -16,12 +17,7 @@ import {
   type TutorContext,
 } from "@/lib/pookie-tutor";
 import { detectClassNeon } from "@/components/pookie/class-neons";
-import {
-  getPookieColor,
-  setPookieColor,
-  subscribePookieColor,
-  resolvePookieNeon,
-} from "@/components/pookie/pookie-color";
+import { setPookieColor } from "@/components/pookie/pookie-color";
 import { orbListen, orbThink, orbCelebrate, orbCalm } from "@/lib/orb/orb-events";
 import { MiniPookie, MiniMuse, moodForMessage, POOKIE_AVATAR_KEYFRAMES } from "@/components/pookie/pookie-avatars";
 
@@ -31,6 +27,11 @@ const MAX_MESSAGES = 50;
 const LONG_MESSAGE = 300;
 
 const QUICK_REPLIES = ["What are my priorities today?"];
+
+/** Local chat keyframes — blinking status dots for the transmitting indicator. */
+const HULL_CHAT_KEYFRAMES = `
+  @keyframes hull-blink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+`;
 
 /** Explicit depth requests escalate to the async Mookie queue.
  *  Exact keyword list from Mehedi — this list IS the escalation contract. */
@@ -83,19 +84,50 @@ function loadHistory(childName: string): ChatMessage[] {
   }
 }
 
+/** Square instrument status-light frame around chat avatars (4px radius per hull spec). */
+function StatusFrame({ children }: { children: ReactNode }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="shrink-0 rounded border border-hull-line bg-hull-void/60 p-0.5"
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Three blinking status dots — the mission-control typing indicator. */
+function TypingDots({ tone = "green" }: { tone?: "green" | "amber" }) {
+  const rgb = tone === "amber" ? "var(--neon-amber-rgb)" : "var(--neon-green-rgb)";
+  return (
+    <span className="flex items-center gap-1.5" aria-hidden="true">
+      {[0, 1, 2].map((d) => (
+        <span
+          key={d}
+          className="h-1.5 w-1.5 rounded-full"
+          style={{
+            background: `rgb(${rgb})`,
+            animation: `hull-blink 1.2s ease-in-out ${d * 0.2}s infinite`,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
 function BotText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
   if (text.length <= LONG_MESSAGE || expanded) {
     return (
       <div>
-        <p className="text-[15px] leading-[1.65] whitespace-pre-wrap text-star-100">{text}</p>
+        <p className="text-[15px] leading-[1.65] whitespace-pre-wrap text-hull-text">{text}</p>
         {text.length > LONG_MESSAGE && (
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="mt-1 text-xs font-medium text-nova-300 hover:text-nova-400"
+            className="mt-1 text-xs font-medium text-neon-cyan/90 hover:text-neon-cyan"
           >
-            Show less
+            Show Less
           </button>
         )}
       </div>
@@ -103,13 +135,13 @@ function BotText({ text }: { text: string }) {
   }
   return (
     <div>
-      <p className="line-clamp-4 text-[15px] leading-[1.65] whitespace-pre-wrap text-star-100">{text}</p>
+      <p className="line-clamp-4 text-[15px] leading-[1.65] whitespace-pre-wrap text-hull-text">{text}</p>
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-1 text-xs font-medium text-nova-300 hover:text-nova-400"
+        className="mt-1 text-xs font-medium text-neon-cyan/90 hover:text-neon-cyan"
       >
-        Read full answer ▾
+        Read Full Answer ▾
       </button>
     </div>
   );
@@ -138,7 +170,6 @@ export function PookieChat({
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory(childName));
   const [draft, setDraft] = useState("");
   const [directMode, setDirectMode] = useState(false);
-  const [, setColorTick] = useState(0);
   const [museThinking, setMuseThinking] = useState(false);
   const [museSlow, setMuseSlow] = useState(false);
   // Squad Singularity: the one orb lives in the toolbar — the chat speaks
@@ -158,9 +189,6 @@ export function PookieChat({
   // the same safety layer serves both modes (sol-school-ai §13).
   const isAdult = (viewerAge ?? 0) >= 18;
   const effectiveDirect = isAdult && directMode;
-  const pookieNeon = resolvePookieNeon(getPookieColor());
-
-  useEffect(() => subscribePookieColor(() => setColorTick((t) => t + 1)), []);
 
   // Squad Singularity: while the user types, the toolbar orb leans in — listening.
   useEffect(() => {
@@ -392,102 +420,119 @@ export function PookieChat({
   }
 
   return (
-    <main className="chat-shell relative mx-auto flex w-full max-w-2xl flex-col px-4 pt-6">
-      <style>{POOKIE_AVATAR_KEYFRAMES}</style>
-      <div className="firefly" style={{ width: 8, height: 8, top: "10%", left: "8%" }} />
-      <div className="firefly" style={{ width: 6, height: 6, top: "30%", left: "92%", animationDelay: "1.8s" }} />
+    <main className="chat-shell relative mx-auto flex w-full max-w-2xl flex-col bg-hull-void/85 px-4 pt-6">
+      <style>{`${POOKIE_AVATAR_KEYFRAMES}\n${HULL_CHAT_KEYFRAMES}`}</style>
 
+      {/* Header — instrument panel */}
       <div className="animate-bloom flex items-center gap-4">
-        {/* AI core link — the one orb watches from the toolbar; this is the open channel. */}
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-nova-400/40 bg-nova-400/10" aria-hidden="true">
-          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
-          <span className="absolute inset-0 rounded-full border border-nova-400/20" style={{ animation: "orb-beckon 4s ease-in-out infinite" }} />
+        {/* AI core link — ambient instrument light; the one orb watches from the toolbar. */}
+        <div
+          className="relative flex h-8 w-8 items-center justify-center rounded-full border border-neon-cyan/30 bg-neon-cyan/5"
+          aria-hidden="true"
+        >
+          <span
+            className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon-green"
+            style={{ boxShadow: "0 0 8px rgb(var(--neon-green-rgb) / 0.5)" }}
+          />
+          <span
+            className="absolute inset-0 rounded-full border border-neon-cyan/10"
+            style={{ animation: "orb-beckon 4s ease-in-out infinite" }}
+          />
         </div>
         <div>
-          <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-            <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-nova-400 align-middle" />
-            Ship comms · Pookie
-          </p>
-          <h1 className="text-sunlit mt-1 text-2xl font-semibold tracking-tight">Hailing your co-pilot</h1>
+          <p className="hull-title hull-cyan">Ship Comms · Pookie</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hull-text">
+            Hailing Your Co-Pilot
+          </h1>
         </div>
       </div>
+
+      {/* Technical readouts — link state, mode, message count */}
+      <div className="animate-bloom mt-3 flex flex-wrap items-center gap-x-5 gap-y-1" role="status">
+        <span>
+          <span className="hull-readout-label">Link </span>
+          <span className="hull-readout text-[11px]" style={{ color: "rgb(var(--neon-green-rgb))" }}>
+            Secure
+          </span>
+        </span>
+        <span>
+          <span className="hull-readout-label">Mode </span>
+          <span className="hull-readout text-[11px]">{effectiveDirect ? "Direct" : "Pookie"}</span>
+        </span>
+        <span>
+          <span className="hull-readout-label">Msgs </span>
+          <span className="hull-readout text-[11px]">{messages.length}</span>
+        </span>
+      </div>
+
       {/* Squad Gavel 2026-10-12 — persistent AI disclosure: subtle, always visible during chat. */}
-      <p className="mt-2 text-[11px] text-stardust-500" role="note">
+      <p className="mt-2 text-[11px] text-hull-text-faint" role="note">
         You&apos;re chatting with Pookie, an AI assistant. Responses are generated automatically and may be inaccurate — verify important details.
       </p>
+
       {isAdult ? (
         <div className="animate-bloom mt-3 flex items-center gap-3" style={{ animationDelay: "0.08s" }}>
           <button
             type="button"
             role="switch"
             aria-checked={directMode}
-            onClick={() => setDirectMode((v) => !v)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-              directMode ? "bg-nova-400/70" : "bg-nebula-700"
-            }`}
             aria-label="Direct mode"
+            onClick={() => setDirectMode((v) => !v)}
+            className="hull-btn neon-cyan px-3 py-1.5 text-[11px]"
           >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-star-100 transition-all ${
-                directMode ? "left-[22px]" : "left-0.5"
-              }`}
-            />
+            Direct · {directMode ? "On" : "Off"}
           </button>
-          <p className="text-xs text-stardust-300">
-            <span className="font-medium text-star-100">Direct mode</span>
-            {directMode ? " on — blunter answers. " : " — blunter answers when it's on. "}
-            Safety rules don&apos;t change.
+          <p className="text-xs text-hull-text-dim">
+            Blunter answers when it&apos;s on. Safety rules don&apos;t change.
           </p>
         </div>
       ) : (
-        <p className="animate-bloom mt-2 text-xs text-stardust-500" style={{ animationDelay: "0.08s" }}>
+        <p className="animate-bloom mt-2 text-xs text-hull-text-faint" style={{ animationDelay: "0.08s" }}>
           Your devoted co-pilot for the whole mission — school, plans, tasks, life. Direct mode is for adults (18+) — same safety, same smarts.
         </p>
       )}
 
       <div
         ref={scrollRef}
-        className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+        className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
         aria-live="polite"
       >
         {messages.map((m, i) =>
           m.role === "user" ? (
             <div key={i} className="flex justify-end">
-              <p className="max-w-[85%] rounded-2xl rounded-br-md bg-nebula-700 px-4 py-2.5 text-[15px] leading-relaxed text-star-100 shadow-glow-sm">
+              <p className="hull-msg hull-msg-user max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed text-hull-text">
                 {m.text}
               </p>
             </div>
           ) : m.thinking ? (
             <div key={i} className="flex gap-2.5">
-              <MiniPookie size={24} speaking />
-              <div className="rounded-2xl rounded-bl-md border border-nova-400/20 bg-nebula-900/70 px-4 py-3">
-                <p className="animate-pulse text-sm text-stardust-300">
-                  {m.persona === "muse" ? "Mookie is charting…" : "Pookie is plotting the course…"}
+              <StatusFrame>
+                <MiniPookie size={24} speaking />
+              </StatusFrame>
+              <div className="hull-msg hull-msg-ai flex items-center gap-3 px-4 py-3">
+                <TypingDots />
+                <p className="hull-readout text-[11px] text-hull-text-dim">
+                  {m.persona === "muse" ? "Analyzing…" : "Transmitting…"}
                 </p>
               </div>
             </div>
           ) : (
             <div key={i} className="flex gap-2.5">
-              {m.persona === "muse" || m.museDeep ? <MiniMuse size={24} /> : <MiniPookie size={24} mood={moodForMessage(m.text)} />}
+              <StatusFrame>
+                {m.persona === "muse" || m.museDeep ? (
+                  <MiniMuse size={24} />
+                ) : (
+                  <MiniPookie size={24} mood={moodForMessage(m.text)} />
+                )}
+              </StatusFrame>
               <div
-                className="min-w-0 flex-1 rounded-2xl rounded-bl-md px-4 py-3"
-                style={
-                  m.persona === "muse" || m.museDeep
-                    ? {
-                        background: "linear-gradient(135deg, rgb(40 24 10 / 0.9), rgb(20 14 8 / 0.9))",
-                        border: "1px solid rgb(251 146 60 / 0.35)",
-                        boxShadow: "0 0 14px rgb(251 146 60 / 0.18)",
-                      }
-                    : {
-                        background: "rgb(10 26 16 / 0.7)",
-                        border: `1px solid ${pookieNeon}30`,
-                        boxShadow: `0 0 12px ${pookieNeon}22`,
-                      }
-                }
+                className={`hull-msg min-w-0 flex-1 px-4 py-3 ${
+                  m.persona === "muse" || m.museDeep ? "hull-amber" : "hull-msg-ai"
+                }`}
               >
                 {(m.persona === "muse" || m.museDeep) && (
-                  <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-orange-300 capitalize">
-                    {m.museDeep ? "Mookie · deeper take" : "Muse · straight talk"}
+                  <p className="mb-1 text-[10px] font-bold tracking-[0.22em] text-neon-amber uppercase">
+                    {m.museDeep ? "Mookie · Deeper Take" : "Muse · Straight Talk"}
                   </p>
                 )}
                 <BotText text={m.text} />
@@ -497,12 +542,13 @@ export function PookieChat({
         )}
         {museThinking && (
           <div className="flex gap-2.5">
-            <MiniMuse size={24} />
-            <div className="pookie-researching rounded-2xl rounded-bl-md border border-orange-400/40 bg-nebula-900/70 px-4 py-3">
-              <p className="animate-pulse text-sm text-orange-300">
-                {museSlow
-                  ? "🔬 Mookie's deep dive is taking a little longer — still on it, Captain…"
-                  : "🔬 Mookie is cooking up something good…"}
+            <StatusFrame>
+              <MiniMuse size={24} />
+            </StatusFrame>
+            <div className="hull-msg hull-amber flex items-center gap-3 px-4 py-3">
+              <TypingDots tone="amber" />
+              <p className="hull-readout text-[11px] text-hull-text-dim">
+                {museSlow ? "Deep Scan Delayed — Still On It…" : "Deep Scan In Progress…"}
               </p>
             </div>
           </div>
@@ -516,9 +562,9 @@ export function PookieChat({
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="rounded-full border border-nova-400/30 bg-nebula-800/60 px-3.5 py-1.5 text-[13px] font-medium text-nova-300 transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="hull-btn neon-cyan px-3 py-1.5 text-[11px]"
             >
-              ✨ {q}
+              {q}
             </button>
           ))}
         </div>
@@ -535,14 +581,13 @@ export function PookieChat({
             onChange={(e) => setDraft(e.target.value)}
             placeholder={isThinking ? "Holding the channel…" : "Hail Pookie — what's on your mind, Captain?"}
             aria-label="Message Pookie"
-            className="min-w-0 flex-1 rounded-2xl border border-nova-400/25 bg-nebula-900/80 px-4 py-3 text-[15px] text-star-100 placeholder:text-stardust-500 focus:border-nova-400/60 focus:outline-none"
-            style={{ boxShadow: `0 0 16px ${pookieNeon}22` }}
+            className="hull-input min-w-0 flex-1 px-4 py-3 text-[15px]"
           />
           <button
             type="submit"
             aria-label="Send message"
             disabled={!draft.trim() || isThinking}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nova-500 text-xl font-bold text-nebula-950 shadow-glow-sm transition-transform hover:scale-105 active:scale-95 disabled:opacity-40"
+            className="hull-btn neon-cyan flex h-12 w-12 shrink-0 items-center justify-center text-lg disabled:opacity-40"
           >
             <span aria-hidden="true">↑</span>
           </button>
