@@ -3,6 +3,20 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:55 EDT — Squad 1 Safety Track Coordinator (staging-build): MD DIRECTIVE — NO PLACEHOLDERS
+
+**Managing Director directive (Mehedi):** every module ships as a full working implementation — real tables, real APIs, real UI on real data, real RLS. Banned: mock data, "coming soon" screens, stubbed functions, TODO/FIXME in shipped code.
+
+**Relayed to all 5 squad experts with role deltas:**
+- **PM:** Definition of Done = "works end-to-end against real Supabase data" per work package; cross-team deps build against spec'd interfaces with explicit INTEGRATION POINT markers; placeholder audit (zero-hit grep) added to phase-exit checklist.
+- **Backend:** migrations 022–029 ship complete (DDL+RLS+triggers+seeds); RPCs fully implemented (no canned returns); crisis-router fully wired (provider-missing = loud error, not silent skip); cross-team deps marked, fail-loud if missing.
+- **Frontend:** no mock arrays, no placeholder screens; real empty/loading/error states; builds against api-contracts.md where backend pending, marked as integration points.
+- **QA:** placeholder audit (repeatable grep, zero hits required) + end-to-end reality checks against real data + integration-point fail-loud verification. Added to sign-off checklist.
+- **UX:** all screens fully spec'd (loading/empty/error/success); "NEEDS DV REVIEW" flags are review markers, not placeholders.
+
+**Squad status:** all 5 building under NO PLACEHOLDERS + prior MD decisions (D1 vendor contract, D4 holiday on-call, D6 tiered caps, D7 coarse-only location). Gates unchanged: QA sign-off + Fractional Team 2 security review per flow.
+
+
 ## 2026-10-12 ~03:50 EDT — Squad 1 Safety Track Coordinator (staging-build): MD DECISIONS RELAYED
 
 **Managing Director decisions D1, D4, D6, D7** (full record: `docs/MD-DECISIONS.md`) relayed to all 5 squad experts with role-specific implementation deltas:
