@@ -3,6 +3,24 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~04:05 EDT — Squad 2 Health Track 💚 UX Designer (staging-build): UX-SPECS.md DELIVERED
+
+**File:** [docs/squads/squad2-health/UX-SPECS.md](sandbox://workspace/pookie-app/docs/squads/squad2-health/UX-SPECS.md) (731 lines, design-only, no code, no deploys). All 6 mission deliverables + implementation contracts, copy-lint, conflict register, acceptance criteria:
+
+1. **Consent screens** — per-subcategory enumeration (never one "health" checkbox): "Everyday wellness" (H1) / "Private health" (H2) tier cards with concrete who-sees-what lines ("This means Mom can see: your step count, your sleep hours"), all unchecked by default; H3 = static non-toggleable line ("There's no switch for this"); H0 informational line; receipt/decline/90-day audit line.
+2. **W8 Wellbeing** — "Sanctuary" treatment (soft violet `#b7a6f5` accent, no family pink, persistent "Teen-private space" badge + honesty sheet); 5-orb mood pulse ("Great…Really struggling"); Rung 1 inline responder / Rung 2 PatternCard / Rung 3 full-screen CrisisScreen with one-tap `tel:988` + `sms:741741` + trusted-adult tell sheet; 988 also persistent in W8 header; H3 auto-suggest on sensitive journal entries; retention picker.
+3. **W23/W13 weight-neutral copy** — allowed/banned vocabulary (copy-lint table), <18 "Food & fuel" 5-step meal check-in (no numbers by schema), W13 meal-planning copy, W22 rest-day normalization, W28 <18 tag suppression; NEDA card exact copy + placement rules (persistent in W23/W8, inline on ed_signal, never a blocking modal, views never parent-logged).
+4. **18th-birthday review** — blocking `/health/review-18` after `/adult/decision`: exact header ("You're 18. Your health information is now private to you."), "Right now: nobody but you" panel, H1/H2 per-parent toggles (default OFF) + H3 static line, review–correct–seal queue (Keep/Correct/Delete + sealed-history opt-in), transition-summary export (PDF/JSON, H3 excluded default), emergency-contact picker with "called ≠ can see" decoupling line; skip = private recorded.
+5. **Graduation-vs-rupture split** — Nebula-Celebrate (independence only) vs Nebula-Neutral (privacy decisions/crisis) vs Nebula-Boring (safe exit only, max plainness); absolute no-mix rule; health-specific application table; working/done/failed interaction contracts (no lying toggles).
+6. **Parent-facing health views** — BoundaryLabel on everything ("You see this because [Teen] shared it."), provenance per reading, W23 <18 engagement-only, H2 exclusion line ("This doesn't include mood or journal"), W8 absent entirely, grace/cooling-off/hide-past neutral empty states ("Health sharing ended." — no tombstones, no event signals).
+
+**MD no-placeholder directive honored:** §7 gives every screen real data bindings (RPC/table names per sol-health), real loading/empty/error states with verbatim copy, tier-aware rendering; gated modules get a real designed Seedling state (§7.8, integration contract `rpc_health_module_status()` flagged for backend).
+
+**Conflicts resolved (§9):** sol-ux §2 "H3 toggle" → removed (H3 absolute); sol-ux §1 "Body stuff and development ☐" → removed as checkbox; Wellness default ON/OFF → unchecked-by-default at consent (access-model owner to confirm amendment); "What I eat" H1 → corrected to H2/engagement-only; `/adult/decision` vs `/health/review-18` → sequenced.
+
+**Blocked on (not UX):** backend migrations 022–028, consent/re-consent RPCs (Platform Team 1), safety-designer sign-off on `wellbeing_events` contract, licensed-counsel review (state_minor_consent_rules, thresholds), DV-advocate string review pre-launch.
+**No deploy.** Branch `staging-build`.
+
 ## 2026-10-12 ~03:50 EDT — Squad 5 PM (PMP) (staging-build): SQUAD 5 KICKOFF (Travel, Marketplace & Support UI)
 
 **Squad 5 — Travel, Marketplace & Support UI** spun up per the Managing Director's team charters. PM (PMP) delivered the squad backlog:
