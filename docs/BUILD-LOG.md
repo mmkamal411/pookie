@@ -1878,3 +1878,18 @@ All: tsc clean. NOT deployed (parent owns deploys). Migrations 064/065 need Supa
 7. **GlassPane** now carries the `.led-strip` signature detail.
 
 **Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys.
+
+## 2026-10-12 ~09:50 EDT — Squad Horizon — Luminous Bridge (commit 61fc24f)
+
+**Mission:** Mehedi's 4 modern-cool-spaceship reference images = north star. Bold direction: the BRIGHT WHITE BRIDGE (SpaceX Dragon capsule — clean bright interior, panoramic Earth, holographic cyan displays, LED strips).
+
+**Design thesis "Luminous Bridge":** the WINDOW becomes sunlit and luminous; panels stay dark-translucent but read as holographic DISPLAYS on a bright bridge (like the reference images' dark screens against white walls). Light text stays readable; the ENVIRONMENT gets bright.
+
+**What shipped:**
+- `cosmic-scene-director.tsx` — all 5 scenes brightened dramatically (sky lightness 9-15% → 28-44%, wash opacity 0.14-0.30 → 0.36-0.55, added central ambient bloom). The window is now sunlit.
+- `globals.css` (+220 lines SQUAD HORIZON section): `.bridge-ambient` (fixed daylight wash, z-2), `.holo-panel` (dark holographic display with scanlines + cyan light bar), `.holo-text`/`.holo-text-dim` (crisp cyan readouts), `.holo-readout` (projected-number stats), `.viewport-frame` (physical window frame), `.light-bleed` (sunlit bloom), brightened `.glass-pane`/`.card-living`/`.console-housing` (lit console with 2px cyan edge), brighter `.led-strip`, brighter body base.
+- `layout.tsx` — mounted `<div className="bridge-ambient" />` between scenes and content.
+- `overview-dashboard.tsx` — home hero gets `viewport-frame light-bleed`.
+- `mission-briefing.tsx` — quote card becomes `holo-panel`.
+
+**Verify:** `npx tsc --noEmit` clean, `npm run build` green. NOT deployed — parent owns deploys.
