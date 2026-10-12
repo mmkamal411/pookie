@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useGradeCelebration } from "@/lib/orb/use-grade-celebration";
 import type { CalibrationSummary, SchoolOverview, TodayCheckin } from "@/lib/school/types";
 import type { AttendanceSummary, GpaBlock, SemesterCard as SemesterCardData } from "@/server/services/school-enrich";
@@ -165,6 +166,20 @@ export function SchoolOverview({
         </h2>
         <BellSchedule />
         <CobbCalendar events={enrich.calendarEvents} />
+        {/* Prism E5 2026-10-12: the minutiae calendar page had no inbound
+            links anywhere — deep-link-only. */}
+        <Link
+          href={`/c/${childSlug}/school/minutiae`}
+          className="card-living flex items-center justify-between rounded-2xl px-5 py-4"
+        >
+          <div>
+            <p className="text-sm font-medium text-star-100">School Minutiae</p>
+            <p className="mt-0.5 text-xs text-stardust-300">
+              The small stuff — early releases, late starts, odd days
+            </p>
+          </div>
+          <span aria-hidden="true" className="text-nova-300">→</span>
+        </Link>
         <WeatherCard childId={childId} />
       </div>
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getMemberships } from "@/lib/tenant/actions";
 import { getMinutiaeCalendar } from "@/server/services/minutiae";
 import { MinutiaeCalendar } from "@/components/school/minutiae-calendar";
@@ -24,11 +25,22 @@ export default async function MinutiaePage({
   const events = await getMinutiaeCalendar(membership.child_id);
 
   return (
-    <MinutiaeCalendar
-      events={events}
-      childName={membership.child.nickname ?? membership.child.first_name}
-      childId={membership.child_id}
-      role={membership.role}
-    />
+    <main className="mx-auto max-w-5xl px-4 pt-4 pb-8">
+      {/* Prism E5 2026-10-12: consistent back behavior — logical parent, not
+          browser-back. */}
+      <Link
+        href={`/c/${childSlug}/school`}
+        className="mb-4 inline-block text-sm font-medium text-nova-300 transition-all hover:text-nova-200"
+        style={{ textShadow: "0 0 10px rgb(167 139 250 / 0.35)" }}
+      >
+        ← School Overview
+      </Link>
+      <MinutiaeCalendar
+        events={events}
+        childName={membership.child.nickname ?? membership.child.first_name}
+        childId={membership.child_id}
+        role={membership.role}
+      />
+    </main>
   );
 }

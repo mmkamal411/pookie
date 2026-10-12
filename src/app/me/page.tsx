@@ -13,6 +13,10 @@ const HOUSEHOLD_LINKS = [
   { href: "/household/shopping", title: "Shopping", sub: "Lists the whole house shares" },
   { href: "/household/spending", title: "Spending", sub: "Where the money goes" },
   { href: "/household/vault", title: "Vault", sub: "Documents that matter" },
+  // Prism E5 2026-10-12: every household page reachable from the just-me home.
+  { href: "/household/weather", title: "Weather", sub: "The sky over your day" },
+  { href: "/household/insurance", title: "Insurance", sub: "Policies and coverage" },
+  { href: "/household/babysitters", title: "Babysitters", sub: "Trusted sitters" },
 ];
 
 /**
@@ -69,7 +73,7 @@ export default async function MePage() {
             <Link
               key={link.href}
               href={link.href}
-              className="neon-pipe rounded-2xl bg-nebula-900/60 p-5 transition hover:bg-nebula-900"
+              className="neon-pipe neon-card neon-teal rounded-2xl bg-nebula-900/60 p-5 transition hover:bg-nebula-900"
             >
               <span className="block text-sm font-semibold text-star-100">
                 {link.title}
@@ -83,10 +87,10 @@ export default async function MePage() {
 
         <Link
           href="/add-child"
-          className="mt-3 block rounded-2xl border border-dashed border-nova-400/40 bg-nova-500/5 p-5 transition hover:border-nova-400/70 hover:bg-nova-500/10"
+          className="neon-hover neon-pink mt-3 block rounded-2xl border border-dashed border-nova-400/40 bg-nova-500/5 p-5 transition hover:border-nova-400/70 hover:bg-nova-500/10"
         >
           <span className="block text-sm font-semibold text-star-100">
-            + Add a child
+            + Add a Child
           </span>
           <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
             Set up grades, school, and daily rhythm for your kid — whenever
