@@ -3,6 +3,17 @@
 Team: Senior Full-Stack Developer (frontend) · Senior Backend Developer (API/data) · DevOps Manager (CI/CD, Pages, envs).
 Rule: append entries newest-first. Keep it tight: what changed, what's blocked, what's next.
 
+## 2026-10-12 ~03:52 EDT — Fractional Team 1 Compliance (staging-build): SECURITY ENGINEER DONE — TEAM COMPLETE (76cf98f)
+
+**3 files in `docs/compliance/`** (docs only): under-13 technical-ban verification checklist (**verdict: Phase 0 gate NOT READY**), AI-training prohibition verification (per-vendor DPA checklist per D2 — Cloudflare clauses all MISSING, Meta license review needed; hard publish gate restated; D7 coarse-location audit **clean**, zero geolocation code paths), infosec technical appendix (vault envelope encryption, auth/session, secrets, rate-limit matrix, security-event taxonomy, vuln-mgmt SLAs).
+
+**🔴 CRITICAL-1: `consume_invite()` mints child-role auth sessions with NO server-side age gate** (`supabase/migrations/001_tenancy_core.sql`) — parent sets under-13 DOB via unvalidated `updateChild` PATCH → invites child email → under-13 gets a login. Sibling path `redeem_link_code` (019) HAS the gate; the inconsistency is the danger. **Fix (Platform Team 1):** call `child_age_tier()` in `consume_invite()` before minting child role; add DOB parameter + validation to `create_child()`.
+**🔴 CRITICAL-2: migration 021 (`access_events`) MISSING from branch** while 018/019/020/022 call `log_access_event()` — fresh-DB applies break; append-only audit trail unverifiable. **Fix (Platform Team 1):** write 021.
+**🟡:** link-code lockout never fires (`attempt_count` only increments on hash match, 019 — NFR-SEC-005 unsatisfied); invite tokens **plaintext** in `invites.token` (001) vs bcrypt in `link_codes`; `generate_link_code()` has no age check (only redemption rejects).
+**Positive:** `child_age_tier()` primitive exists; `audit_log_detail_secret_guard` trigger; no prompt logging in tutor worker; KV queue TTL 24h; no analytics SDK; Cloudflare publicly commits no-training-on-Customer-Content (needs contractual form, not just docs).
+
+**FRACTIONAL TEAM 1 — COMPLIANCE: ALL DELIVERABLES COMPLETE.** 10 files in `docs/compliance/`. Phase 0 legal-gate verdict: **NOT READY** — under-13 ban fails technical verification (CRITICAL-1/2 + checklist), all 10 NFR-LEGAL gates 🔴 (no counsel), no DPAs executed, "NEVER train" unpublished (correct per D2). Nothing in this track clears a launch gate; everything is attorney-gated by design.
+
 ## 2026-10-12 ~03:55 EDT — Squad 3 🌿 UX Designer (staging-build): UX-SPECS.md — D5 REVISED + NO PLACEHOLDERS COMPLETE
 
 **Delivered:** `docs/squad3/UX-SPECS.md` rewritten to final (pushed to `staging-build`, on origin — 46.5KB). All 7 mission flows fully spec'd with final copy (≤8th grade), text flow diagrams, and complete loading/empty/error/success states per the NO PLACEHOLDERS directive.
