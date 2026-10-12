@@ -33,6 +33,7 @@ import {
 } from "@/lib/menu-access";
 import { useViewerProfile } from "@/lib/use-viewer-profile";
 import { BottomSheet, Badge, EmptyCategoryCard } from "@/components/ui";
+import { DevelopmentBadge } from "@/components/development-badge";
 
 type ModuleHit = { mod: LifeModule; grove: Grove };
 
@@ -101,6 +102,7 @@ function ModuleRow({
   }
 
   // Seedling: a designed state — expands to the real one-step seed action.
+  // Tagged with the Development badge so it's unmistakable (Mehedi 2026-10-12).
   return (
     <div className="card-living rounded-2xl p-4">
       <button
@@ -110,10 +112,13 @@ function ModuleRow({
         className="flex w-full items-start justify-between gap-2 text-left"
       >
         <div>
-          <p className="text-sm font-medium text-star-100">
-            <span aria-hidden="true" className="mr-1.5 text-xs">🌱</span>
-            {mod.name}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-star-100">
+              <span aria-hidden="true" className="mr-1.5 text-xs">🌱</span>
+              {mod.name}
+            </p>
+            <DevelopmentBadge />
+          </div>
           <p className="mt-1 text-xs leading-relaxed text-stardust-300">{mod.watchOver}</p>
         </div>
         <span aria-hidden="true" className={`shrink-0 text-xs text-nova-300 transition-transform ${seedOpen ? "rotate-180" : ""}`}>
