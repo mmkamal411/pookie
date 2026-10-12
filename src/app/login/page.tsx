@@ -7,12 +7,18 @@ import { PookieOrb } from "@/components/pookie-orb";
 /**
  * Landing + auth. First thing a family sees: warmth, not a form.
  * Magic-link sign-in (no passwords anywhere). Invite links land here
- * with ?token=… and are consumed after sign-in.
+ * with ?token=… and are consumed after sign-in. ?next=… carries a
+ * post-auth return URL (e.g. /verify-invite?token=…) for both flows.
  */
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string; demo?: string }>;
+  searchParams: Promise<{
+    token?: string;
+    error?: string;
+    demo?: string;
+    next?: string;
+  }>;
 }) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -29,14 +35,35 @@ export default function LoginPage({
   // Surface auth failures redirected back from /auth/callback.
   const authError = params.error === "auth";
 
+  // Post-auth destination. Legacy ?token=… invites keep their /?invite=
+  // handoff; ?next=… is honored only when it is a same-origin path
+  // (never protocol-relative), so an attacker can't bounce users
+  // off-site through our login.
+  function postAuthNext(sp: {
+    token?: string;
+    next?: string;
+  }): string | null {
+    if (sp.token) return `/?invite=${sp.token}`;
+    if (sp.next && sp.next.startsWith("/") && !sp.next.startsWith("//")) {
+      return sp.next;
+    }
+    return null;
+  }
+
   async function signInWithGoogle() {
     setOauthBusy(true);
     setError(null);
     try {
+      const sp = await searchParams;
+      const next = postAuthNext(sp);
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback${
+            next ? `?next=${encodeURIComponent(next)}` : ""
+          }`,
+        },
       });
       if (error) throw error;
       // On success the browser leaves for Google's consent screen.
@@ -52,12 +79,13 @@ export default function LoginPage({
     setError(null);
     try {
       const sp = await searchParams;
+      const next = postAuthNext(sp);
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback${
-            sp.token ? `?next=/?invite=${sp.token}` : ""
+            next ? `?next=${encodeURIComponent(next)}` : ""
           }`,
         },
       });

@@ -9,6 +9,7 @@ export function SettingsTabs({ childSlug }: { childSlug: string }) {
   const base = `/c/${childSlug}/settings`;
   const tabs = [
     { label: "Profile", href: base },
+    { label: "Family", href: `${base}/family` },
     { label: "Sync", href: `${base}/sync` },
     { label: "Workers", href: `${base}/health` },
     { label: "School logins", href: `${base}/credentials` },

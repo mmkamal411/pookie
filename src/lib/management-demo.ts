@@ -10,6 +10,7 @@ import type {
   NotificationPrefs,
   Profile,
 } from "./management-api";
+import type { FamilyMember, PendingInvite } from "./family/types";
 
 export const DEMO_CHILD_ID = "demo-child-id";
 
@@ -122,5 +123,40 @@ export const demoPortals: PortalMeta[] = [
     credentials_updated_at: "2026-10-05T09:00:00-04:00",
     consecutive_failures: 0,
     created_at: "2026-10-05T09:00:00-04:00",
+  },
+];
+
+/* ---------------- Family (demo fixtures mirror src/lib/family/types.ts) ---------------- */
+
+export const demoFamilyMembers: FamilyMember[] = [
+  {
+    childId: DEMO_CHILD_ID,
+    firstName: "Dawson",
+    nickname: null,
+    slug: "dawson",
+    avatarUrl: null,
+    schoolName: "Walton High School",
+    gradeLevel: "10",
+    dateOfBirth: "2011-07-23",
+    logins: [
+      {
+        email: "parent@example.com",
+        displayName: "Demo Parent",
+        role: "parent",
+        linkedAt: "2026-10-05T09:00:00-04:00",
+      },
+    ],
+  },
+];
+
+export const demoPendingInvites: PendingInvite[] = [
+  {
+    id: "demo-invite-1",
+    email: "dawson@example.com",
+    childId: DEMO_CHILD_ID,
+    childName: "Dawson",
+    sentAt: "2026-10-10T09:00:00-04:00",
+    expiresAt: "2026-10-24T09:00:00-04:00",
+    token: "demo-token",
   },
 ];
