@@ -35,11 +35,12 @@ export default function GlobalError({
               🛸
             </p>
             <h1 className="text-sunlit mt-4 text-2xl font-semibold">
-              Hull Breach Detected
+              Something Went Wrong
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-stardust-300">
-              Pookie hit a system malfunction loading this module. It might
-              be temporary — or your ship&apos;s log might be corrupted.
+              Pookie ran into a problem loading this page. This is usually
+              temporary — try again, and if it keeps happening, starting
+              fresh often fixes it.
             </p>
             {error.digest && (
               <p className="mt-2 text-xs text-stardust-400">
@@ -52,19 +53,19 @@ export default function GlobalError({
                 onClick={reset}
                 className="btn-dapple w-full rounded-2xl py-3 text-sm font-semibold text-nebula-950"
               >
-                Rerun Diagnostics
+                Try Again
               </button>
               <Link
                 href="/login"
                 className="block w-full rounded-2xl border border-white/15 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/30"
               >
-                Board a Fresh Ship
+                Start Fresh
               </Link>
             </div>
             <p className="mt-4 text-xs leading-relaxed text-stardust-400">
-              Boarding fresh signs you in with a new session. If your old
-              ship&apos;s log is corrupted, you can decommission it from
-              Settings → Profile once you&apos;re back aboard.
+              Starting fresh signs you out and back in. If your account
+              seems stuck, you can delete it from Settings → Profile
+              once you&apos;re back in.
             </p>
           </div>
         </main>
