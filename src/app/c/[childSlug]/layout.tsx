@@ -8,6 +8,7 @@ import PageGlide from "@/components/page-glide";
 import { WindowManagerProvider } from "@/components/window-manager";
 import { ModuleWindowFrame } from "@/components/module-window";
 import { MinimizedDock } from "@/components/minimized-dock";
+import { AppletHost } from "@/components/applet-host";
 
 // Tenant-scoped route — always renders at request time.
 export const dynamic = "force-dynamic";
@@ -86,6 +87,10 @@ export default async function ChildDashboard({
           </GlassPane>
           {/* Stowed-module chips — float above the Command Deck (Squad Windows 2026-10-12). */}
           <MinimizedDock />
+          {/* Temporary module applets — modal overlays floating in front of
+              the pilot (Mehedi 2026-10-12). Mounted here so they sit inside
+              the tenant context and reuse the window-manager chrome CSS. */}
+          <AppletHost />
         </WindowManagerProvider>
         {/* Spacer so the fixed Command Deck never covers page content.
             The deck itself now lives in the root layout (Squad Deck 2026-10-12)

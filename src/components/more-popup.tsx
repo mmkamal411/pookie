@@ -24,6 +24,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GROVES, resolveModuleHref, type Grove, type LifeModule } from "@/lib/modules";
+import { openApplet } from "@/lib/applet-bus";
 import {
   resolveModuleVisibility,
   getRecentModuleIds,
@@ -80,22 +81,45 @@ function ModuleRow({
   }
 
   if (mod.status === "live" && mod.route) {
-    const href = resolveModuleHref(childSlug, mod.route);
-    return (
-      <Link
-        href={href}
-        onClick={() => {
-          recordModuleVisit(mod.id);
-          onNavigate();
-        }}
-        className="card-living block rounded-2xl p-4"
-      >
+    const rowInner = (
+      <>
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-star-100">{mod.name}</p>
           <Badge tone="live">Live</Badge>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-stardust-300">{mod.watchOver}</p>
-      </Link>
+      </>
+    );
+    // W1 School IS the Progress view — it keeps its page navigation.
+    if (mod.id === "W1") {
+      const href = resolveModuleHref(childSlug, mod.route);
+      return (
+        <Link
+          href={href}
+          onClick={() => {
+            recordModuleVisit(mod.id);
+            onNavigate();
+          }}
+          className="card-living block rounded-2xl p-4"
+        >
+          {rowInner}
+        </Link>
+      );
+    }
+    // Every other module opens as a temporary applet (Mehedi 2026-10-12):
+    // modal overlay with minimize + close, no full-page navigation.
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          recordModuleVisit(mod.id);
+          openApplet(mod.id);
+          onNavigate();
+        }}
+        className="card-living block w-full rounded-2xl p-4 text-left"
+      >
+        {rowInner}
+      </button>
     );
   }
 
@@ -265,20 +289,38 @@ export function MorePopup({
             <div className="mt-3">
               <p className="text-[11px] font-semibold tracking-[0.18em] text-stardust-500 capitalize">Recent</p>
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                {recentHits.map(({ hit }) => (
-                  <Link
-                    key={hit.mod.id}
-                    href={resolveModuleHref(childSlug, hit.mod.route!)}
-                    onClick={() => {
-                      recordModuleVisit(hit.mod.id);
-                      onClose();
-                    }}
-                    className="flex shrink-0 items-center gap-2 rounded-full border border-nova-400/25 bg-nebula-900/70 px-3.5 py-2 text-xs text-star-100 transition-colors hover:border-nova-400/50"
-                  >
-                    <span aria-hidden="true">{hit.grove.sigil}</span>
-                    {hit.mod.name}
-                  </Link>
-                ))}
+                {recentHits.map(({ hit }) =>
+                  // W1 School is the Progress view (page navigation); every
+                  // other module opens as a temporary applet.
+                  hit.mod.id === "W1" ? (
+                    <Link
+                      key={hit.mod.id}
+                      href={resolveModuleHref(childSlug, hit.mod.route!)}
+                      onClick={() => {
+                        recordModuleVisit(hit.mod.id);
+                        onClose();
+                      }}
+                      className="flex shrink-0 items-center gap-2 rounded-full border border-nova-400/25 bg-nebula-900/70 px-3.5 py-2 text-xs text-star-100 transition-colors hover:border-nova-400/50"
+                    >
+                      <span aria-hidden="true">{hit.grove.sigil}</span>
+                      {hit.mod.name}
+                    </Link>
+                  ) : (
+                    <button
+                      key={hit.mod.id}
+                      type="button"
+                      onClick={() => {
+                        recordModuleVisit(hit.mod.id);
+                        openApplet(hit.mod.id);
+                        onClose();
+                      }}
+                      className="flex shrink-0 items-center gap-2 rounded-full border border-nova-400/25 bg-nebula-900/70 px-3.5 py-2 text-xs text-star-100 transition-colors hover:border-nova-400/50"
+                    >
+                      <span aria-hidden="true">{hit.grove.sigil}</span>
+                      {hit.mod.name}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           )}

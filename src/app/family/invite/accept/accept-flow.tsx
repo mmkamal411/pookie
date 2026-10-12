@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { NebulaBackground } from "@/components/nebula-background";
 import { PookieOrb } from "@/components/pookie-orb";
 
 interface Preview {
@@ -52,7 +51,6 @@ export function AcceptFlow({
 
   return (
     <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <NebulaBackground />
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-12">
         <div className="w-full">
           <div className="flex items-center gap-3">

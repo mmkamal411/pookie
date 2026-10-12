@@ -29,10 +29,17 @@ export function TicketForm({
   childSlug,
   isTeen,
   onBehalfOf,
+  onCreated,
 }: {
   childSlug: string;
   isTeen: boolean;
   onBehalfOf?: string;
+  /**
+   * When provided, called with the new ticket's id instead of navigating
+   * to the thread page — the applet pattern keeps support inside the
+   * overlay (no full-page navigation for modules).
+   */
+  onCreated?: (ticketId: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -103,7 +110,8 @@ export function TicketForm({
       } catch {
         // ignore
       }
-      router.push(`/c/${childSlug}/support/tickets/${created.id}`);
+      if (onCreated) onCreated(created.id);
+      else router.push(`/c/${childSlug}/support/tickets/${created.id}`);
     } catch (e) {
       setError((e as Error).message);
       setSaving(false);

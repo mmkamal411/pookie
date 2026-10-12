@@ -7,6 +7,7 @@ import { ReactiveOrb } from "@/components/pookie/orb-reactive";
 import { getPookieColor, subscribePookieColor } from "@/components/pookie/pookie-color";
 import { MorePopup } from "@/components/more-popup";
 import { GROVES, resolveModuleHref } from "@/lib/modules";
+import { useAppletBus } from "@/lib/applet-bus";
 
 /**
  * The one orb — Pookie herself, hovering in the center of the console.
@@ -196,6 +197,10 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
   const pathname = usePathname();
   const base = `/c/${childSlug}`;
   const [moreOpen, setMoreOpen] = useState(false);
+  // Modules now open as temporary applets (no module page navigations) —
+  // the More tab carries the active glow while any applet is open.
+  const applet = useAppletBus();
+  const appletOpen = applet.open !== null;
 
   // Prism E5 (2026-10-12): the More tab carries the active glow while a
   // module page is current — previously no tab lit up anywhere under
@@ -224,14 +229,17 @@ export function ChildToolbar({ childSlug }: { childSlug: string }) {
     { id: "pookie", label: "Pookie", href: `${base}/pookie`, glow: "#ffd88a", sector: "AI Core", orb: true, active: pathname.startsWith(`${base}/pookie`) },
     { id: "progress", label: "Progress", href: `${base}/school`, glow: "#fbbf24", sector: "Sector · Progress", glyph: TrajectoryGlyph, active: pathname.startsWith(`${base}/school`) },
     // More opens the module popup (FR-MENU-001) — not a page. It also carries
-    // the active glow while a module page is current (see onModulePage).
-    { id: "more", label: "More", href: "", glow: "#2dd4bf", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen || onModulePage },
+    // the active glow while an applet is open or a module page is current
+    // (see onModulePage).
+    { id: "more", label: "More", href: "", glow: "#2dd4bf", sector: "Module Bay", glyph: ModuleGridGlyph, popup: true, active: moreOpen || onModulePage || appletOpen },
   ];
 
   const activeTab = tabs.find((t) => t.active);
   const sector = pathname.includes("/settings")
     ? "Ship Systems"
-    : (activeTab?.sector ?? "Deep Space");
+    : appletOpen
+      ? "Module Bay"
+      : (activeTab?.sector ?? "Deep Space");
 
   const tabStyle = (glow: string): CSSProperties =>
     ({ "--tab-glow": glow, "--tab-glow-soft": soft(glow) }) as CSSProperties;

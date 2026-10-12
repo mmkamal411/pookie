@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { NebulaBackground } from "@/components/nebula-background";
 import { completeOnboarding } from "@/lib/onboarding/actions";
 import {
   FieldError,
@@ -139,7 +138,6 @@ export function ClaimFlow({ userEmail }: { userEmail: string }) {
 
   return (
     <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <NebulaBackground />
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-12">
         {view === "loading" && (
           <StepShell eyebrow="Connect to my family" title="One moment…" sub="Checking your requests.">

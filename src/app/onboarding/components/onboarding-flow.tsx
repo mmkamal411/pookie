@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { NebulaBackground } from "@/components/nebula-background";
 import { StepName } from "./step-name";
 import { StepChildren, type ChildAdded } from "./step-children";
 import { StepDone, type DoneVariant } from "./step-done";
@@ -29,7 +28,6 @@ export function OnboardingFlow({
 
   return (
     <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <NebulaBackground />
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-12">
         {step === "name" && (
           <StepName

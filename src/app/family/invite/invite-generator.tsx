@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import QRCode from "qrcode";
-import { NebulaBackground } from "@/components/nebula-background";
 import { BackButton } from "@/components/ui";
 
 /**
@@ -79,7 +78,6 @@ export function InviteGenerator({
 
   return (
     <main className="relative min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <NebulaBackground />
       <div className="relative z-10 mx-auto w-full max-w-lg px-6 py-12">
         <div className="mb-4">
           <BackButton />

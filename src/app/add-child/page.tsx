@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/tenant/actions";
-import { NebulaBackground } from "@/components/nebula-background";
 import { AddChildForm } from "./add-child-form";
 
 // Session-dependent — always block, never prerender.
@@ -26,7 +25,6 @@ export default async function AddChildPage() {
 
   return (
     <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <NebulaBackground />
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-12">
         <AddChildForm />
       </div>
