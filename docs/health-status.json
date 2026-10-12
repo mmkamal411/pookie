@@ -1,0 +1,128 @@
+{
+  "checked_at": "2026-10-12T09:48:57.134187+00:00",
+  "ok": true,
+  "environments": {
+    "staging": {
+      "name": "staging",
+      "base_url": "https://pookie-staging.pages.dev",
+      "canonical": true,
+      "notes": "Canonical staging \u2014 the actual deploy target (CI + deploy-staging.py).",
+      "status": "healthy",
+      "ok": true,
+      "presence": "Pookie app detected",
+      "endpoints": [
+        {
+          "name": "root",
+          "url": "https://pookie-staging.pages.dev/",
+          "expected": 307,
+          "actual": 307,
+          "ok": true,
+          "ms": 323,
+          "detail": "Location: /login"
+        },
+        {
+          "name": "login",
+          "url": "https://pookie-staging.pages.dev/login",
+          "expected": 200,
+          "actual": 200,
+          "ok": true,
+          "ms": 323,
+          "detail": "shell renders (14281 bytes)"
+        },
+        {
+          "name": "callback",
+          "url": "https://pookie-staging.pages.dev/auth/callback",
+          "expected": 307,
+          "actual": 307,
+          "ok": true,
+          "ms": 352,
+          "detail": "graceful redirect"
+        },
+        {
+          "name": "me",
+          "url": "https://pookie-staging.pages.dev/api/v1/me",
+          "expected": 403,
+          "actual": 403,
+          "ok": true,
+          "ms": 280,
+          "detail": "envelope ok, code=TENANT_SCOPE_VIOLATION"
+        },
+        {
+          "name": "static_asset",
+          "url": "https://pookie-staging.pages.dev/_next/static/chunks/2snjpn0k-m0fq.css",
+          "expected": 200,
+          "actual": 200,
+          "ok": true,
+          "ms": 312,
+          "detail": "69312 bytes"
+        }
+      ]
+    },
+    "staging_branch_preview": {
+      "name": "staging_branch_preview",
+      "base_url": "https://staging-build.pookie-staging.pages.dev",
+      "canonical": false,
+      "notes": "Deprecated branch-preview subdomain \u2014 goes stale after each deploy; liveness only, not a deploy target.",
+      "status": "healthy",
+      "ok": true,
+      "presence": "Pookie app detected",
+      "endpoints": [
+        {
+          "name": "root",
+          "url": "https://staging-build.pookie-staging.pages.dev/",
+          "expected": 307,
+          "actual": 307,
+          "ok": true,
+          "ms": 1857,
+          "detail": "Location: /login"
+        },
+        {
+          "name": "login",
+          "url": "https://staging-build.pookie-staging.pages.dev/login",
+          "expected": 200,
+          "actual": 200,
+          "ok": true,
+          "ms": 1168,
+          "detail": "shell renders (14863 bytes)"
+        },
+        {
+          "name": "callback",
+          "url": "https://staging-build.pookie-staging.pages.dev/auth/callback",
+          "expected": 307,
+          "actual": 307,
+          "ok": true,
+          "ms": 402,
+          "detail": "graceful redirect"
+        },
+        {
+          "name": "me",
+          "url": "https://staging-build.pookie-staging.pages.dev/api/v1/me",
+          "expected": 403,
+          "actual": 403,
+          "ok": true,
+          "ms": 830,
+          "detail": "envelope ok, code=TENANT_SCOPE_VIOLATION"
+        },
+        {
+          "name": "static_asset",
+          "url": "https://staging-build.pookie-staging.pages.dev/_next/static/chunks/3d-1vk5hzu5rq.css",
+          "expected": 200,
+          "actual": 200,
+          "ok": true,
+          "ms": 480,
+          "detail": "3713 bytes"
+        }
+      ]
+    },
+    "production": {
+      "name": "production",
+      "base_url": "https://pookie.pages.dev",
+      "canonical": true,
+      "notes": "Production. Deploys only on Mehedi's explicit go-ahead. (Live project subdomain is pookie-2ey.pages.dev \u2014 verify intended production domain before first prod deploy.)",
+      "status": "not_deployed",
+      "ok": null,
+      "presence": "not the Pookie app (GET /login -> 200, title: 'pookie.pages.dev - Cloud Drive')",
+      "endpoints": []
+    }
+  }
+}

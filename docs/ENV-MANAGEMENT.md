@@ -41,13 +41,22 @@ in the "Build (Next.js)" step of `deploy-staging.yml` / `deploy-production.yml`.
 ## Dashboard cleanup (manual — Cloudflare dashboard)
 
 - [ ] **REMOVE `NEXT_PUBLIC_DEMO_MODE`** from the `pookie-staging` Pages
-  project env vars (and from `pookie` when created). Demo mode was deleted
-  from source in commit 35344d7; zero references remain in `src/`
-  (verified 2026-10-12). Dead config from the stale-build incident era —
-  its presence in a future bundle would defeat the staleness grep.
+  project env vars — **both the production and preview scopes**. Demo mode
+  was deleted from source in commit 35344d7; zero references remain in `src/`
+  (verified 2026-10-12). Live-verified 2026-10-12 (Cloudflare API, read-only):
+  the var is still present in both scopes. Dead config from the stale-build
+  incident era — its presence in a future Pages-built bundle would defeat the
+  staleness grep (`deploy-staging.py` / CI fail on `NEXT_PUBLIC_DEMO_MODE`).
 - [ ] Confirm no other `NEXT_PUBLIC_*` vars are set in the dashboard that
   contradict the CI-baked values above (dashboard values do NOT override
-  build-time baking; duplicates only cause confusion).
+  build-time baking; duplicates only cause confusion). Live-verified
+  2026-10-12 — `pookie-staging` production scope holds exactly:
+  `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_DEMO_MODE` (remove),
+  `NEXT_PUBLIC_POOKIE_TUTOR_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+  Preview scope holds the same minus `NEXT_PUBLIC_POOKIE_TUTOR_URL` —
+  consider adding it there too if preview builds are ever used (or remove
+  dashboard NEXT_PUBLIC_* vars entirely, since nothing bakes from them).
 
 ## GitHub Secrets checklist (repo Settings → Secrets and variables → Actions)
 

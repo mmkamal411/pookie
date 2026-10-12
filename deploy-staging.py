@@ -71,6 +71,29 @@ def build_is_stale():
     return False, ""
 
 
+def tutor_url_available():
+    """True if NEXT_PUBLIC_POOKIE_TUTOR_URL will reach `npm run build`.
+
+    Next.js reads .env.local automatically, so the value can come from the
+    process environment or that file. Without it, the build bakes an empty
+    tutor URL and the Pookie chat silently loses its AI backend — a config
+    mismatch of exactly the class that caused the 2026-10-12 stale-build
+    incident (shipped build != intended build), so we fail loudly instead.
+    """
+    if os.environ.get("NEXT_PUBLIC_POOKIE_TUTOR_URL"):
+        return True
+    env_local = os.path.join(APP_DIR, ".env.local")
+    try:
+        with open(env_local) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("NEXT_PUBLIC_POOKIE_TUTOR_URL="):
+                    return bool(line.split("=", 1)[1].strip())
+    except OSError:
+        pass
+    return False
+
+
 def verify_build_output():
     """Fail if staleness markers leaked into the fresh build output."""
     open_next = os.path.join(APP_DIR, ".open-next")
@@ -110,6 +133,16 @@ def main():
                          "rebuilding (local iteration only; still refuses "
                          "a stale build)")
     args = ap.parse_args()
+
+    # Build-time config integrity: NEXT_PUBLIC_POOKIE_TUTOR_URL is baked into
+    # the bundle. Shipping without it degrades the Pookie chat to its local
+    # fallback — a build that does not match the intended staging config.
+    # (CI always sets it from the POOKIE_TUTOR_URL secret; locally it must
+    # come from .env.local or the shell environment.)
+    if not tutor_url_available():
+        sys.exit("REFUSING TO DEPLOY: NEXT_PUBLIC_POOKIE_TUTOR_URL is not "
+                 "set in the environment or .env.local — the build would bake "
+                 "an empty tutor URL. Add it to .env.local and retry.")
 
     if args.skip_build:
         stale, reason = build_is_stale()

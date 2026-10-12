@@ -1,5 +1,20 @@
 # Cloudflare Setup Checklist — for Mehedi (founder provisions)
 
+> **SUPERSEDED 2026-10-12 (Squad 5 build-integrity audit).** This checklist
+> describes the old static-export flow and is no longer accurate: the pipeline
+> is now OpenNext (`npm run build` → `npx opennextjs-cloudflare build` →
+> `.pages-deploy/` → `wrangler pages deploy`, no Pages Git integration, no
+> `out/` dir); staging deploys on push to `staging-build` (not `main`);
+> `NEXT_PUBLIC_*` vars are baked at CI build time from GitHub secrets, NOT
+> from the Pages dashboard (dashboard values never reach the bundle — see
+> `docs/ENV-MANAGEMENT.md` § "Build-time vs. runtime"); and the app has a
+> server runtime (service-role key lives in the Pages dashboard env).
+> Current sources of truth: `docs/ENV-MANAGEMENT.md` (env vars),
+> `docs/ROLLBACK.md` (rollback), `.github/workflows/deploy-staging.yml`
+> (staging pipeline). Keep this file for the founder-provisioning steps only
+> (project creation, API token) — verify each line against the sources above
+> before acting on it.
+
 The DevOps Manager does NOT create these — Cloudflare resources are provisioned
 by the founder per the zero-risk rule. Complete each item, then tell the team.
 
