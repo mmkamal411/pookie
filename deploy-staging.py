@@ -27,4 +27,16 @@ env["CLOUDFLARE_API_TOKEN"] = str(entry["surrogate"]).strip()
 env["CLOUDFLARE_ACCOUNT_ID"] = ACCOUNT_ID
 rebuild()
 r = subprocess.run(["npx","wrangler","pages","deploy",".pages-deploy","--project-name",PROJECT,"--commit-dirty=true"], cwd=APP_DIR, env=env)
-sys.exit(r.returncode)
+if r.returncode != 0:
+    sys.exit(r.returncode)
+# Post-deploy smoke test (added 2026-10-12 after the post-login 404 incident).
+# A stale/broken deployment served a Next.js error boundary on `/` with no
+# automated detection. This catches it in ~30s before anyone announces "deployed".
+print("\n--- Running post-deploy smoke test ---")
+import time
+time.sleep(10)  # Give Cloudflare a moment to propagate the deployment
+s = subprocess.run([sys.executable, os.path.join(APP_DIR, "smoke-test-staging.py"),
+                    "https://pookie-staging.pages.dev"], cwd=APP_DIR)
+if s.returncode != 0:
+    print("\n*** DEPLOY MAY BE BROKEN — smoke test failed, investigate before announcing ***")
+sys.exit(s.returncode)
