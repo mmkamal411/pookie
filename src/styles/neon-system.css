@@ -1,0 +1,194 @@
+/* ==========================================================================
+   PRISM NEON SYSTEM — app-wide subtle neon highlight system.
+   Owner: Prism E3 (UI Engineer, neon system). E4 and other squads: DO NOT
+   restyle pages to build this — USE these tokens and classes. This file is
+   the single source of truth for every glow in the app.
+
+   Design rules (Mehedi, non-negotiable):
+   - Cool hi-tech, well-lit. Subtle neon: shine and sparkle, NEVER harsh.
+   - Divine light: soft glows in neon colors at low opacity (0.25–0.5) and
+     large blur radius (12–24px), 200ms smooth transitions.
+   - Title Case everywhere, elevated copy — applies to any text this file
+     ships (class names excluded; those are kebab-case by convention).
+
+   Usage: pick a color (.neon-green | .neon-teal | .neon-blue | .neon-pink,
+   default .neon-teal) and compose it with a behavior class:
+       <button class="neon-cta neon-pink">Launch</button>
+       <nav>  <a class="neon-current neon-green">Home</a>
+       <div class="neon-card neon-blue">...</div>
+   ========================================================================== */
+
+@theme {
+  /* Neon palette — soft, luminous; never harsh. Registered as Tailwind v4
+     color tokens, so utilities like `text-neon-teal` and `bg-neon-pink/40`
+     work out of the box. */
+  --color-neon-green: #4ade80;
+  --color-neon-teal: #2dd4bf;
+  --color-neon-blue: #7dd3fc;
+  --color-neon-pink: #f472b6;
+}
+
+:root {
+  /* Space-separated RGB triplets so utilities can dial alpha with
+     rgb(var(--nx) / <opacity>). */
+  --neon-green-rgb: 74 222 128;
+  --neon-teal-rgb: 45 212 191;
+  --neon-blue-rgb: 125 211 252;
+  --neon-pink-rgb: 244 114 182;
+
+  /* Active neon color for behavior classes. Defaults to teal. */
+  --nx: var(--neon-teal-rgb);
+}
+
+/* -- Color selectors: set which neon the behavior classes use. ----------- */
+.neon-green { --nx: var(--neon-green-rgb); }
+.neon-teal { --nx: var(--neon-teal-rgb); }
+.neon-blue { --nx: var(--neon-blue-rgb); }
+.neon-pink { --nx: var(--neon-pink-rgb); }
+
+/* -- Shared transition contract ------------------------------------------
+   Every interactive neon surface eases its glow in 200ms. Never change the
+   duration here without updating docs/PRISM-NEON-SYSTEM.md. */
+.neon-hover,
+.neon-focus,
+.neon-active,
+.neon-card,
+.neon-cta {
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+
+/* -- .neon-hover: soft glow appears on hover ------------------------------
+   Use on: links, icon buttons, list rows — anything tappable but small. */
+.neon-hover:hover {
+  box-shadow:
+    0 0 16px rgb(var(--nx) / 0.32),
+    0 0 40px rgb(var(--nx) / 0.12);
+}
+
+/* -- .neon-focus: focus-ring glow for keyboard navigation -----------------
+   Use on: every interactive element that takes focus. Never remove the
+   default outline without this class in place. */
+.neon-focus:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(var(--nx) / 0.55),
+    0 0 18px rgb(var(--nx) / 0.4);
+}
+
+/* -- .neon-active: pressed-state glow -------------------------------------
+   Use on: buttons/tabs that hold a momentary "pressed" feel. */
+.neon-active:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 22px rgb(var(--nx) / 0.45),
+    inset 0 0 10px rgb(var(--nx) / 0.15);
+}
+
+/* -- .neon-current: current-page / selected indicator glow ----------------
+   Use on: the active nav item, selected tab, current step. Persistent. */
+.neon-current {
+  box-shadow:
+    0 0 16px rgb(var(--nx) / 0.35),
+    inset 0 0 12px rgb(var(--nx) / 0.12);
+  border-color: rgb(var(--nx) / 0.45);
+}
+
+/* -- .neon-divider: soft neon section divider -----------------------------
+   A hairline gradient that glows at its center. Put between sections. */
+.neon-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--nx) / 0.55) 50%,
+    transparent
+  );
+  box-shadow: 0 0 14px rgb(var(--nx) / 0.35);
+}
+
+/* -- .neon-card: card lift + glow on hover --------------------------------
+   Use on: content cards, panels, menu tiles. Lifts 2px, never more. */
+.neon-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px rgb(3 3 12 / 0.35),
+    0 0 20px rgb(var(--nx) / 0.3),
+    0 0 56px rgb(var(--nx) / 0.1);
+}
+
+/* -- .neon-cta: primary button glow ---------------------------------------
+   Use on: the ONE primary action per surface. Secondary buttons use
+   .neon-hover instead — a page with three glowing CTAs is a page with none. */
+.neon-cta {
+  box-shadow:
+    0 0 16px rgb(var(--nx) / 0.35),
+    0 0 44px rgb(var(--nx) / 0.14);
+}
+.neon-cta:hover {
+  box-shadow:
+    0 0 22px rgb(var(--nx) / 0.45),
+    0 0 60px rgb(var(--nx) / 0.18);
+  transform: translateY(-1px);
+}
+.neon-cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 0 14px rgb(var(--nx) / 0.4),
+    inset 0 0 8px rgb(var(--nx) / 0.18);
+}
+
+/* -- .neon-shine: subtle shine sweep on hover ------------------------------
+   Optional sparkle for hero surfaces. The light passes once; it never loops. */
+.neon-shine {
+  position: relative;
+  overflow: hidden;
+}
+.neon-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgb(255 255 255 / 0.18) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.neon-shine:hover::after {
+  transform: translateX(120%);
+  transition: transform 600ms ease;
+}
+
+/* -- Light theme: glows soften so they stay luminous, never washed out. -- */
+[data-theme="light"] .neon-hover:hover,
+[data-theme="light"] .neon-card:hover {
+  box-shadow:
+    0 8px 22px rgb(30 27 75 / 0.12),
+    0 0 16px rgb(var(--nx) / 0.3);
+}
+
+/* -- Accessibility: stillness over animation. ------------------------------
+   Reduced-motion users get static, calm surfaces — no transitions, no shine
+   sweeps, no scale. Glows that are already visible stay; nothing pulses. */
+@media (prefers-reduced-motion: reduce) {
+  .neon-hover,
+  .neon-focus,
+  .neon-active,
+  .neon-card,
+  .neon-cta,
+  .neon-shine::after {
+    transition: none;
+    animation: none;
+  }
+  .neon-hover:hover,
+  .neon-card:hover,
+  .neon-cta:hover {
+    transform: none;
+  }
+  .neon-shine::after {
+    display: none;
+  }
+}

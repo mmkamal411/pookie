@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Prism E3 — app-wide subtle neon highlight system (tokens + utilities). */
+@import "../styles/neon-system.css";
 
 /* ==========================================================================
    POOKIE DESIGN LANGUAGE — Nebula.
