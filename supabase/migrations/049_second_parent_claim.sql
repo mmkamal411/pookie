@@ -167,6 +167,12 @@ BEGIN
     RAISE EXCEPTION 'invite_not_found_or_expired';
   END IF;
 
+  -- The inviter cannot redeem their own invite.
+  IF EXISTS (SELECT 1 FROM public.parent_invites pi
+              WHERE pi.id = v_invite.id AND pi.created_by = v_uid) THEN
+    RAISE EXCEPTION 'cannot_invite_self';
+  END IF;
+
   -- Idempotent for existing members (re-redeem returns the child, no dup row).
   IF EXISTS (SELECT 1 FROM public.child_access ca
               WHERE ca.user_id = v_uid AND ca.child_id = v_invite.child_id
@@ -328,7 +334,7 @@ DECLARE
   v_approver uuid := NULL;
   v_approver_kind text := NULL;
   v_claim_id uuid;
-  v_uniform jsonb := jsonb_build_object(
+  v_uniform_base jsonb := jsonb_build_object(
     'submitted', true,
     'message', 'If this child is in Pookie, we have notified the parent on record.');
 BEGIN
@@ -367,7 +373,7 @@ BEGIN
     VALUES (v_uid, trim(p_child_name), p_child_dob, trim(p_creating_parent_email),
             true, p_attestation_text, p_custody_attestation, 'locked')
     RETURNING id INTO v_claim_id;
-    RETURN v_uniform;
+    RETURN v_uniform_base || jsonb_build_object('claim_id', v_claim_id);
   END IF;
 
   -- Match: name + DOB against the child record, corroborated by the
@@ -397,7 +403,7 @@ BEGIN
     VALUES (v_uid, trim(p_child_name), p_child_dob, trim(p_creating_parent_email),
             true, p_attestation_text, p_custody_attestation, 'needs_review')
     RETURNING id INTO v_claim_id;
-    RETURN v_uniform;
+    RETURN v_uniform_base || jsonb_build_object('claim_id', v_claim_id);
   END IF;
 
   -- Corroborated match. STAY OUT: court orders disable self-serve entirely.
@@ -411,7 +417,7 @@ BEGIN
             true, p_attestation_text, p_custody_attestation,
             v_child.id, 'blocked_court_order')
     RETURNING id INTO v_claim_id;
-    RETURN v_uniform;
+    RETURN v_uniform_base || jsonb_build_object('claim_id', v_claim_id);
   END IF;
 
   -- Approval routing: 13+ → teen approves; <13 → Parent A approves.
@@ -459,7 +465,7 @@ BEGIN
     VALUES (v_claim_id, v_approver);
   END IF;
 
-  RETURN v_uniform;
+  RETURN v_uniform_base || jsonb_build_object('claim_id', v_claim_id);
 END;
 $$;
 
@@ -649,3 +655,38 @@ $$;
 
 REVOKE ALL ON FUNCTION public.escalate_stale_claims() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.escalate_stale_claims() TO service_role;
+
+-- ---------------------------------------------------------------------------
+-- preview_parent_invite(p_code): PUBLIC invite preview (FR-AUTH-009).
+-- Zero child PII before authentication: returns only the inviter's display
+-- name + expiry. Invalid/expired/used codes fail uniformly
+-- ('invite_not_found_or_expired') — no enumeration oracle.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.preview_parent_invite(p_code text)
+RETURNS TABLE (inviter_name text, expires_at timestamptz)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_hash text := encode(digest(nullif(trim(p_code), ''), 'sha256'), 'hex');
+  v_invite record;
+BEGIN
+  SELECT pi.created_by, pi.expires_at INTO v_invite
+    FROM public.parent_invites pi
+   WHERE pi.code_hash = v_hash
+     AND pi.expires_at > now()
+     AND pi.used_at IS NULL;
+
+  IF v_invite.created_by IS NULL THEN
+    RAISE EXCEPTION 'invite_not_found_or_expired';
+  END IF;
+
+  RETURN QUERY
+    SELECT u.display_name, v_invite.expires_at
+      FROM public.users u WHERE u.id = v_invite.created_by;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.preview_parent_invite(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.preview_parent_invite(text) TO anon, authenticated, service_role;

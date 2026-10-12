@@ -5,7 +5,7 @@
 -- claims a human peer wrote it.
 --
 -- CONTENT RULES (enforced):
---   - Provenance label on every spark (origin, source_refs, de-identification
+--   - Provenance label on every spark (id, body, origin, source_refs, de-identification
 --     method, study-skill tags, review status, AI label). No spark renders
 --     without a resolvable label.
 --   - Study-skills-only fence: deterministic rules in the service layer
@@ -35,7 +35,10 @@ CREATE TABLE IF NOT EXISTS public.study_sparks (
                                    -- NULL = global technique-library spark
   class_id         uuid REFERENCES public.classes(id) ON DELETE SET NULL,
   unit_tag         text,
-  spark_text       text NOT NULL CHECK (char_length(spark_text) BETWEEN 1 AND 600),
+  body             text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 600),
+  -- AI label as DATA (not a UI string): survives API responses and exports.
+  ai_label         text GENERATED ALWAYS AS
+                     ('Made by Pookie AI · checked ' || (created_at::date)::text) STORED,
   origin           text NOT NULL
                    CHECK (origin IN ('ai-synthesis','curriculum-extraction')),
   source_refs      jsonb NOT NULL DEFAULT '[]'::jsonb,   -- syllabus_doc_ids etc.
@@ -56,8 +59,7 @@ CREATE TABLE IF NOT EXISTS public.study_sparks (
 );
 
 CREATE INDEX IF NOT EXISTS study_sparks_live_idx
-  ON public.study_sparks (child_id, class_id, expires_at)
-  WHERE expires_at > now();
+  ON public.study_sparks (child_id, class_id, expires_at);
 CREATE INDEX IF NOT EXISTS study_sparks_expiry_idx
   ON public.study_sparks (expires_at);
 

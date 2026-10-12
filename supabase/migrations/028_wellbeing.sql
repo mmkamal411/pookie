@@ -303,6 +303,7 @@ AS $$
 DECLARE
   v_journal int := 0;
   v_scores  int := 0;
+  v_tmp     int := 0;
 BEGIN
   -- Per-entry auto-purge (teen setting) wins.
   UPDATE public.wellbeing_entries
@@ -320,7 +321,8 @@ BEGIN
     AND auto_purge_after_days IS NULL
     AND journal_text IS NOT NULL
     AND entered_at < now() - interval '12 months';
-  GET DIAGNOSTICS v_journal = v_journal + ROW_COUNT;
+  GET DIAGNOSTICS v_tmp = ROW_COUNT;
+  v_journal := v_journal + v_tmp;
 
   -- Mood scores/tags: 24 months, then tombstone the row.
   UPDATE public.wellbeing_entries

@@ -273,37 +273,8 @@ REVOKE ALL ON FUNCTION public.purge_expired_checkins() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.purge_expired_checkins() TO service_role;
 
 -- ---------------------------------------------------------------------------
--- Lab-safety pulse (FR-SCHOOL-019): one question, day-of-lab, inside the
--- morning check-in. The free-text box is Reflection-scoped — never
--- parent-visible (blocklisted in the serializer alongside checkins.text).
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.lab_safety_pulses (
-  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  child_id         uuid NOT NULL REFERENCES public.children(id) ON DELETE CASCADE,
-  class_id         uuid REFERENCES public.classes(id) ON DELETE SET NULL,
-  pulse_date       date NOT NULL,
-  read_safety_card boolean NOT NULL DEFAULT false,
-  question         text,                              -- Reflection-scoped
-  created_at       timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (child_id, class_id, pulse_date)
-);
-
-ALTER TABLE public.lab_safety_pulses ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS lab_safety_pulses_teen_only ON public.lab_safety_pulses;
-CREATE POLICY lab_safety_pulses_teen_only ON public.lab_safety_pulses
-  FOR ALL
-  USING (
-    child_id = ANY (public.current_child_ids())
-    AND EXISTS (SELECT 1 FROM public.child_access ca
-                WHERE ca.user_id = public.safe_auth_uid()
-                  AND ca.child_id = public.lab_safety_pulses.child_id
-                  AND ca.role = 'child')
-  )
-  WITH CHECK (
-    child_id = ANY (public.current_child_ids())
-    AND EXISTS (SELECT 1 FROM public.child_access ca
-                WHERE ca.user_id = public.safe_auth_uid()
-                  AND ca.child_id = public.lab_safety_pulses.child_id
-                  AND ca.role = 'child')
-  );
+-- Lab-safety pulse (FR-SCHOOL-019) storage: checkins.lab_read_safety_card +
+-- checkins.lab_anonymous_question (added in 047_school_track_frontend.sql,
+-- the wired check-in contract). No separate table — one check-in truth.
+-- The free-text box is Reflection-scoped: blocklisted from parent payloads
+-- (src/server/services/provenance.ts PARENT_BLOCKED_FIELDS).

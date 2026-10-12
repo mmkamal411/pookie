@@ -80,18 +80,18 @@ CREATE OR REPLACE FUNCTION public.vault_doc_encrypt(p_plaintext text, p_key text
 RETURNS bytea
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
-  SELECT pgp_sym_encrypt(p_plaintext, p_key)
+  SELECT extensions.pgp_sym_encrypt(p_plaintext, p_key)
 $$;
 
 CREATE OR REPLACE FUNCTION public.vault_doc_decrypt(p_ciphertext bytea, p_key text)
 RETURNS text
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
-  SELECT pgp_sym_decrypt(p_ciphertext, p_key)
+  SELECT extensions.pgp_sym_decrypt(p_ciphertext, p_key)
 $$;
 
 REVOKE ALL ON FUNCTION public.vault_doc_encrypt(text, text) FROM PUBLIC;

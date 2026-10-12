@@ -56,55 +56,40 @@ CREATE POLICY forecasts_tenant_read ON public.forecasts
 -- Service_role (compute route) bypasses RLS; writes stamp child_id explicitly.
 
 -- ---------------------------------------------------------------------------
--- path_to_90_actions: teen-owned checkboxes. Parents READ-ONLY.
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.path_to_90_actions (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  child_id    uuid NOT NULL REFERENCES public.children(id) ON DELETE CASCADE,
-  class_id    uuid NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
-  action_text text NOT NULL CHECK (char_length(action_text) BETWEEN 1 AND 500),
-  rank        integer NOT NULL CHECK (rank >= 1),
-  done        boolean NOT NULL DEFAULT false,
-  done_at     timestamptz,
-  created_by  uuid REFERENCES public.users(id),   -- the teen (or parent suggestion)
-  created_at  timestamptz NOT NULL DEFAULT now(),
-  provenance  text NOT NULL DEFAULT 'app_generated'
-              CHECK (provenance IN ('school_of_record','app_generated'))
-);
+-- Teen checkbox ownership (FR-SCHOOL-007): the Path-to-90 checkboxes live in
+-- study_plans.plan[] (the wired frontend contract — path-to-90.tsx toggles
+-- via PATCH plans/[planId] { items: [{rank, done}] }). Parents are READ-ONLY
+-- on the teen's checkboxes, enforced at BOTH layers:
+--   (a) service: togglePlanItems() requires the teen role (403 otherwise);
+--   (b) database: this trigger rejects any parent-role UPDATE that mutates
+--       the plan items. Parents may still update safety_status (review gate)
+--       and insert new plans; only the teen (or service_role pipeline) may
+--       change checkbox state.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.study_plans_guard_teen_checkboxes()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE v_role text;
+BEGIN
+  IF NEW.plan IS NOT DISTINCT FROM OLD.plan THEN
+    RETURN NEW;
+  END IF;
+  SELECT ca.role INTO v_role
+    FROM public.child_access ca
+   WHERE ca.user_id = public.safe_auth_uid()
+     AND ca.child_id = NEW.child_id;
+  -- service_role / pipeline (no JWT → NULL role) bypasses; parents blocked.
+  IF v_role = 'parent' THEN
+    RAISE EXCEPTION 'study_plan_checkboxes_teen_only';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 
-CREATE INDEX IF NOT EXISTS path_to_90_actions_child_class_idx
-  ON public.path_to_90_actions (child_id, class_id, rank);
-
-ALTER TABLE public.path_to_90_actions ENABLE ROW LEVEL SECURITY;
-
--- Teen (owner): full CRUD on own rows.
-DROP POLICY IF EXISTS path_to_90_teen_all ON public.path_to_90_actions;
-CREATE POLICY path_to_90_teen_all ON public.path_to_90_actions
-  FOR ALL
-  USING (
-    child_id = ANY (public.current_child_ids())
-    AND EXISTS (SELECT 1 FROM public.child_access ca
-                WHERE ca.user_id = public.safe_auth_uid()
-                  AND ca.child_id = public.path_to_90_actions.child_id
-                  AND ca.role = 'child')
-  )
-  WITH CHECK (
-    child_id = ANY (public.current_child_ids())
-    AND EXISTS (SELECT 1 FROM public.child_access ca
-                WHERE ca.user_id = public.safe_auth_uid()
-                  AND ca.child_id = public.path_to_90_actions.child_id
-                  AND ca.role = 'child')
-  );
-
--- Parent: SELECT ONLY. There is deliberately NO parent INSERT/UPDATE/DELETE
--- policy — the route layer also 403s non-teen writes (defense in depth).
-DROP POLICY IF EXISTS path_to_90_parent_read ON public.path_to_90_actions;
-CREATE POLICY path_to_90_parent_read ON public.path_to_90_actions
-  FOR SELECT
-  USING (
-    child_id = ANY (public.current_child_ids())
-    AND EXISTS (SELECT 1 FROM public.child_access ca
-                WHERE ca.user_id = public.safe_auth_uid()
-                  AND ca.child_id = public.path_to_90_actions.child_id
-                  AND ca.role = 'parent')
-  );
+DROP TRIGGER IF EXISTS study_plans_teen_checkboxes_guard ON public.study_plans;
+CREATE TRIGGER study_plans_teen_checkboxes_guard
+  BEFORE UPDATE OF plan ON public.study_plans
+  FOR EACH ROW EXECUTE FUNCTION public.study_plans_guard_teen_checkboxes();

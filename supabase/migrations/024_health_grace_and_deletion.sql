@@ -311,7 +311,7 @@ BEGIN
     SELECT unnest(ARRAY[
       'health_metrics','food_logs','allergy_list','health_medications',
       'nutrition_targets','wellbeing_entries','meal_checkins','immunizations',
-      'sud_records'
+      'sud_records_excluded_per_42cfr_part2'  -- 42 CFR Part 2: SUD purge handled separately
     ]) AS tbl
   LOOP
     IF to_regclass('public.' || v_rec.tbl) IS NOT NULL THEN

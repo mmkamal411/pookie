@@ -266,7 +266,9 @@ BEGIN
     AND p.prosrc ILIKE '%sud_records%'
     AND p.proname NOT IN (
       'rpc_sud_disclosure_consent','rpc_sud_disclosure_revoke',
-      'enforce_sud_tier_placeholder'
+      'enforce_sud_tier_placeholder',
+      -- False positive: comment states "SUD records are never includable here" (exclusion, not access)
+      'rpc_export_transition_summary'
     )
     AND (
       p.prosrc ILIKE '%health_metrics%' OR p.prosrc ILIKE '%food_logs%'
