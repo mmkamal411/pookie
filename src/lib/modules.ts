@@ -97,6 +97,16 @@ export const GROVES: Grove[] = [
       { id: "W6", name: "Driving School", watchOver: "Driving, skills, independence — becoming, step by step.", seedAction: "Find a driving school", status: "seedling", route: null },
     ],
   },
+  {
+    name: "Support",
+    subtitle: "help, when you need it",
+    sigil: "💬",
+    modules: [
+      { id: "S1", name: "Help Center & FAQ", watchOver: "Answers to common questions — searchable, plain-language.", seedAction: "Browse the help center", status: "seedling", route: null },
+      { id: "S2", name: "AI Support Chat", watchOver: "Instant answers from Pookie's support assistant, 24/7.", seedAction: "Start a chat", status: "seedling", route: null },
+      { id: "S3", name: "Support Tickets", watchOver: "Open a ticket, track it, talk to a human.", seedAction: "Open your first ticket", status: "seedling", route: null },
+    ],
+  },
 ];
 
 export const MODULE_COUNT = GROVES.reduce((n, g) => n + g.modules.length, 0);
