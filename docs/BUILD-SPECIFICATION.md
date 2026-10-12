@@ -30,6 +30,8 @@ requirement to its panel/spec source. §4 records explicit removals.
 | FR-AUTH-007 | Session management via Supabase Auth with middleware refresh on every request. | existing |
 | FR-AUTH-008 | 5-tab navigation (Home · Today · Pookie · Progress · More), child switcher with active-child persistence. Switching children purges the prior child's data from client state. | Cat 1 ✅ |
 | FR-AUTH-009 | `/verify-invite` public landing: zero child PII rendered pre-authentication; unguessable single-use tokens; no enumeration oracle (no "this token is invalid because…" differentiation). | Cat 1 ⚠️ |
+| FR-AUTH-010 | Parent identity tiers: glossary required (attested ≠ school-verified ≠ id-verified; never "verified" alone, never "consent"). v1: guardian attestation checkbox (timestamp + IP hash) + email ownership via OAuth/magic-link; attested stewards get base product + parent-provided data only. v2: school-portal proof as primary method (one-time parent-portal login; store only `school_portal_verified_at`); government ID via Stripe Identity as escalation (decision-only retention — never the image/document/template). Just-in-time step-up for H2 access, never at signup. Failure → provisional (full base product, sensitive scopes gated; private to claimant; no "fraud" language). School emergency-contact matching DROPPED (FERPA/honeypot/circularity). Per-parent verification; teen sees status, other parent never does. | Round 2 Prop 3 |
+| FR-AUTH-011 | Second-parent onboarding: three-card first-run (Just me / Add my child / Connect to my family). Primary path = invite-from-inside (existing parent generates deep link/QR; zero enumeration surface). Fallback claim path: verified sign-in required → full legal name + child name/DOB + creating-parent's signup email + perjury-style attestation + custody attestation ("any court orders limiting access?"); uniform response regardless of match ("if this child is in Pookie, we've notified the parent on record"); rate limits + CAPTCHA; no auto-grant ever. <13 → Parent A approves (sees verified attributes, not "identity confirmed"); 13+ → teen approves (verification badges, anti-coercion check, 30-day lockout) + fact-only notification to Parent A (no veto). Parent A unresponsive 14 days → human-review escalation with documentary proof. `court_order_restriction` flag disables self-serve entirely. Rejection = one-time dismissible card, no reason, 30-day lockout. Parent B gets working "just me" Pookie immediately while waiting. | Round 2 Prop 5 |
 
 ### FR-ACCESS — Linking, grant/revoke, requests, block list, audit
 
@@ -45,6 +47,8 @@ requirement to its panel/spec source. §4 records explicit removals.
 | FR-ACCESS-008 | Block list: a blocked adult's household may not re-invite for 30 days; block never revokes safety-critical school comms; court-order override path exists (human review). | 1.3.5 ⚠️ |
 | FR-ACCESS-009 | Append-only `access_events` audit table (migration 021): every grant / revoke / request / block / safe-exit with timestamp, `granted_by`, reason code, device/IP hash. Teen-visible; never shown to a revoked parent. | 1.3.6 ⚠️ NEW |
 | FR-ACCESS-010 | `cannot_invite_self` guard; no user can self-grant a `parent` role — all roles assigned by server functions only. | spec §3 |
+| FR-ACCESS-011 | Time-boxed grants: `expires_at` + `grant_kind` ('one_time'|'recurring'|'indefinite') + `grant_purpose` (reason code, NOT NULL for non-indefinite) on `child_access` (migration 023). Occasion-based UX ("Share for a bit": who → scope picker with "Sitter basics" preset → occasion presets with computed end times). Scope allowlist for temporary grants: operational scopes only (schedule/logistics, pickup authorization, emergency medical card) — RPC rejects Reflection/Wellness/H2/H3/full-communications. Frequency cap: max 2 temporary grants per grantee per rolling 30 days (exceeding converts to indefinite-grant flow with teen approval); background pattern detection flags installment behavior on the teen's Sharing screen. Blocks/revokes/safe-exit propagate to temporary grants. Teen 13+ always notified with one-tap revoke (instant for third-party grants). Expiry as a slope: T-24h parent nudge → T-1h/T-15m sitter wrap-up → "All done" screen with [Request more time] + [Text parent] + 10-min read-only grace. Expiry notices: single-fire, zero attribution, no re-request CTA. Saved templates + one-tap re-grant (no auto-recurring). Idempotent 5-min sweeper (`revoked_by='system'`, reason `expiry`). | Round 2 Prop 2 |
+| FR-ACCESS-012 | Emergency card independence: contacts, allergies, and address are never gated by any grant's expiry — a lapsed grant can never block a 911 call. Stated explicitly on the scope picker so parents trust the expiry mechanism. | Round 2 Prop 2 |
 
 ### FR-AGE — Age tiers
 
@@ -75,6 +79,9 @@ requirement to its panel/spec source. §4 records explicit removals.
 | FR-SAFETY-010 | Persistent teen-nominated trusted-adult / safe-contact list with teen-controlled visibility. | G15 |
 | FR-SAFETY-011 | Court-order ingestion workflow: verified orders supersede via human review; `court_order_restriction` flag; the teen is told plainly why access changed. | G9, 1.3.2 |
 | FR-SAFETY-012 | Custody-order carve-out in the revoke matrix; travel-restriction profile for custody orders. | G9, R4 |
+| FR-SAFETY-013 | Break-glass Path A (teen-configured safety net): trigger ONLY by the teen's pre-designated trusted adult (designated in the teen's own session; G1/G15 infrastructure required first). **Hard invariant: a revoked adult can never be the break-glass contact.** Corroboration: two independent confirmations required. Human review required (never self-serve). Scope: real-time location (coarse default; precise only if reviewer documents necessity) + W19 emergency medical card — NEVER reflections, check-ins, mood, journals, AI chats, H2/H3, messages, grades (server-side invariant). 12-hour auto-expiry + mandatory active closure with access log. Teen configures eligible scopes at onboarding (13+): location on, emergency info on, everything else off. Product name: "Emergency safety access" (never "break-glass"). | Round 2 Prop 1 |
+| FR-SAFETY-014 | Break-glass Path B (law-enforcement exigent): legal spine SCA §2702(b)(8) (good-faith belief of emergency involving danger of death/serious physical injury requiring disclosure without delay). Verification: callback to independently-sourced agency number + written official-channel confirmation within 24h + two-employee approval; time pressure never lowers the bar. Scope: location only (coarse default), read-only one-time pull. 72-hour incident-bounded cap, renewable on fresh attestation; terminate on case closure. Court orders/warrants honored via FR-SAFETY-011/012 (the front door), not break-glass. | Round 2 Prop 1 |
+| FR-SAFETY-015 | Break-glass invariants: no civilian self-serve trigger, ever; scope fixed in policy (requester never chooses); spoliation guard — auto-expiry kills access grants only, records go on litigation hold (7-year retention of request/verification/disclosure package); "Pookie is not an emergency response service — call 911" posture in ToS; teen notified via silent in-app card on next login (never push/SMS), LE-requested deferral ≤14 days max then automatic; audit in `access_events` (021) with `reason_code='emergency'`, teen-visible only. Disclosure timing: onboarding one-liner (13+) → full version at revoke/go-independent decision moment → persistent Sharing-screen row + FAQ. Post-use repair flow: "What happened" card (per-scope receipts) → one-tap re-lock → false-alarm track with plain apology → human support option. **Do NOT build disclosure tooling, LE portal, or approval UI before counsel signs off (NFR-LEGAL-006).** | Round 2 Prop 1 |
 
 ### FR-HEALTH — Health privacy taxonomy and module guardrails
 
@@ -216,6 +223,17 @@ Covered per-module in FR-MOD-W30/W31/W27/W29/W28 above, plus:
 |---|---|---|
 | FR-TRAVEL-001 | Purchasing/contracting carve-out: visibility ≠ transactional authority. No purchase, booking, or contract flow is completable by a <18 account, enforced server-side. | G13 |
 
+### FR-SUPPORT — Help Center, AI chat, tickets (Mehedi 2026-10-12)
+
+| ID | Requirement | Source |
+|---|---|---|
+| FR-SUPPORT-001 | S1 Help Center & FAQ: 9-section tree (~90 articles) covering all 28 modules + access model + privacy + legal; legal-accordion component with "Required by law" / "Our choice" badges; ≤8th-grade plain language; attorney editorial workflow; honest law-required vs Pookie's-choice distinction. | Mehedi 2026-10-12 |
+| FR-SUPPORT-002 | S2 AI support chat: 24/7 first contact; escalation tripwires (confidence below threshold after 2 attempts, explicit "human" request, safety/crisis keywords, legal/compliance topic, account/billing issue). Visible handoff contract: AI shows 3–5 bullet summary card ("what I'll hand them") → [Looks right] [Add something] → ticket created. Crisis = pattern interrupt: AI stops troubleshooting → [Call 988] [Text 741741] [GA Crisis Line] + "help me tell a trusted adult" + stays present; ticket filed quietly second. | Round 2 Prop 6 |
+| FR-SUPPORT-003 | S3 tickets: `support_tickets` + `ticket_events` schema; window-aware SLA (4h within 9 AM–5 PM ET, 7 days/week; 11 PM ticket → first response by 1 PM next day); status pills (Open → With [name] → Answered → Closed) with timestamps + real presence; no queue numbers; after-hours honest banner + AI continuity + "Notes for the agent" scratchpad; shift-change re-intros. Two agents, 9–5 ET daily (Mehedi-locked). | Round 2 Prop 6 |
+| FR-SUPPORT-004 | Teen ticket privacy: explicit zero-parent-notification banner (except imminent-safety); `teen_privacy` flag enforced at API layer (invisible to parent accounts, not just UI-hidden); agents must request in-thread consent before viewing grades/health; every agent access audit-logged and teen-visible at Settings → Privacy → "Who's looked at my stuff"; lock-screen-safe push previews. | Round 2 Prop 6 |
+| FR-SUPPORT-005 | Agent RBAC (least-privilege): ticket content + user contact + relevant module context only; never health/grades without in-thread teen consent; teen-approved break-glass grants (24h TTL) for exceptional cases; under-13 requires parent on the ticket; all agent access audited. | Round 2 Prop 6 |
+| FR-SUPPORT-006 | Agent empowerment scope (Mehedi decision needed): billing/refund authority and access-exception authority — resolve in-ticket or triage? Holiday coverage: 7-day promise year-round or adjusted SLA copy? Crisis keyword sensitivity bar. | Round 2 Prop 6, open |
+
 ---
 
 ## 2. NON-FUNCTIONAL REQUIREMENTS
@@ -253,6 +271,7 @@ Covered per-module in FR-MOD-W30/W31/W27/W29/W28 above, plus:
 | NFR-PRIVACY-007 | No consent re-prompt for 90 days after a teen declines. | 1.2.1 |
 | NFR-PRIVACY-008 | No training on user inputs: vendor contract term + user-facing disclosure. | Cat 2 ⚠️ |
 | NFR-PRIVACY-009 | GIPA: extract-then-mask (last-4 only) for mail intake and the document vault; auto-delete raw images ≤30 days; on-device redaction guidance. | Cat 4 W21/W7 ⚠️ |
+| NFR-PRIVACY-010 | AI training prohibition (strengthens NFR-PRIVACY-008): binding "never train" commitment with broad "train" definition (training, fine-tuning, RLHF, eval datasets, embedding stores) in ToS + Privacy Policy + FAQ. Contractual: DPA with Cloudflare and any AI subprocessor — explicit zero-retention-for-training, no-secondary-use, subprocessor flow-down, audit/certification rights; documented processing regions; **30-day advance notice** before any new AI subprocessor touches chat data. Technical: transient-only processing; no persistent prompt/response store except teen-saved records (labeled study history, never training data); debug logs ≤30-day TTL, access-controlled, contractually excluded from model improvement. **No training opt-out toggle** (nothing to opt out of); separate default-OFF opt-in for aggregated de-identified product analytics, clearly distinguished from chat content. Disclosed safety-review carve-out (teen-readable): crisis conversations may receive human safety review, never used for training. State-law posture documented: WA MHMDA determination, TX SCOPE, CA AB 2246 (defaults-off, no dark patterns), CA SB 1119, IL BIPA note. Annual internal attestation; if any vendor term changes to permit training, the commitment is pulled BEFORE the change takes effect. **Do NOT publish the absolute promise until vendor terms are verified.** | Round 2 Prop 4 |
 
 ### NFR-A11Y — Accessibility
 
@@ -343,6 +362,8 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 | FR | Gaps | Reassessment | Checklist § | Spec § |
 |---|---|---|---|---|
 | FR-AUTH-001..009 | G12 | — | 1.1, Cat 1 | §2 |
+| FR-AUTH-010 | — | — | — | Round 2 Prop 3 |
+| FR-AUTH-011 | — | — | — | Round 2 Prop 5 |
 | FR-ACCESS-001 | — | — | 1.2.1 | §5 |
 | FR-ACCESS-002 | — | — | 1.2.2 | §5 |
 | FR-ACCESS-003 | — | — | 1.2.3 | §5 |
@@ -353,6 +374,8 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 | FR-ACCESS-008 | — | — | 1.3.5 | §11 |
 | FR-ACCESS-009 | — | — | 1.3.6 | NEW |
 | FR-ACCESS-010 | — | — | — | §3 |
+| FR-ACCESS-011 | — | — | — | Round 2 Prop 2 |
+| FR-ACCESS-012 | — | — | — | Round 2 Prop 2 |
 | FR-AGE-001 | G11 | — | 1.1.4 | §4 |
 | FR-AGE-002 | G4 | R1, R2 | 1.4.1 | §4 (supersedes) |
 | FR-AGE-003 | — | — | 1.4.2 | §4 |
@@ -373,6 +396,9 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 | FR-SAFETY-010 | G15 | — | — | NEW |
 | FR-SAFETY-011 | G9 | R4 | 1.3.2 | NEW |
 | FR-SAFETY-012 | G9 | R4 | — | NEW |
+| FR-SAFETY-013 | — | — | — | Round 2 Prop 1 |
+| FR-SAFETY-014 | — | — | — | Round 2 Prop 1 |
+| FR-SAFETY-015 | — | — | — | Round 2 Prop 1 |
 | FR-HEALTH-001 | G3 | R9 | Cat 4 W2 | NEW |
 | FR-HEALTH-002 | — | R9 | Cat 4 W2 | NEW |
 | FR-HEALTH-003 | G2 | R9 | Cat 4 W8 | — |
@@ -415,6 +441,12 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 | FR-AI-004 | — | — | Cat 2 | — |
 | FR-AI-005 | G10 | — | — | NEW |
 | FR-TRAVEL-001 | G13 | — | Cat 4 W30 | NEW |
+| FR-SUPPORT-001 | — | — | — | Mehedi 2026-10-12 |
+| FR-SUPPORT-002 | — | — | — | Round 2 Prop 6 |
+| FR-SUPPORT-003 | — | — | — | Round 2 Prop 6 |
+| FR-SUPPORT-004 | — | — | — | Round 2 Prop 6 |
+| FR-SUPPORT-005 | — | — | — | Round 2 Prop 6 |
+| FR-SUPPORT-006 | — | — | — | Round 2 Prop 6, open |
 
 ### Full NFR → source map
 
@@ -434,6 +466,7 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 | NFR-PRIVACY-007 | 1.2.1 |
 | NFR-PRIVACY-008 | Cat 2 |
 | NFR-PRIVACY-009 | Cat 4 W21/W7 |
+| NFR-PRIVACY-010 | Round 2 Prop 4 |
 | NFR-A11Y-001 | Mehedi test protocol |
 | NFR-A11Y-002 | 1.2.1 |
 | NFR-RELIABILITY-001 | AGENTS.md, commit 538f288 |
@@ -481,17 +514,18 @@ reassessments R1–R12, checklist sections (§1–§5), spec sections (spec §N)
 ## 5. BUILD ORDER (recommended)
 
 1. **Legal gates first:** NFR-LEGAL-007 (COPPA package), NFR-LEGAL-001 (ToS) — unblock everything downstream.
-2. **Data layer:** migrations 015–021 (invites, profiles, access authority, link codes, access requests, access_events); RLS on every table (NFR-SEC-001).
-3. **Privacy taxonomy:** H0–H3 (FR-HEALTH-001) + retention schedule (NFR-PRIVACY-002).
-4. **Access model:** onboarding (FR-AUTH-002), linking (FR-ACCESS-001/002/003), grant/revoke matrix (FR-ACCESS-004/005), scopes (FR-ACCESS-006), audit (FR-ACCESS-009).
-5. **Safety spine:** trusted adult (FR-SAFETY-001), crisis protocol (FR-SAFETY-002), safe-exit (FR-SAFETY-004), safety carve-out (FR-SAFETY-003), cooling-off redesign (FR-AGE-002).
+2. **Data layer:** migrations 015–023 (invites, profiles, access authority, link codes, access requests, access_events, emergency_requests, temporary grants, verification); RLS on every table (NFR-SEC-001).
+3. **Privacy taxonomy:** H0–H3 (FR-HEALTH-001) + retention schedule (NFR-PRIVACY-002) + AI no-training vendor verification (NFR-PRIVACY-010 — audit before publishing).
+4. **Access model:** onboarding (FR-AUTH-002), linking (FR-ACCESS-001/002/003), grant/revoke matrix (FR-ACCESS-004/005), scopes (FR-ACCESS-006), audit (FR-ACCESS-009), time-boxed grants (FR-ACCESS-011/012), parent identity tiers (FR-AUTH-010), second-parent onboarding (FR-AUTH-011).
+5. **Safety spine:** trusted adult (FR-SAFETY-001), crisis protocol (FR-SAFETY-002), safe-exit (FR-SAFETY-004), safety carve-out (FR-SAFETY-003), cooling-off redesign (FR-AGE-002), break-glass Paths A+B (FR-SAFETY-013/014/015 — disclosure tooling AFTER NFR-LEGAL-006 sign-off).
 6. **Age tiers:** under-13 guarantees (FR-AGE-001), 18+ flows (FR-AGE-005/006/007/008).
 7. **School rebuild:** provenance (FR-SCHOOL-001), inbox segregation (FR-SCHOOL-002), check-in redesign (FR-SCHOOL-003), forecast engine (FR-SCHOOL-007).
 8. **AI guardrails:** FR-AI-001 through FR-AI-005.
-9. **Menu:** FR-MENU-001 through FR-MENU-005 (popup bottom-sheet, 6 categories).
-10. **Modules:** per FR-MODULES marks — 🛑 modules last, each with its stated fix.
-11. **Travel:** FR-TRAVEL-001 + FR-MOD-W27/W29/W30/W31 with vetting/rules engines.
-12. **Verification:** full Mehedi test protocol (functional, non-functional, red team, SAST/DAST, chaos, load) + post-deploy smoke gate (NFR-RELIABILITY-002).
+9. **Menu:** FR-MENU-001 through FR-MENU-005 (popup bottom-sheet, 7 categories incl. Support).
+10. **Support:** FR-SUPPORT-001 through FR-SUPPORT-006 (ticket schema + handoff + SLA engine first — crisis path is launch-blocking per G2).
+11. **Modules:** per FR-MODULES marks — 🛑 modules last, each with its stated fix; dependency-ordered per PANEL-ROUND2-SOLUTIONS.md §9.
+12. **Travel:** FR-TRAVEL-001 + FR-MOD-W27/W29/W30/W31 with vetting/rules engines.
+13. **Verification:** full Mehedi test protocol (functional, non-functional, red team, SAST/DAST, chaos, load) + post-deploy smoke gate (NFR-RELIABILITY-002).
 
 ---
 
