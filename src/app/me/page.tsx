@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/tenant/actions";
-import { getPilotLayoutPlan } from "@/lib/pilot-layout";
-import { getNudges } from "@/lib/nudges";
+import { getPilotLayoutPlan } from "@/lib/pilot-layout-server";
+import { getNudges } from "@/lib/nudges-server";
 import PageGlide from "@/components/page-glide";
 import { WindowManagerProvider } from "@/components/window-manager";
 import { AppletHost } from "@/components/applet-host";
