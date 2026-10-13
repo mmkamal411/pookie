@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import {
-  consumeInvite,
-  getActiveChildId,
-  getMemberships,
-} from "@/lib/tenant/actions";
+import { consumeInvite } from "@/lib/tenant/actions";
 
 // Tenant resolution reads the session cookie — this route always blocks.
 export const dynamic = "force-dynamic";
@@ -21,23 +17,25 @@ function ageYears(isoDate: string): number {
 }
 
 /**
- * Root router — resolves login email → tenant per the plan (§4.1):
+ * Root router — user-first (Mehedi 2026-10-12).
+ *
+ * The pilot is an average human in command of their day-to-day life, with or
+ * without children. The pilot's OWN dashboard (/me) is the default landing
+ * for EVERY signed-in user — parents with kids land on their own bridge
+ * first, then tap into a child's console from the Crew section. Child
+ * cockpits (/c/[childSlug]) are opt-in modules, never the front door.
+ * The old 1-membership → child / N-membership → /select-child split is gone.
+ *
  * - No session → /login
  * - ?invite= token → DOB gate, then consume it (failures land on the
  *   friendly /verify-invite invalid state — never the error boundary),
  *   then continue
  * - profiles.onboarding_completed = false → /onboarding (first-login gate)
- * - 0 memberships → /me (the "just me" home — the old
- *   /login?error=no-invite bounce was a dead end: a signed-in user with
- *   no children saw the login form again with no dashboard and no way
- *   to add a child)
- * - 1 membership → straight into that child's dashboard (no switcher, ever)
- * - N memberships (parent) → /select-child
- * - Existing session with active child → that child's dashboard
+ * - otherwise → /me (the pilot's own bridge)
  *
  * The profiles table (017) may not be applied yet: a missing table (42P01)
- * skips the onboarding gate (falls through to the legacy behavior) rather
- * than redirect-looping.
+ * skips the onboarding gate (falls through to the dashboard) rather than
+ * redirect-looping.
  */
 export default async function Home({
   searchParams,
@@ -93,20 +91,7 @@ export default async function Home({
     redirect("/onboarding");
   }
 
-  const memberships = await getMemberships();
-  if (memberships.length === 0) redirect("/me");
-
-  const activeChildId = await getActiveChildId();
-  const active = memberships.find((m) => m.child_id === activeChildId);
-  if (active) redirect(`/c/${active.child.slug}`);
-
-  if (memberships.length === 1) {
-    // NOTE: do NOT call setActiveChild() here — cookies().set() throws in a
-    // Server Component ("Cookies can only be modified in a Server Action or
-    // Route Handler"), which 500s the front door for every single-child user.
-    // The /c/[slug] page resolves the tenant from the URL slug directly.
-    redirect(`/c/${memberships[0].child.slug}`);
-  }
-
-  redirect("/select-child");
+  // User-first: everyone lands on their own bridge. Crew consoles are
+  // opt-in modules under /me, reachable any time at /c/[childSlug].
+  redirect("/me");
 }

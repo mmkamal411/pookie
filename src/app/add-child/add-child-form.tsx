@@ -28,14 +28,20 @@ function previewAge(birthdate: string): number | null {
 }
 
 /**
- * Standalone add-first-child form for zero-membership users (the "just me"
- * → later path). It calls the same createChildProfile server action as the
- * onboarding wizard, which routes through the provision_onboarding_child
- * RPC (052) — the only child-creation path that works without an existing
- * parent membership. create_child() would raise parent_membership_required
- * for these users, so this page never touches it.
+ * Add-a-child form — the legal-gated door (guardian attestation, birthdate
+ * age shields, under-13 COPPA notice). Used by the standalone /add-child
+ * page and embedded in the Crew hub applet.
+ *
+ * It calls the same createChildProfile server action, which routes through
+ * the provision_onboarding_child RPC (052) — the only child-creation path
+ * that works without an existing parent membership. create_child() would
+ * raise parent_membership_required for these users, so this form never
+ * touches it.
+ *
+ * onAdded (optional): called with the new child's name after a successful
+ * add. When absent, the form navigates home ("/") itself.
  */
-export function AddChildForm() {
+export function AddChildForm({ onAdded }: { onAdded?: (childName: string) => void }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [birthdate, setBirthdate] = useState("");
@@ -64,14 +70,19 @@ export function AddChildForm() {
       setBusy(false);
       return;
     }
-    router.push("/");
+    const firstName = name.trim().split(/\s+/)[0];
+    if (onAdded) {
+      onAdded(firstName);
+    } else {
+      router.push("/");
+    }
   }
 
   return (
     <StepShell
       eyebrow="Add a child"
       title="Tell us about your child"
-      sub="Birthdate sets up the right protections for their age. You can add more children later from Settings → Profile."
+      sub="Birthdate sets up the right protections for their age. You can manage your crew anytime from the Crew hub."
     >
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div>

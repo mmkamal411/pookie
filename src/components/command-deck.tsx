@@ -40,8 +40,7 @@ const HIDDEN_ROUTES = [
 
 // Contextual standby labels for account-level pages.
 const STANDBY_LABELS: [RegExp, string][] = [
-  [/^\/select-child/, "Select your crew member"],
-  [/^\/me/, "Your Pookie, watching over home"],
+  [/^\/me/, "Your bridge"],
   [/^\/household/, "Household systems"],
   [/^\/family\/claims/, "Family claims"],
   [/^\/family\/invite/, "Family invites"],

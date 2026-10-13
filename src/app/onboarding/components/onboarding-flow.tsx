@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { StepName } from "./step-name";
-import { StepChildren, type ChildAdded } from "./step-children";
 import { StepDone, type DoneVariant } from "./step-done";
 
-type Step = "name" | "children" | "done";
+type Step = "name" | "done";
 
 /**
- * The /onboarding wizard shell. Skippable at every step: "Skip for now"
- * (step 1) and "Skip for now" (step 2) both complete onboarding server-side
- * and land on the Done screen — dashboard in "just me" mode.
+ * The /onboarding wizard shell — user-first (Meheldi 2026-10-12).
+ *
+ * Registration asks ZERO children questions: the pilot sets up their own
+ * life (name) and they're in. Adding children lives in the Crew feature
+ * menu (legal gates intact there), never in registration.
+ *
+ * Skippable at every step: "Skip for now" completes onboarding server-side
+ * and lands on the Done screen.
  */
 export function OnboardingFlow({
   initialDisplayName,
@@ -34,19 +38,9 @@ export function OnboardingFlow({
             initialName={displayName}
             onContinue={(name) => {
               setDisplayName(name);
-              setStep("children");
+              goDone({ kind: "named" });
             }}
             onDone={() => goDone({ kind: "skipped" })}
-          />
-        )}
-        {step === "children" && (
-          <StepChildren
-            displayName={displayName}
-            onJustMe={() => goDone({ kind: "justMe" })}
-            onSkip={() => goDone({ kind: "skipped" })}
-            onChildAdded={(result: ChildAdded) =>
-              goDone({ kind: "child", result })
-            }
           />
         )}
         {step === "done" && done && <StepDone variant={done} />}

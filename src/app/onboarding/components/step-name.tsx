@@ -59,7 +59,7 @@ export function StepName({
     <StepShell
       eyebrow="Pre-flight"
       title="Meet your co-pilot"
-      sub="The AI co-pilot that flies with you. Your time, your family, your plans — one cockpit. Thirty seconds to launch."
+      sub="The AI co-pilot that flies with you. Your time, your money, your health, your plans — one cockpit. Thirty seconds to launch."
     >
       <form
         onSubmit={(e) => {

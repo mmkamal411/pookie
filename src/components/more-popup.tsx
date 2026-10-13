@@ -14,14 +14,16 @@
 //
 // Props:
 //   open, onClose      — sheet lifecycle
-//   childSlug          — tenant route scope for live module links
+//   childSlug          — tenant route scope for live module links; "" =
+//     account mode (pilot's own bridge): only account-level modules
+//     (the pilot's own stations + the Crew hub) are listed
 //   viewerRole/viewerAge — optional override; defaults to useViewerProfile()
 //     (role from tenant membership, age from the localStorage viewer record
 //     until the backend ships an age endpoint)
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GROVES, resolveModuleHref, type Grove, type LifeModule } from "@/lib/modules";
 import { openApplet } from "@/lib/applet-bus";
@@ -181,6 +183,12 @@ export function MorePopup({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   // Per-category lists of modules the viewer may see (hidden ones dropped).
+  // Account mode (childSlug === "", e.g. the pilot's own bridge): only
+  // account-level modules — the pilot's own stations plus the Crew hub.
+  // Child-scoped stations live inside the Crew hub or the child console.
+  const accountMode = childSlug === "";
+  const isAccountModule = (mod: LifeModule) =>
+    mod.accountLevel === true || (mod.route?.startsWith("/household/") ?? false);
   const visibleByGrove = useMemo(() => {
     return GROVES.map((grove) => ({
       grove,
@@ -189,10 +197,11 @@ export function MorePopup({
           const visibility = resolveModuleVisibility(mod, viewer);
           return { mod, grove, visibility };
         })
-        .filter((h) => h.visibility !== "hidden"),
+        .filter((h) => h.visibility !== "hidden")
+        .filter((h) => !accountMode || isAccountModule(h.mod)),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewer.role, viewer.age]);
+  }, [viewer.role, viewer.age, accountMode]);
 
   const searching = query.trim().length > 0;
   const searchHits = useMemo(() => {
@@ -231,6 +240,45 @@ export function MorePopup({
 
   const toggleGrove = (name: string) =>
     setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
+
+  // Adaptive-zone depth (AI automation architect): in account mode the
+  // Stations menu leads with the AI's spotlight — the ONE thing the
+  // cockpit wants the pilot to see. Quiet when the plan is quiet.
+  const [spotlight, setSpotlight] = useState<{
+    hit: ModuleHit;
+    headline: string;
+    actionLabel: string;
+  } | null>(null);
+  useEffect(() => {
+    if (!open || !accountMode) return;
+    let live = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/v1/me/layout-plan");
+        const json = (await res.json()) as {
+          ok?: boolean;
+          data?: { plan?: { spotlight?: { panelId: string; headline: string; action?: { label: string } } | null } };
+        };
+        const sp = json.data?.plan?.spotlight;
+        if (!live || !sp) return;
+        const found = MODULE_INDEX.get(sp.panelId);
+        if (!found || found.mod.status !== "live") return;
+        const visibility = resolveModuleVisibility(found.mod, viewer);
+        if (visibility !== "visible") return;
+        setSpotlight({
+          hit: found,
+          headline: sp.headline,
+          actionLabel: sp.action?.label ?? "Open",
+        });
+      } catch {
+        // The menu works fine without the spotlight — stay quiet.
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, accountMode]);
 
   // Growth-framed suggestion when a category is gated empty (sol-ux §9).
   const suggestion = useMemo(() => {
@@ -285,6 +333,29 @@ export function MorePopup({
         </div>
       ) : (
         <>
+          {spotlight && (
+            <div className="mt-3">
+              <p className="text-[11px] font-semibold tracking-[0.18em] text-pulse-300/90 capitalize">
+                Pookie&apos;s spotlight
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  recordModuleVisit(spotlight.hit.mod.id);
+                  openApplet(spotlight.hit.mod.id);
+                  onClose();
+                }}
+                className="card-living mt-2 block w-full rounded-2xl border-pulse-400/30 p-4 text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-star-100">{spotlight.headline}</p>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-stardust-300">
+                  {spotlight.hit.mod.name} · {spotlight.actionLabel} →
+                </p>
+              </button>
+            </div>
+          )}
           {recentHits.length > 0 && (
             <div className="mt-3">
               <p className="text-[11px] font-semibold tracking-[0.18em] text-stardust-500 capitalize">Recent</p>

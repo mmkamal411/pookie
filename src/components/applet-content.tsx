@@ -58,6 +58,11 @@ export const APPLETS: Record<string, AppletDef> = {
   "faq-article": { name: "Help Center", readout: "Beacon", glow: "#93c5fd" },
   "ticket-new": { name: "Open a Ticket", readout: "Beacon", glow: "#93c5fd" },
   "ticket-detail": { name: "Support Ticket", readout: "Beacon", glow: "#93c5fd" },
+  // Crew — the children feature menu, self-contained (Meheldi 2026-10-12).
+  // The hub (roster, add-child, school logins, sync, permissions) and the
+  // per-child console, opened as applets like every other module.
+  crew: { name: "Crew", readout: "Crew", glow: "#a78bfa" },
+  "crew-console": { name: "Crew Console", readout: "Crew", glow: "#a78bfa" },
 };
 
 type AppletViewProps = { params: AppletParams };
@@ -103,6 +108,8 @@ const VIEWS: Record<string, AppletView> = {
   "faq-article": view(() => import("./applet-views-support"), "FaqArticleApplet"),
   "ticket-new": view(() => import("./applet-views-support"), "TicketNewApplet"),
   "ticket-detail": view(() => import("./applet-views-support"), "TicketDetailApplet"),
+  crew: view(() => import("./pilot/crew-applet"), "CrewApplet"),
+  "crew-console": view(() => import("./pilot/crew-applet"), "CrewConsoleApplet"),
 };
 
 /** The applet's content, with a loading state while its chunk resolves. */

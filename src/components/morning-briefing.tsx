@@ -5,6 +5,7 @@
 // This is the "addictive morning ritual" — one glance, then go.
 
 import { useEffect, useState } from "react";
+import { NudgeFeed } from "@/components/nudge-feed";
 
 interface BriefingData {
   tasksDueToday: number;
@@ -72,13 +73,16 @@ export function MorningBriefing({
 
   if (items.length === 0) {
     return (
-      <div className="hull-panel hull-green animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
-        <p className="hull-readout text-sm text-neon-green">All Clear — Nothing Urgent on the Board Today.</p>
-      </div>
+      <>
+        <div className="hull-panel hull-green animate-bloom mt-6 p-4" style={{ animationDelay: "0.14s" }}>
+          <p className="hull-readout text-sm text-neon-green">All Clear — Nothing Urgent on the Board Today.</p>
+        </div>
+        <NudgeFeed />
+      </>
     );
   }
 
-  return (
+  const briefing = (
     <div className={`hull-panel hull-panel-accent animate-bloom mt-6 p-4 ${accent}`} style={{ animationDelay: "0.14s" }}>
       <p className="hull-title">Morning Briefing</p>
       <ul className="mt-2 space-y-1.5">
@@ -95,5 +99,14 @@ export function MorningBriefing({
         ))}
       </ul>
     </div>
+  );
+
+  // The background AI's feed rides under the briefing counts — what Pookie
+  // noticed, drafted, or handled overnight, with one-tap actions.
+  return (
+    <>
+      {briefing}
+      <NudgeFeed />
+    </>
   );
 }

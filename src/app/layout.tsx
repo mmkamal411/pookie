@@ -5,6 +5,8 @@ import { NebulaBackground } from "@/components/nebula-background";
 import { CosmicSceneDirector } from "@/components/cosmic-scene-director";
 import { CockpitBackground } from "@/components/space-background";
 import { CommandDeck } from "@/components/command-deck";
+import { PageTransit } from "@/components/page-transit";
+import { SoothingOrb } from "@/components/pilot/soothing-orb";
 import { ServiceWorkerRegistrar } from "@/components/pwa/sw-registrar";
 // Squad Cookie 2026-10-12 — consent banner, preference center, footer.
 import { CookieBanner } from "@/components/cookies/cookie-banner";
@@ -24,7 +26,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pookie",
   description:
-    "Your whole life, flown from one cockpit — time, tasks, school, family, health, money, with a divine AI co-pilot.",
+    "Your whole life, flown from one cockpit — time, tasks, health, money, home, and your crew's school when they're part of your life. A divine AI co-pilot on every station.",
   // Squad Mobile 2026-10-12 — PWA installability (iOS + Android).
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -122,6 +124,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NebulaBackground />
         <CosmicSceneDirector />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
+        {/* Black-hole page transit (Meheldi 2026-10-12 ~22:28): a brief warp
+            between views. ≤600ms, skippable, instant-cut on reduced-motion. */}
+        <PageTransit />
+        {/* Soothing orb companion (Meheldi 2026-10-12 ~22:30): slow wander,
+            gentle settle home, hushes while the pilot works. */}
+        <SoothingOrb />
         {/* Squad Cookie 2026-10-12 — global footer: Cookies Policy, Privacy
             Statement, and the Cookie Settings re-entry point. */}
         <CookieFooter />

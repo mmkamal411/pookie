@@ -1,31 +1,35 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getMemberships, signOut } from "@/lib/tenant/actions";
+import { signOut } from "@/lib/tenant/actions";
+import { getPilotLayoutPlan } from "@/lib/pilot-layout";
+import { getNudges } from "@/lib/nudges";
 import PageGlide from "@/components/page-glide";
+import { WindowManagerProvider } from "@/components/window-manager";
+import { AppletHost } from "@/components/applet-host";
+import { HeroVista } from "@/components/pilot/hero-vista";
+import { AdaptiveDashboard } from "@/components/pilot/adaptive-dashboard";
+import { NudgeFeed } from "@/components/nudge-feed";
 
 // Session-dependent — always block, never prerender.
 export const dynamic = "force-dynamic";
 
-const HOUSEHOLD_LINKS = [
-  { href: "/household/mail", title: "Mail", sub: "Bills, letters, and action items" },
-  { href: "/household/shopping", title: "Shopping", sub: "Lists the whole house shares" },
-  { href: "/household/spending", title: "Spending", sub: "Where the money goes" },
-  { href: "/household/vault", title: "Vault", sub: "Documents that matter" },
-  // Prism E5 2026-10-12: every household page reachable from the just-me home.
-  { href: "/household/weather", title: "Weather", sub: "The sky over your day" },
-  { href: "/household/insurance", title: "Insurance", sub: "Policies and coverage" },
-  { href: "/household/babysitters", title: "Babysitters", sub: "Trusted sitters" },
-];
-
 /**
- * /me — the "just me" home. Landed here by the root router when a signed-in,
- * onboarded user holds zero child memberships. Previously these users were
- * bounced to /login?error=no-invite: a signed-in person staring at the login
- * form with no dashboard and no path to add a child. This page is their
- * Pookie instead — their own household surfaces, plus the door to add a
- * first child later (via provision_onboarding_child, the zero-membership
- * RPC — create_child() would reject them).
+ * /me — the pilot's own bridge, and the default landing for EVERY
+ * signed-in, onboarded user (Meheldi 2026-10-12, final brief ~22:28).
+ *
+ * Final composition — calm and exact:
+ *   1. Live planetary video vista behind it all (vista-sources.ts is the
+ *      integration point; cosmic loop until the designer delivers planets).
+ *   2. ONE glass pane: local weather + calendar visible, expanding for
+ *      to-do details. The pane's sections render from the AI's layout plan
+ *      (adaptive-zone architecture); the pilot can arrange/lock sections.
+ *   3. The proactive AI speaks through the nudge banner + section
+ *      highlights — ambient, never a chatbot home.
+ *
+ * Everything else is a station: the Stations button in the standby console
+ * opens the module directory (pilot stations + the Crew hub) as applets.
+ * Child consoles open from the Crew hub as applets — the child cockpit is
+ * an opt-in module, never the front door.
  */
 export default async function MePage() {
   const supabase = await createClient();
@@ -33,10 +37,6 @@ export default async function MePage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/me");
-
-  // Anyone with a family belongs on the tenant router, not here.
-  const memberships = await getMemberships();
-  if (memberships.length > 0) redirect("/");
 
   // profiles (017) may not be applied yet — degrade to the email handle.
   const { data: profile } = await supabase
@@ -46,69 +46,35 @@ export default async function MePage() {
     .maybeSingle();
   const name = profile?.display_name?.trim() || user.email?.split("@")[0] || "there";
 
+  // Adaptive-zone seams: the AI automation architect drives these.
+  const [plan, nudges] = await Promise.all([getPilotLayoutPlan(), getNudges()]);
+
   return (
-    <>
-    <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden bg-nebula-950">
-      <PageGlide>
-      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-12">
-        <div className="flex items-center gap-4">
-          <div>
-            <p className="text-sm font-medium tracking-[0.2em] text-nova-400 capitalize">
-              Your Pookie
-            </p>
-            <h1 className="text-sunlit mt-1 text-2xl font-semibold">
-              Welcome, {name}
-            </h1>
+    <WindowManagerProvider>
+      <main className="relative flex min-h-screen min-h-dvh w-full overflow-hidden">
+        <PageGlide>
+          <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 pt-6 pb-12">
+            <HeroVista pilotName={name} />
+            <AdaptiveDashboard initialPlan={plan} nudges={nudges} />
+            {/* "Overnight by Pookie" — what the background AI noticed,
+                drafted, or handled while the pilot was away. */}
+            <NudgeFeed />
+            <form action={signOut} className="mt-8 text-center">
+              <button
+                type="submit"
+                className="text-xs font-medium text-stardust-400 underline-offset-4 transition hover:text-stardust-200 hover:underline"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
-        </div>
-        <p className="mt-4 text-sm leading-relaxed text-stardust-300">
-          Your Pookie is all yours — your household, watched over. If a child
-          joins your life later, you can add them anytime.
-        </p>
-
-        <div className="mt-8 grid grid-cols-2 gap-3">
-          {HOUSEHOLD_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="neon-pipe neon-card neon-teal rounded-2xl bg-nebula-900/60 p-5 transition hover:bg-nebula-900"
-            >
-              <span className="block text-sm font-semibold text-star-100">
-                {link.title}
-              </span>
-              <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
-                {link.sub}
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <Link
-          href="/add-child"
-          className="neon-hover neon-pink mt-3 block rounded-2xl border border-dashed border-nova-400/40 bg-nova-500/5 p-5 transition hover:border-nova-400/70 hover:bg-nova-500/10"
-        >
-          <span className="block text-sm font-semibold text-star-100">
-            + Add a Child
-          </span>
-          <span className="mt-1 block text-xs leading-relaxed text-stardust-300">
-            Set up grades, school, and daily rhythm for your kid — whenever
-            you&apos;re ready.
-          </span>
-        </Link>
-
-        <form action={signOut} className="mt-8">
-          <button
-            type="submit"
-            className="text-xs font-medium text-stardust-400 underline-offset-4 transition hover:text-stardust-200 hover:underline"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
-      </PageGlide>
-      {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
-      <div className="h-32 shrink-0" aria-hidden="true" />
-    </main>
-    </>
+        </PageGlide>
+        {/* Spacer for the root Command Deck (Squad Deck 2026-10-12). */}
+        <div className="h-32 shrink-0" aria-hidden="true" />
+      </main>
+      {/* Module applets (Crew hub, stations) open over the bridge —
+          same minimize/close chrome as everywhere else. */}
+      <AppletHost />
+    </WindowManagerProvider>
   );
 }

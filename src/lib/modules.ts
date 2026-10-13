@@ -27,6 +27,12 @@ export interface LifeModule {
   route: string | null;
   teenPrivate?: boolean;
   /**
+   * Account-level module — its route resolves at the account namespace,
+   * never under /c/[childSlug]. (Meheldi 2026-10-12: user-first — the
+   * pilot's own stations plus the Crew hub live outside any child scope.)
+   */
+  accountLevel?: boolean;
+  /**
    * Minimum viewer age — the module is hidden when the viewer's age is below
    * this (FR-MENU-004). Client-side only; server enforces real access.
    */
@@ -124,6 +130,18 @@ export const GROVES: Grove[] = [
       { id: "S1", name: "Help Center & FAQ", watchOver: "Answers to common questions — searchable, plain-language.", seedAction: "Browse the help center", status: "live", route: "/support/faq" },
       { id: "S2", name: "AI Support Chat", watchOver: "Instant answers from Pookie's support assistant, 24/7.", seedAction: "Start a chat", status: "live", route: "/support/chat" },
       { id: "S3", name: "Support Tickets", watchOver: "Open a ticket, track it, talk to a human.", seedAction: "Open your first ticket", status: "live", route: "/support/tickets" },
+    ],
+  },
+  {
+    // Crew — the children feature menu, self-contained (Meheldi 2026-10-12).
+    // User-first: the pilot never has to be a parent. The roster, per-child
+    // consoles (opened as applets), school logins, sync setups, permissions,
+    // and the add-a-child door (legal gates intact) — all in one place.
+    name: "Crew",
+    subtitle: "the people you fly with — optional",
+    sigil: "🧑‍🚀",
+    modules: [
+      { id: "crew", name: "Crew", watchOver: "Consoles, school logins, sync, and permissions for the kids in your life — all in one place, all optional.", seedAction: "Meet your crew", status: "live", route: "/crew", accountLevel: true },
     ],
   },
 ];

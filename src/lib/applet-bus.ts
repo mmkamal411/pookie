@@ -184,11 +184,13 @@ export function resolveAppletLink(href: string, childSlug: string): AppletLinkTa
   }
 
   // Canonical module routes from the registry (W1 School is the Progress
-  // view — it keeps navigating to its page).
+  // view — it keeps navigating to its page). Account-level modules (the
+  // pilot's own stations, the Crew hub) resolve outside any child scope.
   for (const grove of GROVES) {
     for (const mod of grove.modules) {
       if (mod.status !== "live" || !mod.route || mod.id === "W1") continue;
-      if (path === resolveModuleHref(childSlug, mod.route)) {
+      const href = mod.accountLevel ? mod.route : resolveModuleHref(childSlug, mod.route);
+      if (path === href) {
         return { id: mod.id, params: {}, recentId: mod.id };
       }
     }

@@ -1,7 +1,7 @@
 /**
  * Machine-readable add-child / onboarding error codes → plain English.
- * Single source of truth shared by the onboarding wizard (step-children)
- * and the standalone /add-child page.
+ * Single source of truth shared by the Crew hub add-child form and the
+ * standalone /add-child page.
  */
 export function childErrorMessage(code: string): string {
   switch (code) {

@@ -9,8 +9,9 @@
    cockpit: dark BLACK instrument panels (shades like #050508, #0a0a0f —
    never navy, never gray), subtle bright neon accents, every surface
    high-contrast readable. Bright text on dark panels. No exceptions.
-   Neon accents: cyan / teal / green / amber only. BANNED (always):
-   lavender, purple washes, pink accents, warm tones. Zero warmth.
+   Neon accents: cyan / teal / green / amber / white / purple.
+   (Meheldi 2026-10-12 ~22:28 — purple and white neon are IN; this reverses
+   the old zero-purple rule. Warm tones still stay out.)
    Tokens defined once here, reused on every surface. No exceptions.
    ========================================================================== */
 
@@ -31,15 +32,24 @@
   --color-comet-500: #22c55e;
   --color-comet-600: #16a34a;
 
-  /* Nova — legacy accent name, now the cyan accent (zero pink, zero purple).
-     Links, eyebrows, active states, CTAs. */
+  /* Nova — the cyan accent. Links, eyebrows, active states, CTAs.
+     (The old "zero purple" note is reversed per Meheldi 2026-10-12 ~22:28:
+     purple neon is a first-class accent now — see --color-pulse-*.) */
   --color-nova-200: #cffafe;
   --color-nova-300: #67e8f9;
   --color-nova-400: #22d3ee;
   --color-nova-500: #00b8d4;
   --color-nova-600: #0e7490;
 
-  /* Starlight — primary text, clean ice-white. Zero lavender. */
+  /* Pulse — the purple neon accent (Meheldi 2026-10-12 ~22:28: purple is
+     IN). Crew console glow, AI highlights, secondary CTAs. */
+  --color-pulse-200: #e9d5ff;
+  --color-pulse-300: #c4b5fd;
+  --color-pulse-400: #a78bfa;
+  --color-pulse-500: #8b5cf6;
+  --color-pulse-600: #7c3aed;
+
+  /* Starlight — primary text, clean ice-white. */
   --color-star-100: #f5fafb;
   --color-star-200: #dff0f4;
   --color-star-300: #c3dce6;
@@ -663,9 +673,9 @@ body {
 }
 
 /* The prism — Mehedi loves the color shifts. The halo and aura breathe
-   through a cool neon spectrum (cyan → teal → green → ice blue) on a
-   slow 24s cycle: vivid but never jarring. The hue swing is deliberately
-   clamped to ±40° so the orb NEVER drifts into purple/pink territory.
+   through the neon spectrum (cyan → teal → green → ice blue → purple) on a
+   slow 24s cycle: vivid but never jarring. Purple is a welcome stop on the
+   cycle now (Meheldi 2026-10-12 ~22:28).
    Composes with the beckon. */
 #toolbar-pookie-orb .orb-halo,
 #standby-pookie-orb .orb-halo {
@@ -682,12 +692,15 @@ body {
   75% { filter: hue-rotate(-10deg) saturate(1.7); }
   100% { filter: hue-rotate(-40deg) saturate(1.55); }
 }
-/* The toolbar orb beckons — a slow, reverent swell that says "I'm here,
-   tap me." Hypnotic, eager to assist, never still. */
+/* The orb is SOOTHING (Meheldi 2026-10-12 ~22:30): it calms the pilot.
+   The wander/drift/pause behavior is driven by the SoothingOrb controller
+   (src/components/pilot/soothing-orb.tsx) — slow 20–40s wander cycles,
+   gentle settle back to toolbar-center home, drift softens while the pilot
+   interacts, static under reduced-motion. The keyframe below is only the
+   faint breathing scale; never hyperactive. */
 @keyframes orb-beckon {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  12% { transform: scale(1.18); opacity: 1; }
-  26% { transform: scale(1); opacity: 0.85; }
+  0%, 100% { transform: scale(1); opacity: 0.88; }
+  50% { transform: scale(1.05); opacity: 1; }
 }
 /* Tap flash — a burst of light as the orb opens Pookie chat. */
 #toolbar-pookie-orb:active .orb-core {
@@ -959,11 +972,14 @@ body {
    intentional — like the ship's interior lighting was designed by someone
    who cares how it makes you feel. Subtle, never harsh. Never cold.
 
-   Palette (unified across all squads — spacecraft palette, zero purple/pink):
+   Palette (unified across all squads — spacecraft palette, purple + white
+   welcomed per Meheldi 2026-10-12 ~22:28):
      cyan   #00E5FF — primary neon accent
      teal   #2dd4bf — systems nominal, calm
      green  #00FF88 — go, healthy, "on track"
      amber  #FFB300 — warmth, caution, "needs extra love" (sparing)
+     purple #a78bfa — AI highlights, crew glow (see --color-pulse-*)
+     white  #f5fafb — starlight text, crisp edges
    GPU-cheap only: border-color / box-shadow / transform / opacity.
    Text stays crisp — glows live on frames, never on glyphs.
    prefers-reduced-motion collapses all of this globally (see top of file).
